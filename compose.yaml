@@ -1,0 +1,18 @@
+# Local PostgreSQL only. The developer runs this through WSL; Claude does not
+# run Docker. Credentials here match .env.example.
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: cdss-postgres
+    environment:
+      POSTGRES_USER: cdss
+      POSTGRES_PASSWORD: cdss
+      POSTGRES_DB: cdss
+    ports:
+      - "5432:5432"
+    volumes:
+      - cdss_pgdata:/var/lib/postgresql/data
+
+volumes:
+  cdss_pgdata:
