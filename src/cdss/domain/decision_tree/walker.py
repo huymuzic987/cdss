@@ -21,6 +21,7 @@ from cdss.domain.decision_tree.contracts import (
     copy_json_value,
 )
 from cdss.domain.decision_tree.errors import (
+    DecisionTreeError,
     InvalidTreeStructure,
     LinkNotEnabled,
     LinkTargetNodeNotFound,
@@ -38,6 +39,7 @@ from cdss.domain.decision_tree.graph import (
     TreeGraphRepository,
 )
 from cdss.domain.decision_tree.patches import apply_context_patch
+from cdss.domain.decision_tree.validator import validate_tree_graph
 
 DEFAULT_MAX_STEPS = 300
 
@@ -53,6 +55,7 @@ def walk_tree(
     """Traverse a graph and tail-transfer through enabled LINK nodes."""
 
     started_at = datetime.now(UTC)
+    validate_tree_graph(graph)
     run_state = RunState.initialize(runtime_input)
     session = _InternalTraversal(
         graph=graph,
@@ -89,6 +92,7 @@ class _InternalTraversal:
         self.visited_node_ids: set[tuple[str, UUID]] = set()
         self.executed_reference_ids: set[tuple[str, UUID, UUID]] = set()
         self.recorded_tree_ids: set[tuple[str, UUID]] = set()
+        self.validated_graph_ids: set[tuple[str, UUID]] = {(graph.tree.tree_key, graph.tree.id)}
         self.tree_metadata: list[TreeMetadata] = []
         self._record_tree_metadata(graph)
 
@@ -244,6 +248,16 @@ class _InternalTraversal:
                 details={"link_target_tree_key": target_tree_key},
                 partial_run_state=self.run_state,
             ) from exc
+        except DecisionTreeError as exc:
+            self._attach_partial_state(exc)
+            raise
+
+        try:
+            self._validate_graph_once(target_graph)
+            self._record_tree_metadata(target_graph)
+        except DecisionTreeError as exc:
+            self._attach_partial_state(exc)
+            raise
 
         target_node_key = link_node.link_target_node_key
         if target_node_key is None:
@@ -261,8 +275,18 @@ class _InternalTraversal:
                     partial_run_state=self.run_state,
                 )
 
-        self._record_tree_metadata(target_graph)
         return target_graph, target_node
+
+    def _validate_graph_once(self, graph: TreeGraph) -> None:
+        identity = (graph.tree.tree_key, graph.tree.id)
+        if identity in self.validated_graph_ids:
+            return
+        validate_tree_graph(graph)
+        self.validated_graph_ids.add(identity)
+
+    def _attach_partial_state(self, error: DecisionTreeError) -> None:
+        if error.partial_run_state is None:
+            error.partial_run_state = self.run_state.snapshot()
 
     def _collect_references(self, node: NodeDefinition) -> None:
         references = self.graph.references_by_node_id.get(node.id, ())

@@ -9,12 +9,12 @@ import pytest
 from cdss.domain.decision_tree import (
     DEFAULT_MAX_STEPS,
     EdgeDefinition,
+    InvalidTreeStructure,
     LinkNotEnabled,
     NodeDefinition,
     NodeType,
     NoMatchingTransition,
     TraceEvent,
-    TraversalCycleDetected,
     TraversalLimitExceeded,
     TraversalTraceEntry,
     TreeDefinition,
@@ -255,7 +255,7 @@ def test_no_matching_transition_preserves_rejected_candidate_trace() -> None:
     assert partial.trace[-1].candidate_node_key == "condition"
 
 
-def test_repeated_node_visit_raises_cycle_error() -> None:
+def test_internal_cycle_is_rejected_before_traversal() -> None:
     start = _node(1, "start", NodeType.START)
     first = _node(2, "first", NodeType.ACTION)
     second = _node(3, "second", NodeType.ACTION)
@@ -268,14 +268,11 @@ def test_repeated_node_visit_raises_cycle_error() -> None:
         ],
     )
 
-    with pytest.raises(TraversalCycleDetected) as exc_info:
+    with pytest.raises(InvalidTreeStructure) as exc_info:
         walk_tree(graph, {})
 
-    partial = exc_info.value.partial_run_state
-    assert partial is not None
-    assert _entered_node_keys(partial.trace) == ["start", "first", "second"]
-    assert partial.trace[-1].candidate_node_key == "first"
-    assert exc_info.value.node_key == "first"
+    assert exc_info.value.details["reason"] == "internal_graph_cycle"
+    assert exc_info.value.partial_run_state is None
 
 
 def test_traversal_step_limit_is_enforced_before_next_side_effect() -> None:

@@ -33,7 +33,7 @@ packages = ["src/cdss"]
 pythonpath = ["src"]
 testpaths = ["tests"]
 markers = [
-    "database: integration test requiring a reachable PostgreSQL database (skipped if unreachable)",
+    "database: integration test requiring the guarded local Docker PostgreSQL databases",
 ]
 
 [tool.ruff]

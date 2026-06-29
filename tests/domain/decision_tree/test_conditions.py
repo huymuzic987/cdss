@@ -9,7 +9,6 @@ import pytest
 from cdss.domain.decision_tree import (
     InvalidConditionDefinition,
     InvalidRuntimeValueType,
-    InvalidTreeStructure,
     MissingRuntimePath,
     NodeType,
     RunState,
@@ -50,6 +49,32 @@ def test_evaluates_all_supported_operators(
     assert evaluation.result is expected
     assert evaluation.details["operator"] == operator
     assert evaluation.details["result"] is expected
+
+
+@pytest.mark.parametrize(("runtime_input", "expected"), [({"value": None}, True), ({}, False)])
+def test_exists_checks_path_presence_without_hiding_other_missing_paths(
+    runtime_input: dict[str, Any], expected: bool
+) -> None:
+    evaluation = evaluate_condition(
+        {"path": "input.value", "op": "exists"},
+        _state(runtime_input),
+    )
+
+    assert evaluation.result is expected
+    assert evaluation.details["kind"] == "existence"
+
+
+@pytest.mark.parametrize(
+    ("runtime_value", "expected"),
+    [(1, True), (2, True), (3, False), (True, False)],
+)
+def test_in_uses_strict_membership(runtime_value: Any, expected: bool) -> None:
+    evaluation = evaluate_condition(
+        {"path": "input.value", "op": "in", "value": [1, 2]},
+        _state({"value": runtime_value}),
+    )
+
+    assert evaluation.result is expected
 
 
 @pytest.mark.parametrize(
@@ -274,6 +299,8 @@ def test_unsupported_operator_raises_typed_error() -> None:
             "value": 1,
         },
         {"path": "input.actual", "op": "eq", "value": 1, "extra": True},
+        {"path": "input.actual", "op": "exists", "value": 1},
+        {"path": "input.actual", "op": "in", "value": "not-an-array"},
         {
             "left": {
                 "expression": "add",
@@ -316,15 +343,16 @@ def test_non_condition_node_without_definition_is_unconditional(node_type: NodeT
     assert evaluation.details == {"kind": "unconditional", "result": True}
 
 
-def test_non_condition_node_with_definition_is_invalid_structure() -> None:
+def test_non_condition_node_with_definition_is_a_conditional_candidate() -> None:
     state = _state({"actual": 1})
 
-    with pytest.raises(InvalidTreeStructure):
-        evaluate_candidate_condition(
-            NodeType.ACTION,
-            {"path": "input.actual", "op": "eq", "value": 1},
-            state,
-        )
+    evaluation = evaluate_candidate_condition(
+        NodeType.LINK,
+        {"path": "input.actual", "op": "eq", "value": 1},
+        state,
+    )
+
+    assert evaluation.result is True
 
 
 def test_evaluation_does_not_mutate_input_context_or_definition() -> None:

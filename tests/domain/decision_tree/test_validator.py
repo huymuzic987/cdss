@@ -204,6 +204,25 @@ def test_link_requires_target_tree_key() -> None:
     assert exc_info.value.details["reason"] == "link_target_tree_key_required"
 
 
+def test_link_may_be_a_conditional_candidate() -> None:
+    start = _node(1, "start", NodeType.START)
+    link = _node(
+        2,
+        "link",
+        NodeType.LINK,
+        condition_definition={
+            "path": "input.facility_capability",
+            "op": "eq",
+            "value": "FULL_RESOURCES",
+        },
+        link_target_tree_key="target-tree",
+    )
+
+    result = validate_tree_graph(_graph([start, link], [_edge(10, start, link)]))
+
+    assert result.warnings == []
+
+
 def test_every_executable_node_must_be_reachable() -> None:
     start = _node(1, "start", NodeType.START)
     action = _node(2, "action", NodeType.ACTION)

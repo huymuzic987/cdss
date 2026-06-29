@@ -18,13 +18,13 @@ from cdss.domain.decision_tree.contracts import (
 from cdss.domain.decision_tree.errors import (
     InvalidConditionDefinition,
     InvalidRuntimeValueType,
-    InvalidTreeStructure,
+    MissingRuntimePath,
     UnsupportedOperator,
 )
 from cdss.domain.decision_tree.paths import resolve_runtime_path
 
 _LOGICAL_FORMS = frozenset({"all", "any", "not"})
-_SUPPORTED_OPERATORS = frozenset({"eq", "lt", "lte", "gt", "gte"})
+_SUPPORTED_OPERATORS = frozenset({"eq", "exists", "in", "lt", "lte", "gt", "gte"})
 
 
 class ConditionEvaluation(RuntimeModel):
@@ -89,14 +89,6 @@ def evaluate_candidate_condition(
         return ConditionEvaluation(
             result=True,
             details={"kind": "unconditional", "result": True},
-        )
-
-    if node_type is not NodeType.CONDITION:
-        raise InvalidTreeStructure(
-            tree_key=tree_key,
-            node_key=node_key,
-            details={"reason": "condition_on_non_condition_node"},
-            partial_run_state=run_state,
         )
 
     return evaluate_condition(
@@ -169,6 +161,38 @@ class _ConditionEvaluator:
                 node_key=self.node_key,
                 details={"operator": operator},
                 partial_run_state=self.run_state,
+            )
+
+        if operator == "exists":
+            path = expression.get("path")
+            if not isinstance(path, str):
+                raise self._invalid("exists_path_must_be_string")
+            try:
+                value = resolve_runtime_path(
+                    self.run_state,
+                    path,
+                    tree_key=self.tree_key,
+                    node_key=self.node_key,
+                )
+            except MissingRuntimePath:
+                return ConditionEvaluation(
+                    result=False,
+                    details={
+                        "kind": "existence",
+                        "operator": operator,
+                        "path": path,
+                        "result": False,
+                    },
+                )
+            return ConditionEvaluation(
+                result=True,
+                details={
+                    "kind": "existence",
+                    "operator": operator,
+                    "path": path,
+                    "value": copy_json_value(value),
+                    "result": True,
+                },
             )
 
         left_forms = [key for key in ("path", "left") if key in expression]
@@ -263,6 +287,19 @@ class _ConditionEvaluator:
     def _apply_operator(self, operator: str, left: Any, right: Any) -> bool:
         if operator == "eq":
             return _strict_equal(left, right)
+        if operator == "in":
+            if not isinstance(right, list):
+                raise InvalidRuntimeValueType(
+                    tree_key=self.tree_key,
+                    node_key=self.node_key,
+                    details={
+                        "operator": operator,
+                        "operand": "right",
+                        "actual_type": type(right).__name__,
+                    },
+                    partial_run_state=self.run_state,
+                )
+            return any(_strict_equal(left, item) for item in right)
 
         self._require_numeric(left, operator=operator, operand="left")
         self._require_numeric(right, operator=operator, operand="right")
@@ -339,6 +376,12 @@ class _ConditionDefinitionValidator:
                 partial_run_state=self.partial_run_state,
             )
 
+        if operator == "exists":
+            if set(expression) != {"op", "path"}:
+                raise self._invalid("exists_requires_only_path")
+            self._validate_path(expression["path"], "exists_path")
+            return
+
         left_forms = [key for key in ("path", "left") if key in expression]
         right_forms = [key for key in ("value", "value_from_path") if key in expression]
         if len(left_forms) != 1 or len(right_forms) != 1:
@@ -352,13 +395,17 @@ class _ConditionDefinitionValidator:
             self._validate_left_expression(expression["left"])
 
         if right_forms[0] == "value_from_path":
+            if operator == "in":
+                raise self._invalid("in_requires_literal_array")
             self._validate_path(expression["value_from_path"], "value_from_path")
         else:
             try:
                 literal = copy_json_value(expression["value"])
             except TypeError as exc:
                 raise self._invalid("comparison_literal_is_not_json") from exc
-            if operator != "eq" and type(literal) not in {int, float}:
+            if operator == "in" and not isinstance(literal, list):
+                raise self._invalid("in_requires_literal_array")
+            if operator not in {"eq", "in"} and type(literal) not in {int, float}:
                 raise self._invalid("numeric_operator_requires_numeric_literal")
 
     def _validate_left_expression(self, left_value: Any) -> None:

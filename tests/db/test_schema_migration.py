@@ -5,8 +5,8 @@ exist, and the development_runtime_logs environment check rejects 'production'.
 It inserts no clinical data; the only write attempt is a runtime-log row that
 the check constraint must reject, and it is rolled back regardless.
 
-Skipped automatically when no PostgreSQL database is reachable. Refuses to run
-against a production environment because it cycles the schema destructively.
+The shared test-database preflight and an immediate destructive-action guard
+restrict this module to the dedicated local Docker schema-test database.
 """
 
 import uuid
@@ -14,10 +14,15 @@ import uuid
 import pytest
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import Engine, create_engine, inspect, text
+from sqlalchemy import Engine, inspect, text
 from sqlalchemy.exc import IntegrityError
 
-from cdss.core.config import AppEnv, get_settings
+from cdss.testing.database import (
+    TestDatabaseTarget as DatabaseTarget,
+)
+from cdss.testing.database import (
+    assert_destructive_test_database_safe,
+)
 
 pytestmark = pytest.mark.database
 
@@ -32,36 +37,28 @@ ENUM_LABELS = ["START", "CONDITION", "INFERENCE", "ACTION", "END", "LINK", "GLOB
 
 
 @pytest.fixture(scope="module")
-def engine() -> Engine:
-    settings = get_settings()
-    if settings.app_env is AppEnv.production:
-        pytest.skip("refusing to cycle the schema against a production database")
-    eng = create_engine(settings.database_url)
-    try:
-        with eng.connect():
-            pass
-    except Exception as exc:  # noqa: BLE001 - any connect failure means "no DB available"
-        pytest.skip(f"database not reachable: {exc}")
-    return eng
-
-
-@pytest.fixture(scope="module")
-def alembic_cfg() -> Config:
+def alembic_cfg(schema_database_target: DatabaseTarget) -> Config:
     cfg = Config("alembic.ini")
-    cfg.set_main_option("sqlalchemy.url", get_settings().database_url)
+    cfg.set_main_option("sqlalchemy.url", schema_database_target.database_url)
     return cfg
 
 
-def test_schema_migrates_base_to_head(alembic_cfg: Config, engine: Engine) -> None:
+def test_schema_migrates_base_to_head(
+    alembic_cfg: Config,
+    schema_database_engine: Engine,
+    schema_database_target: DatabaseTarget,
+) -> None:
+    _guard(schema_database_engine, schema_database_target)
     command.downgrade(alembic_cfg, "base")
-    assert not (REQUIRED_TABLES & set(inspect(engine).get_table_names()))
+    assert not (REQUIRED_TABLES & set(inspect(schema_database_engine).get_table_names()))
 
+    _guard(schema_database_engine, schema_database_target)
     command.upgrade(alembic_cfg, "head")
-    assert REQUIRED_TABLES <= set(inspect(engine).get_table_names())
+    assert REQUIRED_TABLES <= set(inspect(schema_database_engine).get_table_names())
 
 
-def test_node_type_enum_exists(engine: Engine) -> None:
-    with engine.connect() as conn:
+def test_node_type_enum_exists(schema_database_engine: Engine) -> None:
+    with schema_database_engine.connect() as conn:
         labels = (
             conn.execute(
                 text(
@@ -76,16 +73,25 @@ def test_node_type_enum_exists(engine: Engine) -> None:
     assert labels == ENUM_LABELS
 
 
-def test_environment_constraint_rejects_production(engine: Engine) -> None:
+def test_environment_constraint_rejects_production(
+    schema_database_engine: Engine,
+    schema_database_target: DatabaseTarget,
+) -> None:
     insert = text(
         "insert into development_runtime_logs "
         "(id, request_id, environment, input_payload, inference_context, journey, created_at) "
         "values (:id, :request_id, 'production', '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, now())"
     )
-    with engine.connect() as conn:
+    with schema_database_engine.connect() as conn:
         trans = conn.begin()
         try:
+            assert_destructive_test_database_safe(conn, schema_database_target)
             with pytest.raises(IntegrityError):
                 conn.execute(insert, {"id": uuid.uuid4(), "request_id": uuid.uuid4()})
         finally:
             trans.rollback()
+
+
+def _guard(engine: Engine, target: DatabaseTarget) -> None:
+    with engine.connect() as connection:
+        assert_destructive_test_database_safe(connection, target)

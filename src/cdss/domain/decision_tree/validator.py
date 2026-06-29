@@ -198,17 +198,17 @@ def _validate_node_semantics(
                 reason="link_target_tree_key_required",
             )
 
-        if node.node_type is NodeType.CONDITION:
+        if node.condition_definition is not None:
             validate_condition_definition(
                 node.condition_definition,
                 tree_key=graph.tree.tree_key,
                 node_key=node.node_key,
             )
-        elif node.condition_definition is not None:
-            raise _structure_error(
-                graph,
-                node=node,
-                reason="condition_on_non_condition_node",
+        elif node.node_type is NodeType.CONDITION:
+            validate_condition_definition(
+                None,
+                tree_key=graph.tree.tree_key,
+                node_key=node.node_key,
             )
 
         _validate_context_patch(graph, node)

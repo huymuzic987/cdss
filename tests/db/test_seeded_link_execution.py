@@ -2,18 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
 import pytest
-from pydantic import ValidationError
-from sqlalchemy import create_engine, select
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from cdss.core.config import get_settings
 from cdss.domain.decision_tree import (
     DecisionTreeError,
     EdgeDefinition,
@@ -28,7 +24,6 @@ from cdss.domain.decision_tree import (
 )
 from cdss.domain.decision_tree.contracts import copy_json_value
 from cdss.infrastructure.db.decision_tree_repository import SqlAlchemyTreeGraphRepository
-from cdss.infrastructure.db.models import DecisionTree
 
 pytestmark = pytest.mark.database
 
@@ -48,29 +43,12 @@ class SeededTrees:
 
 
 @pytest.fixture(scope="module")
-def seeded_trees() -> Generator[SeededTrees, None, None]:
-    try:
-        settings = get_settings()
-    except ValidationError:
-        pytest.skip("DATABASE_URL is not configured")
-
-    engine = create_engine(settings.database_url, pool_pre_ping=True)
-    try:
-        with Session(engine) as session:
-            try:
-                available = set(session.execute(select(DecisionTree.tree_key)).scalars())
-            except SQLAlchemyError as exc:
-                pytest.skip(f"database not reachable or schema unavailable: {exc}")
-            missing = [tree_key for tree_key in TREE_KEYS if tree_key not in available]
-            if missing:
-                pytest.skip(f"declared seeded trees are unavailable: {', '.join(missing)}")
-            repository = SqlAlchemyTreeGraphRepository(session)
-            yield SeededTrees(
-                repository=repository,
-                graphs={tree_key: repository.get_tree(tree_key) for tree_key in TREE_KEYS},
-            )
-    finally:
-        engine.dispose()
+def seeded_trees(seeded_session: Session) -> SeededTrees:
+    repository = SqlAlchemyTreeGraphRepository(seeded_session)
+    return SeededTrees(
+        repository=repository,
+        graphs={tree_key: repository.get_tree(tree_key) for tree_key in TREE_KEYS},
+    )
 
 
 def test_tree_1_normal_bp_definition_applies_expected_context(seeded_trees: SeededTrees) -> None:

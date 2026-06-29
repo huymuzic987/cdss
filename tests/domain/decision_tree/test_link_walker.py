@@ -9,7 +9,11 @@ from uuid import UUID
 import pytest
 
 from cdss.domain.decision_tree import (
+    DecisionTreeError,
     EdgeDefinition,
+    InvalidConditionDefinition,
+    InvalidStartNode,
+    InvalidTreeStructure,
     LinkTargetNodeNotFound,
     LinkTargetNotFound,
     NodeDefinition,
@@ -35,6 +39,15 @@ class InMemoryGraphRepository:
             return self.graphs[tree_key]
         except KeyError as exc:
             raise TreeNotFound(tree_key=tree_key) from exc
+
+
+class RaisingGraphRepository:
+    def __init__(self, error: DecisionTreeError) -> None:
+        self.error = error
+
+    def get_tree(self, tree_key: str) -> TreeGraph:
+        del tree_key
+        raise self.error
 
 
 def _tree(serial: int, tree_key: str) -> TreeDefinition:
@@ -121,6 +134,48 @@ def _entered(trace: Sequence[TraversalTraceEntry]) -> list[tuple[str, str]]:
         (entry.tree_key, entry.node_key)
         for entry in trace
         if entry.event is TraceEvent.NODE_ENTERED
+    ]
+
+
+def _source_graph_with_link_state(
+    *,
+    target_node_key: str | None = None,
+) -> tuple[TreeGraph, NodeDefinition]:
+    tree = _tree(700, "source-with-state")
+    start = _node(tree, 701, "start", NodeType.START)
+    action = _node(
+        tree,
+        702,
+        "prepare",
+        NodeType.ACTION,
+        action_payload={"step": "prepare"},
+        context_patch={"prepared": True},
+    )
+    link = _node(
+        tree,
+        703,
+        "target-link",
+        NodeType.LINK,
+        link_target_tree_key="target-tree",
+        link_target_node_key=target_node_key,
+    )
+    graph = _graph(
+        tree,
+        [start, action, link],
+        [_edge(tree, 710, start, action), _edge(tree, 711, action, link)],
+        [_reference(720, link, 1, "Link evidence")],
+    )
+    return graph, link
+
+
+def _assert_preserved_link_state(error: DecisionTreeError, link: NodeDefinition) -> None:
+    partial = error.partial_run_state
+    assert partial is not None
+    assert partial.context == {"prepared": True}
+    assert [action.payload for action in partial.actions] == [{"step": "prepare"}]
+    assert _entered(partial.trace)[-1] == ("source-with-state", link.node_key)
+    assert [(reference.node_key, reference.source_title) for reference in partial.references] == [
+        (link.node_key, "Link evidence")
     ]
 
 
@@ -238,7 +293,10 @@ def test_link_with_target_node_enters_exact_node_without_target_start() -> None:
     target_graph = _graph(
         target_tree,
         [target_start, default_action, exact_action],
-        [_edge(target_tree, 210, target_start, default_action)],
+        [
+            _edge(target_tree, 210, target_start, default_action, 1),
+            _edge(target_tree, 211, target_start, exact_action, 2),
+        ],
     )
 
     result = walk_tree(
@@ -281,6 +339,7 @@ def test_missing_link_target_tree_raises_typed_error_with_partial_state() -> Non
     with pytest.raises(LinkTargetNotFound) as exc_info:
         walk_tree(source_graph, {}, repository=InMemoryGraphRepository([]))
 
+    assert exc_info.value.code == "link_target_not_found"
     partial = exc_info.value.partial_run_state
     assert partial is not None
     assert partial.context == {"prepared": True}
@@ -292,21 +351,7 @@ def test_missing_link_target_tree_raises_typed_error_with_partial_state() -> Non
 
 
 def test_missing_requested_target_node_raises_typed_error() -> None:
-    source_tree = _tree(100, "source-tree")
-    start = _node(source_tree, 101, "start", NodeType.START)
-    link = _node(
-        source_tree,
-        102,
-        "link",
-        NodeType.LINK,
-        link_target_tree_key="target-tree",
-        link_target_node_key="missing-node",
-    )
-    source_graph = _graph(
-        source_tree,
-        [start, link],
-        [_edge(source_tree, 110, start, link)],
-    )
+    source_graph, link = _source_graph_with_link_state(target_node_key="missing-node")
     target_tree = _tree(200, "target-tree")
     target_start = _node(target_tree, 201, "target-start", NodeType.START)
     target_action = _node(target_tree, 202, "target-action", NodeType.ACTION)
@@ -325,7 +370,126 @@ def test_missing_requested_target_node_raises_typed_error() -> None:
 
     assert exc_info.value.tree_key == "target-tree"
     assert exc_info.value.node_key == "missing-node"
-    assert exc_info.value.partial_run_state is not None
+    assert exc_info.value.code == "link_target_node_not_found"
+    _assert_preserved_link_state(exc_info.value, link)
+
+
+def test_invalid_linked_target_structure_preserves_source_state() -> None:
+    source_graph, link = _source_graph_with_link_state()
+    target_tree = _tree(800, "target-tree")
+    target_start = _node(target_tree, 801, "start", NodeType.START)
+    target_end = _node(target_tree, 802, "end", NodeType.END)
+    target_graph = _graph(
+        target_tree,
+        [target_start, target_end],
+        [_edge(target_tree, 810, target_start, target_end)],
+    )
+    invalid_edge = _edge(target_tree, 811, target_end, target_start)
+    outgoing = dict(target_graph.outgoing_edges_by_node_id)
+    outgoing[target_end.id] = (invalid_edge,)
+    target_graph = replace(
+        target_graph,
+        outgoing_edges_by_node_id=MappingProxyType(outgoing),
+    )
+
+    with pytest.raises(InvalidTreeStructure) as exc_info:
+        walk_tree(source_graph, {}, repository=InMemoryGraphRepository([target_graph]))
+
+    assert exc_info.value.code == "invalid_tree_structure"
+    _assert_preserved_link_state(exc_info.value, link)
+
+
+def test_invalid_linked_target_condition_preserves_source_state() -> None:
+    source_graph, link = _source_graph_with_link_state()
+    target_tree = _tree(800, "target-tree")
+    target_start = _node(target_tree, 801, "start", NodeType.START)
+    target_condition = _node(
+        target_tree,
+        802,
+        "condition",
+        NodeType.CONDITION,
+        condition_definition={"all": []},
+    )
+    target_end = _node(target_tree, 803, "end", NodeType.END)
+    target_graph = _graph(
+        target_tree,
+        [target_start, target_condition, target_end],
+        [
+            _edge(target_tree, 810, target_start, target_condition),
+            _edge(target_tree, 811, target_condition, target_end),
+        ],
+    )
+
+    with pytest.raises(InvalidConditionDefinition) as exc_info:
+        walk_tree(source_graph, {}, repository=InMemoryGraphRepository([target_graph]))
+
+    assert exc_info.value.code == "invalid_condition_definition"
+    _assert_preserved_link_state(exc_info.value, link)
+
+
+def test_invalid_linked_target_start_preserves_source_state() -> None:
+    source_graph, link = _source_graph_with_link_state()
+    error = InvalidStartNode(
+        tree_key="target-tree",
+        details={"start_node_count": 0},
+    )
+
+    with pytest.raises(InvalidStartNode) as exc_info:
+        walk_tree(source_graph, {}, repository=RaisingGraphRepository(error))
+
+    assert exc_info.value.code == "invalid_start_node"
+    _assert_preserved_link_state(exc_info.value, link)
+
+
+def test_linked_graph_is_validated_only_once_per_execution(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source_graph, _ = _source_graph_with_link_state()
+    target_tree = _tree(800, "target-tree")
+    target_start = _node(target_tree, 801, "start", NodeType.START)
+    target_link = _node(
+        target_tree,
+        802,
+        "self-link",
+        NodeType.LINK,
+        link_target_tree_key="target-tree",
+        link_target_node_key="action",
+    )
+    target_action = _node(target_tree, 803, "action", NodeType.ACTION)
+    target_graph = _graph(
+        target_tree,
+        [target_start, target_link, target_action],
+        [
+            _edge(target_tree, 810, target_start, target_link, 1),
+            _edge(target_tree, 811, target_start, target_action, 2),
+        ],
+    )
+    repository = InMemoryGraphRepository([target_graph])
+    repository_calls: list[str] = []
+    original_get_tree = repository.get_tree
+
+    def counted_get_tree(tree_key: str) -> TreeGraph:
+        repository_calls.append(tree_key)
+        return original_get_tree(tree_key)
+
+    repository.get_tree = counted_get_tree  # type: ignore[method-assign]
+    validation_calls: list[str] = []
+
+    from cdss.domain.decision_tree.validator import validate_tree_graph as validate
+
+    def counted_validate(graph: TreeGraph) -> object:
+        validation_calls.append(graph.tree.tree_key)
+        return validate(graph)
+
+    monkeypatch.setattr(
+        "cdss.domain.decision_tree.walker.validate_tree_graph",
+        counted_validate,
+    )
+
+    walk_tree(source_graph, {}, repository=repository)
+
+    assert repository_calls == ["target-tree", "target-tree"]
+    assert validation_calls == ["source-with-state", "target-tree"]
 
 
 def test_references_are_aggregated_in_execution_order_and_deduplicated() -> None:
@@ -335,7 +499,7 @@ def test_references_are_aggregated_in_execution_order_and_deduplicated() -> None
         source_tree,
         102,
         "rejected",
-        NodeType.CONDITION,
+        NodeType.ACTION,
         condition_definition={"path": "input.value", "op": "lt", "value": 0},
     )
     link = _node(

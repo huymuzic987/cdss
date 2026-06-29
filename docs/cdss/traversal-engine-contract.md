@@ -23,6 +23,8 @@ The following invariants apply:
 - A run performs no patient-data writes and requires no patient identifier.
 - Database access loads tree definitions and evidence only. Traversal does not
   query one node at a time.
+- Every root graph and newly loaded linked graph is validated once per run
+  before its nodes can be traversed.
 - A linked tree replaces the current control flow. Completion does not return
   automatically to the source tree.
 
@@ -254,6 +256,8 @@ A terminal `ACTION` is valid and is not equivalent to an unresolved link.
 
 ### LINK
 
+- A LINK may carry a `condition_definition` when it is one of several outgoing
+  branch candidates. Evaluate that predicate before entering the LINK.
 - Record the node entry and its references.
 - Do not follow an internal outgoing edge.
 - Resolve and load `link_target_tree_key`.
@@ -279,18 +283,19 @@ At every nonterminal node:
 2. Reject any edge whose source or target is not an executable node in the same
    tree.
 3. For each target in order:
-   - if the target is `CONDITION`, evaluate its non-null
-     `condition_definition`;
-   - otherwise, a null `condition_definition` is an unconditional match.
+   - if the target has a non-null `condition_definition`, evaluate it;
+   - a `CONDITION` target must have a non-null definition;
+   - any other target with a null definition is an unconditional match.
 4. Record every attempted conditional candidate and result.
 5. Select the first matching target.
 6. Enter only the selected target.
 
 `traversal_order` is therefore branch priority, not presentation order.
 
-A non-`CONDITION` executable node carrying a non-null `condition_definition` is
-ambiguous and must be rejected as invalid tree structure rather than silently
-ignored.
+This permits data-defined conditional LINK targets, as used by seeded Tree 3
+to select a treatment strategy by facility capability. The engine applies the
+same condition grammar to every conditional candidate and does not branch on
+node keys or clinical values in code.
 
 If outgoing edges exist but no candidate matches, raise
 `NoMatchingTransition`. Selection must never fall back by swallowing condition
@@ -402,9 +407,8 @@ ORM rows into those domain objects. FastAPI schemas/routes belong under
 ## 16. Current application and test conventions
 
 - FastAPI is created by `cdss.main.create_app()`.
-- The only route is the unversioned synchronous `GET /health`.
-- There is no current API version prefix, response-schema package, domain error
-  handler, or database-backed route.
+- Routes are the unversioned synchronous `GET /health` and `POST /evaluate`.
+- Evaluation uses API response schemas and typed domain-error mapping.
 - SQLAlchemy is synchronous.
 - `get_engine()` lazily creates one process-wide engine with
   `pool_pre_ping=True`.
@@ -416,13 +420,18 @@ ORM rows into those domain objects. FastAPI schemas/routes belong under
 - Pytest discovers under `tests/` with `src` added to `pythonpath`.
 - Pure configuration, ORM metadata, and FastAPI `TestClient` tests do not
   require PostgreSQL.
-- Tests marked `database` use the configured `DATABASE_URL`, skip when it is
-  unreachable, refuse production, and currently cycle that database from
-  Alembic base to head.
+- Database tests load `.env.test` explicitly and fail closed instead of falling
+  back to `.env`, process environment values, or a remote database.
+- Seeded tests marked `database` use the dedicated local Docker `cdss_test`
+  database and set their PostgreSQL transaction to read-only.
+- Schema-migration tests use a separate local Docker `cdss_schema_test` database,
+  validate its configured and connected identity immediately before destructive
+  work, and cycle only that database from Alembic base to head.
 - The current migration tests are stateful within their module: later tests
   assume the first migration test has upgraded the schema.
-- There is no dedicated test-database fixture, transaction rollback fixture,
-  seed fixture, or seed loader in this checkout.
+- There is no tracked seed fixture or seed loader in this checkout. A preflight
+  requires all five tree keys and fails with instructions when the local test
+  database has not been seeded from the external authoritative source.
 
 ## 17. Audited repository mismatches
 
@@ -434,13 +443,11 @@ The supplied four-table schema and the repository are not identical:
 - `node_source_references` additionally enforces
   `UNIQUE (node_id, reference_order)`.
 - ORM/migration timestamps are non-null.
-- No seed script or seed migration exists. The README explicitly says the
-  database is intentionally empty after migration.
-- None of the five stated tree keys appears in tracked repository content.
-- There is no local `.env`, no ambient `DATABASE_URL`, and no PostgreSQL listener
-  was reachable at `127.0.0.1:5432` during this audit.
-- `Settings.cdss_max_steps` currently defaults to 100, while the frozen traversal
-  contract requires a default of 300.
+- No seed script or seed migration exists. The populated Trees 1-5 live outside
+  tracked repository artifacts.
+- The configured populated database was audited read-only on 2026-06-29; its
+  actual JSON shapes are recorded in `tree-json-dialect.md`.
+- `Settings.cdss_max_steps` and `.env.example` use the contract default of 300.
 - The README introduction says no ORM models or migrations exist, although both
   are present later in the same README and in the repository.
 

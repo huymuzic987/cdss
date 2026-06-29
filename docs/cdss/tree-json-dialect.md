@@ -1,8 +1,8 @@
 # Decision-Tree JSON Dialect
 
-Status: frozen runtime dialect with an explicit seed-audit limitation.
+Status: audited runtime dialect for seeded Trees 1-5.
 
-## 1. Audit evidence and limitation
+## 1. Audit evidence
 
 The requested audit target is the non-null JSONB stored for the first five
 trees:
@@ -15,25 +15,19 @@ essential-treatment-strategy
 optimal-treatment-strategy
 ```
 
-Those rows cannot be inspected from the current checkout:
+The populated configured database was inspected on 2026-06-29 through
+PostgreSQL transactions set to `READ ONLY`. The audit covered 186 nodes, 185
+internal edges, and 169 source references across the five trees. It found:
 
-- Git contains one commit and no seed SQL, JSON, Python seed loader, data
-  migration, or fixture.
-- The only migration creates schema and inserts no clinical data.
-- The README states that the database is intentionally empty after migration.
-- No local `.env` or ambient `DATABASE_URL` is configured.
-- No PostgreSQL server was reachable on the repository's documented local
-  address during the audit.
+- 95 non-null `condition_definition` values;
+- 34 non-null `context_patch` values;
+- 15 non-null `action_payload` values; and
+- 5 non-null `global_config` values.
 
-Consequently, there are **zero repository-verifiable non-null JSONB values for
-Trees 1-5** in this checkout. This document must not pretend that unobserved
-action/global keys are actual seed content.
-
-The shapes below freeze the dialect explicitly required by the project brief.
-They are the implementation contract for later prompts, but seed-dependent
-examples must be rechecked against the real seed artifact as soon as it is
-available. Any additional shape found in actual seeds requires a deliberate
-contract update; it must not be accepted through permissive ad hoc evaluation.
+No seed data or schema was changed. The repository still contains no tracked
+seed artifact, so reproducibility depends on a database containing the audited
+definitions. Any additional shape found in later seeds requires a deliberate
+contract update rather than permissive evaluation.
 
 ## 2. JSONB columns
 
@@ -47,8 +41,8 @@ contract update; it must not be accepted through permissive ad hoc evaluation.
 | `global_config` | Opaque tree-level configuration exposed as metadata from GLOBAL nodes. |
 
 `node_source_references.section_path` is also JSONB, but it is evidence metadata,
-not part of the condition/patch dialect. Its actual seeded shape is unavailable
-in this checkout.
+not part of the condition/patch dialect. The audited values are ordered arrays
+of section objects containing `number` and `title`.
 
 All engine-recognized documents must be JSON objects. JSON arrays appear only
 at defined child/operation positions. Unknown expression or operation keys are
@@ -69,14 +63,17 @@ Examples required by the project contract:
 input.current_clinic_sbp
 input.is_medication_follow_up
 input.active_bp_target
+input.clinic_1_sbp
+input.facility_capability
 context.risk.level
 context.treatment.bp_target
 context.treatment.bp_target.sbp.upper_exclusive_mmhg
 ```
 
 Path segments traverse JSON objects by exact key. Missing paths raise a typed
-error when evaluated or required by a patch. There is no fallback value, string
-coercion, array-index syntax, wildcard, or implicit root.
+error when evaluated or required by a patch, except for the explicit `exists`
+operator. There is no fallback value, string coercion, array-index syntax,
+wildcard, or implicit root.
 
 ## 4. Condition definitions
 
@@ -113,8 +110,8 @@ The forms are mutually exclusive at each expression object.
 `all` contains a non-empty ordered array of condition definitions. Every child
 must evaluate to true.
 
-The values and field names in examples illustrate syntax only because the seed
-rows are unavailable.
+The shapes, paths, and thresholds in this document were checked against the
+audited seed rows.
 
 ### 4.2 `any`
 
@@ -245,12 +242,47 @@ both required. A subtraction comparison uses `left` instead of top-level
 The right comparison operand follows the same exclusive `value` or
 `value_from_path` rule.
 
+### 5.4 Path existence
+
+Seeded Tree 1 selects between out-of-office and clinic-only measurement routes
+with the exact two-key form:
+
+```json
+{
+  "op": "exists",
+  "path": "input.home_sbp"
+}
+```
+
+`exists` returns true when the exact path is present, including when its value
+is JSON null. A missing segment returns false for this operator only. It has no
+`value` or `value_from_path` operand. Invalid path syntax or roots remain
+configuration errors.
+
+### 5.5 Literal membership
+
+Seeded Tree 2 uses literal-array membership:
+
+```json
+{
+  "op": "in",
+  "path": "input.risk_factor_count",
+  "value": [1, 2]
+}
+```
+
+Membership uses the same strict equality as `eq`; booleans therefore do not
+match numeric `0` or `1`. The audited form requires a literal JSON array and
+does not accept `value_from_path`.
+
 ## 6. Operators and strict types
 
 The frozen operator set is:
 
 ```text
 eq
+exists
+in
 lt
 lte
 gt
@@ -262,6 +294,8 @@ Semantics:
 | Operator | Meaning |
 | --- | --- |
 | `eq` | Strict equality without string/number coercion. |
+| `exists` | Whether an exact runtime path is present. |
+| `in` | Strict membership in a literal JSON array. |
 | `lt` | Numeric left operand is less than numeric right operand. |
 | `lte` | Numeric left operand is less than or equal to numeric right operand. |
 | `gt` | Numeric left operand is greater than numeric right operand. |
@@ -272,7 +306,8 @@ Rules:
 - `lt`, `lte`, `gt`, and `gte` require numeric operands.
 - JSON booleans are not numeric, even though Python's `bool` subclasses `int`.
 - Numeric strings such as `"140"` are not coerced.
-- Missing paths raise `MissingRuntimePath`.
+- Missing paths raise `MissingRuntimePath`, except that an `exists` check
+  returns false.
 - Wrong operand types raise `InvalidRuntimeValueType`.
 - Unknown operators raise `UnsupportedOperator`.
 - Null or malformed condition documents raise
@@ -376,17 +411,17 @@ The engine deep-copies and preserves the entire payload together with source
 tree/node metadata. It must not branch on action keys or translate clinical
 content.
 
-The current repository provides no seeded action payload from which actual keys
-can be documented. The project brief identifies an expected Vietnamese
-action/end text:
+The 15 audited payloads are JSON objects. Their `action_type` values include
+`CONTINUE_LIFESTYLE_AND_MONITORING`, `LIFESTYLE_AND_CONTINUED_MONITORING`,
+`MAINTAIN_CURRENT_REGIMEN`, `CONTINUE_MONITORING`,
+`CONTINUE_MONITORING_AND_MAINTAIN_REGIMEN`,
+`FIXED_DOSE_THREE_DRUG_COMBINATION`, and treatment-selection actions. Common
+fields include follow-up mode/requirement, next follow-up stage, pill count,
+drug classes/options, and clinician-review flags.
 
-```text
-Tiếp tục theo dõi và duy trì phác đồ
-```
-
-It does not establish whether that text is stored in `text_vi`, inside
-`action_payload`, or both. That storage detail remains seed-verification work
-and must not be invented in engine code.
+The text `Tiếp tục theo dõi và duy trì phác đồ` is stored in `text_vi` on Tree
+4 and Tree 5 END nodes; their structured action payloads are collected
+unchanged.
 
 ## 9. Global configuration
 
@@ -399,8 +434,10 @@ and must not be invented in engine code.
 - does not automatically merge it into runtime context; and
 - does not interpret clinical keys.
 
-No non-null seeded `global_config` is available in the repository, so its
-internal keys and value types cannot be claimed as audited.
+The five audited GLOBAL configurations contain metadata for age-threshold
+notes, risk-classification behavior, BP-target restoration, and BP-target
+comparison/override contracts. They include runtime path strings but remain
+opaque metadata and are not merged into context.
 
 ## 10. Link fields are not JSON dialect
 
@@ -411,8 +448,9 @@ link_target_tree_key
 link_target_node_key
 ```
 
-They are not encoded in a JSONB payload. The project brief lists these expected
-unseeded target keys:
+They are not encoded in a JSONB payload. A LINK may independently carry a
+`condition_definition`; seeded Tree 3 has ten such LINK candidates for facility
+and comorbidity routing. The audited database lacks these target keys:
 
 ```text
 hypertensive-emergency
@@ -427,22 +465,17 @@ resistant-hypertension
 
 Their absence must produce typed unresolved-link failures, not terminal success.
 
-## 11. Seed verification checklist
+## 11. Audited shape summary
 
-When the seed artifact or populated test database becomes available, re-audit
-Trees 1-5 before implementing the evaluator:
-
-1. Export every non-null `condition_definition`, `context_patch`,
-   `action_payload`, and `global_config` with tree/node identity.
-2. Confirm whether all condition objects fit the mutually exclusive grammar
-   above.
-3. Confirm exact subtraction object placement and operand keys.
-4. Confirm whether `required` is always present on `COPY_PATH`.
-5. Record actual action payload keys without assigning them engine semantics.
-6. Record actual global configuration keys without merging them into context.
-7. Inspect `section_path` shapes for evidence serialization.
-8. Add any newly observed shape to this document and its tests before accepting
-   it in runtime code.
-
-Until that audit is possible, implementation must remain strict to this frozen
-dialect rather than use a permissive expression interpreter.
+- Conditions use `all`, `any`, `not`, comparisons, and four subtraction
+  expressions.
+- Observed operators are `eq`, `exists`, `gte`, `in`, `lt`, and `lte`; `gt`
+  remains supported by the frozen engine contract but is not present in these
+  seeds.
+- The only condition object without a right operand is `exists`.
+- The sole ordered patch operation is required `COPY_PATH` from
+  `input.active_bp_target` to `context.treatment.bp_target`.
+- Source-reference `section_path` values are ordered JSON arrays of objects
+  carrying section `number` and `title` fields.
+- Conditions occur on 85 CONDITION nodes and 10 LINK nodes. Conditional LINK
+  predicates use the same strict evaluator as CONDITION nodes.
