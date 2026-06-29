@@ -49,4 +49,4 @@ def test_database_url_required() -> None:
 
 
 def test_cdss_max_steps_has_default() -> None:
-    assert make_settings().cdss_max_steps == 100
+    assert make_settings().cdss_max_steps == 300

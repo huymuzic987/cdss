@@ -5,6 +5,7 @@ from cdss.domain.decision_tree.conditions import (
     ConditionEvaluation,
     evaluate_candidate_condition,
     evaluate_condition,
+    validate_condition_definition,
 )
 from cdss.domain.decision_tree.contracts import (
     ExecutedAction,
@@ -46,6 +47,12 @@ from cdss.domain.decision_tree.graph import (
 )
 from cdss.domain.decision_tree.patches import ContextPatchResult, apply_context_patch
 from cdss.domain.decision_tree.paths import resolve_runtime_path
+from cdss.domain.decision_tree.validator import (
+    TreeValidationResult,
+    TreeValidationWarning,
+    validate_tree_graph,
+)
+from cdss.domain.decision_tree.walker import DEFAULT_MAX_STEPS, walk_tree
 
 __all__ = [
     "ContextPatchError",
@@ -53,6 +60,7 @@ __all__ = [
     "ConditionEvaluation",
     "collect_action",
     "DecisionTreeError",
+    "DEFAULT_MAX_STEPS",
     "EdgeDefinition",
     "ExecutedAction",
     "ExecutedReference",
@@ -85,6 +93,11 @@ __all__ = [
     "TreeGraphRepository",
     "TreeMetadata",
     "TreeNotFound",
+    "TreeValidationResult",
+    "TreeValidationWarning",
     "UnsupportedOperator",
     "apply_context_patch",
+    "validate_condition_definition",
+    "validate_tree_graph",
+    "walk_tree",
 ]

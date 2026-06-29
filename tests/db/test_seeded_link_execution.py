@@ -1,0 +1,327 @@
+"""Read-only LINK/evidence checks discovered from the declared seeded trees."""
+
+from __future__ import annotations
+
+from collections.abc import Generator, Mapping
+from dataclasses import dataclass
+from typing import Any
+from uuid import UUID
+
+import pytest
+from pydantic import ValidationError
+from sqlalchemy import create_engine, select
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
+
+from cdss.core.config import get_settings
+from cdss.domain.decision_tree import (
+    DecisionTreeError,
+    EdgeDefinition,
+    LinkTargetNotFound,
+    NodeDefinition,
+    NodeType,
+    RunState,
+    TraversalResult,
+    TreeDefinition,
+    TreeGraph,
+    walk_tree,
+)
+from cdss.domain.decision_tree.contracts import copy_json_value
+from cdss.infrastructure.db.decision_tree_repository import SqlAlchemyTreeGraphRepository
+from cdss.infrastructure.db.models import DecisionTree
+
+pytestmark = pytest.mark.database
+
+TREE_KEYS = [
+    "hypertension-diagnosis",
+    "risk-classification",
+    "treatment-threshold-and-bp-target",
+    "essential-treatment-strategy",
+    "optimal-treatment-strategy",
+]
+
+
+@dataclass(frozen=True)
+class SeededTrees:
+    repository: SqlAlchemyTreeGraphRepository
+    graphs: dict[str, TreeGraph]
+
+
+@pytest.fixture(scope="module")
+def seeded_trees() -> Generator[SeededTrees, None, None]:
+    try:
+        settings = get_settings()
+    except ValidationError:
+        pytest.skip("DATABASE_URL is not configured")
+
+    engine = create_engine(settings.database_url, pool_pre_ping=True)
+    try:
+        with Session(engine) as session:
+            try:
+                available = set(session.execute(select(DecisionTree.tree_key)).scalars())
+            except SQLAlchemyError as exc:
+                pytest.skip(f"database not reachable or schema unavailable: {exc}")
+            missing = [tree_key for tree_key in TREE_KEYS if tree_key not in available]
+            if missing:
+                pytest.skip(f"declared seeded trees are unavailable: {', '.join(missing)}")
+            repository = SqlAlchemyTreeGraphRepository(session)
+            yield SeededTrees(
+                repository=repository,
+                graphs={tree_key: repository.get_tree(tree_key) for tree_key in TREE_KEYS},
+            )
+    finally:
+        engine.dispose()
+
+
+def test_tree_1_normal_bp_definition_applies_expected_context(seeded_trees: SeededTrees) -> None:
+    graph = seeded_trees.graphs["hypertension-diagnosis"]
+    node = _find_node(
+        graph,
+        lambda candidate: (
+            _nested_value(
+                candidate.context_patch,
+                ("diagnosis", "hypertension_class"),
+            )
+            == "NORMAL_BP"
+        ),
+        "NORMAL_BP context patch",
+    )
+
+    state = _walk_from_exact_node(seeded_trees, graph, node, {})
+
+    assert _nested_value(state.context, ("diagnosis", "hypertension_class")) == "NORMAL_BP"
+
+
+def test_tree_1_emergency_link_is_typed_unresolved_dependency(
+    seeded_trees: SeededTrees,
+) -> None:
+    graph = seeded_trees.graphs["hypertension-diagnosis"]
+    node = _find_node(
+        graph,
+        lambda candidate: (
+            candidate.node_type is NodeType.LINK
+            and candidate.link_target_tree_key == "hypertensive-emergency"
+        ),
+        "hypertensive-emergency LINK",
+    )
+
+    with pytest.raises(LinkTargetNotFound) as exc_info:
+        walk_tree(
+            _bridge_to(graph, node),
+            {},
+            repository=seeded_trees.repository,
+        )
+
+    partial = exc_info.value.partial_run_state
+    assert partial is not None
+    assert any(
+        entry.tree_key == graph.tree.tree_key and entry.node_key == node.node_key
+        for entry in partial.trace
+    )
+
+
+def test_tree_3_restore_operation_copies_active_target_before_transfer(
+    seeded_trees: SeededTrees,
+) -> None:
+    graph = seeded_trees.graphs["treatment-threshold-and-bp-target"]
+    node = _find_node(
+        graph,
+        lambda candidate: _has_copy_operation(
+            candidate,
+            from_path="input.active_bp_target",
+            to_path="context.treatment.bp_target",
+        ),
+        "active BP target COPY_PATH",
+    )
+    active_target = {"test_marker": "restored-target"}
+
+    state = _walk_from_exact_node(
+        seeded_trees,
+        graph,
+        node,
+        {"active_bp_target": active_target},
+    )
+
+    assert _nested_value(state.context, ("treatment", "bp_target")) == active_target
+
+
+def test_tree_4_or_5_target_reached_emits_seeded_vietnamese_text(
+    seeded_trees: SeededTrees,
+) -> None:
+    expected_text = "Tiếp tục theo dõi và duy trì phác đồ"
+    candidates = [
+        (graph, node)
+        for graph in (
+            seeded_trees.graphs["essential-treatment-strategy"],
+            seeded_trees.graphs["optimal-treatment-strategy"],
+        )
+        for node in graph.nodes_by_id.values()
+        if node.node_type in {NodeType.ACTION, NodeType.END}
+        and node.text_vi == expected_text
+        and node.action_payload is not None
+    ]
+    if not candidates:
+        pytest.fail("seeded target-reached ACTION/END with payload was not found")
+    graph, node = candidates[0]
+
+    state = _walk_from_exact_node(seeded_trees, graph, node, {})
+
+    assert any(action.text_vi == expected_text for action in state.actions)
+
+
+def test_drug_combination_failure_retains_prior_execution_state(
+    seeded_trees: SeededTrees,
+) -> None:
+    graphs = [
+        seeded_trees.graphs["essential-treatment-strategy"],
+        seeded_trees.graphs["optimal-treatment-strategy"],
+    ]
+    selected: tuple[TreeGraph, NodeDefinition, NodeDefinition] | None = None
+    for graph in graphs:
+        link = next(
+            (
+                node
+                for node in graph.nodes_by_id.values()
+                if node.node_type is NodeType.LINK
+                and node.link_target_tree_key == "drug-combination"
+            ),
+            None,
+        )
+        if link is None:
+            continue
+        predecessors = [
+            graph.nodes_by_id[edge.from_node_id]
+            for edges in graph.outgoing_edges_by_node_id.values()
+            for edge in edges
+            if edge.to_node_id == link.id
+        ]
+        predecessor = next(
+            (
+                node
+                for node in predecessors
+                if node.node_type is NodeType.ACTION and node.action_payload is not None
+            ),
+            None,
+        )
+        if predecessor is not None:
+            selected = (graph, predecessor, link)
+            break
+    if selected is None:
+        pytest.fail("seeded ACTION leading to drug-combination LINK was not found")
+    graph, predecessor, link = selected
+
+    with pytest.raises(LinkTargetNotFound) as exc_info:
+        walk_tree(
+            _bridge_to(graph, predecessor),
+            {},
+            repository=seeded_trees.repository,
+        )
+
+    partial = exc_info.value.partial_run_state
+    assert partial is not None
+    assert partial.actions
+    assert partial.trace
+    assert any(
+        entry.tree_key == graph.tree.tree_key and entry.node_key == link.node_key
+        for entry in partial.trace
+    )
+    if predecessor.context_patch is not None:
+        assert partial.context
+
+
+def _walk_from_exact_node(
+    seeded_trees: SeededTrees,
+    graph: TreeGraph,
+    node: NodeDefinition,
+    runtime_input: dict[str, Any],
+) -> RunState | TraversalResult:
+    try:
+        return walk_tree(
+            _bridge_to(graph, node),
+            runtime_input,
+            repository=seeded_trees.repository,
+        )
+    except DecisionTreeError as exc:
+        if exc.partial_run_state is None:
+            raise
+        return exc.partial_run_state
+
+
+def _bridge_to(target_graph: TreeGraph, target_node: NodeDefinition) -> TreeGraph:
+    tree = TreeDefinition(
+        id=UUID(int=9000),
+        tree_key=f"test-bridge-{target_graph.tree.tree_key}",
+        name_en="Test bridge",
+        name_vi="Test bridge",
+    )
+    start = NodeDefinition(
+        id=UUID(int=9001),
+        tree_id=tree.id,
+        node_key="start",
+        node_type=NodeType.START,
+        text_en="start",
+        text_vi="start",
+    )
+    link = NodeDefinition(
+        id=UUID(int=9002),
+        tree_id=tree.id,
+        node_key="link",
+        node_type=NodeType.LINK,
+        text_en="link",
+        text_vi="link",
+        link_target_tree_key=target_graph.tree.tree_key,
+        link_target_node_key=target_node.node_key,
+    )
+    edge = EdgeDefinition(
+        id=UUID(int=9003),
+        from_node_id=start.id,
+        to_node_id=link.id,
+        traversal_order=1,
+        from_tree_id=tree.id,
+        to_tree_id=tree.id,
+    )
+    return TreeGraph.build(tree=tree, nodes=[start, link], edges=[edge], references=[])
+
+
+def _find_node(
+    graph: TreeGraph,
+    predicate: Any,
+    description: str,
+) -> NodeDefinition:
+    node = next(
+        (candidate for candidate in graph.nodes_by_id.values() if predicate(candidate)),
+        None,
+    )
+    if node is None:
+        pytest.fail(f"seeded definition not found: {description}")
+    return node
+
+
+def _nested_value(value: Any, path: tuple[str, ...]) -> Any:
+    current = value
+    for segment in path:
+        if not isinstance(current, Mapping) or segment not in current:
+            return None
+        current = current[segment]
+    return copy_json_value(current)
+
+
+def _has_copy_operation(
+    node: NodeDefinition,
+    *,
+    from_path: str,
+    to_path: str,
+) -> bool:
+    patch = node.context_patch
+    if not isinstance(patch, Mapping):
+        return False
+    operations = patch.get("operations")
+    if not isinstance(operations, (list, tuple)):
+        return False
+    return any(
+        isinstance(operation, Mapping)
+        and operation.get("op") == "COPY_PATH"
+        and operation.get("from_path") == from_path
+        and operation.get("to_path") == to_path
+        for operation in operations
+    )

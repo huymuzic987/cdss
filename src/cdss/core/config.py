@@ -1,7 +1,7 @@
 """Application settings.
 
 Settings are loaded from environment variables (and an optional ``.env`` file).
-No traversal logic lives here yet; ``CDSS_MAX_STEPS`` is only a configured value.
+``CDSS_MAX_STEPS`` configures the traversal safety limit used by the API.
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     app_env: AppEnv = Field(default=AppEnv.development)
     # DATABASE_URL is intentionally required and comes from the environment only.
     database_url: str = Field()
-    cdss_max_steps: int = Field(default=100, gt=0)
+    cdss_max_steps: int = Field(default=300, gt=0)
     # None means "not explicitly configured" -> resolved from app_env below.
     dev_runtime_logging_enabled: bool | None = Field(default=None)
 
