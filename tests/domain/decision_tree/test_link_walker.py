@@ -40,6 +40,9 @@ class InMemoryGraphRepository:
         except KeyError as exc:
             raise TreeNotFound(tree_key=tree_key) from exc
 
+    def list_trees(self) -> list[TreeDefinition]:
+        return [graph.tree for graph in self.graphs.values()]
+
 
 class RaisingGraphRepository:
     def __init__(self, error: DecisionTreeError) -> None:
@@ -48,6 +51,9 @@ class RaisingGraphRepository:
     def get_tree(self, tree_key: str) -> TreeGraph:
         del tree_key
         raise self.error
+
+    def list_trees(self) -> list[TreeDefinition]:
+        return []
 
 
 def _tree(serial: int, tree_key: str) -> TreeDefinition:

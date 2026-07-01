@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session, aliased
 
@@ -41,6 +43,22 @@ class SqlAlchemyTreeGraphRepository(TreeGraphRepository):
 
     def __init__(self, session: Session) -> None:
         self._session = session
+
+    def list_trees(self) -> Sequence[TreeDefinition]:
+        tree_rows = (
+            self._session.execute(select(DecisionTree).order_by(DecisionTree.name_en))
+            .scalars()
+            .all()
+        )
+        return [
+            TreeDefinition(
+                id=tree_row.id,
+                tree_key=tree_row.tree_key,
+                name_en=tree_row.name_en,
+                name_vi=tree_row.name_vi,
+            )
+            for tree_row in tree_rows
+        ]
 
     def get_tree(self, tree_key: str) -> TreeGraph:
         tree_row = self._session.execute(

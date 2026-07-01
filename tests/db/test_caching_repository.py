@@ -7,7 +7,7 @@ from typing import cast
 import pytest
 
 from cdss.domain.decision_tree import TreeNotFound
-from cdss.domain.decision_tree.graph import TreeGraph
+from cdss.domain.decision_tree.graph import TreeDefinition, TreeGraph
 from cdss.infrastructure.db.caching_repository import (
     CachingTreeGraphRepository,
     TreeGraphCache,
@@ -26,6 +26,9 @@ class CountingRepository:
         if tree_key not in self._graphs:
             raise TreeNotFound(tree_key=tree_key)
         return cast(TreeGraph, self._graphs[tree_key])
+
+    def list_trees(self) -> list[TreeDefinition]:
+        return [cast(TreeGraph, graph).tree for graph in self._graphs.values()]
 
 
 def test_cache_loads_each_tree_once_across_repository_instances() -> None:

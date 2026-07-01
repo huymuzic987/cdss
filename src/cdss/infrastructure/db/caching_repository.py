@@ -15,10 +15,10 @@ reloads; it changes no single-run behavior.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from functools import lru_cache
 
-from cdss.domain.decision_tree.graph import TreeGraph, TreeGraphRepository
+from cdss.domain.decision_tree.graph import TreeDefinition, TreeGraph, TreeGraphRepository
 
 
 class TreeGraphCache:
@@ -50,6 +50,9 @@ class CachingTreeGraphRepository(TreeGraphRepository):
 
     def get_tree(self, tree_key: str) -> TreeGraph:
         return self._cache.get_or_load(tree_key, lambda: self._inner.get_tree(tree_key))
+
+    def list_trees(self) -> Sequence[TreeDefinition]:
+        return self._inner.list_trees()
 
 
 @lru_cache(maxsize=1)
