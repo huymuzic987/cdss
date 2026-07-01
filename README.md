@@ -81,3 +81,12 @@ uv run alembic upgrade head
 
 The migration test supplies its guarded `cdss_schema_test` URL directly. Do not
 run manual downgrade commands against a populated database.
+
+## Backups
+
+Database snapshots and the dump/restore scripts live in `backups/` (see
+[backups/README.md](backups/README.md)). To refresh local from prod anytime:
+
+```bash
+uv run python backups/dump.py && uv run python backups/restore.py
+```
