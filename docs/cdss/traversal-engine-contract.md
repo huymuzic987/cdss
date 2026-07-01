@@ -152,8 +152,14 @@ The exact event enum may be selected during implementation, but it must
 distinguish a node entry from a candidate evaluation. Trace entries must not
 contain unserializable ORM objects.
 
-The global traversal step limit applies across all linked trees. Entering or
-attempting nodes must not reset the counter.
+The global traversal step limit (`max_steps`) bounds the number of **node
+entries** and applies across all linked trees; it is never reset on a link
+transfer. Candidate evaluations are recorded in the trace but do not consume the
+budget — the limit measures traversal progress (nodes entered), not branch
+fan-out, so it does not shrink as trees grow wider. Termination is guaranteed
+independently by cycle detection; the step limit is a secondary safety bound.
+Trace step numbering is a separate monotonic sequence that still increases on
+every entry, including candidate evaluations.
 
 ## 7. References
 

@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, aliased
 
 from cdss.domain.decision_tree.contracts import NodeType
-from cdss.domain.decision_tree.errors import TreeNotFound
+from cdss.domain.decision_tree.errors import InvalidTreeStructure, TreeNotFound
 from cdss.domain.decision_tree.graph import (
     EdgeDefinition,
     NodeDefinition,
@@ -21,6 +21,19 @@ from cdss.infrastructure.db.models import (
     DecisionTree,
     NodeSourceReference,
 )
+
+
+def _coerce_node_type(node: DecisionNode, tree_key: str) -> NodeType:
+    """Map a stored node type to the domain enum, failing typed on divergence."""
+
+    try:
+        return NodeType(node.node_type.value)
+    except ValueError as exc:
+        raise InvalidTreeStructure(
+            tree_key=tree_key,
+            node_key=node.node_key,
+            details={"reason": "unknown_node_type", "node_type": str(node.node_type.value)},
+        ) from exc
 
 
 class SqlAlchemyTreeGraphRepository(TreeGraphRepository):
@@ -72,7 +85,7 @@ class SqlAlchemyTreeGraphRepository(TreeGraphRepository):
                 id=node.id,
                 tree_id=node.tree_id,
                 node_key=node.node_key,
-                node_type=NodeType(node.node_type.value),
+                node_type=_coerce_node_type(node, tree_row.tree_key),
                 text_en=node.text_en,
                 text_vi=node.text_vi,
                 condition_definition=node.condition_definition,

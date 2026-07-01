@@ -22,6 +22,7 @@ from cdss.domain.decision_tree.contracts import (
 )
 from cdss.domain.decision_tree.errors import (
     DecisionTreeError,
+    InvalidRuntimeValueType,
     InvalidTreeStructure,
     LinkNotEnabled,
     LinkTargetNodeNotFound,
@@ -56,7 +57,17 @@ def walk_tree(
 
     started_at = datetime.now(UTC)
     validate_tree_graph(graph)
-    run_state = RunState.initialize(runtime_input)
+    try:
+        run_state = RunState.initialize(runtime_input)
+    except TypeError as exc:
+        # Non-finite floats (NaN/Infinity) and non-JSON value types survive the
+        # API schema but are rejected when the input snapshot is frozen. Surface
+        # them as a typed 422 instead of an untyped 500.
+        raise InvalidRuntimeValueType(
+            message="Runtime input is not a valid JSON object.",
+            tree_key=graph.tree.tree_key,
+            details={"reason": "invalid_runtime_input"},
+        ) from exc
     session = _InternalTraversal(
         graph=graph,
         run_state=run_state,
@@ -88,7 +99,12 @@ class _InternalTraversal:
         self.max_steps = max_steps
         self.repository = repository
         self.links_enabled = links_enabled
-        self.step_count = 0
+        # Monotonic trace sequence number (increments on every trace entry) is
+        # kept separate from the traversal budget, which counts only actual node
+        # entries across all linked trees. Candidate evaluations are traced but
+        # do not consume the budget.
+        self.trace_step = 0
+        self.node_step_count = 0
         self.visited_node_ids: set[tuple[str, UUID]] = set()
         self.executed_reference_ids: set[tuple[str, UUID, UUID]] = set()
         self.recorded_tree_ids: set[tuple[str, UUID]] = set()
@@ -107,7 +123,7 @@ class _InternalTraversal:
         current = self.graph.start_node
         while True:
             self._check_repeated_visit(current)
-            self._ensure_step_available(current)
+            self._enter_node_budget(current)
             self.visited_node_ids.add(self._node_identity(current))
             self._collect_references(current)
 
@@ -174,7 +190,6 @@ class _InternalTraversal:
                     partial_run_state=self.run_state,
                 )
 
-            self._ensure_step_available(current)
             evaluation = evaluate_candidate_condition(
                 candidate.node_type,
                 candidate.condition_definition,
@@ -320,11 +335,10 @@ class _InternalTraversal:
         evaluation_details: JsonObject | None = None,
         changed_context_paths: list[str] | None = None,
     ) -> None:
-        self._ensure_step_available(node)
-        self.step_count += 1
+        self.trace_step += 1
         self.run_state.trace.append(
             TraversalTraceEntry(
-                step=self.step_count,
+                step=self.trace_step,
                 event=event,
                 tree_key=self.graph.tree.tree_key,
                 node_key=node.node_key,
@@ -337,14 +351,18 @@ class _InternalTraversal:
             )
         )
 
-    def _ensure_step_available(self, node: NodeDefinition) -> None:
-        if self.step_count >= self.max_steps:
+    def _enter_node_budget(self, node: NodeDefinition) -> None:
+        # The budget bounds actual node entries across all linked trees and is
+        # never reset on transfer. Candidate evaluations do not consume it;
+        # cycle detection guarantees termination regardless of the budget.
+        if self.node_step_count >= self.max_steps:
             raise TraversalLimitExceeded(
                 tree_key=self.graph.tree.tree_key,
                 node_key=node.node_key,
                 details={"max_steps": self.max_steps},
                 partial_run_state=self.run_state,
             )
+        self.node_step_count += 1
 
 
 def _optional_json_object(value: Mapping[str, Any] | None) -> JsonObject | None:
