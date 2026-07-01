@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     # DATABASE_URL is intentionally required and comes from the environment only.
     database_url: str = Field()
     cdss_max_steps: int = Field(default=300, gt=0)
+    # Opt-in process-level caching of immutable tree graphs. Off by default:
+    # a deployment that enables it owns cache invalidation after any re-seed.
+    cdss_graph_cache_enabled: bool = Field(default=False)
     # None means "not explicitly configured" -> resolved from app_env below.
     dev_runtime_logging_enabled: bool | None = Field(default=None)
 
