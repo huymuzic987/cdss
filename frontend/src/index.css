@@ -1,6 +1,8 @@
 :root {
-  color-scheme: light;
+  color-scheme: dark;
   font-family: system-ui, sans-serif;
+  background-color: #000000;
+  color: #e2e8f0;
 }
 
 html,

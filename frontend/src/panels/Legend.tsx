@@ -1,7 +1,7 @@
 import { NODE_TYPE_COLORS } from '../canvas/DecisionNodeShapeUtil'
 import type { NodeType } from '../api/types'
 
-const CANVAS_NODE_TYPES: NodeType[] = ['START', 'CONDITION', 'INFERENCE', 'ACTION', 'END', 'LINK']
+const CANVAS_NODE_TYPES: NodeType[] = ['START', 'CONDITION', 'INFERENCE', 'ACTION', 'END', 'LINK', 'GLOBAL']
 
 export function Legend() {
   return (
