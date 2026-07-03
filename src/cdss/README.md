@@ -61,30 +61,35 @@ Exposes FastAPI routers and Pydantic validators:
 
 ## 🔄 Flow of Inserting New Trees into the Database
 
-Since the repository does not contain a built-in UI for authoring decision trees, inserting new clinical trees requires loading data rows directly into the relational tables.
+> [!WARNING]
+> **Keep Seeding and Tree Modifications Local Only**
+>
+> All new decision trees and adjustments to existing configurations must be made and verified **locally only** (using the local Docker PostgreSQL `cdss` or `cdss_test` databases). Do not run insertions, schema modifications, or restore operations against any remote or production databases at this stage.
+
+Since the repository does not contain a built-in UI for authoring decision trees, inserting new clinical trees requires loading data rows directly into the local database tables.
 
 ```mermaid
 graph TD
     A[Design Clinical Flowchart] --> B[Convert to JSON condition/patch dialect]
-    B --> C{Insertion Strategy}
-    C -->|Production Sync| D[SQL Snapshot Restore]
-    C -->|Programmatic Script| E[SQLAlchemy Insertion Script]
+    B --> C{Local Insertion Strategy}
+    C -->|Local Sync| D[SQL Snapshot Restore to Local]
+    C -->|Programmatic Script| E[SQLAlchemy Local Insertion Script]
     C -->|Data Migrations| F[Alembic Migration Version]
     D --> G[Run Static Graph Validator]
     E --> G
     F --> G
-    G --> H[Run Integration Tests]
+    G --> H[Run Local Integration Tests]
 ```
 
 ### Step 1: Design and Dialect Conversion
 1. Map out the clinical decision-tree structure (nodes and prioritization of outgoing branches).
 2. Write appropriate JSON condition expressions (`all`, `any`, comparison operators) and merge patches for each node following the [decision-tree JSON dialect contract](file:///c:/Users/Huy/Desktop/cdss/docs/cdss/tree-json-dialect.md).
 
-### Step 2: Database Insertion
+### Step 2: Database Insertion (Local Only)
 
-#### Method A: SQL Snapshot Restore (Environment Synchronization)
-This is the standard approach to synchronize local databases with production or staging clinical knowledge:
-* Export a SQL snapshot using the backup tool:
+#### Method A: SQL Snapshot Restore (Local Environment Sync)
+This is the standard approach to synchronize local databases with a clinical snapshot:
+* Export a local SQL snapshot using the backup tool:
   ```bash
   uv run python backups/dump.py
   ```
@@ -92,9 +97,10 @@ This is the standard approach to synchronize local databases with production or 
   ```bash
   uv run python backups/restore.py
   ```
+  *Note: The restore script contains a fail-closed guard preventing executions against any non-local hosts.*
 
-#### Method B: Programmatic Python Script (Developer Seeding)
-Developers can write scripts using the SQLAlchemy session to insert tree elements programmatically:
+#### Method B: Programmatic Python Script (Local Seeding)
+Developers can write scripts using the SQLAlchemy session to insert tree elements programmatically into the local DB:
 ```python
 from uuid import uuid4
 from cdss.infrastructure.db.models import DecisionTree, DecisionNode, DecisionEdge
@@ -128,15 +134,15 @@ session.commit()
 ```
 
 #### Method C: Alembic Data Migrations
-For automatic deployments, write custom python migrations under `alembic/versions`:
+For local migrations, write custom python migrations under `alembic/versions`:
 ```python
 def upgrade() -> None:
     # Execute transactional insertions
     op.execute("INSERT INTO decision_trees (id, tree_key, name_en, name_vi, ...) VALUES (...)")
 ```
 
-### Step 3: Run Validation & Integration Tests
-Every newly loaded tree **must** pass static structural checkups to verify clinical safety before being evaluated in a production setting.
+### Step 3: Run Validation & Local Integration Tests
+Every newly loaded tree **must** pass static structural checkups locally to verify clinical safety.
 1. Run the static validator suite:
    ```bash
    uv run pytest -m database tests/db/test_seeded_tree_validation.py
