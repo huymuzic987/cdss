@@ -271,6 +271,9 @@ Evaluates decision tree logic statelessly against a clinical input payload.
 
 ### 1. Spin up and Configure Backend API
 ```bash
+# Set link mode to copy (highly recommended if running on WSL/virtual environments on mounted drives)
+export UV_LINK_MODE=copy
+
 # Sync dependencies and create a virtualenv
 uv sync
 
@@ -281,7 +284,6 @@ cp .env.example .env
 docker compose up -d postgres
 
 # Run database schema migrations
-export UV_LINK_MODE=copy
 uv run alembic upgrade head
 
 # Run FastAPI with reload enabled
@@ -289,14 +291,22 @@ uv run uvicorn cdss.main:app --reload
 ```
 The API is now running at `http://localhost:8000`.
 
+> [!NOTE]
+> **WSL Development Tip**: If you are running the backend in WSL and editing files on a mounted Windows drive (`/mnt/c/...`), WSL `inotify` file watchers may not automatically reload Uvicorn on changes. In such cases, restart Uvicorn manually to apply edits.
+
 ### 2. Spin up Frontend Visualizer
-The visualizer connects to the backend and renders graphs on a canvas:
+The visualizer connects to the backend and renders graphs on an interactive whiteboard canvas:
 ```bash
 cd frontend
 pnpm install
 pnpm dev
 ```
 The visualizer runs at `http://localhost:5173`.
+
+> [!TIP]
+> * **Automatic CORS Port Matching**: If port `5173` is already in use, Vite will automatically select a different port (such as `5174`). The backend is configured to accept CORS requests dynamically from any local development port.
+> * **Untangling Layouts (Drag & Drop)**: If lines or cards overlap in complex clinical pathways, you can click and drag any node to rearrange the layout. Connected edges (arrows) will automatically stretch and follow the nodes.
+
 
 ---
 

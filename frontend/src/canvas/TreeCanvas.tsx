@@ -28,9 +28,19 @@ interface TreeCanvasProps {
   graph: TreeGraphResponse
   focusNodeKey: string | null
   onSelectNode: (node: TreeGraphNode | null) => void
+  /** Node keys that were traversed (entered) */
+  highlightedNodeKeys?: ReadonlySet<string>
+  /** The currently active node being stepped through */
+  activeNodeKey?: string | null
 }
 
-export function TreeCanvas({ graph, focusNodeKey, onSelectNode }: TreeCanvasProps) {
+export function TreeCanvas({
+  graph,
+  focusNodeKey,
+  onSelectNode,
+  highlightedNodeKeys,
+  activeNodeKey,
+}: TreeCanvasProps) {
   const editorRef = useRef<Editor | null>(null)
   const shapeIdsRef = useRef<Map<string, TLShapeId>>(new Map())
   const [searchQuery, setSearchQuery] = useState('')
@@ -38,7 +48,7 @@ export function TreeCanvas({ graph, focusNodeKey, onSelectNode }: TreeCanvasProp
   const handleMount = useCallback(
     (editor: Editor) => {
       editorRef.current = editor
-      editor.updateInstanceState({ isReadonly: true })
+      editor.user.updateUserPreferences({ colorScheme: 'dark' })
 
       const nodesByKey = new Map(graph.nodes.map((node) => [node.node_key, node]))
 
@@ -47,11 +57,14 @@ export function TreeCanvas({ graph, focusNodeKey, onSelectNode }: TreeCanvasProp
         if (cancelled) return
         shapeIdsRef.current = buildTreeScene(editor, graph.nodes, graph.edges, positions)
 
-        const initialFocusKey = focusNodeKey ?? graph.start_node_key
-        const initialShapeId = shapeIdsRef.current.get(initialFocusKey)
-        if (initialShapeId) {
-          editor.select(initialShapeId)
-          editor.zoomToSelection({ animation: { duration: 0 } })
+        if (focusNodeKey) {
+          const shapeId = shapeIdsRef.current.get(focusNodeKey)
+          if (shapeId) {
+            editor.select(shapeId)
+            editor.zoomToSelection({ animation: { duration: 0 } })
+          } else {
+            editor.zoomToFit({ animation: { duration: 0 } })
+          }
         } else {
           editor.zoomToFit({ animation: { duration: 0 } })
         }
@@ -85,6 +98,7 @@ export function TreeCanvas({ graph, focusNodeKey, onSelectNode }: TreeCanvasProp
     [],
   )
 
+  // Focus / pan to node when focusNodeKey changes
   useEffect(() => {
     if (!focusNodeKey) return
     const editor = editorRef.current
@@ -93,6 +107,45 @@ export function TreeCanvas({ graph, focusNodeKey, onSelectNode }: TreeCanvasProp
     editor.select(shapeId)
     editor.zoomToSelection({ animation: { duration: 200 } })
   }, [focusNodeKey])
+
+  // Apply highlight status to shapes when highlight sets change
+  useEffect(() => {
+    const editor = editorRef.current
+    if (!editor) return
+
+    for (const [nodeKey, shapeId] of shapeIdsRef.current) {
+      let status: 'none' | 'entered' | 'active' = 'none'
+      if (activeNodeKey && nodeKey === activeNodeKey) {
+        status = 'active'
+      } else if (highlightedNodeKeys?.has(nodeKey)) {
+        status = 'entered'
+      }
+      const shape = editor.getShape(shapeId)
+      if (shape && shape.type === 'decisionNode') {
+        const current = (shape.props as { highlightStatus: string }).highlightStatus
+        if (current !== status) {
+          editor.updateShape({ id: shapeId, type: 'decisionNode', props: { highlightStatus: status } })
+        }
+      }
+    }
+  }, [highlightedNodeKeys, activeNodeKey])
+
+  // Pan / zoom to the active node during traversal
+  useEffect(() => {
+    if (!activeNodeKey) return
+    const editor = editorRef.current
+    const shapeId = shapeIdsRef.current.get(activeNodeKey)
+    if (!editor || !shapeId) return
+    editor.zoomToSelection({ animation: { duration: 300 } })
+    // Don't select — that fires onSelectNode which would overwrite. Just center.
+    const shapeBounds = editor.getShapePageBounds(shapeId)
+    if (shapeBounds) {
+      editor.centerOnPoint(
+        { x: shapeBounds.midX, y: shapeBounds.midY },
+        { animation: { duration: 300 } },
+      )
+    }
+  }, [activeNodeKey])
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
