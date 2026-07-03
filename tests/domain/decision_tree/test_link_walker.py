@@ -40,6 +40,9 @@ class InMemoryGraphRepository:
         except KeyError as exc:
             raise TreeNotFound(tree_key=tree_key) from exc
 
+    def list_trees(self) -> list[TreeDefinition]:
+        return [graph.tree for graph in self.graphs.values()]
+
 
 class RaisingGraphRepository:
     def __init__(self, error: DecisionTreeError) -> None:
@@ -48,6 +51,9 @@ class RaisingGraphRepository:
     def get_tree(self, tree_key: str) -> TreeGraph:
         del tree_key
         raise self.error
+
+    def list_trees(self) -> list[TreeDefinition]:
+        return []
 
 
 def _tree(serial: int, tree_key: str) -> TreeDefinition:
@@ -641,12 +647,15 @@ def test_global_step_limit_is_retained_after_link_transfer() -> None:
         [_edge(target_tree, 210, target_start, target_action)],
     )
 
+    # Budget counts node entries only. The two source-tree entries (start, link)
+    # exhaust a budget of 2, so the first target node fails on entry: the counter
+    # is retained across the link transfer, not reset for the target tree.
     with pytest.raises(TraversalLimitExceeded) as exc_info:
         walk_tree(
             source_graph,
             {},
             repository=InMemoryGraphRepository([target_graph]),
-            max_steps=3,
+            max_steps=2,
         )
 
     partial = exc_info.value.partial_run_state
@@ -656,3 +665,4 @@ def test_global_step_limit_is_retained_after_link_transfer() -> None:
         ("source-tree", "start"),
         ("source-tree", "link"),
     ]
+    assert exc_info.value.node_key == "target-start"

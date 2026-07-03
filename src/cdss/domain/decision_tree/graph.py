@@ -249,6 +249,10 @@ class TreeGraphRepository(Protocol):
         """Load and validate one complete tree graph."""
         ...
 
+    def list_trees(self) -> Sequence[TreeDefinition]:
+        """List every tree's identity without loading its full graph."""
+        ...
+
 
 def _freeze_node(tree: TreeDefinition, node: NodeDefinition) -> NodeDefinition:
     frozen_values: dict[str, FrozenJsonObject | None] = {}
