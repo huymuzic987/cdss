@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from types import SimpleNamespace
 from typing import Any, cast
 from uuid import UUID
 
@@ -10,8 +11,11 @@ import pytest
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import Executable
 
-from cdss.domain.decision_tree import TreeNotFound
-from cdss.infrastructure.db.decision_tree_repository import SqlAlchemyTreeGraphRepository
+from cdss.domain.decision_tree import InvalidTreeStructure, TreeNotFound
+from cdss.infrastructure.db.decision_tree_repository import (
+    SqlAlchemyTreeGraphRepository,
+    _coerce_node_type,
+)
 from cdss.infrastructure.db.models import (
     DecisionEdge,
     DecisionNode,
@@ -106,6 +110,20 @@ def test_repository_bulk_loads_valid_graph_in_four_queries() -> None:
     assert graph.outgoing_edges_by_node_id[start_id][0].to_node_id == action_id
     assert graph.references_by_node_id[action_id][0].source_title == "Guideline"
     assert len(scripted_session.executed_statements) == 4
+
+
+def test_coerce_node_type_rejects_unknown_type_with_typed_error() -> None:
+    node = cast(
+        DecisionNode,
+        SimpleNamespace(node_key="mystery", node_type=SimpleNamespace(value="BOGUS")),
+    )
+
+    with pytest.raises(InvalidTreeStructure) as exc_info:
+        _coerce_node_type(node, "test-tree")
+
+    assert exc_info.value.tree_key == "test-tree"
+    assert exc_info.value.node_key == "mystery"
+    assert exc_info.value.details == {"reason": "unknown_node_type", "node_type": "BOGUS"}
 
 
 def test_repository_tree_not_found_uses_one_query() -> None:

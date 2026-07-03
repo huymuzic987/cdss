@@ -9,6 +9,7 @@ import pytest
 from cdss.domain.decision_tree import (
     DEFAULT_MAX_STEPS,
     EdgeDefinition,
+    InvalidRuntimeValueType,
     InvalidTreeStructure,
     LinkNotEnabled,
     NodeDefinition,
@@ -329,6 +330,52 @@ def test_link_not_enabled_preserves_prior_state_and_link_entry() -> None:
     assert _entered_node_keys(partial.trace) == ["start", "action", "link"]
     assert partial.trace[-1].event is TraceEvent.NODE_ENTERED
     assert exc_info.value.details["link_target_tree_key"] == "external-tree"
+
+
+@pytest.mark.parametrize("bad_value", [float("nan"), float("inf"), float("-inf")])
+def test_non_finite_input_raises_typed_error_not_untyped_crash(bad_value: float) -> None:
+    start = _node(1, "start", NodeType.START)
+    action = _node(2, "action", NodeType.ACTION)
+    graph = _graph([start, action], [_edge(10, start, action)])
+
+    with pytest.raises(InvalidRuntimeValueType) as exc_info:
+        walk_tree(graph, {"measurement": bad_value})
+
+    assert exc_info.value.details["reason"] == "invalid_runtime_input"
+    assert exc_info.value.tree_key == "walker-test-tree"
+    # The fault precedes run-state creation, so there is no partial state.
+    assert exc_info.value.partial_run_state is None
+
+
+def test_candidate_evaluations_do_not_consume_the_step_budget() -> None:
+    start = _node(1, "start", NodeType.START)
+    cond_a = _node(
+        2, "cond-a", NodeType.CONDITION,
+        condition_definition={"op": "exists", "path": "input.absent"},
+    )
+    cond_b = _node(
+        3, "cond-b", NodeType.CONDITION,
+        condition_definition={"op": "exists", "path": "input.missing"},
+    )
+    end = _node(4, "end", NodeType.END)
+    graph = _graph(
+        [start, cond_a, cond_b, end],
+        [
+            _edge(10, start, cond_a, traversal_order=1),
+            _edge(11, start, cond_b, traversal_order=2),
+            _edge(12, start, end, traversal_order=3),
+            _edge(13, cond_a, end),
+            _edge(14, cond_b, end),
+        ],
+    )
+
+    # Only two nodes are entered (start, end); the three candidate evaluations at
+    # the start node are traced but must not count against the two-step budget.
+    result = walk_tree(graph, {}, max_steps=2)
+
+    assert result.status == "success"
+    assert _entered_node_keys(result.trace) == ["start", "end"]
+    assert len(result.trace) == 5
 
 
 def test_trace_step_numbers_are_stable_and_monotonic() -> None:
