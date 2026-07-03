@@ -11,7 +11,7 @@ export interface DecisionNodeShapeProps {
 
 export type DecisionNodeShape = TLBaseShape<'decisionNode', DecisionNodeShapeProps>
 
-declare module '@tldraw/tlschema' {
+declare module 'tldraw' {
   interface TLGlobalShapePropsMap {
     decisionNode: DecisionNodeShapeProps
   }

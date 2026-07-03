@@ -38,7 +38,6 @@ export function TreeCanvas({ graph, focusNodeKey, onSelectNode }: TreeCanvasProp
   const handleMount = useCallback(
     (editor: Editor) => {
       editorRef.current = editor
-      editor.updateInstanceState({ isReadonly: true })
 
       const nodesByKey = new Map(graph.nodes.map((node) => [node.node_key, node]))
 
@@ -47,11 +46,14 @@ export function TreeCanvas({ graph, focusNodeKey, onSelectNode }: TreeCanvasProp
         if (cancelled) return
         shapeIdsRef.current = buildTreeScene(editor, graph.nodes, graph.edges, positions)
 
-        const initialFocusKey = focusNodeKey ?? graph.start_node_key
-        const initialShapeId = shapeIdsRef.current.get(initialFocusKey)
-        if (initialShapeId) {
-          editor.select(initialShapeId)
-          editor.zoomToSelection({ animation: { duration: 0 } })
+        if (focusNodeKey) {
+          const shapeId = shapeIdsRef.current.get(focusNodeKey)
+          if (shapeId) {
+            editor.select(shapeId)
+            editor.zoomToSelection({ animation: { duration: 0 } })
+          } else {
+            editor.zoomToFit({ animation: { duration: 0 } })
+          }
         } else {
           editor.zoomToFit({ animation: { duration: 0 } })
         }
