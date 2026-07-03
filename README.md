@@ -281,6 +281,7 @@ cp .env.example .env
 docker compose up -d postgres
 
 # Run database schema migrations
+export UV_LINK_MODE=copy
 uv run alembic upgrade head
 
 # Run FastAPI with reload enabled
@@ -292,8 +293,8 @@ The API is now running at `http://localhost:8000`.
 The visualizer connects to the backend and renders graphs on a canvas:
 ```bash
 cd frontend
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 The visualizer runs at `http://localhost:5173`.
 
