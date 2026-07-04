@@ -13,7 +13,27 @@
 -- re-resolves the parent id it needs (tree_id by tree_key, node ids by
 -- node_key) via a join back to the row inserted by the previous statement.
 --
--- Fixes applied in this pass (cross-checked against
+-- Regimen-selection redesign (this pass):
+--   The four separate ACEI+CCB / ARB+CCB / ACEI+D / ARB+D INFERENCE nodes
+--   had no distinguishing condition, so the engine always took the first
+--   in traversal order — there was no real way to choose between them, and
+--   picking one arbitrarily would ignore contraindications. Trees 4 and 5
+--   (essential-treatment-strategy / optimal-treatment-strategy), which this
+--   tree links into, already solve this exact problem: they never resolve
+--   ACEI-vs-ARB or a specific drug themselves. They state the class-level
+--   option (letter "A" covers both ACEI and ARB) via
+--   treatment_preferences.combination_options (see
+--   T5_ACTION_FIXED_DOSE_TWO_DRUG_COMBINATION's
+--   "combination_options": [["A","C"],["A","D"]]) and hand off to
+--   link_target_tree_key = "drug-combination" (Tree 6) for the actual
+--   contraindication-based agent pick. Collapsed the four nodes into one
+--   T8_INF_REGIMEN_OPTIONS emitting the same combination_options shape,
+--   removing the arbitrary always-picks-first behavior and the duplicate
+--   fan-out into T8_C_HAS_CV_RISK / T8_C_NO_CV_RISK. Tree 6 itself is not
+--   yet seeded (0 rows) — this only makes Tree 8 consistent with Tree 4/5's
+--   already-established design, it does not build Tree 6.
+--
+-- Other fixes applied in an earlier pass (cross-checked against
 -- backups/Khuyến cáo THA VNHA 2022.pdf, section 3.7.1, p.34):
 --   * The SGLT2i/GLP-1RA trigger condition previously listed six risk
 --     factors including invented fields has_atherosclerotic_ckd and
@@ -23,10 +43,7 @@
 --     Rebuilt using the established fields has_cardiovascular_disease,
 --     has_coronary_artery_disease, has_stroke (ASCVD's components per
 --     Bảng 2's own definition) and context.risk.level == "HIGH".
---   * Regimen INFERENCE nodes now use the A/B/C/D drug-class letter system
---     established by Trees 4/5 (treatment_preferences.preferred_combination
---     .classes), instead of ad hoc English tokens.
---   * T8_INF_MAINTAIN_REGIMEN now uses treatment.status, matching T4's
+--   * T8_INF_MAINTAIN_REGIMEN uses treatment.status, matching T4's
 --     status-flag pattern.
 --   * GLOBAL node restructured to the kind/purpose metadata shape used by
 --     every real GLOBAL node (was a flat glossary object).
@@ -127,56 +144,17 @@ node_seed (
             2
         ),
         (
-            'T8_INF_REGIMEN_ACEI_CCB',
+            'T8_INF_REGIMEN_OPTIONS',
             'INFERENCE',
-            'A + C (ACEI + CCB)',
-            'A + C (ƯCMC + CKCa)',
+            'A + C, or A + D (ACE inhibitor/ARB + calcium-channel blocker, or ACE inhibitor/ARB + thiazide-like diuretic)',
+            'A + C, hoặc A + D (ƯCMC/CTTA + CKCa, hoặc ƯCMC/CTTA + LT Thiazide-like)',
             NULL::jsonb,
-            '{"treatment_preferences":{"preferred_combination":{"classes":["A","C"],"class_a_agent":"ACEI"}}}'::jsonb,
+            '{"treatment_preferences":{"combination_options":[["A","C"],["A","D"]]}}'::jsonb,
             NULL::jsonb,
             NULL::jsonb,
             NULL::text,
             NULL::text,
             3
-        ),
-        (
-            'T8_INF_REGIMEN_ARB_CCB',
-            'INFERENCE',
-            'A + C (ARB + CCB)',
-            'A + C (CTTA + CKCa)',
-            NULL::jsonb,
-            '{"treatment_preferences":{"preferred_combination":{"classes":["A","C"],"class_a_agent":"ARB"}}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            4
-        ),
-        (
-            'T8_INF_REGIMEN_ACEI_THIAZIDE',
-            'INFERENCE',
-            'A + D (ACEI + thiazide-like diuretic)',
-            'A + D (ƯCMC + LT Thiazide-like)',
-            NULL::jsonb,
-            '{"treatment_preferences":{"preferred_combination":{"classes":["A","D"],"class_a_agent":"ACEI"}}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            5
-        ),
-        (
-            'T8_INF_REGIMEN_ARB_THIAZIDE',
-            'INFERENCE',
-            'A + D (ARB + thiazide-like diuretic)',
-            'A + D (CTTA + LT Thiazide-like)',
-            NULL::jsonb,
-            '{"treatment_preferences":{"preferred_combination":{"classes":["A","D"],"class_a_agent":"ARB"}}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            6
         ),
         (
             'T8_C_HAS_CV_RISK',
@@ -189,7 +167,7 @@ node_seed (
             NULL::jsonb,
             NULL::text,
             NULL::text,
-            7
+            4
         ),
         (
             'T8_C_NO_CV_RISK',
@@ -202,7 +180,7 @@ node_seed (
             NULL::jsonb,
             NULL::text,
             NULL::text,
-            8
+            5
         ),
         (
             'T8_INF_ADD_SGLT2I_GLP1RA',
@@ -215,7 +193,7 @@ node_seed (
             NULL::jsonb,
             NULL::text,
             NULL::text,
-            9
+            6
         ),
         (
             'T8_INF_MAINTAIN_REGIMEN',
@@ -228,7 +206,7 @@ node_seed (
             NULL::jsonb,
             NULL::text,
             NULL::text,
-            10
+            7
         ),
         (
             'T8_LINK_A_ESSENTIAL_TREATMENT_STRATEGY',
@@ -241,7 +219,7 @@ node_seed (
             NULL::jsonb,
             'essential-treatment-strategy',
             NULL::text,
-            11
+            8
         ),
         (
             'T8_LINK_A_OPTIMAL_TREATMENT_STRATEGY',
@@ -254,7 +232,7 @@ node_seed (
             NULL::jsonb,
             'optimal-treatment-strategy',
             NULL::text,
-            12
+            9
         ),
         (
             'T8_LINK_B_ESSENTIAL_TREATMENT_STRATEGY',
@@ -267,7 +245,7 @@ node_seed (
             NULL::jsonb,
             'essential-treatment-strategy',
             NULL::text,
-            13
+            10
         ),
         (
             'T8_LINK_B_OPTIMAL_TREATMENT_STRATEGY',
@@ -280,7 +258,7 @@ node_seed (
             NULL::jsonb,
             'optimal-treatment-strategy',
             NULL::text,
-            14
+            11
         ),
         (
             'T8_GLOBAL_ABBREVIATION_GLOSSARY',
@@ -365,31 +343,18 @@ edge_seed (
         ),
         (
             'T8_C_ABOVE_TARGET',
-            'T8_INF_REGIMEN_ACEI_CCB',
+            'T8_INF_REGIMEN_OPTIONS',
             1
         ),
-        ('T8_C_ABOVE_TARGET', 'T8_INF_REGIMEN_ARB_CCB', 2),
         (
-            'T8_C_ABOVE_TARGET',
-            'T8_INF_REGIMEN_ACEI_THIAZIDE',
-            3
+            'T8_INF_REGIMEN_OPTIONS',
+            'T8_C_HAS_CV_RISK',
+            1
         ),
         (
-            'T8_C_ABOVE_TARGET',
-            'T8_INF_REGIMEN_ARB_THIAZIDE',
-            4
-        ),
-        ('T8_INF_REGIMEN_ACEI_CCB', 'T8_C_HAS_CV_RISK', 1),
-        ('T8_INF_REGIMEN_ARB_CCB', 'T8_C_HAS_CV_RISK', 1),
-        (
-            'T8_INF_REGIMEN_ACEI_THIAZIDE',
+            'T8_INF_REGIMEN_OPTIONS',
             'T8_C_NO_CV_RISK',
-            1
-        ),
-        (
-            'T8_INF_REGIMEN_ARB_THIAZIDE',
-            'T8_C_NO_CV_RISK',
-            1
+            2
         ),
         (
             'T8_C_HAS_CV_RISK',
@@ -509,47 +474,14 @@ reference_seed (
             1
         ),
         (
-            'T8_INF_REGIMEN_ACEI_CCB',
+            'T8_INF_REGIMEN_OPTIONS',
             'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
             '[{"number": "3.7.1", "title": "Tăng huyết áp và Đái tháo đường týp 2"}]'::jsonb,
             'Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)',
-            'Combination strategy should include one RAS-inhibitor class (here: ACEI) and one calcium-channel-blocker class.',
+            'Combination strategy should include one RAS-inhibitor class (A: ACEI or ARB) and one calcium-channel-blocker or thiazide-like-diuretic class (C or D). Matching Trees 4/5''s own pattern, the specific agent within each class (e.g. ACEI vs ARB) is resolved downstream against contraindications in Tree 6 (drug-combination), not decided here.',
             ARRAY [32]::smallint [],
             ARRAY [34]::smallint [],
-            'Chiến lược điều trị nên bao gồm một nhóm thuốc ức chế RAS (ƯCMC) và một nhóm thuốc chẹn kênh canxi.',
-            1
-        ),
-        (
-            'T8_INF_REGIMEN_ARB_CCB',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.7.1", "title": "Tăng huyết áp và Đái tháo đường týp 2"}]'::jsonb,
-            'Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)',
-            'Combination strategy should include one RAS-inhibitor class (here: ARB) and one calcium-channel-blocker class.',
-            ARRAY [32]::smallint [],
-            ARRAY [34]::smallint [],
-            'Chiến lược điều trị nên bao gồm một nhóm thuốc ức chế RAS (CTTA) và một nhóm thuốc chẹn kênh canxi.',
-            1
-        ),
-        (
-            'T8_INF_REGIMEN_ACEI_THIAZIDE',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.7.1", "title": "Tăng huyết áp và Đái tháo đường týp 2"}]'::jsonb,
-            'Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)',
-            'Combination strategy should include one RAS-inhibitor class (here: ACEI) and one thiazide-like diuretic class.',
-            ARRAY [32]::smallint [],
-            ARRAY [34]::smallint [],
-            'Chiến lược điều trị nên bao gồm một nhóm thuốc ức chế RAS (ƯCMC) và một nhóm thuốc lợi tiểu thiazide-like.',
-            1
-        ),
-        (
-            'T8_INF_REGIMEN_ARB_THIAZIDE',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.7.1", "title": "Tăng huyết áp và Đái tháo đường týp 2"}]'::jsonb,
-            'Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)',
-            'Combination strategy should include one RAS-inhibitor class (here: ARB) and one thiazide-like diuretic class.',
-            ARRAY [32]::smallint [],
-            ARRAY [34]::smallint [],
-            'Chiến lược điều trị nên bao gồm một nhóm thuốc ức chế RAS (CTTA) và một nhóm thuốc lợi tiểu thiazide-like.',
+            'Chiến lược điều trị nên bao gồm một nhóm thuốc ức chế RAS và một nhóm thuốc chẹn kênh canxi hoặc lợi tiểu thiazide-like.',
             1
         ),
         (
