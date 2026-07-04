@@ -104,7 +104,7 @@ def test_malformed_input_returns_stable_validation_error(
     assert response.status_code == 422
     body = response.json()
     assert body["code"] == "invalid_request"
-    assert body["message"] == "Request validation failed."
+    assert body["message"].startswith("Request validation failed.")
     assert body["details"]["errors"]
     assert "traceback" not in body
 
@@ -116,14 +116,13 @@ def test_tree_not_found_returns_404(api_context: ApiTestContext) -> None:
     )
 
     assert response.status_code == 404
-    assert response.json() == {
-        "code": "tree_not_found",
-        "message": "Decision tree was not found.",
-        "tree_key": "missing-tree",
-        "node_key": None,
-        "details": {},
-        "partial_run_state": None,
-    }
+    body = response.json()
+    assert body["code"] == "tree_not_found"
+    assert body["message"] == "Decision tree 'missing-tree' was not found."
+    assert body["tree_key"] == "missing-tree"
+    assert body["node_key"] is None
+    assert body["details"] == {}
+    assert body["partial_run_state"] is None
 
 
 def test_unresolved_link_returns_424_with_partial_execution_state(

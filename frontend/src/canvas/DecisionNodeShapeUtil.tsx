@@ -68,10 +68,12 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
     return true
   }
 
-  override getIndicatorPath(shape: DecisionNodeShape) {
-    const path = new Path2D()
-    path.rect(0, 0, shape.props.w, shape.props.h)
-    return path
+  override indicator(_shape: DecisionNodeShape) {
+    return null
+  }
+
+  override getIndicatorPath(_shape: DecisionNodeShape) {
+    return new Path2D()
   }
 
   override component(shape: DecisionNodeShape) {
@@ -85,16 +87,13 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
     let background = colors.background
 
     if (highlightStatus === 'active') {
-      borderColor = '#00f0ff'
-      borderWidth = 3
-      boxShadow = '0 0 0 3px rgba(0, 240, 255, 0.4), 0 0 18px 6px rgba(0, 240, 255, 0.3)'
-      transform = 'scale(1.04)'
-      background = '#092533'
+      borderWidth = 4
+      boxShadow = `0 0 0 4px #000000, 0 0 0 10px ${colors.border}, 0 0 35px 15px ${colors.border}cc`
+      transform = 'scale(1.08)'
     } else if (highlightStatus === 'entered') {
-      borderColor = '#0ea5e9'
-      borderWidth = 3
-      boxShadow = '0 0 0 2px rgba(14, 165, 233, 0.3), 0 0 12px 3px rgba(14, 165, 233, 0.2)'
-      background = '#071824'
+      borderWidth = 2
+      boxShadow = `0 0 0 4px ${colors.border}, 0 0 20px 8px ${colors.border}80`
+      transform = 'scale(1.03)'
     }
 
     return (

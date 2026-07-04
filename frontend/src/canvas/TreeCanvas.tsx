@@ -22,6 +22,9 @@ const HIDDEN_COMPONENTS = {
   HelperButtons: null,
   ContextMenu: null,
   QuickActions: null,
+  SelectionBackground: null,
+  SelectionForeground: null,
+  SelectionOutline: null,
 }
 
 interface TreeCanvasProps {
@@ -44,6 +47,7 @@ export function TreeCanvas({
   const editorRef = useRef<Editor | null>(null)
   const shapeIdsRef = useRef<Map<string, TLShapeId>>(new Map())
   const [searchQuery, setSearchQuery] = useState('')
+  const [isSceneLoaded, setIsSceneLoaded] = useState(false)
 
   const handleMount = useCallback(
     (editor: Editor) => {
@@ -61,13 +65,10 @@ export function TreeCanvas({
           const shapeId = shapeIdsRef.current.get(focusNodeKey)
           if (shapeId) {
             editor.select(shapeId)
-            editor.zoomToSelection({ animation: { duration: 0 } })
-          } else {
-            editor.zoomToFit({ animation: { duration: 0 } })
           }
-        } else {
-          editor.zoomToFit({ animation: { duration: 0 } })
         }
+        editor.zoomToFit({ animation: { duration: 0 } })
+        setIsSceneLoaded(true)
       })
 
       const unlisten = editor.store.listen(
@@ -100,18 +101,18 @@ export function TreeCanvas({
 
   // Focus / pan to node when focusNodeKey changes
   useEffect(() => {
-    if (!focusNodeKey) return
+    if (!focusNodeKey || !isSceneLoaded) return
     const editor = editorRef.current
     const shapeId = shapeIdsRef.current.get(focusNodeKey)
     if (!editor || !shapeId) return
     editor.select(shapeId)
-    editor.zoomToSelection({ animation: { duration: 200 } })
-  }, [focusNodeKey])
+    editor.zoomToFit({ animation: { duration: 200 } })
+  }, [focusNodeKey, isSceneLoaded])
 
   // Apply highlight status to shapes when highlight sets change
   useEffect(() => {
     const editor = editorRef.current
-    if (!editor) return
+    if (!editor || !isSceneLoaded) return
 
     for (const [nodeKey, shapeId] of shapeIdsRef.current) {
       let status: 'none' | 'entered' | 'active' = 'none'
@@ -128,11 +129,11 @@ export function TreeCanvas({
         }
       }
     }
-  }, [highlightedNodeKeys, activeNodeKey])
+  }, [highlightedNodeKeys, activeNodeKey, isSceneLoaded])
 
   // Pan / zoom to the active node during traversal
   useEffect(() => {
-    if (!activeNodeKey) return
+    if (!activeNodeKey || !isSceneLoaded) return
     const editor = editorRef.current
     const shapeId = shapeIdsRef.current.get(activeNodeKey)
     if (!editor || !shapeId) return
@@ -145,7 +146,7 @@ export function TreeCanvas({
         { animation: { duration: 300 } },
       )
     }
-  }, [activeNodeKey])
+  }, [activeNodeKey, isSceneLoaded])
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
