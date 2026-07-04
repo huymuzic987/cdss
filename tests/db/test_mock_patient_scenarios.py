@@ -269,7 +269,13 @@ def test_tree_1_normal_bp_route(seeded_trees: SeededTrees) -> None:
 
     result = walk_tree(seeded_trees.graphs[T1], runtime_input, repository=seeded_trees.repository)
 
-    assert result.context == {"diagnosis": {"hypertension_class": "NORMAL_BP"}}
+    assert result.context == {
+        "diagnosis": {
+            "hypertension_class": "NORMAL_BP",
+            "current_clinic_sbp": 120,
+            "current_clinic_dbp": 80,
+        }
+    }
     assert result.actions == []
     _assert_trace(
         result,
@@ -321,7 +327,13 @@ def test_tree_1_emergency_route_preserves_partial_state(seeded_trees: SeededTree
     assert error.details["link_target_tree_key"] == "hypertensive-emergency"
     state = _partial_state(error.partial_run_state)
     assert state.input_snapshot == runtime_input
-    assert state.context == {"diagnosis": {"hypertension_class": "HYPERTENSIVE_EMERGENCY"}}
+    assert state.context == {
+        "diagnosis": {
+            "hypertension_class": "HYPERTENSIVE_EMERGENCY",
+            "current_clinic_sbp": 180,
+            "current_clinic_dbp": 80,
+        }
+    }
     assert state.actions == []
     _assert_trace(
         state,
@@ -364,7 +376,12 @@ def test_tree_3_lifestyle_follow_up_meets_stored_10_5_rule(
 
     result = walk_tree(seeded_trees.graphs[T3], runtime_input, repository=seeded_trees.repository)
 
-    assert result.context == {}
+    assert result.context == {
+        "diagnosis": {
+            "current_clinic_sbp": 140,
+            "current_clinic_dbp": 90,
+        }
+    }
     assert [(action.node_key, action.text_vi, action.payload) for action in result.actions] == [
         (
             "T3_ACTION_LIFESTYLE_FOLLOW_UP_CONTINUE_MONITORING",
@@ -426,7 +443,13 @@ def test_tree_3_medication_follow_up_restores_and_uses_target(
 
     result = walk_tree(seeded_trees.graphs[T3], runtime_input, repository=seeded_trees.repository)
 
-    assert result.context == {"treatment": {"bp_target": active_bp_target}}
+    assert result.context == {
+        "treatment": {"bp_target": active_bp_target},
+        "diagnosis": {
+            "current_clinic_sbp": 129,
+            "current_clinic_dbp": 79,
+        },
+    }
     assert result.input_snapshot["active_bp_target"] == active_bp_target
     restore_entry = next(
         entry
@@ -465,7 +488,13 @@ def test_tree_4_target_reached_emits_maintain_regimen_action(
 
     result = walk_tree(seeded_trees.graphs[T3], runtime_input, repository=seeded_trees.repository)
 
-    assert result.context == {"treatment": {"bp_target": active_bp_target}}
+    assert result.context == {
+        "treatment": {"bp_target": active_bp_target},
+        "diagnosis": {
+            "current_clinic_sbp": 129,
+            "current_clinic_dbp": 79,
+        },
+    }
     assert [
         (action.tree_key, action.node_key, action.text_vi, action.payload)
         for action in result.actions
@@ -504,7 +533,13 @@ def test_tree_5_initial_regimen_not_reached_preserves_action_and_state(
     assert error.details["link_target_tree_key"] == "drug-combination"
     state = _partial_state(error.partial_run_state)
     assert state.input_snapshot == runtime_input
-    assert state.context == {"treatment": {"bp_target": active_bp_target}}
+    assert state.context == {
+        "treatment": {"bp_target": active_bp_target},
+        "diagnosis": {
+            "current_clinic_sbp": 130,
+            "current_clinic_dbp": 80,
+        },
+    }
     assert [
         (action.tree_key, action.node_key, action.text_vi, action.payload)
         for action in state.actions
@@ -559,7 +594,11 @@ def test_tree_5_escalated_regimen_not_reached_preserves_resistant_state(
             "bp_target": active_bp_target,
             "pill_count": 2,
             "status": "RESISTANT_HYPERTENSION",
-        }
+        },
+        "diagnosis": {
+            "current_clinic_sbp": 130,
+            "current_clinic_dbp": 80,
+        },
     }
     assert state.actions == []
     _assert_trace(state, [*T3_MEDICATION_FULL_RESOURCES, *T5_ESCALATED_TARGET_NOT_REACHED])

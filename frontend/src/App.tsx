@@ -39,7 +39,7 @@ function App() {
   // ---- Traversal simulation ----
   const STEP_MS = 500 // fixed step speed
   const [traversalState, setTraversalState] = useState<TraversalState>('idle')
-  const [highlightedNodeKeys, setHighlightedNodeKeys] = useState<ReadonlySet<string>>(new Set())
+  const [highlightedNodeKeys, setHighlightedNodeKeys] = useState<Record<string, ReadonlySet<string>>>({})
   const [activeNodeKey, setActiveNodeKey] = useState<string | null>(null)
   const [activeTraversalTreeKey, setActiveTraversalTreeKey] = useState<string | null>(null)
 
@@ -129,7 +129,7 @@ function App() {
     async (startTreeKey: string, input: JsonObject): Promise<void> => {
       cancelRef.current = false
       setTraversalState('running')
-      setHighlightedNodeKeys(new Set())
+      setHighlightedNodeKeys({})
       setActiveNodeKey(null)
       setActiveTraversalTreeKey(startTreeKey)
       setError(null)
@@ -188,7 +188,10 @@ function App() {
           enteredByTree[currentTreeKey].add(entry.node_key)
 
           // Update the full highlighted set for this tree
-          setHighlightedNodeKeys(new Set(enteredByTree[currentTreeKey]))
+          setHighlightedNodeKeys((prev) => ({
+            ...prev,
+            [currentTreeKey]: new Set(enteredByTree[currentTreeKey]),
+          }))
 
           await sleep(STEP_MS)
         } else {
@@ -219,7 +222,7 @@ function App() {
   const handleReset = () => {
     cancelRef.current = true
     setTraversalState('idle')
-    setHighlightedNodeKeys(new Set())
+    setHighlightedNodeKeys({})
     setActiveNodeKey(null)
     setActiveTraversalTreeKey(null)
     setShowModal(false)
@@ -231,7 +234,10 @@ function App() {
 
   // Only pass highlight props when the active tab matches the traversal tree
   const isTraversalTab = activeTreeKey === activeTraversalTreeKey
-  const visibleHighlights = isTraversalTab ? highlightedNodeKeys : new Set<string>()
+  const visibleHighlights =
+    activeTreeKey && highlightedNodeKeys[activeTreeKey]
+      ? highlightedNodeKeys[activeTreeKey]
+      : new Set<string>()
   const visibleActiveNode =
     isTraversalTab && traversalState === 'running' ? activeNodeKey : null
 
