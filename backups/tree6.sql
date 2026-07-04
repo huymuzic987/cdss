@@ -1,6 +1,24 @@
 --
--- CDSS decision-tree insert script (fourth pass — rebuilt to match the
+-- CDSS decision-tree insert script (fifth pass — cross-checked against
+-- Tree 4/Tree 5 and drug-list removed; fourth pass rebuilt to match the
 -- author's own 5-image board description, verbatim)
+--
+-- FIFTH PASS: T6_C_SPECIAL_POPULATION/NOT_SPECIAL_POPULATION previously used
+-- a condition invented from this tree's own reading of Bảng 9's prose
+-- ((age>=80 AND frailty) OR (HIGH_NORMAL_BP AND low/medium risk)), which
+-- does not match the already-seeded T4_C_MONOTHERAPY_ELIGIBILITY /
+-- T5_C_MONOTHERAPY_ELIGIBILITY condition (is_lifestyle_follow_up OR age>=80
+-- OR frailty, independently OR'd). Since Trees 4/5 already decide and
+-- communicate the monotherapy-vs-combination tier via their own action
+-- before an unconditional LINK into this tree's START, Tree 6 must reuse
+-- the exact same condition or it can silently contradict what the patient
+-- was already told. Fixed to match verbatim. Also added class B
+-- (beta-blocker, requires_indication) to the monotherapy combination_options
+-- menu, matching T4_ACTION_CONSIDER_MONOTHERAPY/
+-- T5_ACTION_CONSIDER_MONOTHERAPY_ONE_PILL's drug_options exactly (previously
+-- only offered A/C/D). Also removed T6_GLOBAL_DRUG_CLASS_GLOSSARY (the
+-- Bảng-10-sourced list of specific drug names per class) — a separate drug
+-- table is planned, so specific drug names no longer live in tree seed data.
 -- Tree: "Cây 6: Phối Hợp Thuốc - Minh"
 -- Source: Bảng 9, Bảng 10, Bảng 11, Hình 5, Mục 3.6.1
 -- (Khuyến cáo THA VNHA 2022.pdf):
@@ -293,23 +311,23 @@ node_seed (
     -- --- Step 4: fresh-therapy initiation (Nhánh A / Nhánh B, Bảng 9) ---
     (
         'T6_C_SPECIAL_POPULATION', 'CONDITION',
-        'Special population: age >=80 and frailty, or high-normal BP with low/moderate risk',
-        'BỆNH NHÂN THUỘC NHÓM ĐẶC BIỆT: ≥80 TUỔI + Suy yếu, hoặc HA bình thường cao + nguy cơ thấp/trung bình',
-        '{"any":[{"all":[{"path":"input.age","op":"gte","value":80},{"path":"input.has_frailty_syndrome","op":"eq","value":true}]},{"all":[{"path":"context.diagnosis.hypertension_class","op":"eq","value":"HIGH_NORMAL_BP"},{"path":"context.risk.level","op":"in","value":["LOW","MEDIUM"]}]}]}'::jsonb,
+        'Persistent high-normal BP after lifestyle management, age 80 or older, or frailty syndrome',
+        'HABTC không đạt mục tiêu sau thay đổi lối sống hoặc tuổi >= 80 hoặc hội chứng lão hóa',
+        '{"any":[{"path":"input.is_lifestyle_follow_up","op":"eq","value":true},{"path":"input.age","op":"gte","value":80},{"path":"input.has_frailty_syndrome","op":"eq","value":true}]}'::jsonb,
         NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 23
     ),
     (
         'T6_C_NOT_SPECIAL_POPULATION', 'CONDITION', 'Not a special population',
         'BỆNH NHÂN KHÔNG THUỘC NHÓM ĐẶC BIỆT',
-        '{"not":{"any":[{"all":[{"path":"input.age","op":"gte","value":80},{"path":"input.has_frailty_syndrome","op":"eq","value":true}]},{"all":[{"path":"context.diagnosis.hypertension_class","op":"eq","value":"HIGH_NORMAL_BP"},{"path":"context.risk.level","op":"in","value":["LOW","MEDIUM"]}]}]}}'::jsonb,
+        '{"not":{"any":[{"path":"input.is_lifestyle_follow_up","op":"eq","value":true},{"path":"input.age","op":"gte","value":80},{"path":"input.has_frailty_syndrome","op":"eq","value":true}]}}'::jsonb,
         NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 24
     ),
     (
         'T6_INF_INITIATE_MONOTHERAPY', 'INFERENCE',
-        'Drug therapy: start with 1 drug (A or C or D)',
-        'Điều trị thuốc KHỞI ĐẦU BẰNG 1 THUỐC (A hoặc C hoặc D)',
+        'Drug therapy: start with 1 drug (A, B, C, or D; B requires an indication)',
+        'Điều trị thuốc KHỞI ĐẦU BẰNG 1 THUỐC (A, B, C, hoặc D; B cần có chỉ định)',
         NULL::jsonb,
-        '{"treatment_preferences":{"combination_options":[["A"],["C"],["D"]],"dose_strategy":"LOW_TO_USUAL_DOSE"}}'::jsonb,
+        '{"treatment_preferences":{"combination_options":[["A"],["B"],["C"],["D"]],"beta_blocker_requires_indication":true,"dose_strategy":"LOW_TO_USUAL_DOSE"}}'::jsonb,
         NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 25
     ),
     (
@@ -446,13 +464,6 @@ node_seed (
         'Cây 14: THA Kháng Trị',
         NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::jsonb,
         'resistant-hypertension', NULL::text, 44
-    ),
-    (
-        'T6_GLOBAL_DRUG_CLASS_GLOSSARY', 'GLOBAL', 'Drug class glossary (Bảng 10)',
-        'Chú giải nhóm thuốc (Bảng 10)',
-        NULL::jsonb, NULL::jsonb, NULL::jsonb,
-        '{"kind":"ABBREVIATION_GLOSSARY","purpose":"Danh mục thuốc theo từng nhóm A/B/C/D dùng trong Cây 6, theo Bảng 10.","entries":{"A_RAS_INHIBITOR":{"label":"A: Ức Chế Hệ RAS","ACE_INHIBITOR":["Benazepril","Captopril","Enalapril","Fosinopril","Lisinopril","Perindopril","Quinapril","Ramipril","Trandolapril","Imidapril"],"ARB":["Azilsartan","Candesartan","Eprosartan","Irbesartan","Losartan","Olmesartan","Telmisartan","Valsartan"],"ARNI":"Chẹn thụ thể Angiotensine-neprisyline"},"B_BETA_BLOCKER":{"label":"B: chẹn Beta","drugs":["Acebutalol","Metoprolol succinate","Carvedilol","Labetalol","Bisoprolol","Atenolol","Metoprolol tartrate","Nebivolol","Propranolol","Nadolol"]},"C_CALCIUM_CHANNEL_BLOCKER":{"label":"C: chẹn kênh Canxi","non_dihydropyridine":["Diltiazem","Verapamil"],"dihydropyridine":["Amlodipine","Felodipine","Isradipine","Nifedipine","Nitrendipine","Lercanidipine"]},"D_DIURETIC":{"label":"D: lợi tiểu","thiazide_thiazide_like":["Bendroflumethiazide","Chlorthalidone","Hydrochlorothiazide","Indapamide"],"loop":["Bumetanide","Furosemide","Torsemide"],"potassium_sparing":["Amiloride","Eplerenone","Spironolactone","Triamterene"]},"MRA":{"label":"MRA: thuốc đối kháng thụ thể mineralocorticoid","drugs":["Spironolactone","Eplerenone"]},"OTHER":{"direct_renin_inhibitor":"Aliskiren","vasodilator":"Hydralazine, Minoxidil","alpha_blocker":["Doxazosin","Prazosin","Terazosin"],"central_alpha_agonist":["Clonidine","Methyldopa"]},"SGLT2i":{"label":"SGLT2i: dapagliflozin / empagliflozin"}}}'::jsonb,
-        NULL::text, NULL::text, 99
     )
 )
 INSERT INTO public.decision_nodes (
@@ -602,16 +613,16 @@ reference_seed (
      'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
      '[{"number": "3.5", "title": "Chiến lược điều trị phối hợp thuốc"}]'::jsonb,
      'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc',
-     'Monotherapy may be considered for age >=80/frailty, or high-normal BP with low/moderate risk.',
+     'Monotherapy eligibility, matching T4_C_MONOTHERAPY_ELIGIBILITY/T5_C_MONOTHERAPY_ELIGIBILITY''s established condition exactly so Tree 6 never contradicts the tier Trees 4/5 already decided.',
      ARRAY[20]::smallint[], ARRAY[22]::smallint[],
-     'Đơn trị có thể xem xét ở bệnh nhân rất già (>80 tuổi) hoặc suy yếu, và HA bình thường-cao với nguy cơ thấp/trung bình.', 1),
+     'Đơn trị có thể xem xét khi HABTC không đạt mục tiêu sau thay đổi lối sống, hoặc tuổi >= 80, hoặc hội chứng lão hóa.', 1),
     ('T6_INF_INITIATE_MONOTHERAPY',
      'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
      '[{"number": "3.5", "title": "Chiến lược điều trị phối hợp thuốc"}]'::jsonb,
      'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc',
-     'Monotherapy initiation for special populations.',
+     'Monotherapy initiation for special populations; class menu (A/B/C/D, B requires indication) matches T4_ACTION_CONSIDER_MONOTHERAPY/T5_ACTION_CONSIDER_MONOTHERAPY_ONE_PILL exactly.',
      ARRAY[20]::smallint[], ARRAY[22]::smallint[],
-     'Điều trị thuốc khởi đầu bằng 1 thuốc (A hoặc C hoặc D).', 1),
+     'Điều trị thuốc khởi đầu bằng 1 thuốc (A, B, C, hoặc D; B cần có chỉ định).', 1),
     ('T6_INF_INITIATE_TWO_DRUG_LOW_DOSE',
      'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
      '[{"number": "3.5", "title": "Chiến lược điều trị phối hợp thuốc"}]'::jsonb,
@@ -646,14 +657,7 @@ reference_seed (
      'Mục 3.6.1. Tăng huyết áp kháng trị',
      'Resistant hypertension: BP not controlled despite optimal 3-drug combination including a diuretic.',
      ARRAY[24]::smallint[], ARRAY[26]::smallint[],
-     'THA kháng trị: không kiểm soát được HA dù đã tối ưu phối hợp 3 thuốc bao gồm lợi tiểu.', 1),
-    ('T6_GLOBAL_DRUG_CLASS_GLOSSARY',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.4", "title": "Điều trị Tăng huyết áp bằng thuốc"}]'::jsonb,
-     'Bảng 10. Các nhóm thuốc và thuốc điều trị tăng huyết áp chính và liều dùng (1)',
-     'Drug names and dosing for each main antihypertensive class.',
-     ARRAY[21]::smallint[], ARRAY[23]::smallint[],
-     'Danh mục thuốc và liều dùng theo từng nhóm thuốc chính.', 1)
+     'THA kháng trị: không kiểm soát được HA dù đã tối ưu phối hợp 3 thuốc bao gồm lợi tiểu.', 1)
 )
 INSERT INTO public.node_source_references (
         "id", "node_id", "source_title", "section_path", "locator", "locator_detail",

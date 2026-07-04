@@ -8,6 +8,7 @@ export interface DecisionNodeShapeProps {
   nodeType: NodeType
   label: string
   highlightStatus: 'none' | 'entered' | 'active'
+  dimmed: boolean
 }
 
 export type DecisionNodeShape = TLBaseShape<'decisionNode', DecisionNodeShapeProps>
@@ -46,10 +47,11 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
     ),
     label: T.string,
     highlightStatus: T.literalEnum('none', 'entered', 'active'),
+    dimmed: T.boolean,
   }
 
   override getDefaultProps(): DecisionNodeShape['props'] {
-    return { w: 220, h: 72, nodeKey: '', nodeType: 'ACTION', label: '', highlightStatus: 'none' }
+    return { w: 220, h: 72, nodeKey: '', nodeType: 'ACTION', label: '', highlightStatus: 'none', dimmed: false }
   }
 
   override canEdit(): boolean {
@@ -76,15 +78,24 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
     return new Path2D()
   }
 
+  override hideSelectionBoundsFg(_shape: DecisionNodeShape): boolean {
+    return true
+  }
+
+  override hideSelectionBoundsBg(_shape: DecisionNodeShape): boolean {
+    return true
+  }
+
   override component(shape: DecisionNodeShape) {
     const colors = NODE_TYPE_COLORS[shape.props.nodeType]
-    const { highlightStatus } = shape.props
+    const { highlightStatus, dimmed } = shape.props
 
     let borderColor = colors.border
     let borderWidth = 2
     let boxShadow = 'none'
     let transform = 'none'
     let background = colors.background
+    let opacity = 1
 
     if (highlightStatus === 'active') {
       borderWidth = 4
@@ -94,6 +105,10 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
       borderWidth = 2
       boxShadow = `0 0 0 4px ${colors.border}, 0 0 20px 8px ${colors.border}80`
       transform = 'scale(1.03)'
+    }
+
+    if (dimmed) {
+      opacity = 0.35
     }
 
     return (
@@ -115,7 +130,8 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
           overflow: 'hidden',
           boxShadow,
           transform,
-          transition: 'box-shadow 0.2s ease, transform 0.15s ease, border-color 0.2s ease',
+          opacity,
+          transition: 'box-shadow 0.2s ease, transform 0.15s ease, border-color 0.2s ease, opacity 0.2s ease',
         }}
       >
         <div

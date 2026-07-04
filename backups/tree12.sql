@@ -10,7 +10,21 @@
 --
 -- See backups/shared_conventions.txt for the full naming/shape audit this
 -- file was brought into line with (extracted from the 5 real seeded trees).
--- Fixes applied in this pass:
+--
+-- LATEST PASS: removed the structured drug-name fields (preferred_drug,
+-- drug_options, add_on_drug, contraindicated_drugs, drugs_to_avoid,
+-- preferred_drugs) from context_patch/action_payload/global_config — a
+-- separate drug table is planned, so specific drug names no longer live in
+-- tree seed data. Drug-CLASS fields (e.g. "drug_class": "BETA_BLOCKER") are
+-- kept, matching the A/B/C/D class system used elsewhere. Node text_en/
+-- text_vi labels and node_keys are unchanged (they are this tree's actual
+-- node identity, not a "list"). A few INFERENCE nodes now have a NULL
+-- context_patch (T12_INF_SEVERE_DRUG_OPTIONS, T12_INF_MAGNESIUM_SUPPLEMENT,
+-- T12_INF_LABETALOL_MGSO4, T12_INF_NICARDIPINE_MGSO4) since drug names were
+-- their only patch content — this is intentional and not compensated for;
+-- the planned drug table will supply this data going forward.
+--
+-- Fixes applied in an earlier pass:
 --   * T12_START_PREGNANCY_HTN_SEQUENCE.text_en was showing "Hypertensive
 --     Emergency" (a leftover from an unrelated edit) — restored to the
 --     tree's actual entry description.
@@ -392,7 +406,7 @@ HATTr >= 110 mmHg',
             '(Chủ vận chọn lọc alpha-2 giao cảm)
 Methyldopa',
             NULL::jsonb,
-            '{"treatment_preferences": {"preferred_drug": "Methyldopa", "drug_class": "CENTRAL_ALPHA2_AGONIST"}}'::jsonb,
+            '{"treatment_preferences": {"drug_class": "CENTRAL_ALPHA2_AGONIST"}}'::jsonb,
             NULL::jsonb,
             NULL::jsonb,
             NULL::text,
@@ -406,7 +420,7 @@ Methyldopa',
             '(Chẹn Beta)
 Labetalol',
             NULL::jsonb,
-            '{"treatment_preferences": {"preferred_drug": "Labetalol", "drug_class": "BETA_BLOCKER"}}'::jsonb,
+            '{"treatment_preferences": {"drug_class": "BETA_BLOCKER"}}'::jsonb,
             NULL::jsonb,
             NULL::jsonb,
             NULL::text,
@@ -422,7 +436,7 @@ Nifedipine [trừ viên dạng nang]
 hoặc
 Nicardipine',
             NULL::jsonb,
-            '{"treatment_preferences": {"drug_options": ["Nifedipine (trừ viên dạng nang)", "Nicardipine"], "drug_class": "DIHYDROPYRIDINE_CCB"}}'::jsonb,
+            '{"treatment_preferences": {"drug_class": "DIHYDROPYRIDINE_CCB"}}'::jsonb,
             NULL::jsonb,
             NULL::jsonb,
             NULL::text,
@@ -456,7 +470,7 @@ hoặc Esmolol (Chẹn Beta)
 hoặc Hydralazine (Giãn mạch)
 hoặc Urapidil',
             NULL::jsonb,
-            '{"treatment_preferences": {"drug_options": ["Methyldopa (uống)", "Nifedipine (uống, trừ viên dạng nang)", "Nicardipine (uống hoặc TM)", "Labetalol (TM)", "Esmolol (chẹn Beta)", "Hydralazine (giãn mạch)", "Urapidil"]}}'::jsonb,
+            NULL::jsonb,
             NULL::jsonb,
             NULL::jsonb,
             NULL::text,
@@ -495,7 +509,7 @@ hoặc Urapidil',
             'IV nitroglycerin infusion',
             'Truyền Nitroglycerin tĩnh mạch',
             NULL::jsonb,
-            '{"treatment_preferences": {"preferred_drug": "Nitroglycerin", "route": "IV_INFUSION"}}'::jsonb,
+            '{"treatment_preferences": {"route": "IV_INFUSION"}}'::jsonb,
             NULL::jsonb,
             NULL::jsonb,
             NULL::text,
@@ -508,7 +522,7 @@ hoặc Urapidil',
             'Add magnesium',
             'Bổ sung magie',
             NULL::jsonb,
-            '{"treatment_preferences": {"add_on_drug": "Magnesium Sulfate"}}'::jsonb,
+            NULL::jsonb,
             NULL::jsonb,
             NULL::jsonb,
             NULL::text,
@@ -522,7 +536,7 @@ hoặc Urapidil',
             'Labetalol (Chẹn Beta) +
 Magnesium Sulfate',
             NULL::jsonb,
-            '{"treatment_preferences": {"drug_options": ["Labetalol", "Magnesium Sulfate"]}}'::jsonb,
+            NULL::jsonb,
             NULL::jsonb,
             NULL::jsonb,
             NULL::text,
@@ -536,7 +550,7 @@ Magnesium Sulfate',
             'Nicardipine (CKCa) +
 Magnesium Sulfate',
             NULL::jsonb,
-            '{"treatment_preferences": {"drug_options": ["Nicardipine", "Magnesium Sulfate"]}}'::jsonb,
+            NULL::jsonb,
             NULL::jsonb,
             NULL::jsonb,
             NULL::text,
@@ -769,7 +783,7 @@ Tránh Atenolol, Propranolol, Nifedipine
 Ưu tiên dùng Methyldopa / CKCa kéo dài',
             NULL::jsonb,
             NULL::jsonb,
-            '{"action_type": "POSTPARTUM_DRUG_CONTRAINDICATIONS", "contraindicated_drugs": ["Nicardipine"], "drugs_to_avoid": ["Atenolol", "Propranolol", "Nifedipine"], "preferred_drugs": ["Methyldopa", "CKCa tác dụng kéo dài"], "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}'::jsonb,
+            '{"action_type": "POSTPARTUM_DRUG_CONTRAINDICATIONS", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}'::jsonb,
             NULL::jsonb,
             NULL::text,
             NULL::text,
@@ -796,7 +810,7 @@ Tránh Atenolol, Propranolol, Nifedipine
             NULL::jsonb,
             NULL::jsonb,
             NULL::jsonb,
-            '{"kind": "ABBREVIATION_GLOSSARY", "purpose": "Chú giải các chữ viết tắt nhóm thuốc dùng trong Cây 12.", "entries": {"1_A_uc_che_he_RAS": {"label": "A: ức chế hệ RAS", "UCMC": "ức chế men chuyển", "CTTA": "chẹn thụ thể angiotensin II", "ARNI": "chẹn thụ thể Angiotensine-neprisyline"}, "4_B_chen_Beta": {"label": "B: chẹn Beta", "CB": "chẹn Beta"}, "3_C_chen_kenh_Canxi": {"label": "C: chẹn kênh Canxi", "CKCa": "chẹn kênh Canxi"}, "2_D_loi_tieu": {"label": "D: lợi tiểu", "LT": "lợi tiểu"}, "6_MRA": {"label": "MRA: thuốc đối kháng thụ thể mineralocorticoid"}, "5_SGLT2i": {"label": "SGLT2i: dapagliflozin / empagliflozin"}}}'::jsonb,
+            '{"kind": "ABBREVIATION_GLOSSARY", "purpose": "Chú giải các chữ viết tắt nhóm thuốc dùng trong Cây 12.", "entries": {"1_A_uc_che_he_RAS": {"label": "A: ức chế hệ RAS", "UCMC": "ức chế men chuyển", "CTTA": "chẹn thụ thể angiotensin II", "ARNI": "chẹn thụ thể Angiotensine-neprisyline"}, "4_B_chen_Beta": {"label": "B: chẹn Beta", "CB": "chẹn Beta"}, "3_C_chen_kenh_Canxi": {"label": "C: chẹn kênh Canxi", "CKCa": "chẹn kênh Canxi"}, "2_D_loi_tieu": {"label": "D: lợi tiểu", "LT": "lợi tiểu"}, "6_MRA": {"label": "MRA: thuốc đối kháng thụ thể mineralocorticoid"}, "5_SGLT2i": {"label": "SGLT2i: thuốc ức chế đồng vận chuyển Natri-glucose 2"}}}'::jsonb,
             NULL::text,
             NULL::text,
             98
@@ -809,7 +823,7 @@ Tránh Atenolol, Propranolol, Nifedipine
             NULL::jsonb,
             NULL::jsonb,
             NULL::jsonb,
-            '{"kind": "OVERRIDE_NOTE", "purpose": "Chống chỉ định thuốc bắt buộc trong thai kỳ, áp dụng cho mọi lựa chọn thuốc hạ áp trong Cây 12.", "details": {"chong_chi_dinh_uc_che_he_RAS": {"label": "Chống chỉ định các thuốc ức chế hệ RAS gồm", "items": ["Ức chế men chuyển (ƯCMC)", "Chẹn thụ thể Angiotensin II (CTTA)", "Ức chế renin trực tiếp", "thuốc kháng thụ thể Mineralocorticoid (MRA)"]}, "chong_chi_dinh_natri_nitroprusside": {"label": "Chống chỉ định Natri Nitroprusside (Giãn mạch)", "ly_do": "do nguy cơ nhiễm độc xyanua thai nhi"}}}'::jsonb,
+            '{"kind": "OVERRIDE_NOTE", "purpose": "Chống chỉ định thuốc bắt buộc trong thai kỳ, áp dụng cho mọi lựa chọn thuốc hạ áp trong Cây 12.", "details": {"chong_chi_dinh_uc_che_he_RAS": {"label": "Chống chỉ định các thuốc ức chế hệ RAS gồm", "items": ["Ức chế men chuyển (ƯCMC)", "Chẹn thụ thể Angiotensin II (CTTA)", "Ức chế renin trực tiếp", "thuốc kháng thụ thể Mineralocorticoid (MRA)"]}}}'::jsonb,
             NULL::text,
             NULL::text,
             99

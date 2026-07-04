@@ -268,7 +268,7 @@ node_seed (
             NULL::jsonb,
             NULL::jsonb,
             NULL::jsonb,
-            '{"kind":"ABBREVIATION_GLOSSARY","purpose":"Chú giải các chữ viết tắt nhóm thuốc dùng trong Cây 8 (hệ thống A/B/C/D), theo chú thích Bảng 18.","entries":{"1_A_uc_che_he_RAS":{"label":"A: ức chế hệ RAS","UCMC":"ức chế men chuyển","CTTA":"chẹn thụ thể angiotensin II","ARNI":"chẹn thụ thể Angiotensine-neprisyline"},"4_B_chen_Beta":{"label":"B: chẹn Beta","CB":"chẹn Beta"},"3_C_chen_kenh_Canxi":{"label":"C: chẹn kênh Canxi","CKCa":"chẹn kênh Canxi"},"2_D_loi_tieu":{"label":"D: lợi tiểu","LT":"lợi tiểu"},"6_MRA":{"label":"MRA: thuốc đối kháng thụ thể mineralocorticoid"},"5_SGLT2i":{"label":"SGLT2i: dapagliflozin / empagliflozin"}}}'::jsonb,
+            '{"kind":"ABBREVIATION_GLOSSARY","purpose":"Chú giải các chữ viết tắt nhóm thuốc dùng trong Cây 8 (hệ thống A/B/C/D), theo chú thích Bảng 18.","entries":{"1_A_uc_che_he_RAS":{"label":"A: ức chế hệ RAS","UCMC":"ức chế men chuyển","CTTA":"chẹn thụ thể angiotensin II","ARNI":"chẹn thụ thể Angiotensine-neprisyline"},"4_B_chen_Beta":{"label":"B: chẹn Beta","CB":"chẹn Beta"},"3_C_chen_kenh_Canxi":{"label":"C: chẹn kênh Canxi","CKCa":"chẹn kênh Canxi"},"2_D_loi_tieu":{"label":"D: lợi tiểu","LT":"lợi tiểu"},"6_MRA":{"label":"MRA: thuốc đối kháng thụ thể mineralocorticoid"},"5_SGLT2i":{"label":"SGLT2i: thuốc ức chế đồng vận chuyển Natri-glucose 2"}}}'::jsonb,
             NULL::text,
             NULL::text,
             99
