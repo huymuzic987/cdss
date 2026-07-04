@@ -60,7 +60,7 @@
 --   gray   (glossary/legend box) -> GLOBAL (global_config)
 --
 -- Safe to run against an empty/staging database. Wrap in a transaction.
--- Use: docker compose exec -T postgres psql -U cdss -d cdss -f /path/tree8.sql
+-- Use: cmd /c "docker compose exec -T postgres psql -U cdss -d cdss < backups\tree8.sql"
 --
 
 BEGIN;

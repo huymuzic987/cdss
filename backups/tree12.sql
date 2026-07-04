@@ -63,7 +63,7 @@
 --   orange  Action/Output Node   -> ACTION
 --   gray    Global Node         -> GLOBAL
 --
--- Use: docker compose exec -T postgres psql -U cdss -d cdss -f /path/tree12.sql
+-- Use: cmd /c "docker compose exec -T postgres psql -U cdss -d cdss < backups\tree12.sql"
 --
 
 BEGIN;

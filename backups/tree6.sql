@@ -88,7 +88,7 @@
 --      'resistant-hypertension' (unseeded, per docs/cdss/tree-json-dialect.md
 --      §10's list of expected-but-unseeded targets).
 --
--- Use: docker compose exec -T postgres psql -U cdss -d cdss -f /path/tree6.sql
+-- Use: cmd /c "docker compose exec -T postgres psql -U cdss -d cdss < backups\tree6.sql"
 --
 
 BEGIN;
