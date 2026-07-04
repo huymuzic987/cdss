@@ -325,7 +325,6 @@ export function MockPatientSidebar({ isRunning, onStart, onReset }: MockPatientS
         <BpRow label="Measure 3" sbpKey="clinic_3_sbp" dbpKey="clinic_3_dbp" form={form} onChange={setStr} disabled={isRunning} />
 
         <div className="ps-sub-label" style={{ marginTop: 8 }}>Follow-Up Readings</div>
-        <BpRow label="Current" sbpKey="current_clinic_sbp" dbpKey="current_clinic_dbp" form={form} onChange={setStr} disabled={isRunning} />
         <BpRow label="Pre-Lifestyle" sbpKey="pre_lifestyle_clinic_sbp" dbpKey="pre_lifestyle_clinic_dbp" form={form} onChange={setStr} disabled={isRunning} />
 
         <div className="ps-sub-label" style={{ marginTop: 8 }}>Out-of-Office / Ambulatory</div>
@@ -404,17 +403,6 @@ export function MockPatientSidebar({ isRunning, onStart, onReset }: MockPatientS
                 {label}
               </label>
             ))}
-            <label className="ps-radio-label">
-              <input
-                type="radio"
-                name="facility_capability"
-                value=""
-                checked={form.facility_capability === ''}
-                onChange={() => setStr('facility_capability', '')}
-                disabled={isRunning}
-              />
-              Not specified
-            </label>
           </div>
         </div>
 
