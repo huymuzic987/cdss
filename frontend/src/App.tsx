@@ -37,7 +37,6 @@ function App() {
   const [error, setError] = useState<string | null>(null)
 
   // ---- Traversal simulation ----
-  const STEP_MS = 500 // fixed step speed
   const [traversalState, setTraversalState] = useState<TraversalState>('idle')
   const [highlightedNodeKeys, setHighlightedNodeKeys] = useState<Record<string, ReadonlySet<string>>>({})
   const [activeNodeKey, setActiveNodeKey] = useState<string | null>(null)
@@ -50,6 +49,39 @@ function App() {
 
   // Ref to abort in-flight animation
   const cancelRef = useRef(false)
+
+  // ---- Sidebar resizing ----
+  const [rightSidebarWidth, setRightSidebarWidth] = useState(320)
+  const [isResizing, setIsResizing] = useState(false)
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsResizing(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isResizing) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newWidth = window.innerWidth - e.clientX
+      // Constrain sidebar width between 240px and 600px
+      if (newWidth >= 240 && newWidth <= 600) {
+        setRightSidebarWidth(newWidth)
+      }
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing])
 
   // ---- Initial load ----
   useEffect(() => {
@@ -143,6 +175,8 @@ function App() {
       // Call /evaluate
       const { result, partial, error: evalError } = await evaluateTree({ start_tree_key: startTreeKey, input })
 
+      if (cancelRef.current) return
+
       if (evalError) {
         setError(evalError.message)
         setTraversalState('idle')
@@ -152,63 +186,41 @@ function App() {
       const traceLog: TraversalTraceEntry[] =
         result?.traversal_log ?? partial?.partial_run_state?.traversal_log ?? []
 
-      // Step through the trace entries
-      const enteredByTree: Record<string, Set<string>> = {}
-      let currentTreeKey = startTreeKey
-
-      const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
-
-      for (const entry of traceLog) {
-        if (cancelRef.current) break
-
-        // If tree switches, switch the tab first
-        if (entry.tree_key !== currentTreeKey) {
-          currentTreeKey = entry.tree_key
-          setActiveTraversalTreeKey(currentTreeKey)
-
-          // Ensure new tree's graph is loaded
-          await ensureGraph(currentTreeKey)
-          if (cancelRef.current) break
-
-          setActiveTreeKey(currentTreeKey)
-          // Wait a tick for the canvas to mount
-          await sleep(220)
-          if (cancelRef.current) break
-        }
-
-        if (entry.event === 'node_entered') {
-          // Light up this node as active
-          setActiveNodeKey(entry.node_key)
-          setFocusNodeKey(entry.node_key)
-
-          // Track it as entered for the current tree
-          if (!enteredByTree[currentTreeKey]) {
-            enteredByTree[currentTreeKey] = new Set()
-          }
-          enteredByTree[currentTreeKey].add(entry.node_key)
-
-          // Update the full highlighted set for this tree
-          setHighlightedNodeKeys((prev) => ({
-            ...prev,
-            [currentTreeKey]: new Set(enteredByTree[currentTreeKey]),
-          }))
-
-          await sleep(STEP_MS)
-        } else {
-          // candidate_evaluated: brief flash for the candidate
-          if (entry.candidate_node_key) {
-            setActiveNodeKey(entry.candidate_node_key)
-            await sleep(Math.min(STEP_MS * 0.4, 250))
-            if (cancelRef.current) break
-            setActiveNodeKey(null)
-            await sleep(60)
-          }
-        }
-      }
+      // Preload all graphs in the path
+      const uniqueTreeKeys = Array.from(new Set(traceLog.map((entry) => entry.tree_key)))
+      await Promise.all(uniqueTreeKeys.map((key) => ensureGraph(key)))
 
       if (cancelRef.current) return
 
-      setActiveNodeKey(null)
+      // Group all entered nodes by tree key
+      const enteredByTree: Record<string, Set<string>> = {}
+      for (const entry of traceLog) {
+        if (entry.event === 'node_entered') {
+          if (!enteredByTree[entry.tree_key]) {
+            enteredByTree[entry.tree_key] = new Set()
+          }
+          enteredByTree[entry.tree_key].add(entry.node_key)
+        }
+      }
+
+      // Update the full highlighted set for all trees
+      const newHighlights: Record<string, ReadonlySet<string>> = {}
+      for (const [treeKey, nodeSet] of Object.entries(enteredByTree)) {
+        newHighlights[treeKey] = nodeSet
+      }
+      setHighlightedNodeKeys(newHighlights)
+
+      // Find the last entered node
+      const lastEntry = [...traceLog].reverse().find((e) => e.event === 'node_entered')
+      if (lastEntry) {
+        setActiveTraversalTreeKey(lastEntry.tree_key)
+        setActiveTreeKey(lastEntry.tree_key)
+        setActiveNodeKey(lastEntry.node_key)
+        setFocusNodeKey(lastEntry.node_key)
+      } else {
+        setActiveNodeKey(null)
+      }
+
       setTraversalState('done')
 
       // Show result modal
@@ -239,7 +251,7 @@ function App() {
       ? highlightedNodeKeys[activeTreeKey]
       : new Set<string>()
   const visibleActiveNode =
-    isTraversalTab && traversalState === 'running' ? activeNodeKey : null
+    isTraversalTab && traversalState !== 'idle' ? activeNodeKey : null
 
   return (
     <div className="app">
@@ -262,6 +274,7 @@ function App() {
         {/* ---- LEFT: Mock Patient Sidebar ---- */}
         <MockPatientSidebar
           isRunning={traversalState === 'running'}
+          canReset={traversalState !== 'idle'}
           onStart={(treeKey, input) => {
             void handleStartTraversal(treeKey, input)
           }}
@@ -269,7 +282,7 @@ function App() {
         />
 
         {/* ---- CENTER: Canvas ---- */}
-        <div className="canvas-area">
+        <div className="canvas-area" style={{ pointerEvents: isResizing ? 'none' : 'auto' }}>
           {activeGraph ? (
             <TreeCanvas
               key={activeGraph.tree.tree_key}
@@ -284,8 +297,14 @@ function App() {
           )}
         </div>
 
+        {/* ---- RESIZER ---- */}
+        <div
+          className={`sidebar-resizer ${isResizing ? 'resizing' : ''}`}
+          onMouseDown={handleMouseDown}
+        />
+
         {/* ---- RIGHT: Side panels ---- */}
-        <div className="side-panels">
+        <div className="side-panels" style={{ width: rightSidebarWidth }}>
           <Legend />
           <NodeDetailPanel
             node={selectedNode}
