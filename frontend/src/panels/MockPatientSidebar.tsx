@@ -252,11 +252,12 @@ function Toggle({ label, fieldKey, form, onChange, disabled, note }: ToggleProps
 
 interface MockPatientSidebarProps {
   isRunning: boolean
+  canReset: boolean
   onStart: (startTreeKey: string, input: JsonObject) => void
   onReset: () => void
 }
 
-export function MockPatientSidebar({ isRunning, onStart, onReset }: MockPatientSidebarProps) {
+export function MockPatientSidebar({ isRunning, canReset, onStart, onReset }: MockPatientSidebarProps) {
   const [form, setForm] = useState<PatientFormData>(DEFAULT_FORM)
   const [validationError, setValidationError] = useState<string | null>(null)
 
@@ -485,7 +486,7 @@ export function MockPatientSidebar({ isRunning, onStart, onReset }: MockPatientS
           type="button"
           className="ps-btn-reset"
           onClick={handleReset}
-          disabled={!isRunning}
+          disabled={!canReset}
         >
           ✕ Reset
         </button>
