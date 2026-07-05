@@ -12,9 +12,10 @@ The application code is located in the [src/](file:///c:/Users/Huy/Desktop/cdss/
 src/
 ├── api/             # HTTP Client and type definitions for backend communication
 ├── canvas/          # Tldraw whiteboard wrapper and custom shapes
+├── hooks/           # State/logic for tree data, traversal simulation, and sidebar resizing
 ├── layout/          # ELK automatic flowchart layout generator
 ├── panels/          # Inspector panels and visual legend components
-├── App.tsx          # Main layout coordinator
+├── App.tsx          # Main layout coordinator (composes the hooks and renders the layout)
 ├── App.css          # Core layouts and tab bar styles
 ├── index.css        # Global CSS variables and fonts
 └── main.tsx         # React bootstrap mounting point
@@ -40,6 +41,12 @@ Presents detailed information about selected nodes and configurations:
 * **[panels/NodeDetailPanel.tsx](file:///c:/Users/Huy/Desktop/cdss/frontend/src/panels/NodeDetailPanel.tsx)**: Sidebar inspector. It decodes and renders JSON condition definitions, context merge patches, action payloads, and clinical citation references. Includes interactive navigation to jump across decision trees when clicking cross-tree `LINK` node types.
 * **[panels/GlobalConfigPanel.tsx](file:///c:/Users/Huy/Desktop/cdss/frontend/src/panels/GlobalConfigPanel.tsx)**: Shows tree-level configs extracted from `GLOBAL` nodes (such as age limits and risk weights).
 * **[panels/Legend.tsx](file:///c:/Users/Huy/Desktop/cdss/frontend/src/panels/Legend.tsx)**: A visual guide explaining colors associated with each node type.
+
+### 5. Application State (`src/hooks`)
+`App.tsx` composes these hooks and renders the layout; each hook owns one concern:
+* **[hooks/useTreeGraphs.ts](file:///c:/Users/Huy/Desktop/cdss/frontend/src/hooks/useTreeGraphs.ts)**: Tree list/tab state, per-tree graph caching, and cross-tree link navigation.
+* **[hooks/useTraversal.ts](file:///c:/Users/Huy/Desktop/cdss/frontend/src/hooks/useTraversal.ts)**: Drives the mock-patient traversal simulation — calls `/evaluate`, tracks highlighted/active nodes, and surfaces the result modal.
+* **[hooks/useSidebarResize.ts](file:///c:/Users/Huy/Desktop/cdss/frontend/src/hooks/useSidebarResize.ts)**: Drag-to-resize behavior for the right-hand side panel.
 
 ---
 
