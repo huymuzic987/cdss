@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { JsonObject } from '../api/types'
+import { PATIENT_PRESETS } from './patientPresets'
 
 // ---------------------------------------------------------------------------
 // Form state definition
@@ -260,6 +261,7 @@ interface MockPatientSidebarProps {
 export function MockPatientSidebar({ isRunning, canReset, onStart, onReset }: MockPatientSidebarProps) {
   const [form, setForm] = useState<PatientFormData>(DEFAULT_FORM)
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [selectedPresetId, setSelectedPresetId] = useState('')
 
   const setField = <K extends keyof PatientFormData>(key: K, value: PatientFormData[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -269,6 +271,17 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onReset }: Mo
 
   const setStr = (key: keyof PatientFormData, value: string) => setField(key, value as PatientFormData[typeof key])
   const setBool = (key: keyof PatientFormData, value: boolean) => setField(key, value as PatientFormData[typeof key])
+
+  const handlePresetChange = (presetId: string) => {
+    setSelectedPresetId(presetId)
+    setValidationError(null)
+    if (!presetId) {
+      setForm(DEFAULT_FORM)
+      return
+    }
+    const preset = PATIENT_PRESETS.find((p) => p.id === presetId)
+    if (preset) setForm({ ...DEFAULT_FORM, ...preset.data })
+  }
 
   const handleStart = () => {
     // Validate essential minimum data to prevent backend missing path errors
@@ -298,6 +311,7 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onReset }: Mo
   const handleReset = () => {
     setForm(DEFAULT_FORM)
     setValidationError(null)
+    setSelectedPresetId('')
     onReset()
   }
 
@@ -312,6 +326,29 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onReset }: Mo
             <div className="ps-header-sub">Fill in fields to simulate traversal</div>
           </div>
         </div>
+      </div>
+
+      {/* ---- Preset patient selector (sticky below header) ---- */}
+      <div className="ps-starting-tree">
+        <label className="ps-field-label" htmlFor="preset-select">Preset Patient</label>
+        <select
+          id="preset-select"
+          className="ps-select"
+          value={selectedPresetId}
+          onChange={(e) => handlePresetChange(e.target.value)}
+          disabled={isRunning}
+        >
+          <option value="">— Select a preset —</option>
+          {Array.from(new Set(PATIENT_PRESETS.map((p) => p.category))).map((category) => (
+            <optgroup key={category} label={category}>
+              {PATIENT_PRESETS.filter((p) => p.category === category).map((p) => (
+                <option key={p.id} value={p.id} title={p.description}>
+                  {p.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
       </div>
 
       {/* ---- Scrollable form body ---- */}
