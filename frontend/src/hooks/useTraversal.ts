@@ -27,8 +27,60 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
   const [modalPartial, setModalPartial] = useState<ApiErrorResponse | null>(null)
   const [showModal, setShowModal] = useState(false)
 
+  // Manual step-through mode: the full trace is fetched up front, but only
+  // revealed one node_entered entry at a time, on each canvas click.
+  const [manualMode, setManualMode] = useState(false)
+  const [manualStepIndex, setManualStepIndex] = useState(0)
+  const manualEntriesRef = useRef<TraversalTraceEntry[]>([])
+  const manualFinalRef = useRef<{ result: EvaluationResponse | null; partial: ApiErrorResponse | null }>({
+    result: null,
+    partial: null,
+  })
+
   // Ref to abort in-flight animation
   const cancelRef = useRef(false)
+
+  // Shared: fire /evaluate, resolve the trace log, and preload every graph
+  // the trace touches. Returns null (after setting error state) on hard failure.
+  const runEvaluation = useCallback(
+    async (
+      startTreeKey: string,
+      input: JsonObject,
+    ): Promise<{ result: EvaluationResponse | null; partial: ApiErrorResponse | null; traceLog: TraversalTraceEntry[] } | null> => {
+      await ensureGraph(startTreeKey)
+      if (cancelRef.current) return null
+      setActiveTreeKey(startTreeKey)
+
+      const { result, partial, error: evalError } = await evaluateTree({ start_tree_key: startTreeKey, input })
+      if (cancelRef.current) return null
+
+      if (evalError) {
+        setError(evalError.message)
+        setTraversalState('idle')
+        return null
+      }
+
+      const traceLog: TraversalTraceEntry[] =
+        result?.traversal_log ?? partial?.partial_run_state?.traversal_log ?? []
+
+      const uniqueTreeKeys = Array.from(new Set(traceLog.map((entry) => entry.tree_key)))
+      await Promise.all(uniqueTreeKeys.map((key) => ensureGraph(key)))
+      if (cancelRef.current) return null
+
+      return { result, partial, traceLog }
+    },
+    [ensureGraph, setActiveTreeKey, setError],
+  )
+
+  const finish = useCallback(
+    (result: EvaluationResponse | null, partial: ApiErrorResponse | null) => {
+      setTraversalState('done')
+      setModalResult(result)
+      setModalPartial(partial)
+      setShowModal(true)
+    },
+    [],
+  )
 
   const handleStartTraversal = useCallback(
     async (startTreeKey: string, input: JsonObject): Promise<void> => {
@@ -39,31 +91,11 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
       setActiveTraversalTreeKey(startTreeKey)
       setError(null)
       setShowModal(false)
+      setManualMode(false)
 
-      // Ensure starting graph is loaded & switch to its tab
-      await ensureGraph(startTreeKey)
-      if (cancelRef.current) return
-      setActiveTreeKey(startTreeKey)
-
-      // Call /evaluate
-      const { result, partial, error: evalError } = await evaluateTree({ start_tree_key: startTreeKey, input })
-
-      if (cancelRef.current) return
-
-      if (evalError) {
-        setError(evalError.message)
-        setTraversalState('idle')
-        return
-      }
-
-      const traceLog: TraversalTraceEntry[] =
-        result?.traversal_log ?? partial?.partial_run_state?.traversal_log ?? []
-
-      // Preload all graphs in the path
-      const uniqueTreeKeys = Array.from(new Set(traceLog.map((entry) => entry.tree_key)))
-      await Promise.all(uniqueTreeKeys.map((key) => ensureGraph(key)))
-
-      if (cancelRef.current) return
+      const evaluation = await runEvaluation(startTreeKey, input)
+      if (!evaluation) return
+      const { result, partial, traceLog } = evaluation
 
       // Group all entered nodes by tree key
       const enteredByTree: Record<string, Set<string>> = {}
@@ -94,15 +126,69 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
         setActiveNodeKey(null)
       }
 
-      setTraversalState('done')
-
-      // Show result modal
-      setModalResult(result)
-      setModalPartial(partial)
-      setShowModal(true)
+      finish(result, partial)
     },
-    [ensureGraph, setActiveTreeKey, setFocusNodeKey, setError],
+    [runEvaluation, setActiveTreeKey, setFocusNodeKey, setError, finish],
   )
+
+  const handleStartManualTraversal = useCallback(
+    async (startTreeKey: string, input: JsonObject): Promise<void> => {
+      cancelRef.current = false
+      setTraversalState('running')
+      setHighlightedNodeKeys({})
+      setActiveNodeKey(null)
+      setActiveTraversalTreeKey(startTreeKey)
+      setError(null)
+      setShowModal(false)
+      setManualMode(false)
+      setManualStepIndex(0)
+
+      const evaluation = await runEvaluation(startTreeKey, input)
+      if (!evaluation) return
+      const { result, partial, traceLog } = evaluation
+
+      const enteredEntries = traceLog.filter((entry) => entry.event === 'node_entered')
+      manualEntriesRef.current = enteredEntries
+      manualFinalRef.current = { result, partial }
+
+      if (enteredEntries.length === 0) {
+        finish(result, partial)
+        return
+      }
+
+      setManualStepIndex(0)
+      setManualMode(true)
+    },
+    [runEvaluation, finish, setError],
+  )
+
+  const handleManualStep = useCallback(() => {
+    if (!manualMode) return
+    const entries = manualEntriesRef.current
+    if (manualStepIndex >= entries.length) return
+
+    const entry = entries[manualStepIndex]
+
+    setHighlightedNodeKeys((prev) => {
+      const next = { ...prev }
+      const existing = next[entry.tree_key] ? new Set(next[entry.tree_key]) : new Set<string>()
+      existing.add(entry.node_key)
+      next[entry.tree_key] = existing
+      return next
+    })
+    setActiveTraversalTreeKey(entry.tree_key)
+    setActiveTreeKey(entry.tree_key)
+    setActiveNodeKey(entry.node_key)
+    setFocusNodeKey(entry.node_key)
+
+    const nextIndex = manualStepIndex + 1
+    setManualStepIndex(nextIndex)
+
+    if (nextIndex >= entries.length) {
+      setManualMode(false)
+      finish(manualFinalRef.current.result, manualFinalRef.current.partial)
+    }
+  }, [manualMode, manualStepIndex, setActiveTreeKey, setFocusNodeKey, finish])
 
   const handleReset = () => {
     cancelRef.current = true
@@ -112,7 +198,13 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
     setActiveTraversalTreeKey(null)
     setShowModal(false)
     setFocusNodeKey(null)
+    setManualMode(false)
+    setManualStepIndex(0)
+    manualEntriesRef.current = []
   }
+
+  const manualStepInfo =
+    manualMode ? { current: manualStepIndex, total: manualEntriesRef.current.length } : null
 
   return {
     traversalState,
@@ -124,6 +216,10 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
     showModal,
     setShowModal,
     handleStartTraversal,
+    handleStartManualTraversal,
+    handleManualStep,
+    manualMode,
+    manualStepInfo,
     handleReset,
   }
 }
