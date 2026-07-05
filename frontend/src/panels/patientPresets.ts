@@ -14,14 +14,11 @@ const FOLLOW_UP = 'Follow-Up Visits'
 
 const MEDICATION_TARGET: Pick<
   PatientFormData,
-  'has_active_bp_target' | 'target_sbp_upper' | 'target_sbp_lower' | 'target_sbp_or_lower' | 'target_dbp_upper' | 'target_source'
+  'has_active_bp_target' | 'target_sbp_upper' | 'target_dbp_upper'
 > = {
   has_active_bp_target: true,
   target_sbp_upper: '130',
-  target_sbp_lower: '120',
-  target_sbp_or_lower: true,
   target_dbp_upper: '80',
-  target_source: 'TREE_3_GENERIC',
 }
 
 export const PATIENT_PRESETS: PatientPreset[] = [

@@ -31,6 +31,7 @@ export interface PatientFormData {
   // Demographics
   age: string
   risk_factor_count: string
+  is_pregnant: boolean
   // Comorbidities
   has_coronary_artery_disease: boolean
   has_type_2_diabetes: boolean
@@ -51,10 +52,7 @@ export interface PatientFormData {
   // Active BP target
   has_active_bp_target: boolean
   target_sbp_upper: string
-  target_sbp_lower: string
-  target_sbp_or_lower: boolean
   target_dbp_upper: string
-  target_source: string
 }
 
 const DEFAULT_FORM: PatientFormData = {
@@ -69,6 +67,7 @@ const DEFAULT_FORM: PatientFormData = {
   bp_24h_sbp: '', bp_24h_dbp: '',
   age: '',
   risk_factor_count: '',
+  is_pregnant: false,
   has_coronary_artery_disease: false,
   has_type_2_diabetes: false,
   has_heart_failure: false,
@@ -86,10 +85,7 @@ const DEFAULT_FORM: PatientFormData = {
   medication_follow_up_stage: '',
   has_active_bp_target: false,
   target_sbp_upper: '',
-  target_sbp_lower: '',
-  target_sbp_or_lower: false,
   target_dbp_upper: '',
-  target_source: '',
 }
 
 // ---------------------------------------------------------------------------
@@ -135,6 +131,7 @@ function formToPayload(form: PatientFormData): JsonObject {
   set('age', num(form.age))
   set('risk_factor_count', num(form.risk_factor_count))
   // Booleans — must be explicitly included as true or false so backend JSON path evaluation doesn't fail
+  out['is_pregnant'] = form.is_pregnant
   out['has_coronary_artery_disease'] = form.has_coronary_artery_disease
   out['has_type_2_diabetes'] = form.has_type_2_diabetes
   out['has_heart_failure'] = form.has_heart_failure
@@ -152,18 +149,11 @@ function formToPayload(form: PatientFormData): JsonObject {
   out['is_lifestyle_follow_up'] = form.is_lifestyle_follow_up
   out['is_medication_follow_up'] = form.is_medication_follow_up
   if (form.medication_follow_up_stage) out['medication_follow_up_stage'] = form.medication_follow_up_stage
-  // Active BP target
+  // Active BP target — SBP/DBP must each be below the given threshold
   if (form.has_active_bp_target) {
     const target: JsonObject = {}
-    const sbp: JsonObject = {}
-    const dbp: JsonObject = {}
-    if (form.target_sbp_upper) sbp['upper_exclusive_mmhg'] = num(form.target_sbp_upper)!
-    if (form.target_sbp_lower) sbp['lower_reference_mmhg'] = num(form.target_sbp_lower)!
-    if (form.target_sbp_or_lower) sbp['or_lower'] = true
-    if (form.target_dbp_upper) dbp['upper_exclusive_mmhg'] = num(form.target_dbp_upper)!
-    if (Object.keys(sbp).length) target['sbp'] = sbp
-    if (Object.keys(dbp).length) target['dbp'] = dbp
-    if (form.target_source) target['source'] = form.target_source
+    if (form.target_sbp_upper) target['sbp'] = { upper_exclusive_mmhg: num(form.target_sbp_upper)! }
+    if (form.target_dbp_upper) target['dbp'] = { upper_exclusive_mmhg: num(form.target_dbp_upper)! }
     out['active_bp_target'] = target
   }
 
@@ -255,10 +245,11 @@ interface MockPatientSidebarProps {
   isRunning: boolean
   canReset: boolean
   onStart: (startTreeKey: string, input: JsonObject) => void
+  onManualStart: (startTreeKey: string, input: JsonObject) => void
   onReset: () => void
 }
 
-export function MockPatientSidebar({ isRunning, canReset, onStart, onReset }: MockPatientSidebarProps) {
+export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart, onReset }: MockPatientSidebarProps) {
   const [form, setForm] = useState<PatientFormData>(DEFAULT_FORM)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [selectedPresetId, setSelectedPresetId] = useState('')
@@ -283,8 +274,9 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onReset }: Mo
     if (preset) setForm({ ...DEFAULT_FORM, ...preset.data })
   }
 
-  const handleStart = () => {
-    // Validate essential minimum data to prevent backend missing path errors
+  /** Validate essential minimum data to prevent backend missing path errors.
+   * Returns the built payload, or null (after flagging validationError) if invalid. */
+  const validateAndBuildPayload = (): JsonObject | null => {
     const s1 = parseFloat(form.clinic_1_sbp)
     const d1 = parseFloat(form.clinic_1_dbp)
     const ageVal = parseFloat(form.age)
@@ -292,20 +284,31 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onReset }: Mo
 
     if (!form.clinic_1_sbp || !form.clinic_1_dbp || isNaN(s1) || isNaN(d1) || s1 <= 0 || d1 <= 0) {
       setValidationError('Clinic Measure 1 SBP and DBP are required positive numbers.')
-      return
+      return null
     }
     if (!form.age || isNaN(ageVal) || ageVal <= 0) {
       setValidationError('Age is required and must be a valid positive number.')
-      return
+      return null
     }
     if (!form.risk_factor_count || isNaN(riskVal) || riskVal < 0) {
       setValidationError('Risk Factor Count is required and must be 0 or higher.')
-      return
+      return null
     }
 
     setValidationError(null)
-    const payload = formToPayload(form)
+    return formToPayload(form)
+  }
+
+  const handleStart = () => {
+    const payload = validateAndBuildPayload()
+    if (!payload) return
     onStart('hypertension-diagnosis', payload)
+  }
+
+  const handleManualStart = () => {
+    const payload = validateAndBuildPayload()
+    if (!payload) return
+    onManualStart('hypertension-diagnosis', payload)
   }
 
   const handleReset = () => {
@@ -402,6 +405,10 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onReset }: Mo
           </div>
         </div>
 
+        <div className="ps-toggles">
+          <Toggle label="Pregnant" fieldKey="is_pregnant" form={form} onChange={setBool} disabled={isRunning} />
+        </div>
+
         {/* ========== SECTION 3: Comorbidities ========== */}
         <SectionHeader label="Comorbidities & Clinical Flags" icon="🏥" />
 
@@ -421,6 +428,43 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onReset }: Mo
 
         {/* ========== SECTION 4: Care Setting ========== */}
         <SectionHeader label="Care Setting & Follow-Up" icon="⚙️" />
+
+        {/* Active BP Target — kept up top since it drives the follow-up comparison below */}
+        <div className="ps-toggles">
+          <Toggle label="Has Active BP Target" fieldKey="has_active_bp_target" form={form} onChange={setBool} disabled={isRunning} note="Patient already on therapy" />
+        </div>
+
+        {form.has_active_bp_target && (
+          <div className="ps-bp-target-box">
+            <div className="ps-field-hint" style={{ display: 'block', marginBottom: 6 }}>
+              Target is reached when SBP is below the SBP number AND DBP is below the DBP number.
+            </div>
+            <div className="ps-field-row">
+              <div className="ps-field">
+                <label className="ps-field-label">SBP Target (mmHg, less than)</label>
+                <input
+                  className="ps-num-input"
+                  type="number" min={60} max={300}
+                  placeholder="e.g. 130"
+                  value={form.target_sbp_upper}
+                  onChange={(e) => setStr('target_sbp_upper', e.target.value)}
+                  disabled={isRunning}
+                />
+              </div>
+              <div className="ps-field">
+                <label className="ps-field-label">DBP Target (mmHg, less than)</label>
+                <input
+                  className="ps-num-input"
+                  type="number" min={40} max={200}
+                  placeholder="e.g. 80"
+                  value={form.target_dbp_upper}
+                  onChange={(e) => setStr('target_dbp_upper', e.target.value)}
+                  disabled={isRunning}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="ps-field">
           <label className="ps-field-label">Facility Capability</label>
@@ -473,29 +517,6 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onReset }: Mo
           </div>
         )}
 
-        {/* Active BP Target */}
-        <div className="ps-toggles" style={{ marginTop: 8 }}>
-          <Toggle label="Has Active BP Target" fieldKey="has_active_bp_target" form={form} onChange={setBool} disabled={isRunning} note="Patient already on therapy" />
-        </div>
-
-        {form.has_active_bp_target && (
-          <div className="ps-bp-target-box">
-            <div className="ps-sub-label">SBP Target</div>
-            <div className="ps-bp-target-row">
-              <input className="ps-bp-input" type="number" placeholder="Upper (excl.)" value={form.target_sbp_upper} onChange={(e) => setStr('target_sbp_upper', e.target.value)} disabled={isRunning} />
-              <input className="ps-bp-input" type="number" placeholder="Lower (ref.)" value={form.target_sbp_lower} onChange={(e) => setStr('target_sbp_lower', e.target.value)} disabled={isRunning} />
-            </div>
-            <label className="ps-radio-label" style={{ marginTop: 4 }}>
-              <input type="checkbox" checked={form.target_sbp_or_lower} onChange={(e) => setBool('target_sbp_or_lower', e.target.checked)} disabled={isRunning} />
-              or lower
-            </label>
-            <div className="ps-sub-label" style={{ marginTop: 6 }}>DBP Target</div>
-            <input className="ps-bp-input" type="number" placeholder="Upper (excl.) mmHg" value={form.target_dbp_upper} onChange={(e) => setStr('target_dbp_upper', e.target.value)} disabled={isRunning} style={{ width: '100%' }} />
-            <div className="ps-sub-label" style={{ marginTop: 6 }}>Source Tag</div>
-            <input className="ps-text-input" type="text" placeholder="e.g. TREE_3_GENERIC" value={form.target_source} onChange={(e) => setStr('target_source', e.target.value)} disabled={isRunning} />
-          </div>
-        )}
-
         {/* Spacer at bottom so content doesn't hide under footer */}
         <div style={{ height: 16 }} />
       </div>
@@ -518,6 +539,14 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onReset }: Mo
           ) : (
             '▶  Start Traversal'
           )}
+        </button>
+        <button
+          type="button"
+          className="ps-btn-manual"
+          onClick={handleManualStart}
+          disabled={isRunning}
+        >
+          🖱  Manual Traverse
         </button>
         <button
           type="button"
