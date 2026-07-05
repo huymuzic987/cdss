@@ -12,7 +12,7 @@ from cdss.api.schemas import (
     FollowUpEvaluationRequest,
 )
 from cdss.core.config import Settings, get_settings
-from cdss.domain.decision_tree import TreeGraphRepository, walk_tree
+from cdss.domain.decision_tree import MissingRuntimePath, TreeGraphRepository, walk_tree
 
 router = APIRouter(tags=["evaluation"])
 
