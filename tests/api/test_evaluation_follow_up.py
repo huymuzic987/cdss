@@ -1,4 +1,4 @@
-"""API tests for the derive-then-compare follow-up evaluation endpoint."""
+"""API tests for the medication follow-up evaluation endpoint."""
 
 from __future__ import annotations
 
@@ -22,12 +22,12 @@ from cdss.domain.decision_tree import (
 )
 from cdss.main import create_app
 
-DIAGNOSIS_TREE_KEY = "hypertension-diagnosis"
+MEDICATION_FOLLOW_UP_TREE_KEY = "treatment-threshold-and-bp-target"
 ESSENTIAL_TREE_KEY = "essential-treatment-strategy"
-DERIVED_BP_TARGET = {
+ACTIVE_BP_TARGET = {
     "sbp": {"upper_exclusive_mmhg": 130},
     "dbp": {"upper_exclusive_mmhg": 80},
-    "source": "DERIVED_FROM_DIAGNOSIS_FACTS",
+    "source": "CALLER_SUPPLIED",
 }
 
 
@@ -52,7 +52,7 @@ class ApiTestContext:
 
 @pytest.fixture
 def api_context() -> Iterator[ApiTestContext]:
-    repository = RecordingRepository([_diagnosis_graph(), _essential_treatment_graph()])
+    repository = RecordingRepository([_tree3_graph(), _essential_treatment_graph()])
     settings = Settings(
         _env_file=None,  # type: ignore[call-arg]
         app_env="test",
@@ -65,20 +65,15 @@ def api_context() -> Iterator[ApiTestContext]:
         yield ApiTestContext(client=client, repository=repository)
 
 
-def test_follow_up_derives_target_then_reports_target_reached(
+def test_follow_up_restores_caller_supplied_target_and_reports_target_reached(
     api_context: ApiTestContext,
 ) -> None:
     response = api_context.client.post(
         "/evaluate/follow-up",
         json={
-            "diagnosis_input": {
-                # Deliberately claims to be a follow-up; the endpoint must
-                # force is_medication_follow_up=false for the derivation call
-                # so it re-derives the target instead of trying to restore one.
-                "is_medication_follow_up": True,
-            },
             "facility_capability": "LIMITED_RESOURCES",
             "medication_follow_up_stage": "INITIAL_REGIMEN",
+            "active_bp_target": ACTIVE_BP_TARGET,
             "current_clinic_sbp": 125,
             "current_clinic_dbp": 75,
         },
@@ -86,20 +81,21 @@ def test_follow_up_derives_target_then_reports_target_reached(
 
     assert response.status_code == 200
     body = response.json()
-    assert body["active_bp_target"] == DERIVED_BP_TARGET
-    assert body["derivation"]["context"]["treatment"]["bp_target"] == DERIVED_BP_TARGET
-    assert body["comparison"]["context"]["treatment"]["bp_target"] == DERIVED_BP_TARGET
-    assert body["comparison"]["traversal_log"][-1]["node_key"] == "target-reached"
-    assert api_context.repository.read_tree_keys == [DIAGNOSIS_TREE_KEY, ESSENTIAL_TREE_KEY]
+    assert body["context"]["treatment"]["bp_target"] == ACTIVE_BP_TARGET
+    assert body["traversal_log"][-1]["node_key"] == "target-reached"
+    assert api_context.repository.read_tree_keys == [
+        MEDICATION_FOLLOW_UP_TREE_KEY,
+        ESSENTIAL_TREE_KEY,
+    ]
 
 
 def test_follow_up_reports_target_not_reached(api_context: ApiTestContext) -> None:
     response = api_context.client.post(
         "/evaluate/follow-up",
         json={
-            "diagnosis_input": {},
             "facility_capability": "LIMITED_RESOURCES",
             "medication_follow_up_stage": "INITIAL_REGIMEN",
+            "active_bp_target": ACTIVE_BP_TARGET,
             "current_clinic_sbp": 145,
             "current_clinic_dbp": 95,
         },
@@ -107,25 +103,7 @@ def test_follow_up_reports_target_not_reached(api_context: ApiTestContext) -> No
 
     assert response.status_code == 200
     body = response.json()
-    assert body["comparison"]["traversal_log"][-1]["node_key"] == "target-not-reached"
-
-
-def test_follow_up_without_derived_target_returns_422(api_context: ApiTestContext) -> None:
-    response = api_context.client.post(
-        "/evaluate/follow-up",
-        json={
-            "diagnosis_input": {"normotensive": True},
-            "facility_capability": "LIMITED_RESOURCES",
-            "medication_follow_up_stage": "INITIAL_REGIMEN",
-            "current_clinic_sbp": 125,
-            "current_clinic_dbp": 75,
-        },
-    )
-
-    assert response.status_code == 422
-    body = response.json()
-    assert body["code"] == "missing_runtime_path"
-    assert body["details"]["reason"] == "bp_target_not_derived"
+    assert body["traversal_log"][-1]["node_key"] == "target-not-reached"
 
 
 def test_follow_up_with_unknown_facility_capability_returns_422(
@@ -134,9 +112,9 @@ def test_follow_up_with_unknown_facility_capability_returns_422(
     response = api_context.client.post(
         "/evaluate/follow-up",
         json={
-            "diagnosis_input": {},
             "facility_capability": "UNKNOWN_FACILITY",
             "medication_follow_up_stage": "INITIAL_REGIMEN",
+            "active_bp_target": ACTIVE_BP_TARGET,
             "current_clinic_sbp": 125,
             "current_clinic_dbp": 75,
         },
@@ -144,15 +122,15 @@ def test_follow_up_with_unknown_facility_capability_returns_422(
 
     assert response.status_code == 422
     body = response.json()
-    assert body["code"] == "missing_runtime_path"
-    assert body["details"]["reason"] == "unknown_facility_capability"
+    assert body["code"] == "no_matching_transition"
 
 
 @pytest.mark.parametrize(
     "payload",
     [
+        {"medication_follow_up_stage": "INITIAL_REGIMEN", "active_bp_target": ACTIVE_BP_TARGET, "current_clinic_sbp": 1, "current_clinic_dbp": 1},
+        {"facility_capability": "LIMITED_RESOURCES", "active_bp_target": ACTIVE_BP_TARGET, "current_clinic_sbp": 1, "current_clinic_dbp": 1},
         {"facility_capability": "LIMITED_RESOURCES", "medication_follow_up_stage": "INITIAL_REGIMEN", "current_clinic_sbp": 1, "current_clinic_dbp": 1},
-        {"diagnosis_input": {}, "medication_follow_up_stage": "INITIAL_REGIMEN", "current_clinic_sbp": 1, "current_clinic_dbp": 1},
     ],
 )
 def test_malformed_follow_up_request_returns_stable_validation_error(
@@ -166,53 +144,15 @@ def test_malformed_follow_up_request_returns_stable_validation_error(
     assert body["code"] == "invalid_request"
 
 
-def _diagnosis_graph() -> TreeGraph:
-    tree = _tree(100, DIAGNOSIS_TREE_KEY)
+def _tree3_graph() -> TreeGraph:
+    """Mirrors the real Tree 3 medication-follow-up branch: restore the
+    caller-supplied active_bp_target into context, then route to the
+    facility's treatment-strategy tree."""
+    tree = _tree(100, MEDICATION_FOLLOW_UP_TREE_KEY)
     start = _node(tree, 101, "start", NodeType.START)
-    normal_bp = _node(
+    restore = _node(
         tree,
         102,
-        "normal-bp",
-        NodeType.END,
-        condition_definition={"op": "exists", "path": "input.normotensive"},
-    )
-    restore = _node(
-        tree,
-        103,
-        "restore-target-should-not-run",
-        NodeType.END,
-        condition_definition={
-            "all": [{"op": "eq", "path": "input.is_medication_follow_up", "value": True}]
-        },
-        context_patch={"treatment": {"bp_target": {"source": "SHOULD_NOT_BE_USED"}}},
-    )
-    derive = _node(
-        tree,
-        104,
-        "derive-target",
-        NodeType.END,
-        condition_definition={
-            "all": [{"op": "eq", "path": "input.is_medication_follow_up", "value": False}]
-        },
-        context_patch={"treatment": {"bp_target": DERIVED_BP_TARGET}},
-    )
-    return _graph(
-        tree,
-        [start, normal_bp, restore, derive],
-        [
-            _edge(tree, 109, start, normal_bp, 1),
-            _edge(tree, 110, start, restore, 2),
-            _edge(tree, 111, start, derive, 3),
-        ],
-    )
-
-
-def _essential_treatment_graph() -> TreeGraph:
-    tree = _tree(200, ESSENTIAL_TREE_KEY)
-    start = _node(tree, 201, "start", NodeType.START)
-    restore = _node(
-        tree,
-        202,
         "restore-active-bp-target",
         NodeType.INFERENCE,
         context_patch={
@@ -226,9 +166,30 @@ def _essential_treatment_graph() -> TreeGraph:
             ]
         },
     )
+    link_essential = _node(
+        tree,
+        103,
+        "link-essential",
+        NodeType.LINK,
+        condition_definition={"op": "eq", "path": "input.facility_capability", "value": "LIMITED_RESOURCES"},
+        link_target_tree_key=ESSENTIAL_TREE_KEY,
+    )
+    return _graph(
+        tree,
+        [start, restore, link_essential],
+        [
+            _edge(tree, 109, start, restore, 1),
+            _edge(tree, 110, restore, link_essential, 1),
+        ],
+    )
+
+
+def _essential_treatment_graph() -> TreeGraph:
+    tree = _tree(200, ESSENTIAL_TREE_KEY)
+    start = _node(tree, 201, "start", NodeType.START)
     reached = _node(
         tree,
-        203,
+        202,
         "target-reached",
         NodeType.END,
         condition_definition={
@@ -246,14 +207,13 @@ def _essential_treatment_graph() -> TreeGraph:
             ]
         },
     )
-    not_reached = _node(tree, 204, "target-not-reached", NodeType.END)
+    not_reached = _node(tree, 203, "target-not-reached", NodeType.END)
     return _graph(
         tree,
-        [start, restore, reached, not_reached],
+        [start, reached, not_reached],
         [
-            _edge(tree, 209, start, restore, 1),
-            _edge(tree, 210, restore, reached, 1),
-            _edge(tree, 211, restore, not_reached, 2),
+            _edge(tree, 209, start, reached, 1),
+            _edge(tree, 210, start, not_reached, 2),
         ],
     )
 

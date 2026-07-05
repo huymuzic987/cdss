@@ -54,31 +54,11 @@ class EvaluationResponse(ApiModel):
 
 
 class FollowUpEvaluationRequest(ApiModel):
-    diagnosis_input: JsonObject
     facility_capability: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
     medication_follow_up_stage: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+    active_bp_target: JsonObject
     current_clinic_sbp: float
     current_clinic_dbp: float
-
-
-class FollowUpEvaluationResponse(ApiModel):
-    active_bp_target: JsonObject
-    derivation: EvaluationResponse
-    comparison: EvaluationResponse
-
-    @classmethod
-    def from_results(
-        cls,
-        *,
-        active_bp_target: JsonObject,
-        derivation: TraversalResult,
-        comparison: TraversalResult,
-    ) -> FollowUpEvaluationResponse:
-        return cls(
-            active_bp_target=active_bp_target,
-            derivation=EvaluationResponse.from_result(derivation),
-            comparison=EvaluationResponse.from_result(comparison),
-        )
 
 
 class PartialRunStateResponse(ApiModel):

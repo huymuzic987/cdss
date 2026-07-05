@@ -10,22 +10,16 @@ from cdss.api.schemas import (
     EvaluationRequest,
     EvaluationResponse,
     FollowUpEvaluationRequest,
-    FollowUpEvaluationResponse,
 )
 from cdss.core.config import Settings, get_settings
-from cdss.domain.decision_tree import MissingRuntimePath, TreeGraphRepository, walk_tree
+from cdss.domain.decision_tree import TreeGraphRepository, walk_tree
 
 router = APIRouter(tags=["evaluation"])
 
-# The diagnosis tree that re-derives a patient's active BP target from
-# diagnosis-time facts (age, comorbidities, the clinic readings that
-# established the hypertension grade), and the two treatment trees a
-# follow-up comparison is run against depending on facility resources.
-_DIAGNOSIS_TREE_KEY = "hypertension-diagnosis"
-_FACILITY_TREATMENT_TREE_KEYS = {
-    "LIMITED_RESOURCES": "essential-treatment-strategy",
-    "FULL_RESOURCES": "optimal-treatment-strategy",
-}
+# Tree 3 owns follow-up routing: given an already-known active_bp_target, it
+# restores that target into context and links onward to the facility's
+# treatment-strategy tree (essential or optimal) based on input.facility_capability.
+_MEDICATION_FOLLOW_UP_TREE_KEY = "treatment-threshold-and-bp-target"
 
 
 @router.post(
@@ -55,7 +49,7 @@ def evaluate(
 
 @router.post(
     "/evaluate/follow-up",
-    response_model=FollowUpEvaluationResponse,
+    response_model=EvaluationResponse,
     responses={
         404: {"model": EvaluationErrorResponse},
         422: {"model": EvaluationErrorResponse},
@@ -67,54 +61,20 @@ def evaluate_follow_up(
     request: FollowUpEvaluationRequest,
     repository: Annotated[TreeGraphRepository, Depends(get_tree_graph_repository)],
     settings: Annotated[Settings, Depends(get_settings)],
-) -> FollowUpEvaluationResponse:
-    """Re-derive a patient's active BP target from diagnosis-time facts, then
-    compare it against today's follow-up reading. Neither call persists
-    anything; the target is recomputed fresh from the same facts every time
-    instead of being trusted as caller-supplied state.
+) -> EvaluationResponse:
+    """Compare today's follow-up reading against an already-known active BP
+    target. The target is caller-supplied (it was established at diagnosis
+    or the last lifestyle/medication follow-up) — this endpoint does not
+    re-derive it, it just restores it into context via Tree 3 and lets Tree 3
+    route to the facility's treatment-strategy tree.
     """
-    derivation_graph = repository.get_tree(_DIAGNOSIS_TREE_KEY)
-    derivation = walk_tree(
-        derivation_graph,
-        {
-            **request.diagnosis_input,
-            "is_medication_follow_up": False,
-            "facility_capability": request.facility_capability,
-        },
-        max_steps=settings.cdss_max_steps,
-        repository=repository,
-    )
-
-    treatment_context = derivation.context.get("treatment")
-    bp_target = treatment_context.get("bp_target") if isinstance(treatment_context, dict) else None
-    if not isinstance(bp_target, dict):
-        raise MissingRuntimePath(
-            message=(
-                "Derivation traversal completed without producing "
-                "context.treatment.bp_target; the diagnosis input may not "
-                "represent a hypertensive patient."
-            ),
-            tree_key=_DIAGNOSIS_TREE_KEY,
-            details={"reason": "bp_target_not_derived", "path": "context.treatment.bp_target"},
-        )
-
-    comparison_tree_key = _FACILITY_TREATMENT_TREE_KEYS.get(request.facility_capability)
-    if comparison_tree_key is None:
-        raise MissingRuntimePath(
-            message=(
-                f"Unknown facility_capability '{request.facility_capability}'; "
-                f"expected one of {sorted(_FACILITY_TREATMENT_TREE_KEYS)}."
-            ),
-            details={"reason": "unknown_facility_capability"},
-        )
-
-    comparison_graph = repository.get_tree(comparison_tree_key)
-    comparison = walk_tree(
-        comparison_graph,
+    graph = repository.get_tree(_MEDICATION_FOLLOW_UP_TREE_KEY)
+    result = walk_tree(
+        graph,
         {
             "is_medication_follow_up": True,
             "medication_follow_up_stage": request.medication_follow_up_stage,
-            "active_bp_target": bp_target,
+            "active_bp_target": request.active_bp_target,
             "current_clinic_sbp": request.current_clinic_sbp,
             "current_clinic_dbp": request.current_clinic_dbp,
             "facility_capability": request.facility_capability,
@@ -122,9 +82,4 @@ def evaluate_follow_up(
         max_steps=settings.cdss_max_steps,
         repository=repository,
     )
-
-    return FollowUpEvaluationResponse.from_results(
-        active_bp_target=bp_target,
-        derivation=derivation,
-        comparison=comparison,
-    )
+    return EvaluationResponse.from_result(result)
