@@ -35,6 +35,10 @@ interface TreeCanvasProps {
   highlightedNodeKeys?: ReadonlySet<string>
   /** The currently active node being stepped through */
   activeNodeKey?: string | null
+  /** When true, an overlay awaits a click to reveal the next manual-traversal step */
+  manualMode?: boolean
+  manualStepInfo?: { current: number; total: number } | null
+  onCanvasClick?: () => void
 }
 
 export function TreeCanvas({
@@ -43,9 +47,13 @@ export function TreeCanvas({
   onSelectNode,
   highlightedNodeKeys,
   activeNodeKey,
+  manualMode,
+  manualStepInfo,
+  onCanvasClick,
 }: TreeCanvasProps) {
   const editorRef = useRef<Editor | null>(null)
   const shapeIdsRef = useRef<Map<string, TLShapeId>>(new Map())
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [isSceneLoaded, setIsSceneLoaded] = useState(false)
 
@@ -159,6 +167,45 @@ export function TreeCanvas({
     }
   }, [activeNodeKey, isSceneLoaded])
 
+  const handlePointerDownCapture = (e: React.PointerEvent) => {
+    if (!manualMode) return
+    if (e.button !== 0 || e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) return
+    if ((e.target as HTMLElement).closest('.canvas-toolbar')) return
+
+    // Track starting position to differentiate click vs drag
+    dragStartRef.current = { x: e.clientX, y: e.clientY }
+    e.stopPropagation()
+  }
+
+  const handlePointerUpCapture = (e: React.PointerEvent) => {
+    if (!manualMode) return
+    if (e.button !== 0 || e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) return
+    if ((e.target as HTMLElement).closest('.canvas-toolbar')) return
+
+    e.stopPropagation()
+  }
+
+  const handleClickCapture = (e: React.MouseEvent) => {
+    if (!manualMode) return
+    if (e.button !== 0 || e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) return
+    if ((e.target as HTMLElement).closest('.canvas-toolbar')) return
+
+    e.stopPropagation()
+    e.preventDefault()
+
+    const start = dragStartRef.current
+    dragStartRef.current = null
+
+    if (start) {
+      const dx = e.clientX - start.x
+      const dy = e.clientY - start.y
+      const distance = Math.sqrt(dx * dx + dy * dy)
+      if (distance > 5) return
+    }
+
+    onCanvasClick?.()
+  }
+
   const handleSearch = (query: string) => {
     setSearchQuery(query)
     const editor = editorRef.current
@@ -177,7 +224,12 @@ export function TreeCanvas({
   }
 
   return (
-    <div className="tree-canvas">
+    <div
+      className="tree-canvas"
+      onPointerDownCapture={handlePointerDownCapture}
+      onPointerUpCapture={handlePointerUpCapture}
+      onClickCapture={handleClickCapture}
+    >
       <div className="canvas-toolbar">
         <input
           type="text"
@@ -190,6 +242,20 @@ export function TreeCanvas({
         </button>
       </div>
       <Tldraw shapeUtils={SHAPE_UTILS} components={HIDDEN_COMPONENTS} onMount={handleMount} />
+      {manualMode && (
+        <div className="manual-overlay">
+          {manualStepInfo && (
+            <div className="manual-banner">
+              <span className="manual-pulse-dot" />
+              <span>
+                Manual Traverse: Click canvas to advance (Step{' '}
+                <strong>{manualStepInfo.current}</strong> of{' '}
+                <strong>{manualStepInfo.total}</strong>)
+              </span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

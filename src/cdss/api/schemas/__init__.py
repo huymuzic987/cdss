@@ -5,7 +5,6 @@ from cdss.api.schemas.evaluation import (
     EvaluationRequest,
     EvaluationResponse,
     FollowUpEvaluationRequest,
-    FollowUpEvaluationResponse,
     PartialRunStateResponse,
 )
 from cdss.api.schemas.tree_graph import (
@@ -22,7 +21,6 @@ __all__ = [
     "EvaluationRequest",
     "EvaluationResponse",
     "FollowUpEvaluationRequest",
-    "FollowUpEvaluationResponse",
     "PartialRunStateResponse",
     "TreeGraphEdge",
     "TreeGraphGlobalNode",
