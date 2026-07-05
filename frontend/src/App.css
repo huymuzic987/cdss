@@ -233,13 +233,20 @@
   margin-bottom: 10px;
 }
 
+.detail-field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
 .detail-field-label {
   font-size: 11px;
   font-weight: 600;
   color: #06b6d4;
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  margin-bottom: 4px;
+  margin-bottom: 0; /* Align with copy button */
 }
 
 .detail-text {
@@ -257,6 +264,90 @@
   color: #22d3ee;
   border: 1px solid #112233;
 }
+
+/* =========================================================================
+   Copy Button Styles & User Selection
+   ========================================================================= */
+
+.side-panels,
+.detail-text,
+.detail-json,
+.detail-key,
+.detail-field-label,
+.reference-list,
+.panel {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+.side-panels button,
+.side-panels .detail-badge,
+.side-panels .legend {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+.copy-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #475569;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.copy-button:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #22d3ee;
+}
+
+.copy-button.copied {
+  color: #10b981;
+}
+
+.copy-icon {
+  pointer-events: none;
+}
+
+.copy-icon.checkmark {
+  animation: scale-up 0.15s ease-out;
+}
+
+@keyframes scale-up {
+  from { transform: scale(0.8); }
+  to { transform: scale(1); }
+}
+
+.copy-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translate(-50%, -4px) scale(0.95);
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #1e293b;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.15s ease;
+  z-index: 100;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.copy-button:hover .copy-tooltip {
+  opacity: 1;
+  transform: translate(-50%, -4px) scale(1);
+}
+
 
 .jump-button {
   margin-top: 6px;
@@ -443,6 +534,17 @@
   border-color: #06b6d4;
   box-shadow: 0 0 6px rgba(6, 182, 212, 0.2);
 }
+
+/* Remove spin buttons/arrows for number inputs in the sidebar */
+.ps-sidebar input[type="number"]::-webkit-outer-spin-button,
+.ps-sidebar input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.ps-sidebar input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 
 /* --- BP rows --- */
 .ps-bp-row {
@@ -656,6 +758,22 @@
 
 .ps-btn-start:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
 .ps-btn-start:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.ps-btn-manual {
+  width: 100%;
+  padding: 9px;
+  border-radius: 8px;
+  border: 1px solid rgba(6, 182, 212, 0.5);
+  background: rgba(6, 182, 212, 0.12);
+  color: #67e8f9;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.ps-btn-manual:hover:not(:disabled) { background: rgba(6, 182, 212, 0.22); transform: translateY(-1px); }
+.ps-btn-manual:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 .ps-btn-reset {
   width: 100%;
@@ -1080,6 +1198,80 @@
   line-height: 1.4;
   text-align: left;
 }
+
+/* =========================================================================
+   Manual Traverse Overlay
+   ========================================================================= */
+
+.manual-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 24px;
+  user-select: none;
+  pointer-events: none;
+}
+
+.manual-banner {
+  background: rgba(9, 13, 22, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 15px rgba(6, 182, 212, 0.15);
+  border-radius: 12px;
+  padding: 12px 20px;
+  color: #e2e8f0;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  animation: slideUp 0.3s ease-out;
+}
+
+.manual-pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #06b6d4;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7);
+  animation: pulse-cyan 1.6s infinite;
+}
+
+@keyframes pulse-cyan {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(6, 182, 212, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(6, 182, 212, 0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 
 
 

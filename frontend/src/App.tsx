@@ -36,6 +36,10 @@ function App() {
     showModal,
     setShowModal,
     handleStartTraversal,
+    handleStartManualTraversal,
+    handleManualStep,
+    manualMode,
+    manualStepInfo,
     handleReset,
   } = useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, setError })
 
@@ -75,6 +79,9 @@ function App() {
           onStart={(treeKey, input) => {
             void handleStartTraversal(treeKey, input)
           }}
+          onManualStart={(treeKey, input) => {
+            void handleStartManualTraversal(treeKey, input)
+          }}
           onReset={handleReset}
         />
 
@@ -88,6 +95,9 @@ function App() {
               onSelectNode={setSelectedNode}
               highlightedNodeKeys={visibleHighlights}
               activeNodeKey={visibleActiveNode}
+              manualMode={manualMode}
+              manualStepInfo={manualStepInfo}
+              onCanvasClick={handleManualStep}
             />
           ) : (
             <div className="panel-empty loading">Loading tree…</div>
