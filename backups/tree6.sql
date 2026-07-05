@@ -1,7 +1,25 @@
 --
--- CDSS decision-tree insert script (fifth pass — cross-checked against
--- Tree 4/Tree 5 and drug-list removed; fourth pass rebuilt to match the
--- author's own 5-image board description, verbatim)
+-- CDSS decision-tree insert script (sixth pass — specific-clinical-situation
+-- beta-blocker check now gates every regimen tier; fifth pass cross-checked
+-- against Tree 4/Tree 5 and drug-list removed; fourth pass rebuilt to match
+-- the author's own 5-image board description, verbatim)
+--
+-- SIXTH PASS: the specific-clinical-situation check (angina, post-MI, heart
+-- failure, AFib, tachycardia, pregnancy) previously only gated the 2-drug
+-- initiation tier. Per the author: having a specific clinical situation
+-- means beta-blocker must be used regardless of whether the patient ends up
+-- on 1, 2, or 3 drugs. The engine's single-path-per-node semantics mean this
+-- check can't be shared across tiers as one branch (the "next step" after a
+-- shared condition must be identical for every entry path, but each tier
+-- needs a different outcome), so it is now duplicated per tier: monotherapy
+-- gets its own T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY ->
+-- T6_C_HAS/NO_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY -> mandates
+-- combination_options:[["B"]] when present (matching T4/T5's own
+-- "beta_blocker_requires_indication" note, now properly enforced rather than
+-- just annotated); the 3-drug escalation tier gets the same pattern via
+-- T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION -> adds B to
+-- additional_drug_classes when present. The existing 2-drug tier's check was
+-- already correct and is unchanged.
 --
 -- FIFTH PASS: T6_C_SPECIAL_POPULATION/NOT_SPECIAL_POPULATION previously used
 -- a condition invented from this tree's own reading of Bảng 9's prose
@@ -324,11 +342,48 @@ node_seed (
     ),
     (
         'T6_INF_INITIATE_MONOTHERAPY', 'INFERENCE',
-        'Drug therapy: start with 1 drug (A, B, C, or D; B requires an indication)',
-        'Điều trị thuốc KHỞI ĐẦU BẰNG 1 THUỐC (A, B, C, hoặc D; B cần có chỉ định)',
+        'Drug therapy: start with 1 drug (A, C, or D)',
+        'Điều trị thuốc KHỞI ĐẦU BẰNG 1 THUỐC (A, C, hoặc D)',
         NULL::jsonb,
-        '{"treatment_preferences":{"combination_options":[["A"],["B"],["C"],["D"]],"beta_blocker_requires_indication":true,"dose_strategy":"LOW_TO_USUAL_DOSE"}}'::jsonb,
+        '{"treatment_preferences":{"combination_options":[["A"],["C"],["D"]],"dose_strategy":"LOW_TO_USUAL_DOSE"}}'::jsonb,
         NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 25
+    ),
+    (
+        'T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY', 'INFERENCE',
+        'Determine specific clinical situations relevant to beta-blocker add-on (monotherapy tier)',
+        'Xác định tình huống lâm sàng đặc hiệu liên quan đến việc thêm chẹn Beta (bậc đơn trị)',
+        NULL::jsonb,
+        '{"treatment":{"has_angina":false,"has_prior_mi":false,"has_atrial_fibrillation":false,"has_tachycardia":false,"is_pregnant":false},"operations":[{"op":"COPY_PATH","from_path":"input.has_angina","to_path":"context.treatment.has_angina","required":false},{"op":"COPY_PATH","from_path":"input.has_prior_mi","to_path":"context.treatment.has_prior_mi","required":false},{"op":"COPY_PATH","from_path":"input.has_atrial_fibrillation","to_path":"context.treatment.has_atrial_fibrillation","required":false},{"op":"COPY_PATH","from_path":"input.has_tachycardia","to_path":"context.treatment.has_tachycardia","required":false},{"op":"COPY_PATH","from_path":"input.is_pregnant","to_path":"context.treatment.is_pregnant","required":false}]}'::jsonb,
+        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 250
+    ),
+    (
+        'T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY', 'CONDITION',
+        'Has specific clinical situation (monotherapy tier)',
+        'CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc đơn trị)',
+        '{"any":[{"path":"input.has_heart_failure","op":"eq","value":true},{"path":"context.treatment.has_angina","op":"eq","value":true},{"path":"context.treatment.has_prior_mi","op":"eq","value":true},{"path":"context.treatment.has_atrial_fibrillation","op":"eq","value":true},{"path":"context.treatment.has_tachycardia","op":"eq","value":true},{"path":"context.treatment.is_pregnant","op":"eq","value":true}]}'::jsonb,
+        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 251
+    ),
+    (
+        'T6_C_NO_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY', 'CONDITION',
+        'No specific clinical situation (monotherapy tier)',
+        'KHÔNG CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc đơn trị)',
+        '{"not":{"any":[{"path":"input.has_heart_failure","op":"eq","value":true},{"path":"context.treatment.has_angina","op":"eq","value":true},{"path":"context.treatment.has_prior_mi","op":"eq","value":true},{"path":"context.treatment.has_atrial_fibrillation","op":"eq","value":true},{"path":"context.treatment.has_tachycardia","op":"eq","value":true},{"path":"context.treatment.is_pregnant","op":"eq","value":true}]}}'::jsonb,
+        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 252
+    ),
+    (
+        'T6_INF_MONOTHERAPY_ADD_BETA_BLOCKER', 'INFERENCE',
+        'Mandate beta-blocker monotherapy', 'Bắt buộc đơn trị bằng chẹn Beta',
+        NULL::jsonb,
+        '{"treatment_preferences":{"combination_options":[["B"]]}}'::jsonb,
+        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 253
+    ),
+    (
+        'T6_END_INITIAL_MONOTHERAPY_WITH_BETA_BLOCKER', 'END',
+        'Start beta-blocker monotherapy; reassess at next encounter',
+        'Bắt đầu đơn trị bằng chẹn Beta; đánh giá lại ở lần tái khám kế tiếp',
+        NULL::jsonb, NULL::jsonb,
+        '{"action_type":"CONSIDER_MONOTHERAPY","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":true,"next_medication_follow_up_stage":"INITIAL_REGIMEN"}'::jsonb,
+        NULL::jsonb, NULL::text, NULL::text, 254
     ),
     (
         'T6_END_INITIAL_MONOTHERAPY', 'END', 'Start monotherapy; reassess at next encounter',
@@ -452,6 +507,43 @@ node_seed (
         NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 42
     ),
     (
+        'T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION', 'INFERENCE',
+        'Determine specific clinical situations relevant to beta-blocker add-on (escalation tier)',
+        'Xác định tình huống lâm sàng đặc hiệu liên quan đến việc thêm chẹn Beta (bậc leo thang)',
+        NULL::jsonb,
+        '{"treatment":{"has_angina":false,"has_prior_mi":false,"has_atrial_fibrillation":false,"has_tachycardia":false,"is_pregnant":false},"operations":[{"op":"COPY_PATH","from_path":"input.has_angina","to_path":"context.treatment.has_angina","required":false},{"op":"COPY_PATH","from_path":"input.has_prior_mi","to_path":"context.treatment.has_prior_mi","required":false},{"op":"COPY_PATH","from_path":"input.has_atrial_fibrillation","to_path":"context.treatment.has_atrial_fibrillation","required":false},{"op":"COPY_PATH","from_path":"input.has_tachycardia","to_path":"context.treatment.has_tachycardia","required":false},{"op":"COPY_PATH","from_path":"input.is_pregnant","to_path":"context.treatment.is_pregnant","required":false}]}'::jsonb,
+        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 260
+    ),
+    (
+        'T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION', 'CONDITION',
+        'Has specific clinical situation (escalation tier)',
+        'CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc leo thang)',
+        '{"any":[{"path":"input.has_heart_failure","op":"eq","value":true},{"path":"context.treatment.has_angina","op":"eq","value":true},{"path":"context.treatment.has_prior_mi","op":"eq","value":true},{"path":"context.treatment.has_atrial_fibrillation","op":"eq","value":true},{"path":"context.treatment.has_tachycardia","op":"eq","value":true},{"path":"context.treatment.is_pregnant","op":"eq","value":true}]}'::jsonb,
+        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 261
+    ),
+    (
+        'T6_C_NO_SPECIFIC_CLINICAL_SITUATION_ESCALATION', 'CONDITION',
+        'No specific clinical situation (escalation tier)',
+        'KHÔNG CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc leo thang)',
+        '{"not":{"any":[{"path":"input.has_heart_failure","op":"eq","value":true},{"path":"context.treatment.has_angina","op":"eq","value":true},{"path":"context.treatment.has_prior_mi","op":"eq","value":true},{"path":"context.treatment.has_atrial_fibrillation","op":"eq","value":true},{"path":"context.treatment.has_tachycardia","op":"eq","value":true},{"path":"context.treatment.is_pregnant","op":"eq","value":true}]}}'::jsonb,
+        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 262
+    ),
+    (
+        'T6_INF_ESCALATE_ADD_BETA_BLOCKER', 'INFERENCE',
+        'Add beta-blocker to escalated regimen', 'Thêm chẹn Beta vào phác đồ leo thang',
+        NULL::jsonb,
+        '{"treatment_preferences":{"additional_drug_classes":["B"]}}'::jsonb,
+        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 263
+    ),
+    (
+        'T6_END_ESCALATE_REGIMEN_WITH_BETA_BLOCKER', 'END',
+        'Increase dose or move to 3-drug combination plus beta-blocker; reassess at next encounter',
+        'Tăng liều hoặc chuyển phối hợp 3 thuốc kèm chẹn Beta; đánh giá lại ở lần tái khám kế tiếp',
+        NULL::jsonb, NULL::jsonb,
+        '{"action_type":"INCREASE_DOSE_OR_THREE_DRUG_COMBINATION","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":true,"next_medication_follow_up_stage":"ESCALATED_REGIMEN"}'::jsonb,
+        NULL::jsonb, NULL::text, NULL::text, 264
+    ),
+    (
         'T6_END_ESCALATE_REGIMEN', 'END',
         'Increase dose or move to 3-drug combination; reassess at next encounter',
         'Tăng liều hoặc chuyển phối hợp 3 thuốc; đánh giá lại ở lần tái khám kế tiếp',
@@ -533,7 +625,12 @@ edge_seed (from_node_key, to_node_key, traversal_order) AS (
     ('T6_C_IS_FIRST_VISIT_FOR_REGIMEN', 'T6_C_SPECIAL_POPULATION', 1),
     ('T6_C_IS_FIRST_VISIT_FOR_REGIMEN', 'T6_C_NOT_SPECIAL_POPULATION', 2),
     ('T6_C_SPECIAL_POPULATION', 'T6_INF_INITIATE_MONOTHERAPY', 1),
-    ('T6_INF_INITIATE_MONOTHERAPY', 'T6_END_INITIAL_MONOTHERAPY', 1),
+    ('T6_INF_INITIATE_MONOTHERAPY', 'T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY', 1),
+    ('T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY', 'T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY', 1),
+    ('T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY', 'T6_C_NO_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY', 2),
+    ('T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY', 'T6_INF_MONOTHERAPY_ADD_BETA_BLOCKER', 1),
+    ('T6_INF_MONOTHERAPY_ADD_BETA_BLOCKER', 'T6_END_INITIAL_MONOTHERAPY_WITH_BETA_BLOCKER', 1),
+    ('T6_C_NO_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY', 'T6_END_INITIAL_MONOTHERAPY', 1),
     ('T6_C_NOT_SPECIAL_POPULATION', 'T6_INF_INITIATE_TWO_DRUG_LOW_DOSE', 1),
     ('T6_INF_INITIATE_TWO_DRUG_LOW_DOSE', 'T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS', 1),
     ('T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS', 'T6_C_HAS_SPECIFIC_CLINICAL_SITUATION', 1),
@@ -552,7 +649,12 @@ edge_seed (from_node_key, to_node_key, traversal_order) AS (
     ('T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY', 'T6_C_WAS_NOT_ON_MONOTHERAPY', 2),
     ('T6_C_WAS_ON_MONOTHERAPY', 'T6_INF_INITIATE_TWO_DRUG_LOW_DOSE', 1),
     ('T6_C_WAS_NOT_ON_MONOTHERAPY', 'T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG', 1),
-    ('T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG', 'T6_END_ESCALATE_REGIMEN', 1),
+    ('T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG', 'T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION', 1),
+    ('T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION', 'T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION', 1),
+    ('T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION', 'T6_C_NO_SPECIFIC_CLINICAL_SITUATION_ESCALATION', 2),
+    ('T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION', 'T6_INF_ESCALATE_ADD_BETA_BLOCKER', 1),
+    ('T6_INF_ESCALATE_ADD_BETA_BLOCKER', 'T6_END_ESCALATE_REGIMEN_WITH_BETA_BLOCKER', 1),
+    ('T6_C_NO_SPECIFIC_CLINICAL_SITUATION_ESCALATION', 'T6_END_ESCALATE_REGIMEN', 1),
     ('T6_C_FOLLOWUP_ESCALATED_STAGE', 'T6_LINK_RESISTANT_HYPERTENSION', 1)
 )
 INSERT INTO public.decision_edges ("id", "from_node_id", "to_node_id", "traversal_order")
@@ -637,6 +739,20 @@ reference_seed (
      'Beta-blocker recommended in combination with any other main drug class for specific clinical situations (Class I).',
      ARRAY[20]::smallint[], ARRAY[22]::smallint[],
      'Chẹn Beta được khuyến cáo phối hợp khi có tình huống lâm sàng đặc hiệu: đau thắt ngực, sau NMCT, suy tim hoặc kiểm soát nhịp tim.', 1),
+    ('T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY',
+     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
+     '[{"number": "3.5", "title": "Chiến lược điều trị phối hợp thuốc"}]'::jsonb,
+     'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc',
+     'The specific-clinical-situation/beta-blocker check must gate every regimen tier (1, 2, or 3 drugs), not only the 2-drug tier, before the final regimen is given to the patient.',
+     ARRAY[20]::smallint[], ARRAY[22]::smallint[],
+     'Chẹn Beta được khuyến cáo phối hợp khi có tình huống lâm sàng đặc hiệu, áp dụng cho mọi bậc điều trị (1, 2, hoặc 3 thuốc).', 1),
+    ('T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION',
+     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
+     '[{"number": "3.5", "title": "Chiến lược điều trị phối hợp thuốc"}]'::jsonb,
+     'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc',
+     'The specific-clinical-situation/beta-blocker check must gate every regimen tier (1, 2, or 3 drugs), not only the 2-drug tier, before the final regimen is given to the patient.',
+     ARRAY[20]::smallint[], ARRAY[22]::smallint[],
+     'Chẹn Beta được khuyến cáo phối hợp khi có tình huống lâm sàng đặc hiệu, áp dụng cho mọi bậc điều trị (1, 2, hoặc 3 thuốc).', 1),
     ('T6_C_TARGET_ACHIEVED',
      'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
      '[{"number": "3.5", "title": "Chiến lược điều trị phối hợp thuốc"}]'::jsonb,
