@@ -114,6 +114,8 @@ export function TreeCanvas({
     const editor = editorRef.current
     if (!editor || !isSceneLoaded) return
 
+    const hasAnyHighlight = (highlightedNodeKeys && highlightedNodeKeys.size > 0) || !!activeNodeKey
+
     for (const [nodeKey, shapeId] of shapeIdsRef.current) {
       let status: 'none' | 'entered' | 'active' = 'none'
       if (activeNodeKey && nodeKey === activeNodeKey) {
@@ -121,11 +123,20 @@ export function TreeCanvas({
       } else if (highlightedNodeKeys?.has(nodeKey)) {
         status = 'entered'
       }
+      const isDimmed = hasAnyHighlight && status === 'none'
+
       const shape = editor.getShape(shapeId)
       if (shape && shape.type === 'decisionNode') {
-        const current = (shape.props as { highlightStatus: string }).highlightStatus
-        if (current !== status) {
-          editor.updateShape({ id: shapeId, type: 'decisionNode', props: { highlightStatus: status } })
+        const currentProps = shape.props as { highlightStatus: string; dimmed?: boolean }
+        const currentStatus = currentProps.highlightStatus
+        const currentDimmed = !!currentProps.dimmed
+
+        if (currentStatus !== status || currentDimmed !== isDimmed) {
+          editor.updateShape({
+            id: shapeId,
+            type: 'decisionNode',
+            props: { highlightStatus: status, dimmed: isDimmed },
+          })
         }
       }
     }

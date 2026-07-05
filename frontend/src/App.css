@@ -126,8 +126,6 @@
    ========================================================================= */
 
 .side-panels {
-  width: 320px;
-  border-left: 1px solid #112233;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -136,10 +134,43 @@
   box-sizing: border-box;
   background: #05070a;
   scrollbar-width: thin;
+  flex-shrink: 0;
 }
 
 .side-panels::-webkit-scrollbar { width: 4px; }
 .side-panels::-webkit-scrollbar-thumb { background: rgba(6, 182, 212, 0.15); border-radius: 2px; }
+
+/* =========================================================================
+   Sidebar Resizer
+   ========================================================================= */
+
+.sidebar-resizer {
+  width: 8px;
+  margin-left: -4px;
+  margin-right: -4px;
+  z-index: 50;
+  cursor: col-resize;
+  position: relative;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.sidebar-resizer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  background-color: #112233;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sidebar-resizer:hover::after,
+.sidebar-resizer.resizing::after {
+  background-color: #06b6d4;
+  box-shadow: 0 0 8px #06b6d4, 0 0 16px #06b6d4;
+}
 
 .panel {
   background: #090d16;
@@ -1049,4 +1080,6 @@
   line-height: 1.4;
   text-align: left;
 }
+
+
 
