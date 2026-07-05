@@ -5,8 +5,8 @@
 -- Generated (UTC) : 2026-07-01T04:25:22.544613+00:00
 -- Row counts:
 --   decision_trees: 5
---   decision_nodes: 186
---   decision_edges: 185
+--   decision_nodes: 189
+--   decision_edges: 188
 --   node_source_references: 169
 --   development_runtime_logs: 0
 --   alembic_version: 1
@@ -128,6 +128,9 @@ e7ffabdc-c629-b367-585c-5c081b7e3ee5	essential-treatment-strategy	Essential trea
 
 COPY public.decision_nodes ("id", "tree_id", "node_key", "node_type", "text_en", "text_vi", "condition_definition", "context_patch", "action_payload", "global_config", "link_target_tree_key", "link_target_node_key", "display_order", "created_at", "updated_at") FROM stdin;
 854590f4-9e9c-3158-47af-43695e29611e	3897f50b-1c59-f954-5bef-89650cc45e5a	T1_START_PATIENT_INFORMATION	START	Patient information	Thông tin bệnh nhân	\N	\N	\N	\N	\N	\N	1	2026-06-27 07:20:49.313128+00	2026-06-27 07:20:49.313128+00
+af62ea0d-827f-488d-9218-ffb2d0e4e0b0	3897f50b-1c59-f954-5bef-89650cc45e5a	T1_C_IS_PREGNANT	CONDITION	Patient is pregnant	Bệnh nhân đang mang thai	{"path": "input.is_pregnant", "op": "eq", "value": true}	\N	\N	\N	\N	\N	65	2026-06-27 07:20:49.313128+00	2026-06-27 07:20:49.313128+00
+8a526e4b-cfd9-4b7b-8fc5-06c18cad2dd8	3897f50b-1c59-f954-5bef-89650cc45e5a	T1_LINK_HYPERTENSION_IN_PREGNANCY	LINK	Hypertension in Pregnancy Tree	Cây: Tăng huyết áp thai kỳ	\N	\N	\N	\N	hypertension-in-pregnancy	\N	66	2026-06-27 07:20:49.313128+00	2026-06-27 07:20:49.313128+00
+8a14e0bd-3f41-4672-9b28-f236d56cfe99	3897f50b-1c59-f954-5bef-89650cc45e5a	T1_C_IS_NOT_PREGNANT	CONDITION	Patient is not pregnant	Bệnh nhân không mang thai	{"path": "input.is_pregnant", "op": "eq", "value": false}	\N	\N	\N	\N	\N	67	2026-06-27 07:20:49.313128+00	2026-06-27 07:20:49.313128+00
 a04f0087-1e67-7368-d086-d6fcccdaedb1	3897f50b-1c59-f954-5bef-89650cc45e5a	T1_C_CLINIC_1_CRISIS	CONDITION	First clinic blood-pressure measurement\nSBP ≥ 180 mmHg OR DBP ≥ 120 mmHg	HAPK lần 1\nHATT ≥ 180 hoặc HATTr ≥ 120 mmHg	{"any": [{"op": "gte", "path": "input.clinic_1_sbp", "value": 180}, {"op": "gte", "path": "input.clinic_1_dbp", "value": 120}]}	\N	\N	\N	\N	\N	2	2026-06-27 07:20:49.313128+00	2026-06-27 07:20:49.313128+00
 bfbb746b-d5ff-6d27-a5e6-5376a31d2841	3897f50b-1c59-f954-5bef-89650cc45e5a	T1_INF_HYPERTENSIVE_EMERGENCY	INFERENCE	Hypertensive emergency	THA CẤP CỨU	\N	{"diagnosis": {"hypertension_class": "HYPERTENSIVE_EMERGENCY"}}	\N	\N	\N	\N	3	2026-06-27 07:20:49.313128+00	2026-06-27 07:20:49.313128+00
 b8778eca-3e96-47d7-fc9d-c8ff3c68e3f7	3897f50b-1c59-f954-5bef-89650cc45e5a	T1_LINK_HYPERTENSIVE_EMERGENCY	LINK	Hypertensive Emergency Tree	Cây 14: THA CẤP CỨU	\N	\N	\N	\N	hypertensive-emergency	\N	4	2026-06-27 07:20:49.313128+00	2026-06-27 07:20:49.313128+00
@@ -316,8 +319,11 @@ aa012536-8918-710b-0209-3b1da478cd70	5be98c95-06f2-e474-21d9-cb52308e0455	T5_C_H
 \.
 
 COPY public.decision_edges ("id", "from_node_id", "to_node_id", "traversal_order") FROM stdin;
-52cd18db-5062-0b91-dca5-a11ea9a8e89f	854590f4-9e9c-3158-47af-43695e29611e	a04f0087-1e67-7368-d086-d6fcccdaedb1	1
-eb690e78-12af-9028-928c-9d7081a5d6a8	854590f4-9e9c-3158-47af-43695e29611e	6538e358-5110-978e-fdeb-9f9163930524	2
+10cd6b1a-81ba-40c2-aead-22283d34c033	854590f4-9e9c-3158-47af-43695e29611e	af62ea0d-827f-488d-9218-ffb2d0e4e0b0	1
+d969c060-cb00-4068-a9d5-06762ce7df73	854590f4-9e9c-3158-47af-43695e29611e	8a14e0bd-3f41-4672-9b28-f236d56cfe99	2
+81fe5658-af2c-4b1f-bab4-3ca14dd44965	af62ea0d-827f-488d-9218-ffb2d0e4e0b0	8a526e4b-cfd9-4b7b-8fc5-06c18cad2dd8	1
+e683dce1-92d1-420a-8493-72f55ae08fe6	8a14e0bd-3f41-4672-9b28-f236d56cfe99	a04f0087-1e67-7368-d086-d6fcccdaedb1	1
+9a624eb5-da84-4ecf-aec4-2b84969caf3f	8a14e0bd-3f41-4672-9b28-f236d56cfe99	6538e358-5110-978e-fdeb-9f9163930524	2
 1bff8c2b-2e3e-c7cd-a976-7df20869808e	a04f0087-1e67-7368-d086-d6fcccdaedb1	bfbb746b-d5ff-6d27-a5e6-5376a31d2841	1
 3083677e-0c15-2332-6c31-a8400c4cddb7	bfbb746b-d5ff-6d27-a5e6-5376a31d2841	b8778eca-3e96-47d7-fc9d-c8ff3c68e3f7	1
 c3924e37-5b4e-9c17-42e1-061c4d794d41	6538e358-5110-978e-fdeb-9f9163930524	7bc03fb5-45fa-4d03-6732-b8f4d0fb67d8	1
