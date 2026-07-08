@@ -1272,6 +1272,8 @@
   }
 }
 
-
-
-
+.canvas-toolbar button.active {
+  background: #0891b2;
+  color: #ffffff;
+  border-color: #0891b2;
+}

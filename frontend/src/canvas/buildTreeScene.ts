@@ -8,6 +8,7 @@ export function buildTreeScene(
   nodes: TreeGraphNode[],
   edges: TreeGraphEdge[],
   positions: Map<string, NodePosition>,
+  arrowKind: 'straight' | 'elbow' = 'straight',
 ): Map<string, TLShapeId> {
   const shapeIdByNodeKey = new Map<string, TLShapeId>()
 
@@ -40,6 +41,8 @@ export function buildTreeScene(
       id: arrowId,
       type: 'arrow',
       props: {
+        kind: arrowKind === 'elbow' ? 'elbow' : 'arc',
+        bend: 0,
         start: { x: 0, y: 0 },
         end: { x: 1, y: 1 },
       },

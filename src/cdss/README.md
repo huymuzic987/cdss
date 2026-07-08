@@ -33,6 +33,7 @@ Contains the core business rules. It has zero external dependencies on databases
 * **[walker.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/walker.py)**: Implements [walk_tree](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/walker.py#L55), the main stateless traversal logic that iterates through nodes and evaluates edges.
 * **[conditions.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/conditions.py)**: Evaluates target candidate conditions (`all`, `any`, `not`), operators (`eq`, `in`, `lt`, `lte`, `gt`, `gte`), subtraction logic, and path existence.
 * **[patches.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/patches.py)**: Applies [context_patch](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/patches.py#L48) payloads, merging static dictionary payloads and executing copy procedures.
+* **[actions.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/actions.py)**: Implements [collect_action](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/actions.py#L15), called on `ACTION`/`END` node entry to deep-copy and append the node's `action_payload` onto `RunState.actions`.
 * **[paths.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/paths.py)**: Contains [resolve_runtime_path](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/paths.py#L49), evaluating path strings (e.g. `input.current_clinic_sbp`) against runtime context dictionaries.
 * **[validator.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/validator.py)**: Performs static validation via [validate_tree_graph](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/validator.py#L40) to guarantee safety (detects loops, checks for single start nodes, validating comorbidity links).
 * **[errors.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/errors.py)**: Lists strongly typed exceptions like [MissingRuntimePath](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/errors.py#L33) or [TraversalCycleDetected](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/errors.py#L42).
@@ -55,6 +56,7 @@ Exposes FastAPI routers and Pydantic validators:
 
 ### 4. Configuration and Bootstrapping
 * **[core/config.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/core/config.py)**: Defines application settings with Pydantic BaseSettings, loading values from `.env`.
+* **[core/database.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/core/database.py)**: Lazily creates the process-wide SQLAlchemy [engine](file:///c:/Users/Huy/Desktop/cdss/src/cdss/core/database.py#L21) and [session factory](file:///c:/Users/Huy/Desktop/cdss/src/cdss/core/database.py#L30); exposes [get_db](file:///c:/Users/Huy/Desktop/cdss/src/cdss/core/database.py#L43) as the FastAPI session dependency.
 * **[main.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/main.py)**: Instantiates the FastAPI application, mounts middlewares (CORS), registers error handlers, and includes routers.
 
 ---
