@@ -96,6 +96,8 @@ src/cdss/
 
 Clinical workflows are evaluated without python-coded branching. Instead, [walk_tree](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/walker.py#L55) traverses a decision tree graph. The engine evaluates target branch conditions based on priority (`traversal_order` on edges) and transitions between nodes.
 
+> For the full frozen runtime-behavior contract, see [docs/cdss/traversal-engine-contract.md](file:///c:/Users/Huy/Desktop/cdss/docs/cdss/traversal-engine-contract.md).
+
 ### Node Types
 * **`START`**: Exactly one entry point per tree. No side effects; branches out immediately.
 * **`CONDITION`**: Evaluates `condition_definition` before allowing entry. Must have at least one outgoing edge.
@@ -337,6 +339,7 @@ cp .env.test.example .env.test
   ```bash
   uv run pytest -m database tests/db/test_seeded_tree_validation.py tests/db/test_seeded_link_execution.py tests/db/test_mock_patient_scenarios.py tests/api/test_seeded_evaluation.py
   ```
+  The mock-patient scenarios and their expected outcomes are documented in [docs/cdss/mock-patient-test-matrix.md](file:///c:/Users/Huy/Desktop/cdss/docs/cdss/mock-patient-test-matrix.md).
 * **Destructive Schema Migration Tests**:
   Verifies Alembic migrations by downgrading to base and upgrading to head on `cdss_schema_test`.
   ```bash
