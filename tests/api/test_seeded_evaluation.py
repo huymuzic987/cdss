@@ -71,6 +71,7 @@ def test_seeded_tree_1_normal_bp_is_read_only(seeded_api_context: SeededApiConte
         seeded_api_context,
         tree_key=T1,
         runtime_input={
+            "is_pregnant": False,
             "clinic_1_sbp": 120,
             "clinic_1_dbp": 80,
             "clinic_2_sbp": 120,
@@ -111,23 +112,31 @@ def test_seeded_tree_5_target_reached_is_read_only(
     assert body["references"]
 
 
-def test_seeded_drug_combination_failure_preserves_partial_state_read_only(
+def test_seeded_drug_combination_resolves_link_then_fails_on_new_required_field(
     seeded_api_context: SeededApiContext,
 ) -> None:
+    """drug-combination is now seeded (backups/cdss_merged.sql), so the LINK resolves
+    and traversal continues into it, executing several of its own ACTION nodes, until
+    it fails on a required field (`has_heart_failure`) this fixture never had to
+    supply for Trees 1-5, instead of raising LinkTargetNotFound.
+    """
     response = _post_read_only(
         seeded_api_context,
         tree_key=T3,
         runtime_input=_medication_input(current_sbp=130, current_dbp=80),
     )
 
-    assert response.status_code == 424
+    assert response.status_code == 422
     body = response.json()
-    assert body["code"] == "link_target_not_found"
-    assert body["details"]["link_target_tree_key"] == "drug-combination"
+    assert body["code"] == "missing_runtime_path"
+    assert body["details"]["path"] == "input.has_heart_failure"
     partial = body["partial_run_state"]
     assert partial["context"]["treatment"]["bp_target"] == ACTIVE_BP_TARGET
-    assert partial["actions"][-1]["node_key"] == "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION"
-    assert partial["traversal_log"][-1]["node_key"] == "T5_LINK_THREE_DRUG_TO_TREE_6"
+    assert partial["actions"][-1]["node_key"] == "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE"
+    assert (
+        partial["traversal_log"][-1]["node_key"]
+        == "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION"
+    )
     assert partial["references"]
 
 

@@ -1,8 +1,118 @@
 :root {
   color-scheme: dark;
   font-family: system-ui, sans-serif;
-  background-color: #000000;
-  color: #e2e8f0;
+
+  /* ---- Structural ---- */
+  --bg-app: #000000;
+  --bg-surface: #05070a;
+  --bg-panel: #090d16;
+  --bg-panel-hover: #101c30;
+  --bg-panel-translucent: rgba(9, 13, 22, 0.9);
+  --bg-inset: #020408;
+  --sidebar-gradient: linear-gradient(180deg, #020617 0%, #000000 100%);
+  --shadow-color: rgba(0, 0, 0, 0.4);
+
+  /* ---- Borders ---- */
+  --border: #112233;
+  --border-soft: rgba(255, 255, 255, 0.1);
+  --border-soft-strong: rgba(255, 255, 255, 0.15);
+
+  /* ---- Text ---- */
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-bright: #f8fafc;
+  --text-on-accent: #ffffff;
+
+  /* ---- Accent ---- */
+  --accent-solid: #0891b2;
+  --accent-solid-hover: #0e7490;
+  --accent-border: #06b6d4;
+  --accent-text: #22d3ee;
+  --info-text: #8ec5fc;
+
+  /* ---- Inputs / toggles ---- */
+  --input-bg: rgba(0, 0, 0, 0.4);
+  --toggle-track-bg: rgba(255, 255, 255, 0.15);
+  --toggle-track-border: rgba(255, 255, 255, 0.1);
+
+  /* ---- Semantic alerts ---- */
+  --danger-bg: #7f1d1d;
+  --danger-text: #fca5a5;
+  --danger-border: #b91c1c;
+  --danger-soft-bg: rgba(127, 29, 29, 0.4);
+
+  --success-bg: #064e3b;
+  --success-text: #34d399;
+  --success-card-bg: #022c22;
+  --success-card-bg-2: #042f2e;
+  --success-card-border: #065f46;
+
+  --warning-bg-1: #451a03;
+  --warning-bg-2: #3b1103;
+
+  --neutral-badge-bg: #1e293b;
+
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* ---- Structural ---- */
+  --bg-app: #e7ebee;
+  --bg-surface: #dde3e8;
+  --bg-panel: #f3f5f7;
+  --bg-panel-hover: #e3e9ee;
+  --bg-panel-translucent: rgba(243, 245, 247, 0.92);
+  --bg-inset: #d9e0e6;
+  --sidebar-gradient: linear-gradient(180deg, #eef2f5 0%, #e3e9ed 100%);
+  --shadow-color: rgba(15, 23, 42, 0.12);
+
+  /* ---- Borders ---- */
+  --border: #c7d0d8;
+  --border-soft: rgba(15, 23, 42, 0.08);
+  --border-soft-strong: rgba(15, 23, 42, 0.15);
+
+  /* ---- Text ---- */
+  --text-primary: #1f2933;
+  --text-secondary: #4b5a68;
+  --text-muted: #74838f;
+  --text-bright: #0f1720;
+  --text-on-accent: #ffffff;
+
+  /* ---- Accent ---- */
+  --accent-solid: #0891b2;
+  --accent-solid-hover: #0e7490;
+  --accent-border: #06b6d4;
+  --accent-text: #0e7490;
+  --info-text: #2563eb;
+
+  /* ---- Inputs / toggles ---- */
+  --input-bg: rgba(15, 23, 42, 0.045);
+  --toggle-track-bg: rgba(15, 23, 42, 0.15);
+  --toggle-track-border: rgba(15, 23, 42, 0.12);
+
+  /* ---- Semantic alerts ---- */
+  --danger-bg: #fee2e2;
+  --danger-text: #b91c1c;
+  --danger-border: #f3b4b4;
+  --danger-soft-bg: rgba(254, 226, 226, 0.9);
+
+  --success-bg: #d1fae5;
+  --success-text: #047857;
+  --success-card-bg: #e6f7f0;
+  --success-card-bg-2: #eafbf5;
+  --success-card-border: #a7e8cf;
+
+  --warning-bg-1: #fdecd4;
+  --warning-bg-2: #fde8d0;
+
+  --neutral-badge-bg: #e2e8f0;
+
+  background-color: var(--bg-app);
+  color: var(--text-primary);
 }
 
 html,

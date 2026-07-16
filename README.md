@@ -379,12 +379,5 @@ uv run python backups/dump.py && uv run python backups/restore.py
 
 ## 🔗 Intentional External Link Dependencies
 
-The following tree keys are not seeded in the database. Traversing them is expected to yield typed unresolved `LinkTargetNotFound` exceptions containing partial state data:
-- `hypertensive-emergency`
-- `hypertension-heart-failure`
+The following tree key is not seeded in the database. Traversing it is expected to yield a typed unresolved `LinkTargetNotFound` exception containing partial state data:
 - `hypertension-older-adults`
-- `hypertension-coronary-artery-disease`
-- `hypertension-type-2-diabetes`
-- `hypertension-chronic-kidney-disease`
-- `drug-combination`
-- `resistant-hypertension`

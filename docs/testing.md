@@ -112,16 +112,9 @@ uv run pyright
 
 ## Intentional External Dependencies
 
-These link targets remain intentionally unseeded and produce typed unresolved
-dependency failures with partial execution state:
+This link target remains intentionally unseeded and produces a typed
+unresolved dependency failure with partial execution state:
 
 ```text
-hypertensive-emergency
-hypertension-heart-failure
 hypertension-older-adults
-hypertension-coronary-artery-disease
-hypertension-type-2-diabetes
-hypertension-chronic-kidney-disease
-drug-combination
-resistant-hypertension
 ```

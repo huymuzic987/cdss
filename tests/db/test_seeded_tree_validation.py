@@ -16,6 +16,14 @@ SEEDED_TREE_KEYS = [
     "treatment-threshold-and-bp-target",
     "essential-treatment-strategy",
     "optimal-treatment-strategy",
+    "drug-combination",
+    "hypertension-type-2-diabetes",
+    "hypertension-coronary-artery-disease",
+    "hypertension-heart-failure",
+    "hypertension-chronic-kidney-disease",
+    "hypertension-in-pregnancy",
+    "resistant-hypertension",
+    "hypertensive-emergency",
 ]
 
 

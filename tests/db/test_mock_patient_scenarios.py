@@ -10,7 +10,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from cdss.domain.decision_tree import (
-    LinkTargetNotFound,
+    MissingRuntimePath,
     RunState,
     TraceEvent,
     TraversalResult,
@@ -259,6 +259,7 @@ def active_bp_target() -> dict[str, Any]:
 
 def test_tree_1_normal_bp_route(seeded_trees: SeededTrees) -> None:
     runtime_input = {
+        "is_pregnant": False,
         "clinic_1_sbp": 120,
         "clinic_1_dbp": 80,
         "clinic_2_sbp": 120,
@@ -281,8 +282,11 @@ def test_tree_1_normal_bp_route(seeded_trees: SeededTrees) -> None:
         result,
         [
             _entered(T1, "T1_START_PATIENT_INFORMATION"),
-            _candidate(T1, "T1_START_PATIENT_INFORMATION", "T1_C_CLINIC_1_CRISIS", False),
-            _candidate(T1, "T1_START_PATIENT_INFORMATION", "T1_C_CLINIC_1_NON_CRISIS", True),
+            _candidate(T1, "T1_START_PATIENT_INFORMATION", "T1_C_IS_PREGNANT", False),
+            _candidate(T1, "T1_START_PATIENT_INFORMATION", "T1_C_IS_NOT_PREGNANT", True),
+            _entered(T1, "T1_C_IS_NOT_PREGNANT"),
+            _candidate(T1, "T1_C_IS_NOT_PREGNANT", "T1_C_CLINIC_1_CRISIS", False),
+            _candidate(T1, "T1_C_IS_NOT_PREGNANT", "T1_C_CLINIC_1_NON_CRISIS", True),
             _entered(T1, "T1_C_CLINIC_1_NON_CRISIS"),
             _candidate(T1, "T1_C_CLINIC_1_NON_CRISIS", "T1_C_CLINIC_2_DIRECT_RANGE", False),
             _candidate(T1, "T1_C_CLINIC_1_NON_CRISIS", "T1_C_CLINIC_2_LOWER", True),
@@ -317,19 +321,26 @@ def test_tree_1_normal_bp_route(seeded_trees: SeededTrees) -> None:
     )
 
 
-def test_tree_1_emergency_route_preserves_partial_state(seeded_trees: SeededTrees) -> None:
+def test_tree_1_emergency_route_now_needs_pregnancy_status(
+    seeded_trees: SeededTrees,
+) -> None:
+    """hypertensive-emergency is now seeded (backups/cdss_merged.sql). Its crisis
+    check itself reads `input.is_pregnant` (pregnancy-adjusted thresholds), and the
+    evaluator reads every `any`/`all` child rather than short-circuiting, so this
+    fixture (which never had to supply that field for Trees 1-5) now fails at the
+    very first candidate evaluation from T1_START, before even reaching the LINK.
+    """
     runtime_input = {"clinic_1_sbp": 180, "clinic_1_dbp": 80}
 
-    with pytest.raises(LinkTargetNotFound) as exc_info:
+    with pytest.raises(MissingRuntimePath) as exc_info:
         walk_tree(seeded_trees.graphs[T1], runtime_input, repository=seeded_trees.repository)
 
     error = exc_info.value
-    assert error.details["link_target_tree_key"] == "hypertensive-emergency"
+    assert error.details["path"] == "input.is_pregnant"
     state = _partial_state(error.partial_run_state)
     assert state.input_snapshot == runtime_input
     assert state.context == {
         "diagnosis": {
-            "hypertension_class": "HYPERTENSIVE_EMERGENCY",
             "current_clinic_sbp": 180,
             "current_clinic_dbp": 80,
         }
@@ -339,27 +350,9 @@ def test_tree_1_emergency_route_preserves_partial_state(seeded_trees: SeededTree
         state,
         [
             _entered(T1, "T1_START_PATIENT_INFORMATION"),
-            _candidate(T1, "T1_START_PATIENT_INFORMATION", "T1_C_CLINIC_1_CRISIS", True),
-            _entered(T1, "T1_C_CLINIC_1_CRISIS"),
-            _candidate(T1, "T1_C_CLINIC_1_CRISIS", "T1_INF_HYPERTENSIVE_EMERGENCY", True),
-            _entered(T1, "T1_INF_HYPERTENSIVE_EMERGENCY"),
-            _candidate(
-                T1,
-                "T1_INF_HYPERTENSIVE_EMERGENCY",
-                "T1_LINK_HYPERTENSIVE_EMERGENCY",
-                True,
-            ),
-            _entered(T1, "T1_LINK_HYPERTENSIVE_EMERGENCY"),
         ],
     )
-    _assert_references(
-        state,
-        [
-            (T1, "T1_C_CLINIC_1_CRISIS", 1),
-            (T1, "T1_C_CLINIC_1_CRISIS", 2),
-            (T1, "T1_INF_HYPERTENSIVE_EMERGENCY", 1),
-        ],
-    )
+    _assert_references(state, [])
 
 
 def test_tree_3_lifestyle_follow_up_meets_stored_10_5_rule(
@@ -515,10 +508,166 @@ def test_tree_4_target_reached_emits_maintain_regimen_action(
     _assert_references(result, [(T4, "T4_C_INITIAL_REGIMEN_BP_TARGET_REACHED", 1)])
 
 
-def test_tree_5_initial_regimen_not_reached_preserves_action_and_state(
+DRUG_COMBINATION_STARTED_MISSING_HEART_FAILURE_INPUT = [
+    _entered("drug-combination", "T6_START_PATIENT_INFO_AND_PRESCRIPTIONS"),
+    _candidate(
+        "drug-combination", "T6_START_PATIENT_INFO_AND_PRESCRIPTIONS", "T6_C_FIRST_VISIT", False
+    ),
+    _candidate(
+        "drug-combination",
+        "T6_START_PATIENT_INFO_AND_PRESCRIPTIONS",
+        "T6_C_FOLLOW_UP_VISIT",
+        True,
+    ),
+    _entered("drug-combination", "T6_C_FOLLOW_UP_VISIT"),
+    _candidate(
+        "drug-combination",
+        "T6_C_FOLLOW_UP_VISIT",
+        "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
+        True,
+    ),
+    _entered("drug-combination", "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS"),
+    _candidate(
+        "drug-combination",
+        "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
+        "T6_C_HAS_PRIOR_PRESCRIPTION",
+        True,
+    ),
+    _entered("drug-combination", "T6_C_HAS_PRIOR_PRESCRIPTION"),
+    _candidate(
+        "drug-combination",
+        "T6_C_HAS_PRIOR_PRESCRIPTION",
+        "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION",
+        True,
+    ),
+    _entered("drug-combination", "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION"),
+    _candidate(
+        "drug-combination",
+        "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION",
+        "T6_C_DOSAGE_ADJUSTMENT_REQUESTED",
+        False,
+    ),
+    _candidate(
+        "drug-combination",
+        "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION",
+        "T6_C_NO_DOSAGE_ADJUSTMENT_REQUESTED",
+        True,
+    ),
+    _entered("drug-combination", "T6_C_NO_DOSAGE_ADJUSTMENT_REQUESTED"),
+    _candidate(
+        "drug-combination",
+        "T6_C_NO_DOSAGE_ADJUSTMENT_REQUESTED",
+        "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT",
+        True,
+    ),
+    _entered("drug-combination", "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT"),
+    _candidate(
+        "drug-combination",
+        "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT",
+        "T6_INF_DETERMINE_CONTRAINDICATIONS",
+        True,
+    ),
+    _entered("drug-combination", "T6_INF_DETERMINE_CONTRAINDICATIONS"),
+    _candidate(
+        "drug-combination",
+        "T6_INF_DETERMINE_CONTRAINDICATIONS",
+        "T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS",
+        True,
+    ),
+    _entered("drug-combination", "T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS"),
+    _candidate(
+        "drug-combination",
+        "T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS",
+        "T6_C_HAS_DUPLICATE_DRUG_CLASS",
+        False,
+    ),
+    _candidate(
+        "drug-combination",
+        "T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS",
+        "T6_C_NO_DUPLICATE_DRUG_CLASS",
+        True,
+    ),
+    _entered("drug-combination", "T6_C_NO_DUPLICATE_DRUG_CLASS"),
+    _candidate(
+        "drug-combination",
+        "T6_C_NO_DUPLICATE_DRUG_CLASS",
+        "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE",
+        True,
+    ),
+    _entered("drug-combination", "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE"),
+    _candidate(
+        "drug-combination",
+        "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE",
+        "T6_C_IS_FIRST_VISIT_FOR_REGIMEN",
+        False,
+    ),
+    _candidate(
+        "drug-combination",
+        "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE",
+        "T6_C_IS_FOLLOW_UP_FOR_REGIMEN",
+        True,
+    ),
+    _entered("drug-combination", "T6_C_IS_FOLLOW_UP_FOR_REGIMEN"),
+    _candidate(
+        "drug-combination", "T6_C_IS_FOLLOW_UP_FOR_REGIMEN", "T6_C_TARGET_ACHIEVED", False
+    ),
+    _candidate(
+        "drug-combination", "T6_C_IS_FOLLOW_UP_FOR_REGIMEN", "T6_C_TARGET_NOT_ACHIEVED", True
+    ),
+    _entered("drug-combination", "T6_C_TARGET_NOT_ACHIEVED"),
+    _candidate(
+        "drug-combination",
+        "T6_C_TARGET_NOT_ACHIEVED",
+        "T6_C_FOLLOWUP_INITIAL_STAGE",
+        True,
+    ),
+    _entered("drug-combination", "T6_C_FOLLOWUP_INITIAL_STAGE"),
+    _candidate(
+        "drug-combination",
+        "T6_C_FOLLOWUP_INITIAL_STAGE",
+        "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY",
+        True,
+    ),
+    _entered("drug-combination", "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY"),
+    _candidate(
+        "drug-combination",
+        "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY",
+        "T6_C_WAS_ON_MONOTHERAPY",
+        False,
+    ),
+    _candidate(
+        "drug-combination",
+        "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY",
+        "T6_C_WAS_NOT_ON_MONOTHERAPY",
+        True,
+    ),
+    _entered("drug-combination", "T6_C_WAS_NOT_ON_MONOTHERAPY"),
+    _candidate(
+        "drug-combination",
+        "T6_C_WAS_NOT_ON_MONOTHERAPY",
+        "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG",
+        True,
+    ),
+    _entered("drug-combination", "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG"),
+    _candidate(
+        "drug-combination",
+        "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG",
+        "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION",
+        True,
+    ),
+    _entered("drug-combination", "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION"),
+]
+
+
+def test_tree_5_initial_regimen_not_reached_resolves_link_then_needs_more_input(
     seeded_trees: SeededTrees,
     active_bp_target: dict[str, Any],
 ) -> None:
+    """drug-combination is now seeded (backups/cdss_merged.sql), so the LINK resolves
+    and traversal continues into it, executing several of its own ACTION nodes,
+    until it fails on a required field (`has_heart_failure`) this fixture never had
+    to supply for Trees 1-5, instead of raising LinkTargetNotFound.
+    """
     runtime_input = _medication_input(
         active_bp_target,
         facility="FULL_RESOURCES",
@@ -526,48 +675,120 @@ def test_tree_5_initial_regimen_not_reached_preserves_action_and_state(
         current_dbp=80,
     )
 
-    with pytest.raises(LinkTargetNotFound) as exc_info:
+    with pytest.raises(MissingRuntimePath) as exc_info:
         walk_tree(seeded_trees.graphs[T3], runtime_input, repository=seeded_trees.repository)
 
     error = exc_info.value
-    assert error.details["link_target_tree_key"] == "drug-combination"
+    assert error.details["path"] == "input.has_heart_failure"
     state = _partial_state(error.partial_run_state)
     assert state.input_snapshot == runtime_input
     assert state.context == {
-        "treatment": {"bp_target": active_bp_target},
+        "treatment": {
+            "bp_target": active_bp_target,
+            "has_prior_prescription": True,
+            "has_dosage_adjustment_request": False,
+            "has_duplicate_drug_class": False,
+            "has_duplicate_ras_inhibitor": False,
+            "was_on_monotherapy": False,
+            "has_angina": False,
+            "has_prior_mi": False,
+            "has_atrial_fibrillation": False,
+            "has_tachycardia": False,
+            "is_pregnant": False,
+        },
         "diagnosis": {
             "current_clinic_sbp": 130,
             "current_clinic_dbp": 80,
         },
+        "treatment_preferences": {
+            "escalation_options": [
+                {"strategy": "INCREASE_DOSE_TWO_DRUG"},
+                {"strategy": "THREE_DRUG_COMBINATION", "classes": ["A", "C", "D"]},
+            ],
+        },
     }
     assert [
-        (action.tree_key, action.node_key, action.text_vi, action.payload)
+        (action.tree_key, action.node_key, action.text_vi, action.payload["action_type"])
         for action in state.actions
     ] == [
         (
             T5,
             "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION",
             "VIÊN PHỐI HỢP 3 THUỐC (1 viên): A+C+D",
-            {
-                "action_type": "FIXED_DOSE_THREE_DRUG_COMBINATION",
-                "classes": ["A", "C", "D"],
-                "fixed_dose_combination": True,
-                "follow_up_mode": "NEW_ENCOUNTER",
-                "follow_up_required": True,
-                "next_medication_follow_up_stage": "ESCALATED_REGIMEN",
-                "pill_count": 1,
-                "requires_clinician_review": True,
-            },
-        )
+            "FIXED_DOSE_THREE_DRUG_COMBINATION",
+        ),
+        (
+            "drug-combination",
+            "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION",
+            "So sánh với đơn thuốc hiện tại",
+            "COMPARE_WITH_CURRENT_PRESCRIPTION",
+        ),
+        (
+            "drug-combination",
+            "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT",
+            "Duy trì phác đồ",
+            "MAINTAIN_CURRENT_REGIMEN",
+        ),
+        (
+            "drug-combination",
+            "T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS",
+            "Kiểm tra trùng nhóm thuốc",
+            "CHECK_DUPLICATE_DRUG_CLASS",
+        ),
+        (
+            "drug-combination",
+            "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE",
+            "Duy trì phác đồ",
+            "MAINTAIN_CURRENT_REGIMEN",
+        ),
     ]
-    _assert_trace(state, [*T3_MEDICATION_FULL_RESOURCES, *T5_INITIAL_TARGET_NOT_REACHED])
-    _assert_references(state, [(T5, "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION", 1)])
+    _assert_trace(
+        state,
+        [
+            *T3_MEDICATION_FULL_RESOURCES,
+            *T5_INITIAL_TARGET_NOT_REACHED,
+            *DRUG_COMBINATION_STARTED_MISSING_HEART_FAILURE_INPUT,
+        ],
+    )
+    _assert_references(
+        state,
+        [
+            (T5, "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION", 1),
+            ("drug-combination", "T6_START_PATIENT_INFO_AND_PRESCRIPTIONS", 1),
+            ("drug-combination", "T6_INF_DETERMINE_CONTRAINDICATIONS", 1),
+            ("drug-combination", "T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS", 1),
+            ("drug-combination", "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG", 1),
+        ],
+    )
 
 
-def test_tree_5_escalated_regimen_not_reached_preserves_resistant_state(
+RESISTANT_HYPERTENSION_FULL_TREATMENT = [
+    _entered("resistant-hypertension", "T13_START"),
+    _candidate("resistant-hypertension", "T13_START", "T13_C_LIMITED", False),
+    _candidate("resistant-hypertension", "T13_START", "T13_C_FULL", True),
+    _entered("resistant-hypertension", "T13_C_FULL"),
+    _candidate("resistant-hypertension", "T13_C_FULL", "T13_A_OPTIMAL_TREATMENT", True),
+    _entered("resistant-hypertension", "T13_A_OPTIMAL_TREATMENT"),
+    _candidate(
+        "resistant-hypertension",
+        "T13_A_OPTIMAL_TREATMENT",
+        "T13_A_CONSIDER_DEVICE",
+        True,
+    ),
+    _entered("resistant-hypertension", "T13_A_CONSIDER_DEVICE"),
+    _candidate("resistant-hypertension", "T13_A_CONSIDER_DEVICE", "T13_END_REFER", True),
+    _entered("resistant-hypertension", "T13_END_REFER"),
+]
+
+
+def test_tree_5_escalated_regimen_resolves_link_and_reaches_resistant_hypertension_terminal(
     seeded_trees: SeededTrees,
     active_bp_target: dict[str, Any],
 ) -> None:
+    """resistant-hypertension is now seeded (backups/cdss_merged.sql), so the LINK
+    resolves and traversal continues into it, reaching a full terminal ACTION instead
+    of raising LinkTargetNotFound.
+    """
     runtime_input = _medication_input(
         active_bp_target,
         facility="FULL_RESOURCES",
@@ -576,14 +797,9 @@ def test_tree_5_escalated_regimen_not_reached_preserves_resistant_state(
         current_dbp=80,
     )
 
-    with pytest.raises(LinkTargetNotFound) as exc_info:
-        walk_tree(seeded_trees.graphs[T3], runtime_input, repository=seeded_trees.repository)
+    result = walk_tree(seeded_trees.graphs[T3], runtime_input, repository=seeded_trees.repository)
 
-    error = exc_info.value
-    assert error.details["link_target_tree_key"] == "resistant-hypertension"
-    state = _partial_state(error.partial_run_state)
-    assert state.input_snapshot == runtime_input
-    assert state.context == {
+    assert result.context == {
         "treatment": {
             "additional_options": [
                 "MRA",
@@ -600,9 +816,49 @@ def test_tree_5_escalated_regimen_not_reached_preserves_resistant_state(
             "current_clinic_dbp": 80,
         },
     }
-    assert state.actions == []
-    _assert_trace(state, [*T3_MEDICATION_FULL_RESOURCES, *T5_ESCALATED_TARGET_NOT_REACHED])
-    _assert_references(state, [(T5, "T5_INF_RESISTANT_HYPERTENSION_TREATMENT_STEP", 1)])
+    assert [
+        (action.tree_key, action.node_key, action.text_vi, action.payload)
+        for action in result.actions
+    ] == [
+        (
+            "resistant-hypertension",
+            "T13_A_OPTIMAL_TREATMENT",
+            "Điều trị theo tiêu chuẩn tối ưu và Tăng cường biện pháp tđls, "
+            "đặc biệt là hạn chế muối",
+            {"action_type": "LIFESTYLE_CHANGES", "salt_restriction": True},
+        ),
+        (
+            "resistant-hypertension",
+            "T13_A_CONSIDER_DEVICE",
+            "Xem xét điều trị can thiệp dụng cụ",
+            {"action_type": "CONSIDER_DEVICE_INTERVENTION"},
+        ),
+        (
+            "resistant-hypertension",
+            "T13_END_REFER",
+            "Chuyển lên trung tâm chuyên khoa",
+            {"action_type": "REFER_TO_SPECIALIZED_CENTER"},
+        ),
+    ]
+    _assert_trace(
+        result,
+        [
+            *T3_MEDICATION_FULL_RESOURCES,
+            *T5_ESCALATED_TARGET_NOT_REACHED,
+            *RESISTANT_HYPERTENSION_FULL_TREATMENT,
+        ],
+    )
+    _assert_references(
+        result,
+        [
+            (T5, "T5_INF_RESISTANT_HYPERTENSION_TREATMENT_STEP", 1),
+            ("resistant-hypertension", "T13_START", 1),
+            ("resistant-hypertension", "T13_C_FULL", 1),
+            ("resistant-hypertension", "T13_A_OPTIMAL_TREATMENT", 1),
+            ("resistant-hypertension", "T13_A_CONSIDER_DEVICE", 1),
+            ("resistant-hypertension", "T13_END_REFER", 1),
+        ],
+    )
 
 
 def _medication_input(

@@ -29,6 +29,7 @@ const HIDDEN_COMPONENTS = {
 
 interface TreeCanvasProps {
   graph: TreeGraphResponse
+  theme: 'dark' | 'light'
   focusNodeKey: string | null
   onSelectNode: (node: TreeGraphNode | null) => void
   /** Node keys that were traversed (entered) */
@@ -57,6 +58,7 @@ function updateArrowShapes(editor: Editor, kind: 'straight' | 'elbow') {
 
 export function TreeCanvas({
   graph,
+  theme,
   focusNodeKey,
   onSelectNode,
   highlightedNodeKeys,
@@ -100,7 +102,7 @@ export function TreeCanvas({
   const handleMount = useCallback(
     (editor: Editor) => {
       editorRef.current = editor
-      editor.user.updateUserPreferences({ colorScheme: 'dark' })
+      editor.user.updateUserPreferences({ colorScheme: theme })
 
       const nodesByKey = new Map(graph.nodes.map((node) => [node.node_key, node]))
 
@@ -133,7 +135,7 @@ export function TreeCanvas({
           }
         }
 
-        shapeIdsRef.current = buildTreeScene(editor, graph.nodes, graph.edges, mergedPositions, savedArrowKind)
+        shapeIdsRef.current = buildTreeScene(editor, graph.nodes, graph.edges, mergedPositions, savedArrowKind, theme)
 
         if (focusNodeKey) {
           const shapeId = shapeIdsRef.current.get(focusNodeKey)
@@ -213,6 +215,24 @@ export function TreeCanvas({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   )
+
+  // Keep tldraw's internal color scheme in sync with the app theme toggle
+  useEffect(() => {
+    editorRef.current?.user.updateUserPreferences({ colorScheme: theme })
+  }, [theme])
+
+  // Keep node shape colors in sync with the app theme toggle
+  useEffect(() => {
+    const editor = editorRef.current
+    if (!editor || !isSceneLoaded) return
+
+    for (const shapeId of shapeIdsRef.current.values()) {
+      const shape = editor.getShape(shapeId)
+      if (shape && shape.type === 'decisionNode' && (shape.props as { theme: string }).theme !== theme) {
+        editor.updateShape({ id: shapeId, type: 'decisionNode', props: { theme } })
+      }
+    }
+  }, [theme, isSceneLoaded])
 
   // Focus / pan to node when focusNodeKey changes
   useEffect(() => {
