@@ -299,16 +299,23 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
     return formToPayload(form)
   }
 
+  /** Tree 1 (initial diagnosis) has no awareness of follow-up visits — it always
+   * requires clinic_2/clinic_3 readings. Follow-up patients must enter at Tree 3,
+   * which reads is_lifestyle_follow_up / is_medication_follow_up directly. */
+  const startTreeKey = form.is_lifestyle_follow_up || form.is_medication_follow_up
+    ? 'treatment-threshold-and-bp-target'
+    : 'hypertension-diagnosis'
+
   const handleStart = () => {
     const payload = validateAndBuildPayload()
     if (!payload) return
-    onStart('hypertension-diagnosis', payload)
+    onStart(startTreeKey, payload)
   }
 
   const handleManualStart = () => {
     const payload = validateAndBuildPayload()
     if (!payload) return
-    onManualStart('hypertension-diagnosis', payload)
+    onManualStart(startTreeKey, payload)
   }
 
   const handleReset = () => {
