@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { TreeCanvas } from './canvas/TreeCanvas'
 import { useSidebarResize } from './hooks/useSidebarResize'
 import { useTraversal } from './hooks/useTraversal'
@@ -9,7 +10,19 @@ import { NodeDetailPanel } from './panels/NodeDetailPanel'
 import { TraversalResultModal } from './panels/TraversalResultModal'
 import './App.css'
 
+type Theme = 'dark' | 'light'
+
 function App() {
+  const [theme, setTheme] = useState<Theme>(() => {
+    const saved = localStorage.getItem('cdss-theme')
+    return saved === 'light' ? 'light' : 'dark'
+  })
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('cdss-theme', theme)
+  }, [theme])
+
   const {
     trees,
     activeTreeKey,
@@ -67,6 +80,14 @@ function App() {
             {tree.name_en}
           </button>
         ))}
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {theme === 'dark' ? '🌙' : '☀️'} {theme === 'dark' ? 'Dark' : 'Light'}
+        </button>
       </div>
 
       {error && <div className="error-banner">{error}</div>}
@@ -91,6 +112,7 @@ function App() {
             <TreeCanvas
               key={activeGraph.tree.tree_key}
               graph={activeGraph}
+              theme={theme}
               focusNodeKey={focusNodeKey}
               onSelectNode={setSelectedNode}
               highlightedNodeKeys={visibleHighlights}

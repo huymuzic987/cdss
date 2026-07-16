@@ -9,6 +9,7 @@ export function buildTreeScene(
   edges: TreeGraphEdge[],
   positions: Map<string, NodePosition>,
   arrowKind: 'straight' | 'elbow' = 'straight',
+  theme: 'dark' | 'light' = 'dark',
 ): Map<string, TLShapeId> {
   const shapeIdByNodeKey = new Map<string, TLShapeId>()
 
@@ -27,6 +28,7 @@ export function buildTreeScene(
         nodeKey: node.node_key,
         nodeType: node.node_type,
         label: node.text_en,
+        theme,
       },
     })
   }
