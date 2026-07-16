@@ -9,6 +9,7 @@ export interface DecisionNodeShapeProps {
   label: string
   highlightStatus: 'none' | 'entered' | 'active'
   dimmed: boolean
+  theme: 'dark' | 'light'
 }
 
 export type DecisionNodeShape = TLBaseShape<'decisionNode', DecisionNodeShapeProps>
@@ -48,10 +49,11 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
     label: T.string,
     highlightStatus: T.literalEnum('none', 'entered', 'active'),
     dimmed: T.boolean,
+    theme: T.literalEnum('dark', 'light'),
   }
 
   override getDefaultProps(): DecisionNodeShape['props'] {
-    return { w: 220, h: 72, nodeKey: '', nodeType: 'ACTION', label: '', highlightStatus: 'none', dimmed: false }
+    return { w: 220, h: 72, nodeKey: '', nodeType: 'ACTION', label: '', highlightStatus: 'none', dimmed: false, theme: 'dark' }
   }
 
   override canEdit(): boolean {
@@ -88,13 +90,14 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
 
   override component(shape: DecisionNodeShape) {
     const colors = NODE_TYPE_COLORS[shape.props.nodeType]
-    const { highlightStatus, dimmed } = shape.props
+    const { highlightStatus, dimmed, theme } = shape.props
+    const isLight = theme === 'light'
 
     let borderColor = colors.border
     let borderWidth = 2
     let boxShadow = 'none'
     let transform = 'none'
-    let background = colors.background
+    let background = isLight ? colors.border : colors.background
     let opacity = 1
 
     if (highlightStatus === 'active') {
@@ -139,7 +142,7 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
             fontSize: 11,
             fontWeight: 700,
             letterSpacing: 0.4,
-            color: highlightStatus !== 'none' ? borderColor : colors.border,
+            color: isLight ? '#000000' : highlightStatus !== 'none' ? borderColor : colors.border,
             textTransform: 'uppercase',
           }}
         >
@@ -148,7 +151,7 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
         <div
           style={{
             fontSize: 13,
-            color: '#f8fafc',
+            color: isLight ? '#000000' : '#f8fafc',
             lineHeight: 1.3,
             display: '-webkit-box',
             WebkitLineClamp: 2,

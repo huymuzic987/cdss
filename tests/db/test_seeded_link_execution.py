@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from cdss.domain.decision_tree import (
     DecisionTreeError,
     EdgeDefinition,
-    LinkTargetNotFound,
+    MissingRuntimePath,
     NodeDefinition,
     NodeType,
     RunState,
@@ -70,9 +70,14 @@ def test_tree_1_normal_bp_definition_applies_expected_context(seeded_trees: Seed
     assert _nested_value(state.context, ("diagnosis", "hypertension_class")) == "NORMAL_BP"
 
 
-def test_tree_1_emergency_link_is_typed_unresolved_dependency(
+def test_tree_1_emergency_link_resolves_into_seeded_tree(
     seeded_trees: SeededTrees,
 ) -> None:
+    """hypertensive-emergency is now seeded (backups/cdss_merged.sql), so the LINK
+    resolves and traversal continues into it instead of raising LinkTargetNotFound.
+    The bridged walk carries no upstream input, so it fails on the tree's own first
+    required field rather than reaching a terminal node.
+    """
     graph = seeded_trees.graphs["hypertension-diagnosis"]
     node = _find_node(
         graph,
@@ -83,7 +88,7 @@ def test_tree_1_emergency_link_is_typed_unresolved_dependency(
         "hypertensive-emergency LINK",
     )
 
-    with pytest.raises(LinkTargetNotFound) as exc_info:
+    with pytest.raises(MissingRuntimePath) as exc_info:
         walk_tree(
             _bridge_to(graph, node),
             {},
@@ -96,6 +101,7 @@ def test_tree_1_emergency_link_is_typed_unresolved_dependency(
         entry.tree_key == graph.tree.tree_key and entry.node_key == node.node_key
         for entry in partial.trace
     )
+    assert any(entry.tree_key == "hypertensive-emergency" for entry in partial.trace)
 
 
 def test_tree_3_restore_operation_copies_active_target_before_transfer(
@@ -147,9 +153,15 @@ def test_tree_4_or_5_target_reached_emits_seeded_vietnamese_text(
     assert any(action.text_vi == expected_text for action in state.actions)
 
 
-def test_drug_combination_failure_retains_prior_execution_state(
+def test_drug_combination_link_resolves_and_retains_prior_execution_state(
     seeded_trees: SeededTrees,
 ) -> None:
+    """drug-combination is now seeded (backups/cdss_merged.sql), so the LINK resolves
+    and traversal continues into it instead of raising LinkTargetNotFound. The bridged
+    walk carries no upstream input, so it fails on drug-combination's own first
+    required field rather than reaching a terminal node, but the ACTION executed
+    before the LINK is still retained in the partial state.
+    """
     graphs = [
         seeded_trees.graphs["essential-treatment-strategy"],
         seeded_trees.graphs["optimal-treatment-strategy"],
@@ -188,7 +200,7 @@ def test_drug_combination_failure_retains_prior_execution_state(
         pytest.fail("seeded ACTION leading to drug-combination LINK was not found")
     graph, predecessor, link = selected
 
-    with pytest.raises(LinkTargetNotFound) as exc_info:
+    with pytest.raises(MissingRuntimePath) as exc_info:
         walk_tree(
             _bridge_to(graph, predecessor),
             {},
@@ -203,6 +215,7 @@ def test_drug_combination_failure_retains_prior_execution_state(
         entry.tree_key == graph.tree.tree_key and entry.node_key == link.node_key
         for entry in partial.trace
     )
+    assert any(entry.tree_key == "drug-combination" for entry in partial.trace)
     if predecessor.context_patch is not None:
         assert partial.context
 

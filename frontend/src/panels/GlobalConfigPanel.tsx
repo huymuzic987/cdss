@@ -15,7 +15,7 @@ export function GlobalConfigPanel({ globalNodes }: GlobalConfigPanelProps) {
         const configStr = node.global_config ? JSON.stringify(node.global_config, null, 2) : ''
         const copyText = `${node.text_en}${configStr ? '\n' + configStr : ''}`
         return (
-          <div key={node.node_key} className="detail-field" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '8px', marginBottom: '8px' }}>
+          <div key={node.node_key} className="detail-field" style={{ borderBottom: '1px solid var(--border-soft)', paddingBottom: '8px', marginBottom: '8px' }}>
             <div className="detail-field-header">
               <span className="detail-key">{node.node_key}</span>
               <CopyButton text={copyText} />
