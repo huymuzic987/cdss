@@ -2213,7 +2213,6 @@ b2c3d4e5-f6a7-5b8c-9d0e-1f2a3b4c5d6e	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_LI
 COPY public.decision_edges ("id", "from_node_id", "to_node_id", "traversal_order") FROM stdin;
 17ec4ab3-c516-5bbc-8d3f-7939b2750532	0878afaa-2a79-5188-94f6-c27d064f9402	9bc0e11b-2f69-5420-a680-6165ec1e61fd	1
 4da9327a-b69b-56ca-a9e1-30e035facb51	0878afaa-2a79-5188-94f6-c27d064f9402	0d880900-1578-512f-993d-012bf287ed9c	2
-7ee20595-ac2d-58ad-a9cf-045dc21b1cd4	9bc0e11b-2f69-5420-a680-6165ec1e61fd	e66c4278-e605-5e6b-a7ea-9a0b0e461dc8	1
 1ec8426a-e5ac-5944-bc14-f2db7559fd2f	0d880900-1578-512f-993d-012bf287ed9c	31a12b62-51e6-595b-bb87-5e214f2f8f97	1
 d3a01d27-5f8a-5c7b-9125-073e76eb67a4	31a12b62-51e6-595b-bb87-5e214f2f8f97	4e8ed9cf-1693-5ca9-9c3e-6c1abbfc8143	1
 3838d992-8e37-51f2-8daa-5897392c54a8	31a12b62-51e6-595b-bb87-5e214f2f8f97	3bef0da4-1b69-573b-b077-07a8d46a1584	2
@@ -2266,7 +2265,6 @@ f331fd7c-edbc-5a60-87b0-3f75d56aa3b8	93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	Khuy�
 d8909b97-057e-5ab4-863e-5d37c8caecfb	d8271d2d-79ff-50e5-be69-ee29cc68f432	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
 0df45abf-3279-5bf5-9057-fe4ade2cfb42	ca0c7576-4117-510d-b28b-6eff717791f7	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
 782d3dfd-a68d-527e-b589-acf23529c583	1208d7cb-f28c-5131-afad-9249828c164c	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-152fd63d-37d9-53c1-9b0f-ef350f6f1e1a	e66c4278-e605-5e6b-a7ea-9a0b0e461dc8	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
 \.
 
 

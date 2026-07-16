@@ -64,7 +64,11 @@ def wipe_and_replay(conn, dump_path: Path) -> None:
         stmt = "\n".join(
             x for x in stmt.splitlines() if x.strip() not in ("BEGIN;", "COMMIT;")
         )
-        if stmt.strip():
+        has_code = any(
+            line.strip() and not line.strip().startswith("--")
+            for line in stmt.splitlines()
+        )
+        if has_code:
             cur.execute(stmt)
 
     while i < n:

@@ -1,0 +1,9 @@
+Distinct tree_key entries: 8
+essential-treatment-strategy | Essential treatment strategy | Cây chiến lược điều trị thiết yếu
+hypertension-coronary-artery-disease | Hypertension + Coronary Artery Disease | Cây 9: THA + bệnh mạch vành
+hypertension-diagnosis | Hypertension Diagnosis | Chẩn đoán THA
+hypertension-heart-failure | Hypertension + Heart Failure | Cây 10: THA + suy tim
+optimal-treatment-strategy | Optimal treatment strategy | Cây chiến lược điều trị tối ưu
+resistant-hypertension | Resistant Hypertension | THA Kháng trị
+risk-classification | Risk Classification | Phân tầng nguy cơ
+treatment-threshold-and-bp-target | Treatment Threshold and BP Target | Ngưỡng Huyết Áp và Đích điều trị

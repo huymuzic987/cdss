@@ -57,6 +57,7 @@ export const PATIENT_PRESETS: PatientPreset[] = [
       clinic_2_sbp: '148', clinic_2_dbp: '93',
       clinic_3_sbp: '152', clinic_3_dbp: '96',
       age: '55', risk_factor_count: '3',
+      facility_capability: 'FULL_RESOURCES',
     },
   },
   {
@@ -150,6 +151,7 @@ export const PATIENT_PRESETS: PatientPreset[] = [
       clinic_2_sbp: '140', clinic_2_dbp: '89',
       clinic_3_sbp: '137', clinic_3_dbp: '87',
       age: '45', risk_factor_count: '8',
+      facility_capability: 'FULL_RESOURCES',
     },
   },
 
