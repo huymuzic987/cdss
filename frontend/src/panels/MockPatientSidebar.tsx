@@ -554,199 +554,9 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
         )}
 
         {/* ========== SECTION 2: Demographics ========== */}
-        <SectionHeader label="Demographics & Risk" icon="👤" />
-
-        <div className="ps-field-row">
-          <div className="ps-field">
-            <label className="ps-field-label">Age (years)</label>
-            <input
-              className="ps-num-input"
-              type="number" min={1} max={120}
-              placeholder="e.g. 65"
-              value={form.age}
-              onChange={(e) => setStr('age', e.target.value)}
-              disabled={isRunning}
-            />
-          </div>
-          <div className="ps-field">
-            <label className="ps-field-label">
-              Risk Factors
-              <span className="ps-field-hint" title="Age >65, Male sex, Smoking, Elevated LDL, Obesity, HR >80, Family history CVD, Premature menopause, Prediabetes, Physical inactivity">ⓘ</span>
-            </label>
-            <input
-              className="ps-num-input"
-              type="number" min={0} max={10}
-              placeholder="0 – 10"
-              value={form.risk_factor_count}
-              onChange={(e) => setStr('risk_factor_count', e.target.value)}
-              disabled={isRunning}
-            />
-          </div>
-        </div>
-
-        <div className="ps-toggles">
-          <Toggle label="Pregnant" fieldKey="is_pregnant" form={form} onChange={setBool} disabled={isRunning} />
-        </div>
-
-        {/* ========== SECTION 3: Comorbidities ========== */}
-        <SectionHeader label="Comorbidities & Clinical Flags" icon="🏥" />
-
-        <div className="ps-toggles">
-          <Toggle label="Coronary Artery Disease" fieldKey="has_coronary_artery_disease" form={form} onChange={setBool} disabled={isRunning} />
-          <Toggle label="Type 2 Diabetes" fieldKey="has_type_2_diabetes" form={form} onChange={setBool} disabled={isRunning} />
-          <Toggle label="Diabetes (general)" fieldKey="has_diabetes" form={form} onChange={setBool} disabled={isRunning} />
-          <Toggle label="Heart Failure" fieldKey="has_heart_failure" form={form} onChange={setBool} disabled={isRunning} />
-          <Toggle label="Chronic Kidney Disease" fieldKey="has_ckd" form={form} onChange={setBool} disabled={isRunning} />
-          <Toggle label="CKD Stage 3+" fieldKey="has_ckd_stage_3_or_higher" form={form} onChange={setBool} disabled={isRunning} />
-          <Toggle label="Cardiovascular Disease" fieldKey="has_cardiovascular_disease" form={form} onChange={setBool} disabled={isRunning} />
-          <Toggle label="Stroke (history)" fieldKey="has_stroke" form={form} onChange={setBool} disabled={isRunning} />
-          <Toggle label="TIA (history)" fieldKey="has_tia" form={form} onChange={setBool} disabled={isRunning} note="Transient Ischemic Attack" />
-          <Toggle label="Frailty Syndrome" fieldKey="has_frailty_syndrome" form={form} onChange={setBool} disabled={isRunning} />
-          <Toggle label="Target Organ Damage" fieldKey="has_target_organ_damage" form={form} onChange={setBool} disabled={isRunning} note="Drives the hypertensive-emergency crisis branch" />
-        </div>
-
-        {form.has_coronary_artery_disease && (
+        <SectionHeader label="Demographics & Risk" icon="👤" open={openSections.demographics} onToggle={() => toggleSection('demographics')} />
+        {openSections.demographics && (
           <>
-            <div className="ps-sub-label" style={{ marginTop: 8 }}>Coronary Artery Disease Detail</div>
-            <div className="ps-toggles">
-              <Toggle label="Acute MI / ACS" fieldKey="has_mi_acs" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="CCS Angina" fieldKey="has_ccs_angina" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="CCS Post-Revascularization" fieldKey="has_ccs_revasc" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="CABG (history)" fieldKey="has_cabg" form={form} onChange={setBool} disabled={isRunning} />
-            </div>
-          </>
-        )}
-
-        {form.has_heart_failure && (
-          <>
-            <div className="ps-sub-label" style={{ marginTop: 8 }}>Heart Failure Detail</div>
-            <div className="ps-toggles">
-              <Toggle label="HFrEF (reduced EF)" fieldKey="has_hfref" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="HFmrEF (mildly reduced EF)" fieldKey="has_hfmref" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="HFpEF (preserved EF)" fieldKey="has_hfpef" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Left Ventricular Hypertrophy" fieldKey="has_lvh" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="BP Target Reached" fieldKey="bp_target_reached" form={form} onChange={setBool} disabled={isRunning} />
-            </div>
-          </>
-        )}
-
-        {form.has_ckd && (
-          <>
-            <div className="ps-sub-label" style={{ marginTop: 8 }}>Chronic Kidney Disease Detail</div>
-            <div className="ps-toggles">
-              <Toggle label="Kidney Transplant (history)" fieldKey="has_kidney_transplant" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Prior Creatinine Test on File" fieldKey="has_prior_creatinine_test" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Still Using RAS Inhibitor" fieldKey="still_using_ras_inhibitor" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Creatinine Increased >30%" fieldKey="creatinine_increased_over_30_percent" form={form} onChange={setBool} disabled={isRunning} />
-            </div>
-          </>
-        )}
-
-        {form.has_target_organ_damage && (
-          <>
-            <div className="ps-sub-label" style={{ marginTop: 8 }}>Hypertensive Emergency Detail</div>
-            <div className="ps-toggles">
-              <Toggle label="Acute Ischemic Stroke" fieldKey="has_acute_ischemic_stroke" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Thrombolysis Candidate" fieldKey="is_thrombolysis_candidate" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Acute Coronary Syndrome" fieldKey="has_acute_coronary_syndrome" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Acute Cardiogenic Pulmonary Edema" fieldKey="has_acute_cardiogenic_pulmonary_edema" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Acute Aortic Syndrome" fieldKey="has_acute_aortic_syndrome" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Eclampsia / Severe Preeclampsia / HELLP" fieldKey="has_eclampsia_severe_preeclampsia_or_hellp" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Hypertensive Encephalopathy" fieldKey="has_hypertensive_encephalopathy" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Acute Intracerebral Hemorrhage" fieldKey="has_acute_intracerebral_hemorrhage" form={form} onChange={setBool} disabled={isRunning} />
-            </div>
-          </>
-        )}
-
-        {form.is_pregnant && (
-          <>
-            <div className="ps-sub-label" style={{ marginTop: 8 }}>Pregnancy Detail</div>
-            <div className="ps-toggles">
-              <Toggle label="Pre-Pregnancy Hypertension" fieldKey="has_pre_pregnancy_hypertension" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Hypertension Before Week 20" fieldKey="has_hypertension_before_week_20" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Hypertension After Week 20" fieldKey="has_hypertension_after_week_20" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Prior Gestational Hypertension" fieldKey="has_prior_gestational_hypertension" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="High Preeclampsia Risk" fieldKey="has_high_preeclampsia_risk" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Proteinuria" fieldKey="has_proteinuria" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Autoimmune Disease" fieldKey="has_autoimmune_disease" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Seizure" fieldKey="has_seizure" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Severe Headache" fieldKey="has_severe_headache" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Visual Disturbance" fieldKey="has_visual_disturbance" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Epigastric Pain" fieldKey="has_epigastric_pain" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Hemolysis" fieldKey="has_hemolysis" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Elevated Liver Enzymes" fieldKey="has_elevated_liver_enzymes" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Low Platelets" fieldKey="has_low_platelets" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Pulmonary Edema" fieldKey="has_pulmonary_edema" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Coagulopathy" fieldKey="has_coagulopathy" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Hypertensive Crisis" fieldKey="has_hypertensive_crisis" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Treatment Target Not Achieved" fieldKey="is_treatment_target_not_achieved" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Postpartum" fieldKey="is_postpartum" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Breastfeeding" fieldKey="is_breastfeeding" form={form} onChange={setBool} disabled={isRunning} />
-            </div>
-            <div className="ps-field-row" style={{ marginTop: 6 }}>
-              <div className="ps-field">
-                <label className="ps-field-label">Proteinuria (24h, mg)</label>
-                <input
-                  className="ps-num-input"
-                  type="number" min={0}
-                  placeholder="e.g. 350"
-                  value={form.proteinuria_24h_mg}
-                  onChange={(e) => setStr('proteinuria_24h_mg', e.target.value)}
-                  disabled={isRunning}
-                />
-              </div>
-              <div className="ps-field">
-                <label className="ps-field-label">ACR (mg/mmol)</label>
-                <input
-                  className="ps-num-input"
-                  type="number" min={0}
-                  placeholder="e.g. 35"
-                  value={form.acr_mg_mmol}
-                  onChange={(e) => setStr('acr_mg_mmol', e.target.value)}
-                  disabled={isRunning}
-                />
-              </div>
-            </div>
-            <div className="ps-field-row">
-              <div className="ps-field">
-                <label className="ps-field-label">Weeks Persisting Postpartum</label>
-                <input
-                  className="ps-num-input"
-                  type="number" min={0}
-                  placeholder="e.g. 8"
-                  value={form.weeks_persisting_postpartum}
-                  onChange={(e) => setStr('weeks_persisting_postpartum', e.target.value)}
-                  disabled={isRunning}
-                />
-              </div>
-              <div className="ps-field">
-                <label className="ps-field-label">Weeks Resolved Postpartum</label>
-                <input
-                  className="ps-num-input"
-                  type="number" min={0}
-                  placeholder="e.g. 2"
-                  value={form.weeks_resolved_postpartum}
-                  onChange={(e) => setStr('weeks_resolved_postpartum', e.target.value)}
-                  disabled={isRunning}
-                />
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* ========== SECTION 4: Care Setting ========== */}
-        <SectionHeader label="Care Setting & Follow-Up" icon="⚙️" />
-
-        {/* Active BP Target — kept up top since it drives the follow-up comparison below */}
-        <div className="ps-toggles">
-          <Toggle label="Has Active BP Target" fieldKey="has_active_bp_target" form={form} onChange={setBool} disabled={isRunning} note="Patient already on therapy" />
-        </div>
-
-        {form.has_active_bp_target && (
-          <div className="ps-bp-target-box">
-            <div className="ps-field-hint" style={{ display: 'block', marginBottom: 6 }}>
-              Target is reached when SBP is below the SBP number AND DBP is below the DBP number.
-            </div>
             <div className="ps-field-row">
               <div className="ps-field">
                 <label className="ps-field-label">Age (years)</label>
@@ -774,6 +584,7 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
                 />
               </div>
             </div>
+
             <div className="ps-toggles">
               <Toggle label="Pregnant" fieldKey="is_pregnant" form={form} onChange={setBool} disabled={isRunning} />
             </div>
@@ -781,31 +592,211 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
         )}
 
         {/* ========== SECTION 3: Comorbidities ========== */}
-        <SectionHeader label="Comorbidities" icon={<HeartPulse size={13} />} open={openSections.comorbidities} onToggle={() => toggleSection('comorbidities')} />
+        <SectionHeader label="Comorbidities & Clinical Flags" icon={<HeartPulse size={13} />} open={openSections.comorbidities} onToggle={() => toggleSection('comorbidities')} />
         {openSections.comorbidities && (
-          <div className="ps-toggles">
-            <Toggle label="Coronary Artery Disease" fieldKey="has_coronary_artery_disease" form={form} onChange={setBool} disabled={isRunning} />
-            <Toggle label="Type 2 Diabetes" fieldKey="has_type_2_diabetes" form={form} onChange={setBool} disabled={isRunning} />
-            <Toggle label="Diabetes (general)" fieldKey="has_diabetes" form={form} onChange={setBool} disabled={isRunning} />
-            <Toggle label="Heart Failure" fieldKey="has_heart_failure" form={form} onChange={setBool} disabled={isRunning} />
-            <Toggle label="Chronic Kidney Disease" fieldKey="has_ckd" form={form} onChange={setBool} disabled={isRunning} />
-            <Toggle label="CKD Stage 3+" fieldKey="has_ckd_stage_3_or_higher" form={form} onChange={setBool} disabled={isRunning} />
-            <Toggle label="Cardiovascular Disease" fieldKey="has_cardiovascular_disease" form={form} onChange={setBool} disabled={isRunning} />
-            <Toggle label="Stroke (history)" fieldKey="has_stroke" form={form} onChange={setBool} disabled={isRunning} />
-            <Toggle label="TIA (history)" fieldKey="has_tia" form={form} onChange={setBool} disabled={isRunning} note="Transient Ischemic Attack" />
-            <Toggle label="Frailty Syndrome" fieldKey="has_frailty_syndrome" form={form} onChange={setBool} disabled={isRunning} />
-            <Toggle label="Target Organ Damage" fieldKey="has_target_organ_damage" form={form} onChange={setBool} disabled={isRunning} />
-          </div>
+          <>
+            <div className="ps-toggles">
+              <Toggle label="Coronary Artery Disease" fieldKey="has_coronary_artery_disease" form={form} onChange={setBool} disabled={isRunning} />
+              <Toggle label="Type 2 Diabetes" fieldKey="has_type_2_diabetes" form={form} onChange={setBool} disabled={isRunning} />
+              <Toggle label="Diabetes (general)" fieldKey="has_diabetes" form={form} onChange={setBool} disabled={isRunning} />
+              <Toggle label="Heart Failure" fieldKey="has_heart_failure" form={form} onChange={setBool} disabled={isRunning} />
+              <Toggle label="Chronic Kidney Disease" fieldKey="has_ckd" form={form} onChange={setBool} disabled={isRunning} />
+              <Toggle label="CKD Stage 3+" fieldKey="has_ckd_stage_3_or_higher" form={form} onChange={setBool} disabled={isRunning} />
+              <Toggle label="Cardiovascular Disease" fieldKey="has_cardiovascular_disease" form={form} onChange={setBool} disabled={isRunning} />
+              <Toggle label="Stroke (history)" fieldKey="has_stroke" form={form} onChange={setBool} disabled={isRunning} />
+              <Toggle label="TIA (history)" fieldKey="has_tia" form={form} onChange={setBool} disabled={isRunning} note="Transient Ischemic Attack" />
+              <Toggle label="Frailty Syndrome" fieldKey="has_frailty_syndrome" form={form} onChange={setBool} disabled={isRunning} />
+              <Toggle label="Target Organ Damage" fieldKey="has_target_organ_damage" form={form} onChange={setBool} disabled={isRunning} note="Drives the hypertensive-emergency crisis branch" />
+            </div>
+
+            {form.has_coronary_artery_disease && (
+              <>
+                <div className="ps-sub-label" style={{ marginTop: 8 }}>Coronary Artery Disease Detail</div>
+                <div className="ps-toggles">
+                  <Toggle label="Acute MI / ACS" fieldKey="has_mi_acs" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="CCS Angina" fieldKey="has_ccs_angina" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="CCS Post-Revascularization" fieldKey="has_ccs_revasc" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="CABG (history)" fieldKey="has_cabg" form={form} onChange={setBool} disabled={isRunning} />
+                </div>
+              </>
+            )}
+
+            {form.has_heart_failure && (
+              <>
+                <div className="ps-sub-label" style={{ marginTop: 8 }}>Heart Failure Detail</div>
+                <div className="ps-toggles">
+                  <Toggle label="HFrEF (reduced EF)" fieldKey="has_hfref" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="HFmrEF (mildly reduced EF)" fieldKey="has_hfmref" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="HFpEF (preserved EF)" fieldKey="has_hfpef" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Left Ventricular Hypertrophy" fieldKey="has_lvh" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="BP Target Reached" fieldKey="bp_target_reached" form={form} onChange={setBool} disabled={isRunning} />
+                </div>
+              </>
+            )}
+
+            {form.has_ckd && (
+              <>
+                <div className="ps-sub-label" style={{ marginTop: 8 }}>Chronic Kidney Disease Detail</div>
+                <div className="ps-toggles">
+                  <Toggle label="Kidney Transplant (history)" fieldKey="has_kidney_transplant" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Prior Creatinine Test on File" fieldKey="has_prior_creatinine_test" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Still Using RAS Inhibitor" fieldKey="still_using_ras_inhibitor" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Creatinine Increased >30%" fieldKey="creatinine_increased_over_30_percent" form={form} onChange={setBool} disabled={isRunning} />
+                </div>
+              </>
+            )}
+
+            {form.has_target_organ_damage && (
+              <>
+                <div className="ps-sub-label" style={{ marginTop: 8 }}>Hypertensive Emergency Detail</div>
+                <div className="ps-toggles">
+                  <Toggle label="Acute Ischemic Stroke" fieldKey="has_acute_ischemic_stroke" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Thrombolysis Candidate" fieldKey="is_thrombolysis_candidate" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Acute Coronary Syndrome" fieldKey="has_acute_coronary_syndrome" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Acute Cardiogenic Pulmonary Edema" fieldKey="has_acute_cardiogenic_pulmonary_edema" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Acute Aortic Syndrome" fieldKey="has_acute_aortic_syndrome" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Eclampsia / Severe Preeclampsia / HELLP" fieldKey="has_eclampsia_severe_preeclampsia_or_hellp" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Hypertensive Encephalopathy" fieldKey="has_hypertensive_encephalopathy" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Acute Intracerebral Hemorrhage" fieldKey="has_acute_intracerebral_hemorrhage" form={form} onChange={setBool} disabled={isRunning} />
+                </div>
+              </>
+            )}
+
+            {form.is_pregnant && (
+              <>
+                <div className="ps-sub-label" style={{ marginTop: 8 }}>Pregnancy Detail</div>
+                <div className="ps-toggles">
+                  <Toggle label="Pre-Pregnancy Hypertension" fieldKey="has_pre_pregnancy_hypertension" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Hypertension Before Week 20" fieldKey="has_hypertension_before_week_20" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Hypertension After Week 20" fieldKey="has_hypertension_after_week_20" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Prior Gestational Hypertension" fieldKey="has_prior_gestational_hypertension" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="High Preeclampsia Risk" fieldKey="has_high_preeclampsia_risk" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Proteinuria" fieldKey="has_proteinuria" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Autoimmune Disease" fieldKey="has_autoimmune_disease" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Seizure" fieldKey="has_seizure" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Severe Headache" fieldKey="has_severe_headache" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Visual Disturbance" fieldKey="has_visual_disturbance" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Epigastric Pain" fieldKey="has_epigastric_pain" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Hemolysis" fieldKey="has_hemolysis" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Elevated Liver Enzymes" fieldKey="has_elevated_liver_enzymes" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Low Platelets" fieldKey="has_low_platelets" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Pulmonary Edema" fieldKey="has_pulmonary_edema" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Coagulopathy" fieldKey="has_coagulopathy" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Hypertensive Crisis" fieldKey="has_hypertensive_crisis" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Treatment Target Not Achieved" fieldKey="is_treatment_target_not_achieved" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Postpartum" fieldKey="is_postpartum" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Breastfeeding" fieldKey="is_breastfeeding" form={form} onChange={setBool} disabled={isRunning} />
+                </div>
+                <div className="ps-field-row" style={{ marginTop: 6 }}>
+                  <div className="ps-field">
+                    <label className="ps-field-label">Proteinuria (24h, mg)</label>
+                    <input
+                      className="ps-num-input"
+                      type="number" min={0}
+                      placeholder="e.g. 350"
+                      value={form.proteinuria_24h_mg}
+                      onChange={(e) => setStr('proteinuria_24h_mg', e.target.value)}
+                      disabled={isRunning}
+                    />
+                  </div>
+                  <div className="ps-field">
+                    <label className="ps-field-label">ACR (mg/mmol)</label>
+                    <input
+                      className="ps-num-input"
+                      type="number" min={0}
+                      placeholder="e.g. 35"
+                      value={form.acr_mg_mmol}
+                      onChange={(e) => setStr('acr_mg_mmol', e.target.value)}
+                      disabled={isRunning}
+                    />
+                  </div>
+                </div>
+                <div className="ps-field-row">
+                  <div className="ps-field">
+                    <label className="ps-field-label">Weeks Persisting Postpartum</label>
+                    <input
+                      className="ps-num-input"
+                      type="number" min={0}
+                      placeholder="e.g. 8"
+                      value={form.weeks_persisting_postpartum}
+                      onChange={(e) => setStr('weeks_persisting_postpartum', e.target.value)}
+                      disabled={isRunning}
+                    />
+                  </div>
+                  <div className="ps-field">
+                    <label className="ps-field-label">Weeks Resolved Postpartum</label>
+                    <input
+                      className="ps-num-input"
+                      type="number" min={0}
+                      placeholder="e.g. 2"
+                      value={form.weeks_resolved_postpartum}
+                      onChange={(e) => setStr('weeks_resolved_postpartum', e.target.value)}
+                      disabled={isRunning}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+          </>
         )}
 
-        {form.is_medication_follow_up && form.medication_follow_up_stage === 'ESCALATED_REGIMEN' && form.facility_capability === 'LIMITED_RESOURCES' && (
+        {/* ========== SECTION 4: Care Setting ========== */}
+        <SectionHeader label="Care Setting & Follow-Up" icon="⚙️" open={openSections.care} onToggle={() => toggleSection('care')} />
+        {openSections.care && (
           <>
-            <div className="ps-sub-label" style={{ marginTop: 8 }}>Resistant Hypertension Detail (Limited Resources)</div>
+            {/* Active BP Target — kept up top since it drives the follow-up comparison below */}
             <div className="ps-toggles">
-              <Toggle label="Tolerates MRA" fieldKey="tolerates_mra" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="Tolerates Spironolactone" fieldKey="tolerates_spironolactone" form={form} onChange={setBool} disabled={isRunning} />
-              <Toggle label="BP Target Reached" fieldKey="bp_target_reached" form={form} onChange={setBool} disabled={isRunning} />
+              <Toggle label="Has Active BP Target" fieldKey="has_active_bp_target" form={form} onChange={setBool} disabled={isRunning} note="Patient already on therapy" />
             </div>
+
+            {form.has_active_bp_target && (
+              <div className="ps-bp-target-box">
+                <div className="ps-field-hint" style={{ display: 'block', marginBottom: 6 }}>
+                  Target is reached when SBP is below the SBP number AND DBP is below the DBP number.
+                </div>
+                <div className="ps-field-row">
+                  <div className="ps-field">
+                    <label className="ps-field-label">Age (years)</label>
+                    <input
+                      className="ps-num-input"
+                      type="number" min={1} max={120}
+                      placeholder="e.g. 65"
+                      value={form.age}
+                      onChange={(e) => setStr('age', e.target.value)}
+                      disabled={isRunning}
+                    />
+                  </div>
+                  <div className="ps-field">
+                    <label className="ps-field-label">
+                      Risk Factors
+                      <span className="ps-field-hint" title="Age >65, Male sex, Smoking, Elevated LDL, Obesity, HR >80, Family history CVD, Premature menopause, Prediabetes, Physical inactivity">ⓘ</span>
+                    </label>
+                    <input
+                      className="ps-num-input"
+                      type="number" min={0} max={10}
+                      placeholder="0 – 10"
+                      value={form.risk_factor_count}
+                      onChange={(e) => setStr('risk_factor_count', e.target.value)}
+                      disabled={isRunning}
+                    />
+                  </div>
+                </div>
+                <div className="ps-toggles">
+                  <Toggle label="Pregnant" fieldKey="is_pregnant" form={form} onChange={setBool} disabled={isRunning} />
+                </div>
+              </div>
+            )}
+
+            {form.is_medication_follow_up && form.medication_follow_up_stage === 'ESCALATED_REGIMEN' && form.facility_capability === 'LIMITED_RESOURCES' && (
+              <>
+                <div className="ps-sub-label" style={{ marginTop: 8 }}>Resistant Hypertension Detail (Limited Resources)</div>
+                <div className="ps-toggles">
+                  <Toggle label="Tolerates MRA" fieldKey="tolerates_mra" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="Tolerates Spironolactone" fieldKey="tolerates_spironolactone" form={form} onChange={setBool} disabled={isRunning} />
+                  <Toggle label="BP Target Reached" fieldKey="bp_target_reached" form={form} onChange={setBool} disabled={isRunning} />
+                </div>
+              </>
+            )}
           </>
         )}
 
