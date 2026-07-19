@@ -80,6 +80,9 @@ function App() {
 
   const { width: rightSidebarWidth, isResizing, handleMouseDown } = useSidebarResize()
 
+  const [leftCollapsed, setLeftCollapsed] = useState(false)
+  const [rightCollapsed, setRightCollapsed] = useState(false)
+
   // Only pass highlight props when the active tab matches the traversal tree
   const isTraversalTab = activeTreeKey === activeTraversalTreeKey
   const visibleHighlights =
@@ -146,7 +149,7 @@ function App() {
 
       <div className="app-body">
         {/* ---- LEFT: Navigator + Patient Simulator ---- */}
-        <div className="left-panel">
+        <div className="left-panel" style={{ width: leftCollapsed ? 0 : 280 }}>
           <TreeNavigator
             trees={trees}
             activeTreeKey={activeTreeKey}
@@ -164,6 +167,22 @@ function App() {
             onReset={handleReset}
           />
         </div>
+
+        {/* ---- LEFT COLLAPSE TOGGLE ---- */}
+        <button
+          type="button"
+          className="panel-toggle-btn"
+          onClick={() => setLeftCollapsed((v) => !v)}
+          title={leftCollapsed ? 'Expand left panel' : 'Collapse left panel'}
+          aria-label={leftCollapsed ? 'Expand left panel' : 'Collapse left panel'}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            {leftCollapsed
+              ? <path d="M4 2l4 4-4 4"/>
+              : <path d="M8 2L4 6l4 4"/>
+            }
+          </svg>
+        </button>
 
         {/* ---- CENTER: Canvas ---- */}
         <div className="canvas-area" style={{ pointerEvents: isResizing ? 'none' : 'auto' }}>
@@ -186,13 +205,37 @@ function App() {
         </div>
 
         {/* ---- RESIZER ---- */}
-        <div
-          className={`sidebar-resizer ${isResizing ? 'resizing' : ''}`}
-          onMouseDown={handleMouseDown}
-        />
+        {!rightCollapsed && (
+          <div
+            className={`sidebar-resizer ${isResizing ? 'resizing' : ''}`}
+            onMouseDown={handleMouseDown}
+          />
+        )}
+
+        {/* ---- RIGHT COLLAPSE TOGGLE ---- */}
+        <button
+          type="button"
+          className="panel-toggle-btn"
+          onClick={() => setRightCollapsed((v) => !v)}
+          title={rightCollapsed ? 'Expand right panel' : 'Collapse right panel'}
+          aria-label={rightCollapsed ? 'Expand right panel' : 'Collapse right panel'}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            {rightCollapsed
+              ? <path d="M8 2L4 6l4 4"/>
+              : <path d="M4 2l4 4-4 4"/>
+            }
+          </svg>
+        </button>
 
         {/* ---- RIGHT: Side panels ---- */}
-        <div className="side-panels" style={{ width: rightSidebarWidth }}>
+        <div
+          className="side-panels"
+          style={rightCollapsed
+            ? { width: 0, padding: 0, overflow: 'hidden', minWidth: 0 }
+            : { width: rightSidebarWidth }
+          }
+        >
           <Legend theme={theme} />
           <NodeDetailPanel
             node={selectedNode}
