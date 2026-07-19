@@ -422,31 +422,53 @@ export function TreeCanvas({
       onClickCapture={handleClickCapture}
     >
       <div className="canvas-toolbar">
-        <input
-          type="text"
-          placeholder="Search nodes..."
-          value={searchQuery}
-          onChange={(event) => handleSearch(event.target.value)}
-        />
-        <button type="button" onClick={() => editorRef.current?.zoomToFit({ animation: { duration: 200 } })}>
-          Fit view
+        <span className="canvas-tree-name" title={graph.tree.name_en}>{graph.tree.name_en}</span>
+
+        <div className="canvas-toolbar-divider" />
+
+        <div className="canvas-toolbar-search">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <input
+            type="text"
+            placeholder="Search nodes..."
+            value={searchQuery}
+            onChange={(event) => handleSearch(event.target.value)}
+          />
+        </div>
+
+        <div className="canvas-toolbar-divider" />
+
+        <button type="button" title="Fit to screen" onClick={() => editorRef.current?.zoomToFit({ animation: { duration: 200 } })}>
+          Fit
         </button>
-        <button
-          type="button"
-          className={arrowKind === 'straight' ? 'active' : ''}
-          onClick={() => handleChangeArrowKind('straight')}
-        >
-          Straight
-        </button>
-        <button
-          type="button"
-          className={arrowKind === 'elbow' ? 'active' : ''}
-          onClick={() => handleChangeArrowKind('elbow')}
-        >
-          Elbow
-        </button>
-        <button type="button" onClick={handleResetLayout}>
-          Reset layout
+
+        <div className="canvas-toolbar-divider" />
+
+        <div className="canvas-toolbar-group">
+          <button
+            type="button"
+            className={arrowKind === 'straight' ? 'active' : ''}
+            title="Straight connectors"
+            onClick={() => handleChangeArrowKind('straight')}
+          >
+            Straight
+          </button>
+          <button
+            type="button"
+            className={arrowKind === 'elbow' ? 'active' : ''}
+            title="Elbow connectors"
+            onClick={() => handleChangeArrowKind('elbow')}
+          >
+            Elbow
+          </button>
+        </div>
+
+        <div className="canvas-toolbar-divider" />
+
+        <button type="button" title="Reset layout to default" onClick={handleResetLayout}>
+          Reset
         </button>
       </div>
       <Tldraw shapeUtils={SHAPE_UTILS} components={HIDDEN_COMPONENTS} onMount={handleMount} />

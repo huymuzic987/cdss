@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchTreeGraph, fetchTrees } from '../api/client'
 import type { TreeGraphNode, TreeGraphResponse, TreeSummary } from '../api/types'
 
@@ -36,11 +36,14 @@ export function useTreeGraphs() {
   }, [])
 
   // ---- Lazy-load graph when switching tabs ----
+  const inFlightRef = useRef<Set<string>>(new Set())
   useEffect(() => {
-    if (!activeTreeKey || graphCache[activeTreeKey]) return
+    if (!activeTreeKey || graphCache[activeTreeKey] || inFlightRef.current.has(activeTreeKey)) return
+    inFlightRef.current.add(activeTreeKey)
     fetchTreeGraph(activeTreeKey)
       .then((graph) => setGraphCache((prev) => ({ ...prev, [activeTreeKey]: graph })))
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => inFlightRef.current.delete(activeTreeKey))
   }, [activeTreeKey, graphCache])
 
   // ---- Ensure a tree graph is loaded (used during simulation) ----
