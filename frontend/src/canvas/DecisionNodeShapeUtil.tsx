@@ -97,7 +97,7 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
     let borderWidth = 2
     let boxShadow = 'none'
     let transform = 'none'
-    let background = isLight ? `${colors.border}22` : colors.background
+    let background = `${colors.border}33`
     let opacity = 1
 
     if (highlightStatus === 'active') {

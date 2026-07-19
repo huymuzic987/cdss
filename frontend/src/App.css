@@ -130,6 +130,52 @@
   border-color: var(--accent-solid);
 }
 
+/* =========================================================================
+   Tree Tabs Bar
+   ========================================================================= */
+
+.top-tabs-bar {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 8px;
+  background: var(--bg-app);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow-x: auto;
+  gap: 2px;
+  scrollbar-width: none;
+}
+
+.top-tabs-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.top-tab {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.top-tab:hover {
+  background: var(--bg-panel-hover);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.top-tab.active {
+  background: var(--accent-solid);
+  color: var(--text-on-accent);
+  border-color: var(--accent-solid);
+}
+
 .error-banner {
   background: var(--danger-bg);
   color: var(--danger-text);

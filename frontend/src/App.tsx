@@ -8,7 +8,6 @@ import { Legend } from './panels/Legend'
 import { MockPatientSidebar } from './panels/MockPatientSidebar'
 import { NodeDetailPanel } from './panels/NodeDetailPanel'
 import { TraversalResultModal } from './panels/TraversalResultModal'
-import { TreeNavigator } from './panels/TreeNavigator'
 import './App.css'
 
 type Theme = 'dark' | 'light'
@@ -145,16 +144,26 @@ function App() {
         </div>
       </div>
 
+      {/* ---- Tree tabs ---- */}
+      <div className="top-tabs-bar">
+        {trees.map((tree) => (
+          <button
+            key={tree.tree_key}
+            type="button"
+            className={`top-tab${activeTreeKey === tree.tree_key ? ' active' : ''}`}
+            onClick={() => handleSelectTab(tree.tree_key)}
+            title={tree.name_en}
+          >
+            {tree.name_en}
+          </button>
+        ))}
+      </div>
+
       {error && <div className="error-banner">{error}</div>}
 
       <div className="app-body">
-        {/* ---- LEFT: Navigator + Patient Simulator ---- */}
+        {/* ---- LEFT: Patient Simulator ---- */}
         <div className="left-panel" style={{ width: leftCollapsed ? 0 : 280 }}>
-          <TreeNavigator
-            trees={trees}
-            activeTreeKey={activeTreeKey}
-            onSelect={handleSelectTab}
-          />
           <MockPatientSidebar
             isRunning={traversalState === 'running'}
             canReset={traversalState !== 'idle'}

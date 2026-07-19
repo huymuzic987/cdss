@@ -419,7 +419,7 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
   const [form, setForm] = useState<PatientFormData>(DEFAULT_FORM)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [selectedPresetId, setSelectedPresetId] = useState('')
-  const [openSections, setOpenSections] = useState({ bp: true, demographics: false, comorbidities: false, care: false })
+  const [openSections, setOpenSections] = useState({ bp: true, demographics: true, comorbidities: true, care: true })
   const toggleSection = (key: keyof typeof openSections) =>
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
 

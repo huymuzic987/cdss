@@ -73,18 +73,7 @@ export function TreeCanvas({
   const [searchQuery, setSearchQuery] = useState('')
   const [isSceneLoaded, setIsSceneLoaded] = useState(false)
 
-  const [arrowKind, setArrowKind] = useState<'straight' | 'elbow'>(() => {
-    const savedLayoutStr = localStorage.getItem(`cdss-tree-layout-${graph.tree.tree_key}`)
-    if (savedLayoutStr) {
-      try {
-        const parsed = JSON.parse(savedLayoutStr)
-        if (parsed.arrowKind === 'elbow' || parsed.arrowKind === 'straight') {
-          return parsed.arrowKind
-        }
-      } catch {}
-    }
-    return 'straight'
-  })
+  const [arrowKind, setArrowKind] = useState<'straight' | 'elbow'>('elbow')
 
   const arrowKindRef = useRef(arrowKind)
   useEffect(() => {
@@ -108,13 +97,12 @@ export function TreeCanvas({
 
       // Retrieve saved configuration from localStorage on mount
       let savedPositions: Record<string, { x: number; y: number }> | null = null
-      let savedArrowKind: 'straight' | 'elbow' = 'straight'
+      let savedArrowKind: 'straight' | 'elbow' = 'elbow'
       const savedLayoutStr = localStorage.getItem(`cdss-tree-layout-${graph.tree.tree_key}`)
       if (savedLayoutStr) {
         try {
           const parsed = JSON.parse(savedLayoutStr)
           if (parsed.positions) savedPositions = parsed.positions
-          if (parsed.arrowKind) savedArrowKind = parsed.arrowKind
         } catch (e) {
           console.error('Failed to parse saved layout', e)
         }
@@ -384,7 +372,7 @@ export function TreeCanvas({
     if (!editor) return
 
     localStorage.removeItem(`cdss-tree-layout-${graph.tree.tree_key}`)
-    setArrowKind('straight')
+    setArrowKind('elbow')
 
     // Run ELK layout
     const elkPositions = await layoutTree(graph.nodes, graph.edges)
@@ -404,8 +392,8 @@ export function TreeCanvas({
       }),
     )
 
-    // Update arrows in-place to straight
-    updateArrowShapes(editor, 'straight')
+    // Update arrows in-place to elbow
+    updateArrowShapes(editor, 'elbow')
 
     // Clear last saved positions cache to match defaults
     lastSavedPositionsRef.current = {}
