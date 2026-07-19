@@ -787,6 +787,57 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
               </div>
             )}
 
+            <div className="ps-field" style={{ marginTop: 8 }}>
+              <label className="ps-field-label">Facility Capability</label>
+              <div className="ps-radio-group">
+                {[
+                  { value: 'FULL_RESOURCES', label: 'Full Resources' },
+                  { value: 'LIMITED_RESOURCES', label: 'Limited Resources' },
+                ].map(({ value, label }) => (
+                  <label key={value} className="ps-radio-label">
+                    <input
+                      type="radio"
+                      name="facility_capability"
+                      value={value}
+                      checked={form.facility_capability === value}
+                      onChange={() => setStr('facility_capability', value)}
+                      disabled={isRunning}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="ps-toggles" style={{ marginTop: 8 }}>
+              <Toggle label="Lifestyle Follow-Up Visit" fieldKey="is_lifestyle_follow_up" form={form} onChange={setBool} disabled={isRunning} />
+              <Toggle label="Medication Follow-Up Visit" fieldKey="is_medication_follow_up" form={form} onChange={setBool} disabled={isRunning} />
+            </div>
+
+            {form.is_medication_follow_up && (
+              <div className="ps-field" style={{ marginTop: 8 }}>
+                <label className="ps-field-label">Medication Follow-Up Stage</label>
+                <div className="ps-radio-group">
+                  {[
+                    { value: 'INITIAL_REGIMEN', label: 'Initial Regimen' },
+                    { value: 'ESCALATED_REGIMEN', label: 'Escalated Regimen' },
+                  ].map(({ value, label }) => (
+                    <label key={value} className="ps-radio-label">
+                      <input
+                        type="radio"
+                        name="medication_follow_up_stage"
+                        value={value}
+                        checked={form.medication_follow_up_stage === value}
+                        onChange={() => setStr('medication_follow_up_stage', value)}
+                        disabled={isRunning}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {form.is_medication_follow_up && form.medication_follow_up_stage === 'ESCALATED_REGIMEN' && form.facility_capability === 'LIMITED_RESOURCES' && (
               <>
                 <div className="ps-sub-label" style={{ marginTop: 8 }}>Resistant Hypertension Detail (Limited Resources)</div>
