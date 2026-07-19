@@ -3,7 +3,8 @@ import type { NodeType } from '../api/types'
 
 const CANVAS_NODE_TYPES: NodeType[] = ['START', 'CONDITION', 'INFERENCE', 'ACTION', 'END', 'LINK', 'GLOBAL']
 
-export function Legend() {
+export function Legend({ theme }: { theme: 'dark' | 'light' }) {
+  const isLight = theme === 'light'
   return (
     <div className="panel legend">
       {CANVAS_NODE_TYPES.map((nodeType) => {
@@ -12,7 +13,10 @@ export function Legend() {
           <div key={nodeType} className="legend-item">
             <span
               className="legend-swatch"
-              style={{ background: colors.background, border: `2px solid ${colors.border}` }}
+              style={{
+                background: isLight ? `${colors.border}22` : colors.background,
+                border: `2px solid ${colors.border}`,
+              }}
             />
             <span>{nodeType}</span>
           </div>
