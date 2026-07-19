@@ -1,4 +1,6 @@
+import { AlertTriangle, FlaskConical, HeartPulse, MousePointer2, Play, Settings2, Stethoscope, User, X } from 'lucide-react'
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import type { JsonObject } from '../api/types'
 import { PATIENT_PRESETS } from './patientPresets'
 
@@ -311,12 +313,29 @@ function formToPayload(form: PatientFormData): JsonObject {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function SectionHeader({ label, icon }: { label: string; icon: string }) {
+function SectionHeader({
+  label,
+  icon,
+  open,
+  onToggle,
+}: {
+  label: string
+  icon: ReactNode
+  open: boolean
+  onToggle: () => void
+}) {
   return (
-    <div className="ps-section-header">
+    <button type="button" className="ps-section-header" onClick={onToggle} aria-expanded={open}>
       <span className="ps-section-icon">{icon}</span>
       <span className="ps-section-label">{label}</span>
-    </div>
+      <svg
+        className={`ps-section-chevron${open ? ' open' : ''}`}
+        width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M9 18l6-6-6-6"/>
+      </svg>
+    </button>
   )
 }
 
@@ -400,6 +419,9 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
   const [form, setForm] = useState<PatientFormData>(DEFAULT_FORM)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [selectedPresetId, setSelectedPresetId] = useState('')
+  const [openSections, setOpenSections] = useState({ bp: true, demographics: false, comorbidities: false, care: false })
+  const toggleSection = (key: keyof typeof openSections) =>
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
 
   const setField = <K extends keyof PatientFormData>(key: K, value: PatientFormData[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -477,7 +499,7 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
       {/* ---- Sticky header ---- */}
       <div className="ps-header">
         <div className="ps-header-left">
-          <span className="ps-header-icon">🧪</span>
+          <span className="ps-header-icon"><FlaskConical size={16} /></span>
           <div>
             <div className="ps-header-title">Patient Simulator</div>
             <div className="ps-header-sub">Fill in fields to simulate traversal</div>
@@ -512,21 +534,24 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
       <div className="ps-body">
 
         {/* ========== SECTION 1: Blood Pressure ========== */}
-        <SectionHeader label="Blood Pressure Measures" icon="🩺" />
+        <SectionHeader label="Blood Pressure" icon={<Stethoscope size={13} />} open={openSections.bp} onToggle={() => toggleSection('bp')} />
+        {openSections.bp && (
+          <>
+            <div className="ps-sub-label">Initial Clinic Readings</div>
+            <BpRow label="Measure 1" sbpKey="clinic_1_sbp" dbpKey="clinic_1_dbp" form={form} onChange={setStr} disabled={isRunning} />
+            <BpRow label="Measure 2" sbpKey="clinic_2_sbp" dbpKey="clinic_2_dbp" form={form} onChange={setStr} disabled={isRunning} />
+            <BpRow label="Measure 3" sbpKey="clinic_3_sbp" dbpKey="clinic_3_dbp" form={form} onChange={setStr} disabled={isRunning} />
 
-        <div className="ps-sub-label">Initial Clinic Readings</div>
-        <BpRow label="Measure 1" sbpKey="clinic_1_sbp" dbpKey="clinic_1_dbp" form={form} onChange={setStr} disabled={isRunning} />
-        <BpRow label="Measure 2" sbpKey="clinic_2_sbp" dbpKey="clinic_2_dbp" form={form} onChange={setStr} disabled={isRunning} />
-        <BpRow label="Measure 3" sbpKey="clinic_3_sbp" dbpKey="clinic_3_dbp" form={form} onChange={setStr} disabled={isRunning} />
+            <div className="ps-sub-label" style={{ marginTop: 8 }}>Follow-Up</div>
+            <BpRow label="Pre-Lifestyle" sbpKey="pre_lifestyle_clinic_sbp" dbpKey="pre_lifestyle_clinic_dbp" form={form} onChange={setStr} disabled={isRunning} />
 
-        <div className="ps-sub-label" style={{ marginTop: 8 }}>Follow-Up Readings</div>
-        <BpRow label="Pre-Lifestyle" sbpKey="pre_lifestyle_clinic_sbp" dbpKey="pre_lifestyle_clinic_dbp" form={form} onChange={setStr} disabled={isRunning} />
-
-        <div className="ps-sub-label" style={{ marginTop: 8 }}>Out-of-Office / Ambulatory</div>
-        <BpRow label="Home" sbpKey="home_sbp" dbpKey="home_dbp" form={form} onChange={setStr} disabled={isRunning} />
-        <BpRow label="Daytime" sbpKey="daytime_sbp" dbpKey="daytime_dbp" form={form} onChange={setStr} disabled={isRunning} />
-        <BpRow label="Morning" sbpKey="morning_sbp" dbpKey="morning_dbp" form={form} onChange={setStr} disabled={isRunning} />
-        <BpRow label="24-Hour" sbpKey="bp_24h_sbp" dbpKey="bp_24h_dbp" form={form} onChange={setStr} disabled={isRunning} />
+            <div className="ps-sub-label" style={{ marginTop: 8 }}>Out-of-Office / Ambulatory</div>
+            <BpRow label="Home" sbpKey="home_sbp" dbpKey="home_dbp" form={form} onChange={setStr} disabled={isRunning} />
+            <BpRow label="Daytime" sbpKey="daytime_sbp" dbpKey="daytime_dbp" form={form} onChange={setStr} disabled={isRunning} />
+            <BpRow label="Morning" sbpKey="morning_sbp" dbpKey="morning_dbp" form={form} onChange={setStr} disabled={isRunning} />
+            <BpRow label="24-Hour" sbpKey="bp_24h_sbp" dbpKey="bp_24h_dbp" form={form} onChange={setStr} disabled={isRunning} />
+          </>
+        )}
 
         {/* ========== SECTION 2: Demographics ========== */}
         <SectionHeader label="Demographics & Risk" icon="👤" />
@@ -724,79 +749,52 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
             </div>
             <div className="ps-field-row">
               <div className="ps-field">
-                <label className="ps-field-label">SBP Target (mmHg, less than)</label>
+                <label className="ps-field-label">Age (years)</label>
                 <input
                   className="ps-num-input"
-                  type="number" min={60} max={300}
-                  placeholder="e.g. 130"
-                  value={form.target_sbp_upper}
-                  onChange={(e) => setStr('target_sbp_upper', e.target.value)}
+                  type="number" min={1} max={120}
+                  placeholder="e.g. 65"
+                  value={form.age}
+                  onChange={(e) => setStr('age', e.target.value)}
                   disabled={isRunning}
                 />
               </div>
               <div className="ps-field">
-                <label className="ps-field-label">DBP Target (mmHg, less than)</label>
+                <label className="ps-field-label">
+                  Risk Factors
+                  <span className="ps-field-hint" title="Age >65, Male sex, Smoking, Elevated LDL, Obesity, HR >80, Family history CVD, Premature menopause, Prediabetes, Physical inactivity">ⓘ</span>
+                </label>
                 <input
                   className="ps-num-input"
-                  type="number" min={40} max={200}
-                  placeholder="e.g. 80"
-                  value={form.target_dbp_upper}
-                  onChange={(e) => setStr('target_dbp_upper', e.target.value)}
+                  type="number" min={0} max={10}
+                  placeholder="0 – 10"
+                  value={form.risk_factor_count}
+                  onChange={(e) => setStr('risk_factor_count', e.target.value)}
                   disabled={isRunning}
                 />
               </div>
             </div>
-          </div>
+            <div className="ps-toggles">
+              <Toggle label="Pregnant" fieldKey="is_pregnant" form={form} onChange={setBool} disabled={isRunning} />
+            </div>
+          </>
         )}
 
-        <div className="ps-field">
-          <label className="ps-field-label">Facility Capability</label>
-          <div className="ps-radio-group">
-            {[
-              { value: 'FULL_RESOURCES', label: 'Full Resources' },
-              { value: 'LIMITED_RESOURCES', label: 'Limited Resources' },
-            ].map(({ value, label }) => (
-              <label key={value} className="ps-radio-label">
-                <input
-                  type="radio"
-                  name="facility_capability"
-                  value={value}
-                  checked={form.facility_capability === value}
-                  onChange={() => setStr('facility_capability', value)}
-                  disabled={isRunning}
-                />
-                {label}
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div className="ps-toggles" style={{ marginTop: 8 }}>
-          <Toggle label="Lifestyle Follow-Up Visit" fieldKey="is_lifestyle_follow_up" form={form} onChange={setBool} disabled={isRunning} />
-          <Toggle label="Medication Follow-Up Visit" fieldKey="is_medication_follow_up" form={form} onChange={setBool} disabled={isRunning} />
-        </div>
-
-        {form.is_medication_follow_up && (
-          <div className="ps-field" style={{ marginTop: 8 }}>
-            <label className="ps-field-label">Medication Follow-Up Stage</label>
-            <div className="ps-radio-group">
-              {[
-                { value: 'INITIAL_REGIMEN', label: 'Initial Regimen' },
-                { value: 'ESCALATED_REGIMEN', label: 'Escalated Regimen' },
-              ].map(({ value, label }) => (
-                <label key={value} className="ps-radio-label">
-                  <input
-                    type="radio"
-                    name="medication_follow_up_stage"
-                    value={value}
-                    checked={form.medication_follow_up_stage === value}
-                    onChange={() => setStr('medication_follow_up_stage', value)}
-                    disabled={isRunning}
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
+        {/* ========== SECTION 3: Comorbidities ========== */}
+        <SectionHeader label="Comorbidities" icon={<HeartPulse size={13} />} open={openSections.comorbidities} onToggle={() => toggleSection('comorbidities')} />
+        {openSections.comorbidities && (
+          <div className="ps-toggles">
+            <Toggle label="Coronary Artery Disease" fieldKey="has_coronary_artery_disease" form={form} onChange={setBool} disabled={isRunning} />
+            <Toggle label="Type 2 Diabetes" fieldKey="has_type_2_diabetes" form={form} onChange={setBool} disabled={isRunning} />
+            <Toggle label="Diabetes (general)" fieldKey="has_diabetes" form={form} onChange={setBool} disabled={isRunning} />
+            <Toggle label="Heart Failure" fieldKey="has_heart_failure" form={form} onChange={setBool} disabled={isRunning} />
+            <Toggle label="Chronic Kidney Disease" fieldKey="has_ckd" form={form} onChange={setBool} disabled={isRunning} />
+            <Toggle label="CKD Stage 3+" fieldKey="has_ckd_stage_3_or_higher" form={form} onChange={setBool} disabled={isRunning} />
+            <Toggle label="Cardiovascular Disease" fieldKey="has_cardiovascular_disease" form={form} onChange={setBool} disabled={isRunning} />
+            <Toggle label="Stroke (history)" fieldKey="has_stroke" form={form} onChange={setBool} disabled={isRunning} />
+            <Toggle label="TIA (history)" fieldKey="has_tia" form={form} onChange={setBool} disabled={isRunning} note="Transient Ischemic Attack" />
+            <Toggle label="Frailty Syndrome" fieldKey="has_frailty_syndrome" form={form} onChange={setBool} disabled={isRunning} />
+            <Toggle label="Target Organ Damage" fieldKey="has_target_organ_damage" form={form} onChange={setBool} disabled={isRunning} />
           </div>
         )}
 
@@ -819,7 +817,7 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
       <div className="ps-footer">
         {validationError && (
           <div className="ps-validation-error">
-            ⚠️ {validationError}
+            <AlertTriangle size={13} style={{ flexShrink: 0 }} /> {validationError}
           </div>
         )}
         <button
@@ -831,7 +829,7 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
           {isRunning ? (
             <><span className="ps-spinner" /> Simulating…</>
           ) : (
-            '▶  Start Traversal'
+            <><Play size={13} /> Start Traversal</>
           )}
         </button>
         <button
@@ -840,7 +838,7 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
           onClick={handleManualStart}
           disabled={isRunning}
         >
-          🖱  Manual Traverse
+          <MousePointer2 size={13} /> Manual Traverse
         </button>
         <button
           type="button"
@@ -848,7 +846,7 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
           onClick={handleReset}
           disabled={!canReset}
         >
-          ✕ Reset
+          <X size={13} /> Reset
         </button>
       </div>
     </aside>

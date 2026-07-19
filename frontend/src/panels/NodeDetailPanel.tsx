@@ -6,6 +6,7 @@ interface NodeDetailPanelProps {
   node: TreeGraphNode | null
   references: TreeGraphSourceReference[]
   onJumpToLink: (targetTreeKey: string, targetNodeKey: string | null) => void
+  theme: 'dark' | 'light'
 }
 
 function JsonBlock({ label, value }: { label: string; value: JsonObject | null }) {
@@ -22,7 +23,7 @@ function JsonBlock({ label, value }: { label: string; value: JsonObject | null }
   )
 }
 
-export function NodeDetailPanel({ node, references, onJumpToLink }: NodeDetailPanelProps) {
+export function NodeDetailPanel({ node, references, onJumpToLink, theme }: NodeDetailPanelProps) {
   if (!node) {
     return (
       <div className="panel">
@@ -33,13 +34,14 @@ export function NodeDetailPanel({ node, references, onJumpToLink }: NodeDetailPa
 
   const nodeReferences = references.filter((reference) => reference.node_key === node.node_key)
   const colors = NODE_TYPE_COLORS[node.node_type]
+  const isLight = theme === 'light'
   const upperSectionText = `Key: ${node.node_key}\nEnglish: ${node.text_en}\nVietnamese: ${node.text_vi}`
 
 
   return (
     <div className="panel">
       <div className="detail-header">
-        <span className="detail-badge" style={{ background: colors.background, color: colors.border }}>
+        <span className="detail-badge" style={{ background: isLight ? colors.border : colors.background, color: isLight ? '#000000' : colors.border }}>
           {node.node_type}
         </span>
         <span className="detail-key">{node.node_key}</span>
