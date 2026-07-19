@@ -7,11 +7,52 @@ import pytest
 
 from cdss.domain.decision_tree import (
     InvalidTreeStructure,
+    Medicine,
     NodeDefinition,
     NodeType,
     RunState,
     collect_action,
 )
+
+_FAKE_MEDICINES = (
+    Medicine(
+        drug_id="DRUG0023",
+        name="Losartan",
+        drug_class="A",
+        subgroup="ARB",
+        route="Thuốc Uống",
+        dose_low="25 mg",
+        dose_usual="50 - 100 mg",
+        dose_max="100 mg",
+        source="Bảng 10",
+        link=None,
+        available=True,
+    ),
+    Medicine(
+        drug_id="DRUG0065",
+        name="Aspirin",
+        drug_class=None,
+        subgroup=None,
+        route=None,
+        dose_low="75 - 81 mg/ngày",
+        dose_usual=None,
+        dose_max="150 - 162 mg/ngày",
+        source=None,
+        link="https://www.drugs.com/dosage/aspirin.html",
+        available=True,
+    ),
+)
+
+
+class _FakeMedicineRepository:
+    def get_by_id(self, drug_id: str) -> Medicine | None:
+        return next((m for m in _FAKE_MEDICINES if m.drug_id == drug_id), None)
+
+    def list_by_class(self, drug_class: str) -> tuple[Medicine, ...]:
+        return tuple(m for m in _FAKE_MEDICINES if m.drug_class == drug_class)
+
+    def list_all(self) -> tuple[Medicine, ...]:
+        return _FAKE_MEDICINES
 
 
 def _node(
@@ -93,7 +134,9 @@ def test_start_combination_end_node_attaches_medicine_options_from_context() -> 
         "combination_options": [["A", "C"], ["A", "D"]],
     }
 
-    action = collect_action(node, state, tree_key="drug-combination")
+    action = collect_action(
+        node, state, tree_key="drug-combination", medicine_repository=_FakeMedicineRepository()
+    )
 
     assert action is not None
     medicine_options = cast(list[dict[str, Any]], action.payload["medicine_options"])
@@ -114,7 +157,12 @@ def test_maintain_regimen_end_node_does_not_attach_medicine_options() -> None:
         "combination_options": [["A", "C"], ["A", "D"]],
     }
 
-    action = collect_action(node, state, tree_key="essential-treatment-strategy")
+    action = collect_action(
+        node,
+        state,
+        tree_key="essential-treatment-strategy",
+        medicine_repository=_FakeMedicineRepository(),
+    )
 
     assert action is not None
     assert action.payload == {"action_type": "MAINTAIN_CURRENT_REGIMEN"}
@@ -142,7 +190,9 @@ def test_start_combination_end_node_without_context_leaves_payload_unchanged() -
     )
     state = RunState.initialize({})
 
-    action = collect_action(node, state, tree_key="drug-combination")
+    action = collect_action(
+        node, state, tree_key="drug-combination", medicine_repository=_FakeMedicineRepository()
+    )
 
     assert action is not None
     assert action.payload == {"action_type": "CONSIDER_MONOTHERAPY"}
@@ -158,7 +208,12 @@ def test_single_drug_end_node_attaches_the_named_drug() -> None:
     )
     state = RunState.initialize({})
 
-    action = collect_action(node, state, tree_key="hypertension-in-pregnancy")
+    action = collect_action(
+        node,
+        state,
+        tree_key="hypertension-in-pregnancy",
+        medicine_repository=_FakeMedicineRepository(),
+    )
 
     assert action is not None
     medicines = cast(list[dict[str, Any]], action.payload["medicines"])

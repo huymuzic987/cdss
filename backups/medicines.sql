@@ -8,29 +8,10 @@
 -- that scheme (SGLT2i, alpha-blockers, vasodilators, central agonists,
 -- direct renin inhibitor, aspirin) have drug_class = NULL.
 --
--- This file is NOT wired into the live application database -- it is a
--- standalone, hand-maintained reference (same convention as the other files
--- in backups/). To change a dose, name, or availability: edit the matching
--- row below, then regenerate the Python lookup used by the app:
---
---     uv run python backups/generate_medicines.py
---
--- That script parses this file's INSERT statement and writes
--- src/cdss/domain/decision_tree/medicines.py (generated, do not hand-edit).
-
-CREATE TABLE IF NOT EXISTS medicines (
-    drug_id     text PRIMARY KEY,
-    name        text NOT NULL,
-    drug_class  text,
-    subgroup    text,
-    route       text,
-    dose_low    text,
-    dose_usual  text,
-    dose_max    text,
-    source      text,
-    link        text,
-    available   boolean NOT NULL DEFAULT true
-);
+-- The `medicines` table schema is owned by the Alembic migration
+-- 8cd7e7adc1fb_create_medicines_table.py -- this file is seed data only (run
+-- it against a database that already has that migration applied). To change
+-- a dose, name, or availability: edit the matching row below and re-apply.
 
 INSERT INTO medicines
     (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available)

@@ -1,7 +1,8 @@
 """Drug-reference resolution for END nodes that start medication therapy.
 
-Two independent mechanisms, both driven by the full medicine catalog in
-medicines.py (generated from backups/medicines.sql):
+Two independent mechanisms, both driven by the full medicine catalog in the
+``medicines`` table (seeded from backups/medicines.sql) via a caller-supplied
+MedicineRepository:
 
 1. Class-letter combinations. Tree 6 ("drug-combination") is the only tree
    whose INFERENCE nodes set ``context.treatment_preferences.combination_options``
@@ -32,7 +33,7 @@ from collections.abc import Mapping
 from typing import Any, cast
 
 from cdss.domain.decision_tree.contracts import JsonObject, JsonValue
-from cdss.domain.decision_tree.medicines import MEDICINES_BY_CLASS, MEDICINES_BY_ID
+from cdss.domain.decision_tree.medicine_catalog import Medicine, MedicineRepository
 
 # action_type values (Tree 6 END nodes only) that represent starting or
 # escalating a class-letter drug combination, as opposed to e.g. maintaining
@@ -54,20 +55,33 @@ SINGLE_DRUG_ACTION_TYPES: Mapping[str, tuple[str, ...]] = {
 }
 
 
-def _is_oral(medicine: JsonObject) -> bool:
-    route = medicine.get("route")
-    return isinstance(route, str) and "Uống" in route
+def _is_oral(medicine: Medicine) -> bool:
+    return medicine.route is not None and "Uống" in medicine.route
 
 
-def _is_available(medicine: JsonObject) -> bool:
-    return medicine.get("available") is True
+def _medicine_to_json(medicine: Medicine) -> JsonObject:
+    return {
+        "drug_id": medicine.drug_id,
+        "name": medicine.name,
+        "drug_class": medicine.drug_class,
+        "subgroup": medicine.subgroup,
+        "route": medicine.route,
+        "dose_low": medicine.dose_low,
+        "dose_usual": medicine.dose_usual,
+        "dose_max": medicine.dose_max,
+        "source": medicine.source,
+        "link": medicine.link,
+        "available": medicine.available,
+    }
 
 
-def _oral_available_medicines(class_letter: str) -> list[JsonObject]:
+def _oral_available_medicines(
+    class_letter: str, medicine_repository: MedicineRepository
+) -> list[JsonObject]:
     return [
-        medicine
-        for medicine in MEDICINES_BY_CLASS.get(class_letter, ())
-        if _is_oral(medicine) and _is_available(medicine)
+        _medicine_to_json(medicine)
+        for medicine in medicine_repository.list_by_class(class_letter)
+        if _is_oral(medicine) and medicine.available
     ]
 
 
@@ -100,16 +114,24 @@ def _base_combinations(treatment_preferences: Mapping[str, Any]) -> list[list[st
     return combos
 
 
-def _mandated_additional_classes(treatment_preferences: Mapping[str, Any]) -> list[str]:
+def _mandated_additional_classes(
+    treatment_preferences: Mapping[str, Any], medicine_repository: MedicineRepository
+) -> list[str]:
     """Class letters (e.g. a mandated beta-blocker) added on top of every combo."""
 
     additional = _string_list(treatment_preferences.get("additional_drug_classes"))
     if additional is None:
         return []
-    return [class_letter for class_letter in additional if class_letter in MEDICINES_BY_CLASS]
+    return [
+        class_letter
+        for class_letter in additional
+        if medicine_repository.list_by_class(class_letter)
+    ]
 
 
-def build_medicine_options(context: Mapping[str, Any]) -> list[JsonObject] | None:
+def build_medicine_options(
+    context: Mapping[str, Any], medicine_repository: MedicineRepository
+) -> list[JsonObject] | None:
     """Resolve the active class-letter combination(s) in ``context`` into medicines.
 
     Returns None if no combination/escalation classes are present in
@@ -123,7 +145,7 @@ def build_medicine_options(context: Mapping[str, Any]) -> list[JsonObject] | Non
     combos = _base_combinations(treatment_preferences)
     if not combos:
         return None
-    mandated = _mandated_additional_classes(treatment_preferences)
+    mandated = _mandated_additional_classes(treatment_preferences, medicine_repository)
 
     medicine_options: list[JsonObject] = []
     for combo in combos:
@@ -132,7 +154,9 @@ def build_medicine_options(context: Mapping[str, Any]) -> list[JsonObject] | Non
             {
                 "classes": cast(JsonValue, classes),
                 "medicines": {
-                    class_letter: cast(JsonValue, _oral_available_medicines(class_letter))
+                    class_letter: cast(
+                        JsonValue, _oral_available_medicines(class_letter, medicine_repository)
+                    )
                     for class_letter in classes
                 },
             }
@@ -140,7 +164,9 @@ def build_medicine_options(context: Mapping[str, Any]) -> list[JsonObject] | Non
     return medicine_options
 
 
-def resolve_single_drug_medicines(action_type: str) -> list[JsonObject] | None:
+def resolve_single_drug_medicines(
+    action_type: str, medicine_repository: MedicineRepository
+) -> list[JsonObject] | None:
     """Look up the specific drug(s) named by a single-drug action_type.
 
     Returns None if action_type isn't in SINGLE_DRUG_ACTION_TYPES. Unlike
@@ -151,4 +177,5 @@ def resolve_single_drug_medicines(action_type: str) -> list[JsonObject] | None:
     drug_ids = SINGLE_DRUG_ACTION_TYPES.get(action_type)
     if drug_ids is None:
         return None
-    return [MEDICINES_BY_ID[drug_id] for drug_id in drug_ids if drug_id in MEDICINES_BY_ID]
+    medicines = (medicine_repository.get_by_id(drug_id) for drug_id in drug_ids)
+    return [_medicine_to_json(medicine) for medicine in medicines if medicine is not None]
