@@ -106,14 +106,6 @@ function App() {
 
   return (
     <div className="app">
-      {/* ---- Top bar ---- */}
-      <div className="top-bar">
-        <div className="top-bar-brand">
-          <span className="top-bar-title">Hypertension CDSS</span>
-          <span className="top-bar-subtitle">Clinical Decision Support</span>
-        </div>
-      </div>
-
       {/* ---- Tree tabs ---- */}
       <div className="top-tabs-wrap">
         {canScrollTabsLeft && (

@@ -13,35 +13,6 @@
 
 
 
-.top-bar {
-  display: flex;
-  align-items: center;
-  height: 44px;
-  padding: 0 16px;
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  gap: 12px;
-}
-
-.top-bar-brand {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.top-bar-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-bright);
-  letter-spacing: -0.1px;
-}
-
-.top-bar-subtitle {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
 /* =========================================================================
    Tree Tabs Bar
    ========================================================================= */
@@ -49,17 +20,16 @@
 .top-tabs-wrap {
   position: relative;
   flex-shrink: 0;
+  background: var(--bg-surface);
   border-bottom: 1px solid var(--border);
 }
 
 .top-tabs-bar {
   display: flex;
   align-items: center;
-  height: 36px;
-  padding: 0 8px;
-  background: var(--bg-app);
+  gap: 4px;
+  padding: 8px 12px 0;
   overflow-x: auto;
-  gap: 7px;
   scrollbar-width: none;
 }
 
@@ -85,13 +55,13 @@
 .tab-scroll-left {
   left: 0;
   justify-content: flex-start;
-  background: linear-gradient(90deg, var(--bg-app) 55%, transparent);
+  background: linear-gradient(90deg, var(--bg-surface) 55%, transparent);
 }
 
 .tab-scroll-right {
   right: 0;
   justify-content: flex-end;
-  background: linear-gradient(270deg, var(--bg-app) 55%, transparent);
+  background: linear-gradient(270deg, var(--bg-surface) 55%, transparent);
 }
 
 .tab-scroll-btn:hover {
@@ -99,34 +69,22 @@
 }
 
 .top-tab {
-  position: relative;
   flex-shrink: 0;
-  padding: 4px 12px;
-  border-radius: 5px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 12px;
-  white-space: nowrap;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  background: var(--bg-panel);
+  padding: 8px 16px;
+  border-radius: 6px 6px 0 0;
   cursor: pointer;
-  transition: background 0.1s, color 0.1s, border-color 0.1s;
-}
-
-.top-tab:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  top: 5px;
-  bottom: 5px;
-  right: -4.5px;
-  width: 2px;
-  background: var(--border);
-  border-radius: 1px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: all 0.15s ease;
 }
 
 .top-tab:hover {
   background: var(--bg-panel-hover);
-  color: var(--text-primary);
-  border-color: var(--border);
+  color: var(--accent-text);
 }
 
 .top-tab.active {
@@ -1633,7 +1591,7 @@
    clearly separated panels instead of blending into the canvas.
    ========================================================================= */
 
-:root[data-theme="light"] .top-bar {
+:root[data-theme="light"] .top-tabs-wrap {
   border-bottom-width: 2px;
 }
 
