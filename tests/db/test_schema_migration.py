@@ -32,6 +32,7 @@ REQUIRED_TABLES = {
     "decision_edges",
     "node_source_references",
     "development_runtime_logs",
+    "medicines",
 }
 ENUM_LABELS = ["START", "CONDITION", "INFERENCE", "ACTION", "END", "LINK", "GLOBAL"]
 

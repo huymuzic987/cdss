@@ -1297,6 +1297,95 @@
   margin-bottom: 6px;
 }
 
+.modal-medicine-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.modal-medicine-option {
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.modal-medicine-option-classes {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-text);
+  letter-spacing: 0.4px;
+  margin-bottom: 6px;
+}
+
+.modal-medicine-class-group {
+  margin-bottom: 6px;
+}
+
+.modal-medicine-class-group:last-child {
+  margin-bottom: 0;
+}
+
+.modal-medicine-class-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 3px;
+}
+
+.modal-medicine-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.modal-medicine-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.modal-medicine-row.unavailable {
+  opacity: 0.55;
+}
+
+.modal-medicine-name {
+  color: var(--text-bright);
+  font-weight: 600;
+  min-width: 130px;
+}
+
+.modal-medicine-row.unavailable .modal-medicine-name {
+  text-decoration: line-through;
+}
+
+.modal-medicine-dose {
+  flex: 1;
+}
+
+.modal-medicine-source {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.modal-medicine-unavailable-badge {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--danger-text);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  border-radius: 999px;
+  padding: 1px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
 .modal-action-payload summary {
   font-size: 11px;
   color: var(--accent-text);
