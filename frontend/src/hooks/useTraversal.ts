@@ -37,22 +37,25 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
     partial: null,
   })
 
-  // Ref to abort in-flight animation
-  const cancelRef = useRef(false)
+  // Generation token: each start/reset bumps this, and every in-flight call
+  // captures its own id so a stale call can never be "un-cancelled" by a
+  // later call resetting a shared flag.
+  const runIdRef = useRef(0)
 
   // Shared: fire /evaluate, resolve the trace log, and preload every graph
   // the trace touches. Returns null (after setting error state) on hard failure.
   const runEvaluation = useCallback(
     async (
+      runId: number,
       startTreeKey: string,
       input: JsonObject,
     ): Promise<{ result: EvaluationResponse | null; partial: ApiErrorResponse | null; traceLog: TraversalTraceEntry[] } | null> => {
       await ensureGraph(startTreeKey)
-      if (cancelRef.current) return null
+      if (runIdRef.current !== runId) return null
       setActiveTreeKey(startTreeKey)
 
       const { result, partial, error: evalError } = await evaluateTree({ start_tree_key: startTreeKey, input })
-      if (cancelRef.current) return null
+      if (runIdRef.current !== runId) return null
 
       if (evalError) {
         setError(evalError.message)
@@ -65,7 +68,7 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
 
       const uniqueTreeKeys = Array.from(new Set(traceLog.map((entry) => entry.tree_key)))
       await Promise.all(uniqueTreeKeys.map((key) => ensureGraph(key)))
-      if (cancelRef.current) return null
+      if (runIdRef.current !== runId) return null
 
       return { result, partial, traceLog }
     },
@@ -84,7 +87,7 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
 
   const handleStartTraversal = useCallback(
     async (startTreeKey: string, input: JsonObject): Promise<void> => {
-      cancelRef.current = false
+      const runId = ++runIdRef.current
       setTraversalState('running')
       setHighlightedNodeKeys({})
       setActiveNodeKey(null)
@@ -93,7 +96,7 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
       setShowModal(false)
       setManualMode(false)
 
-      const evaluation = await runEvaluation(startTreeKey, input)
+      const evaluation = await runEvaluation(runId, startTreeKey, input)
       if (!evaluation) return
       const { result, partial, traceLog } = evaluation
 
@@ -115,8 +118,14 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
       }
       setHighlightedNodeKeys(newHighlights)
 
-      // Find the last entered node
-      const lastEntry = [...traceLog].reverse().find((e) => e.event === 'node_entered')
+      // Find the last entered node (walk backwards, no array copy)
+      let lastEntry: TraversalTraceEntry | undefined
+      for (let i = traceLog.length - 1; i >= 0; i--) {
+        if (traceLog[i].event === 'node_entered') {
+          lastEntry = traceLog[i]
+          break
+        }
+      }
       if (lastEntry) {
         setActiveTraversalTreeKey(lastEntry.tree_key)
         setActiveTreeKey(lastEntry.tree_key)
@@ -133,7 +142,7 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
 
   const handleStartManualTraversal = useCallback(
     async (startTreeKey: string, input: JsonObject): Promise<void> => {
-      cancelRef.current = false
+      const runId = ++runIdRef.current
       setTraversalState('running')
       setHighlightedNodeKeys({})
       setActiveNodeKey(null)
@@ -143,7 +152,7 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
       setManualMode(false)
       setManualStepIndex(0)
 
-      const evaluation = await runEvaluation(startTreeKey, input)
+      const evaluation = await runEvaluation(runId, startTreeKey, input)
       if (!evaluation) return
       const { result, partial, traceLog } = evaluation
 
@@ -191,7 +200,7 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
   }, [manualMode, manualStepIndex, setActiveTreeKey, setFocusNodeKey, finish])
 
   const handleReset = () => {
-    cancelRef.current = true
+    runIdRef.current++
     setTraversalState('idle')
     setHighlightedNodeKeys({})
     setActiveNodeKey(null)

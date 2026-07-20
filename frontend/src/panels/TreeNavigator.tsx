@@ -49,9 +49,7 @@ export function TreeNavigator({ trees, activeTreeKey, onSelect }: Props) {
     trees: trees.filter((t) => cat.match(t.tree_key, t.name_en)),
   })).filter((g) => g.trees.length > 0)
 
-  const categorizedKeys = new Set(
-    CATEGORIES.flatMap((cat) => trees.filter((t) => cat.match(t.tree_key, t.name_en)).map((t) => t.tree_key)),
-  )
+  const categorizedKeys = new Set(categorized.flatMap((g) => g.trees.map((t) => t.tree_key)))
   const other = trees.filter((t) => !categorizedKeys.has(t.tree_key))
   if (other.length > 0) categorized.push({ label: 'Other', trees: other })
 
