@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     # Opt-in process-level caching of immutable tree graphs. Off by default:
     # a deployment that enables it owns cache invalidation after any re-seed.
     cdss_graph_cache_enabled: bool = Field(default=False)
+    # Opt-in process-level caching of the medicine reference catalog. Same
+    # off-by-default/invalidation-on-re-seed tradeoff as cdss_graph_cache_enabled.
+    cdss_medicine_cache_enabled: bool = Field(default=False)
     # None means "not explicitly configured" -> resolved from app_env below.
     dev_runtime_logging_enabled: bool | None = Field(default=None)
 

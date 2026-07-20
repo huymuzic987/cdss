@@ -12,6 +12,7 @@ from cdss.infrastructure.db.models import (
     DecisionNode,
     DecisionTree,
     DevelopmentRuntimeLog,
+    Medicine,
     NodeSourceReference,
     NodeType,
 )
@@ -36,6 +37,7 @@ def test_table_names() -> None:
         "decision_edges",
         "node_source_references",
         "development_runtime_logs",
+        "medicines",
     }
 
 
@@ -123,3 +125,26 @@ def test_source_reference_page_arrays() -> None:
     assert ref.printed_page_numbers == [10, 11, 12]
     assert ref.pdf_page_numbers == [42]
     assert ref.section_path == ["chapter 3", "section 3.2"]
+
+
+def test_medicine_uses_drug_id_as_primary_key() -> None:
+    assert [c.name for c in _table(Medicine).primary_key.columns] == ["drug_id"]
+
+
+def test_medicine_field_assignment() -> None:
+    medicine = Medicine(
+        drug_id="DRUG0003",
+        name="Amlodipine",
+        drug_class="C",
+        subgroup="CKCa DHP",
+        route="Thuốc Uống",
+        dose_low="2.5 mg",
+        dose_usual="5 - 10 mg",
+        dose_max="10 mg",
+        source="Bảng 10",
+        link=None,
+        available=True,
+    )
+    assert medicine.drug_id == "DRUG0003"
+    assert medicine.drug_class == "C"
+    assert medicine.available is True
