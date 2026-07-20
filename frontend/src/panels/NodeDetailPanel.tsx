@@ -1,5 +1,5 @@
 import type { JsonObject, TreeGraphNode, TreeGraphSourceReference } from '../api/types'
-import { NODE_TYPE_COLORS } from '../canvas/DecisionNodeShapeUtil'
+import { getNodeTypeColors } from '../canvas/DecisionNodeShapeUtil'
 import { CopyButton } from './CopyButton'
 
 interface NodeDetailPanelProps {
@@ -33,15 +33,14 @@ export function NodeDetailPanel({ node, references, onJumpToLink, theme }: NodeD
   }
 
   const nodeReferences = references.filter((reference) => reference.node_key === node.node_key)
-  const colors = NODE_TYPE_COLORS[node.node_type]
-  const isLight = theme === 'light'
+  const colors = getNodeTypeColors(node.node_type, theme)
   const upperSectionText = `Key: ${node.node_key}\nEnglish: ${node.text_en}\nVietnamese: ${node.text_vi}`
 
 
   return (
     <div className="panel">
       <div className="detail-header">
-        <span className="detail-badge" style={{ background: isLight ? colors.border : colors.background, color: isLight ? '#000000' : colors.border }}>
+        <span className="detail-badge" style={{ background: colors.background, color: colors.border }}>
           {node.node_type}
         </span>
         <span className="detail-key">{node.node_key}</span>

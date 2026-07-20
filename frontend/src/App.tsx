@@ -82,6 +82,38 @@ function App() {
   const [leftCollapsed, setLeftCollapsed] = useState(false)
   const [rightCollapsed, setRightCollapsed] = useState(false)
 
+  const tabsScrollRef = useRef<HTMLDivElement>(null)
+  const [canScrollTabsLeft, setCanScrollTabsLeft] = useState(false)
+  const [canScrollTabsRight, setCanScrollTabsRight] = useState(false)
+
+  const updateTabsScrollState = () => {
+    const el = tabsScrollRef.current
+    if (!el) return
+    setCanScrollTabsLeft(el.scrollLeft > 2)
+    setCanScrollTabsRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2)
+  }
+
+  useEffect(() => {
+    updateTabsScrollState()
+    const el = tabsScrollRef.current
+    if (!el) return
+    const observer = new ResizeObserver(updateTabsScrollState)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [trees])
+
+  const scrollTabs = (direction: -1 | 1) => {
+    tabsScrollRef.current?.scrollBy({ left: direction * 180, behavior: 'smooth' })
+  }
+
+  const handleTabsWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    const el = tabsScrollRef.current
+    if (!el) return
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      el.scrollLeft += e.deltaY
+    }
+  }
+
   // Only pass highlight props when the active tab matches the traversal tree
   const isTraversalTab = activeTreeKey === activeTraversalTreeKey
   const visibleHighlights =
@@ -145,18 +177,49 @@ function App() {
       </div>
 
       {/* ---- Tree tabs ---- */}
-      <div className="top-tabs-bar">
-        {trees.map((tree) => (
+      <div className="top-tabs-wrap">
+        {canScrollTabsLeft && (
           <button
-            key={tree.tree_key}
             type="button"
-            className={`top-tab${activeTreeKey === tree.tree_key ? ' active' : ''}`}
-            onClick={() => handleSelectTab(tree.tree_key)}
-            title={tree.name_en}
+            className="tab-scroll-btn tab-scroll-left"
+            onClick={() => scrollTabs(-1)}
+            aria-label="Scroll tabs left"
           >
-            {tree.name_en}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
           </button>
-        ))}
+        )}
+        <div
+          className="top-tabs-bar"
+          ref={tabsScrollRef}
+          onScroll={updateTabsScrollState}
+          onWheel={handleTabsWheel}
+        >
+          {trees.map((tree) => (
+            <button
+              key={tree.tree_key}
+              type="button"
+              className={`top-tab${activeTreeKey === tree.tree_key ? ' active' : ''}`}
+              onClick={() => handleSelectTab(tree.tree_key)}
+              title={tree.name_en}
+            >
+              {tree.name_en}
+            </button>
+          ))}
+        </div>
+        {canScrollTabsRight && (
+          <button
+            type="button"
+            className="tab-scroll-btn tab-scroll-right"
+            onClick={() => scrollTabs(1)}
+            aria-label="Scroll tabs right"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {error && <div className="error-banner">{error}</div>}
