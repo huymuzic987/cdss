@@ -1,4 +1,4 @@
-import type { PatientFormData } from './MockPatientSidebar'
+import type { PatientFormData } from './mockPatientForm/types'
 
 export interface PatientPreset {
   id: string
