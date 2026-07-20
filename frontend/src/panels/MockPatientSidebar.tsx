@@ -1,4 +1,4 @@
-import { AlertTriangle, FlaskConical, HeartPulse, MousePointer2, Play, Settings2, Stethoscope, User, X } from 'lucide-react'
+import { AlertTriangle, FlaskConical, HeartPulse, Moon, MousePointer2, Play, Settings2, Stethoscope, Sun, User, X } from 'lucide-react'
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import type { JsonObject } from '../api/types'
@@ -413,13 +413,15 @@ interface MockPatientSidebarProps {
   onStart: (startTreeKey: string, input: JsonObject) => void
   onManualStart: (startTreeKey: string, input: JsonObject) => void
   onReset: () => void
+  theme: 'dark' | 'light'
+  onToggleTheme: () => void
 }
 
-export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart, onReset }: MockPatientSidebarProps) {
+export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart, onReset, theme, onToggleTheme }: MockPatientSidebarProps) {
   const [form, setForm] = useState<PatientFormData>(DEFAULT_FORM)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [selectedPresetId, setSelectedPresetId] = useState('')
-  const [openSections, setOpenSections] = useState({ bp: true, demographics: false, comorbidities: false, care: false })
+  const [openSections, setOpenSections] = useState({ bp: true, demographics: true, comorbidities: true, care: true })
   const toggleSection = (key: keyof typeof openSections) =>
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
 
@@ -505,6 +507,15 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
             <div className="ps-header-sub">Fill in fields to simulate traversal</div>
           </div>
         </div>
+        <button
+          type="button"
+          className="ps-theme-toggle"
+          onClick={onToggleTheme}
+          title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+          aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+        >
+          {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+        </button>
       </div>
 
       {/* ---- Preset patient selector (sticky below header) ---- */}

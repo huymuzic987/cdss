@@ -30,6 +30,21 @@ export const NODE_TYPE_COLORS: Record<NodeType, { background: string; border: st
   GLOBAL: { background: '#111827', border: '#6b7280' },
 }
 
+// Near-black, fully saturated borders + bold fills so node types stay unmistakable against a light canvas.
+export const NODE_TYPE_COLORS_LIGHT: Record<NodeType, { background: string; border: string }> = {
+  START: { background: '#6ee7b7', border: '#064e3b' },
+  CONDITION: { background: '#fcd34d', border: '#78350f' },
+  INFERENCE: { background: '#93c5fd', border: '#1e3a8a' },
+  ACTION: { background: '#fdba74', border: '#7c2d12' },
+  END: { background: '#d8b4fe', border: '#581c87' },
+  LINK: { background: '#f9a8d4', border: '#831843' },
+  GLOBAL: { background: '#9ca3af', border: '#111827' },
+}
+
+export function getNodeTypeColors(nodeType: NodeType, theme: 'dark' | 'light') {
+  return theme === 'light' ? NODE_TYPE_COLORS_LIGHT[nodeType] : NODE_TYPE_COLORS[nodeType]
+}
+
 export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
   static override type = 'decisionNode' as const
 
@@ -89,15 +104,15 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
   }
 
   override component(shape: DecisionNodeShape) {
-    const colors = NODE_TYPE_COLORS[shape.props.nodeType]
+    const colors = getNodeTypeColors(shape.props.nodeType, shape.props.theme)
     const { highlightStatus, dimmed, theme } = shape.props
     const isLight = theme === 'light'
 
     let borderColor = colors.border
-    let borderWidth = 2
-    let boxShadow = 'none'
+    let borderWidth = isLight ? 3 : 2
+    let boxShadow = isLight ? '0 2px 6px rgba(15, 23, 42, 0.35)' : 'none'
     let transform = 'none'
-    let background = isLight ? `${colors.border}22` : colors.background
+    let background = isLight ? colors.background : `${colors.border}33`
     let opacity = 1
 
     if (highlightStatus === 'active') {
@@ -105,7 +120,7 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
       boxShadow = `0 0 0 4px #000000, 0 0 0 10px ${colors.border}, 0 0 35px 15px ${colors.border}cc`
       transform = 'scale(1.08)'
     } else if (highlightStatus === 'entered') {
-      borderWidth = 2
+      borderWidth = isLight ? 3 : 2
       boxShadow = `0 0 0 4px ${colors.border}, 0 0 20px 8px ${colors.border}80`
       transform = 'scale(1.03)'
     }
@@ -142,7 +157,7 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
             fontSize: 11,
             fontWeight: 700,
             letterSpacing: 0.4,
-            color: isLight ? '#000000' : highlightStatus !== 'none' ? borderColor : colors.border,
+            color: colors.border,
             textTransform: 'uppercase',
           }}
         >
