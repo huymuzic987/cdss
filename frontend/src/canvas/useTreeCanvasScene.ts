@@ -47,10 +47,14 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
         try {
           const parsed = JSON.parse(savedLayoutStr)
           if (parsed.positions) savedPositions = parsed.positions
+          if (parsed.arrowKind === 'straight' || parsed.arrowKind === 'elbow') {
+            savedArrowKind = parsed.arrowKind
+          }
         } catch (e) {
           console.error('Failed to parse saved layout', e)
         }
       }
+      setArrowKind(savedArrowKind)
 
       let cancelled = false
       void layoutTree(graph.nodes, graph.edges).then((positions) => {
@@ -134,7 +138,7 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
             )
           }
         },
-        { source: 'user', scope: 'session' },
+        { source: 'user', scope: 'all' },
       )
 
       return () => {
