@@ -6,7 +6,7 @@ All database tests target the existing `postgres` service in `compose.yaml`:
 
 ```text
 host: localhost
-port: 5432
+port: 54321
 user: cdss
 seeded test database: cdss_test
 destructive schema-test database: cdss_schema_test
@@ -28,7 +28,7 @@ cp .env.test.example .env.test
 
 Database tests load `.env.test` explicitly. They do not fall back to `.env` or
 ambient process settings. `DATABASE_URL` and `TEST_DATABASE_URL` must normalize
-to the same `localhost:5432/cdss_test` identity.
+to the same `localhost:54321/cdss_test` identity.
 
 Confirm the connected identities without exposing credentials:
 
