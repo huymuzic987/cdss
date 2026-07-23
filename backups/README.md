@@ -52,5 +52,5 @@ database.
 ```bash
 uv run python backups/restore.py                                  # latest snapshot -> local cdss
 uv run python backups/restore.py --dump backups/cdss_prod_<date>.sql
-uv run python backups/restore.py --target postgresql://cdss:cdss@localhost:5432/cdss
+uv run python backups/restore.py --target postgresql://cdss:cdss@localhost:54321/cdss
 ```

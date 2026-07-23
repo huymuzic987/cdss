@@ -19,7 +19,7 @@ from cdss.testing.database import (
     load_test_database_environment,
 )
 
-LOCAL_URL = "postgresql://cdss:secret@localhost:5432/cdss_test"
+LOCAL_URL = "postgresql://cdss:secret@localhost:54321/cdss_test"
 
 
 class _ScalarResult:
@@ -70,7 +70,7 @@ def test_guard_rejects_missing_or_false_destructive_opt_in(allow: str | None) ->
 
 def test_guard_rejects_different_database_and_test_urls() -> None:
     with pytest.raises(SafetyError, match="identify different targets"):
-        _guard(_target(test_database_url="postgresql://cdss:x@localhost:5432/other_test"))
+        _guard(_target(test_database_url="postgresql://cdss:x@localhost:54321/other_test"))
 
 
 def test_guard_rejects_configured_database_name_mismatch() -> None:
@@ -80,8 +80,8 @@ def test_guard_rejects_configured_database_name_mismatch() -> None:
 
 def test_guard_rejects_non_local_target_without_exposing_password() -> None:
     target = _target(
-        database_url="postgresql://cdss:super-secret@db.example.com:5432/cdss_test",
-        test_database_url="postgresql://cdss:super-secret@db.example.com:5432/cdss_test",
+        database_url="postgresql://cdss:super-secret@db.example.com:54321/cdss_test",
+        test_database_url="postgresql://cdss:super-secret@db.example.com:54321/cdss_test",
     )
 
     with pytest.raises(SafetyError) as exc_info:
@@ -89,6 +89,18 @@ def test_guard_rejects_non_local_target_without_exposing_password() -> None:
 
     assert "local Docker" in str(exc_info.value)
     assert "super-secret" not in str(exc_info.value)
+
+
+def test_guard_rejects_non_configured_port() -> None:
+    target = _target(
+        database_url="postgresql://cdss:secret@localhost:5432/cdss_test",
+        test_database_url="postgresql://cdss:secret@localhost:5432/cdss_test",
+    )
+    with pytest.raises(
+        SafetyError,
+        match="database port is not the configured local Docker PostgreSQL port",
+    ):
+        _guard(target)
 
 
 def test_guard_rejects_actual_database_name_mismatch() -> None:
@@ -99,7 +111,7 @@ def test_guard_rejects_actual_database_name_mismatch() -> None:
 
 
 def test_guard_rejects_configured_protected_database_name() -> None:
-    protected_url = "postgresql://cdss:secret@localhost:5432/cdss"
+    protected_url = "postgresql://cdss:secret@localhost:54321/cdss"
     with pytest.raises(SafetyError, match="protected non-test database"):
         _guard(
             _target(

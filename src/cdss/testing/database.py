@@ -17,7 +17,7 @@ from sqlalchemy.exc import ArgumentError
 
 DEFAULT_TEST_ENV_FILE = Path(".env.test")
 LOCAL_DOCKER_HOSTS = frozenset({"localhost", "127.0.0.1", "::1", "postgres"})
-POSTGRES_DEFAULT_PORT = 5432
+POSTGRES_DEFAULT_PORT = 54321
 
 
 @dataclass(frozen=True, slots=True)

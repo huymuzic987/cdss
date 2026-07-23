@@ -3,7 +3,7 @@ from pydantic import ValidationError
 
 from cdss.core.config import AppEnv, Settings
 
-_DB_URL = "postgresql://u:p@localhost:5432/db"
+_DB_URL = "postgresql://u:p@localhost:54321/db"
 
 
 @pytest.fixture(autouse=True)
