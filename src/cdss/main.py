@@ -16,9 +16,9 @@ def create_app() -> FastAPI:
     app = FastAPI(title="Hypertension CDSS", version="0.1.0", docs_url=None, redoc_url=None)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[_FRONTEND_DEV_ORIGIN],
-        allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
-        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
         allow_headers=["*"],
     )
     register_error_handlers(app)
