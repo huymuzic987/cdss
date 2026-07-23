@@ -74,6 +74,16 @@ function App() {
     setCanScrollTabsRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2)
   }
 
+  // While a traversal is running or done, only show tabs for trees touched by
+  // the path (plus the tree the traversal is currently/last in). Resetting
+  // (traversalState -> 'idle') brings back the full tree list.
+  const visibleTrees =
+    traversalState === 'idle'
+      ? trees
+      : trees.filter(
+          (tree) => tree.tree_key === activeTraversalTreeKey || highlightedNodeKeys[tree.tree_key],
+        )
+
   useEffect(() => {
     updateTabsScrollState()
     const el = tabsScrollRef.current
@@ -81,7 +91,7 @@ function App() {
     const observer = new ResizeObserver(updateTabsScrollState)
     observer.observe(el)
     return () => observer.disconnect()
-  }, [trees])
+  }, [visibleTrees])
 
   const scrollTabs = (direction: -1 | 1) => {
     tabsScrollRef.current?.scrollBy({ left: direction * 180, behavior: 'smooth' })
@@ -126,7 +136,7 @@ function App() {
           onScroll={updateTabsScrollState}
           onWheel={handleTabsWheel}
         >
-          {trees.map((tree) => (
+          {visibleTrees.map((tree) => (
             <button
               key={tree.tree_key}
               type="button"
