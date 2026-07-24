@@ -1,22 +1,31 @@
 """SQLAlchemy ORM models for the decision-tree schema.
 
-Six tables: decision_trees, decision_nodes, decision_edges,
-node_source_references, development_runtime_logs, medicines. No patient or
-clinical-term tables exist anywhere in this system -- medicines is a static
-reference catalog (drug names/doses), not patient prescription data.
+Thirteen tables: decision_trees, decision_nodes, decision_edges,
+node_source_references, development_runtime_logs, medicines, patients,
+patient_conditions, visits, visit_observations, visit_medications,
+fhir_import_batches. medicines is a static drug reference catalog (with an
+ATC code column for the future drugs-table integration). patients/
+patient_conditions/visits/visit_observations/visit_medications/
+fhir_import_batches hold clinical data imported from FHIR R4 bundles for the
+statistics dashboard. Condition/Observation coded identifiers (ICD-10,
+SNOMED CT, LOINC) are stored as plain string columns rather than foreign
+keys, since the planned `diseases`/findings reference table doesn't exist
+yet -- joining on those codes once it does is additive, not a migration.
 """
 
 from __future__ import annotations
 
 import enum
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any
 
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -211,5 +220,213 @@ class Medicine(Base):
     source: Mapped[str | None] = mapped_column(Text, nullable=True)
     link: Mapped[str | None] = mapped_column(Text, nullable=True)
     available: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+    # ATC (Anatomical Therapeutic Chemical) classification code -- nullable until
+    # the catalog is backfilled. Plain string column, not a FK: there is no ATC
+    # reference table in this schema, just the code itself for future lookups.
+    atc_code: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     __table_args__ = (Index("ix_medicines_drug_class", "drug_class"),)
+
+
+class Patient(Base):
+    """A patient imported from a FHIR R4 Patient resource.
+
+    ``fhir_id`` is the Patient.id from the source bundle and is how re-imports
+    upsert rather than duplicate. ``department`` mirrors the source data's
+    ai4life department extension (e.g. "Nội tim mạch").
+    """
+
+    __tablename__ = "patients"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    fhir_id: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    gender: Mapped[str | None] = mapped_column(Text, nullable=True)
+    birth_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    risk_factor_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("0")
+    )
+    department: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+
+    visits: Mapped[list[Visit]] = relationship(
+        back_populates="patient", order_by="Visit.visit_number"
+    )
+    conditions: Mapped[list[PatientCondition]] = relationship(back_populates="patient")
+
+
+class PatientCondition(Base):
+    """A diagnosis imported from a FHIR Condition resource.
+
+    Stores the coded identifiers (ICD-10, SNOMED CT) as plain string columns
+    rather than a foreign key, since the future ``diseases`` reference table
+    (name/description/ICD-10/SNOMED/LOINC catalog) doesn't exist yet. Once it
+    does, joining on ``icd10_code`` (or adding a ``disease_id`` FK backfilled
+    from it) is a one-column addition, not a data migration.
+    """
+
+    __tablename__ = "patient_conditions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    patient_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("patients.id"), nullable=False
+    )
+    fhir_condition_id: Mapped[str] = mapped_column(Text, nullable=False)
+    icd10_code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    snomed_code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    condition_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "patient_id", "fhir_condition_id", name="uq_patient_conditions_patient_id_fhir_id"
+        ),
+        Index("ix_patient_conditions_patient_id", "patient_id"),
+        Index("ix_patient_conditions_icd10_code", "icd10_code"),
+    )
+
+    patient: Mapped[Patient] = relationship(back_populates="conditions")
+
+
+class Visit(Base):
+    """One encounter (initial diagnosis or follow-up) imported from a FHIR
+    Encounter + its linked Observation/MedicationRequest resources. A source
+    bundle with no Encounter at all (a single-snapshot record, as produced by
+    real-world exports) is imported as an implicit visit_number=1.
+
+    ``cdss_recommended_action`` is the treatment strategy the CDSS engine
+    would recommend at this visit; the actual medications given are in
+    ``VisitMedication``. ``adherent_to_cdss`` flags whether the clinician
+    followed the recommendation, which is what the efficacy dashboard
+    compares outcomes against.
+    """
+
+    __tablename__ = "visits"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    patient_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("patients.id"), nullable=False
+    )
+    fhir_encounter_id: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+
+    visit_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    visit_date: Mapped[date] = mapped_column(Date, nullable=False)
+    facility_capability: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    is_early_revisit: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
+    )
+    early_revisit_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    scheduled_next_visit_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    clinic_sbp: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    clinic_dbp: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    bp_target_sbp: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    bp_target_dbp: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    bp_controlled: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+    hypertension_class: Mapped[str | None] = mapped_column(Text, nullable=True)
+    risk_level: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    cdss_recommended_action: Mapped[str | None] = mapped_column(Text, nullable=True)
+    adherent_to_cdss: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+
+    __table_args__ = (
+        UniqueConstraint("patient_id", "visit_number", name="uq_visits_patient_id_visit_number"),
+        Index("ix_visits_patient_id", "patient_id"),
+        Index("ix_visits_visit_date", "visit_date"),
+    )
+
+    patient: Mapped[Patient] = relationship(back_populates="visits")
+    observations: Mapped[list[VisitObservation]] = relationship(back_populates="visit")
+    medications: Mapped[list[VisitMedication]] = relationship(back_populates="visit")
+
+
+class VisitObservation(Base):
+    """A lab/vital reading imported from a FHIR Observation resource, keyed
+    by LOINC code. Blood pressure (SBP/DBP) is special-cased onto dedicated
+    ``Visit`` columns since almost every dashboard stat needs it; everything
+    else (eGFR, potassium, future labs) lands here generically so new
+    observation types never require a schema migration. ``loinc_code`` is a
+    plain string column for the same forward-compatibility reason as
+    ``PatientCondition.icd10_code`` -- joins to the future diseases/findings
+    catalog by code, not by FK.
+    """
+
+    __tablename__ = "visit_observations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    visit_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("visits.id"), nullable=False
+    )
+    loinc_code: Mapped[str] = mapped_column(Text, nullable=False)
+    display_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    value: Mapped[float] = mapped_column(Float, nullable=False)
+    unit: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+
+    __table_args__ = (
+        Index("ix_visit_observations_visit_id", "visit_id"),
+        Index("ix_visit_observations_loinc_code", "loinc_code"),
+    )
+
+    visit: Mapped[Visit] = relationship(back_populates="observations")
+
+
+class VisitMedication(Base):
+    """An actual medication given at a visit, imported from a FHIR
+    MedicationRequest resource. ``drug_id`` links to the existing
+    ``medicines`` catalog when the name matches; ``drug_name`` is kept
+    denormalized so an unmatched drug (not yet in the catalog) isn't lost.
+    """
+
+    __tablename__ = "visit_medications"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    visit_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("visits.id"), nullable=False
+    )
+    drug_id: Mapped[str | None] = mapped_column(
+        Text, ForeignKey("medicines.drug_id"), nullable=True
+    )
+    drug_name: Mapped[str] = mapped_column(Text, nullable=False)
+    drug_class_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    dose_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    dose_unit: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+
+    __table_args__ = (
+        Index("ix_visit_medications_visit_id", "visit_id"),
+        Index("ix_visit_medications_drug_id", "drug_id"),
+    )
+
+    visit: Mapped[Visit] = relationship(back_populates="medications")
+
+
+class FhirImportBatch(Base):
+    """Audit record of one FHIR bundle import (preset or synthetic seed)."""
+
+    __tablename__ = "fhir_import_batches"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_label: Mapped[str] = mapped_column(Text, nullable=False)
+    patient_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    visit_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    error_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    errors: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'[]'::jsonb")
+    )
+    imported_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow
+    )

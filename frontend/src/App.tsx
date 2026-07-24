@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { TreeCanvas } from './canvas/TreeCanvas'
+import { DashboardPage } from './dashboard/DashboardPage'
 import { useSidebarResize } from './hooks/useSidebarResize'
 import { useTraversal } from './hooks/useTraversal'
 import { useTreeGraphs } from './hooks/useTreeGraphs'
@@ -59,6 +60,8 @@ function App() {
   } = useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, setError })
 
   const { width: rightSidebarWidth, isResizing, handleMouseDown } = useSidebarResize()
+
+  const [showDashboard, setShowDashboard] = useState(false)
 
   const [leftCollapsed, setLeftCollapsed] = useState(false)
   const [rightCollapsed, setRightCollapsed] = useState(false)
@@ -136,12 +139,22 @@ function App() {
           onScroll={updateTabsScrollState}
           onWheel={handleTabsWheel}
         >
+          <button
+            type="button"
+            className={`top-tab dashboard-tab${showDashboard ? ' active' : ''}`}
+            onClick={() => setShowDashboard(true)}
+          >
+            Dashboard
+          </button>
           {visibleTrees.map((tree) => (
             <button
               key={tree.tree_key}
               type="button"
-              className={`top-tab${activeTreeKey === tree.tree_key ? ' active' : ''}`}
-              onClick={() => handleSelectTab(tree.tree_key)}
+              className={`top-tab${!showDashboard && activeTreeKey === tree.tree_key ? ' active' : ''}`}
+              onClick={() => {
+                setShowDashboard(false)
+                handleSelectTab(tree.tree_key)
+              }}
               title={tree.name_en}
             >
               {tree.name_en}
@@ -162,8 +175,13 @@ function App() {
         )}
       </div>
 
-      {error && <div className="error-banner">{error}</div>}
+      {error && !showDashboard && <div className="error-banner">{error}</div>}
 
+      {showDashboard ? (
+        <div className="app-body">
+          <DashboardPage />
+        </div>
+      ) : (
       <div className="app-body">
         {/* ---- LEFT: Patient Simulator ---- */}
         <div className="left-panel" style={{ width: leftCollapsed ? 0 : 280 }}>
@@ -262,6 +280,7 @@ function App() {
           <GlobalConfigPanel globalNodes={activeGraph?.global_nodes ?? []} />
         </div>
       </div>
+      )}
 
       {/* ---- Result modal ---- */}
       {showModal && (

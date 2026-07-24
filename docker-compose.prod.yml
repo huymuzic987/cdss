@@ -1,0 +1,72 @@
+# Production deployment: db + backend + frontend. Built and run on the
+# target host by the Jenkinsfile. `docker compose` auto-loads a `.env` file
+# next to this one for the ${...} substitutions below; that same .env is
+# also passed into the backend container via env_file.
+#
+# IMAGE_TAG selects which previously built image tag to run (set to the
+# Jenkins BUILD_NUMBER during deploys, or a prior build number during a
+# rollback). Defaults to "latest", which the pipeline always points at the
+# last known-good build.
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - cdss_pgdata:/var/lib/postgresql/data
+    networks: [cdss_net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: cdss-backend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Always points at the internal db service, regardless of what a
+      # DATABASE_URL in .env might say, so the two can never drift apart.
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [cdss_net]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: cdss-frontend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [cdss_net]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  cdss_net:
+
+volumes:
+  cdss_pgdata:

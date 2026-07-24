@@ -1,0 +1,26 @@
+# Backend build context (see Dockerfile.backend). Only src/, alembic/,
+# alembic.ini, pyproject.toml and uv.lock are needed inside the image.
+.git
+.github
+.claude
+
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+
+frontend
+node_modules
+
+tests
+docs
+scratch
+backups
+
+.env
+.env.*
+!.env.*.example
+
+*.md
+!README.md
