@@ -289,12 +289,16 @@ docker compose up -d postgres
 uv run alembic upgrade head
 
 # Run FastAPI with reload enabled
-uv run uvicorn cdss.main:app --reload
+./dev.sh       # macOS/Linux/WSL/Git Bash
+.\dev.ps1      # Windows PowerShell
 ```
 The API is now running at `http://localhost:8000`.
 
 > [!NOTE]
 > **WSL Development Tip**: If you are running the backend in WSL and editing files on a mounted Windows drive (`/mnt/c/...`), WSL `inotify` file watchers may not automatically reload Uvicorn on changes. In such cases, restart Uvicorn manually to apply edits.
+
+> [!NOTE]
+> **PowerShell script policy**: If `.\dev.ps1` is blocked, PowerShell's default execution policy is disallowing local scripts. Run `Set-ExecutionPolicy -Scope Process RemoteSigned` in that session (or once for your user with `-Scope CurrentUser`) and try again.
 
 ### 2. Spin up Frontend Visualizer
 The visualizer connects to the backend and renders graphs on an interactive whiteboard canvas:
