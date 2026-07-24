@@ -15,6 +15,10 @@ disaster recovery and point-in-time reference.
 The dump captures the five decision-tree tables plus `alembic_version`. It
 contains clinical decision-tree definitions only — no patient/PHI data.
 
+`cdss_merged.sql` additionally includes the `medicines` table and its
+65-row seed data (see the file's own header comment for full merge
+provenance), so restoring it alone yields a complete, ready-to-use database.
+
 ## Create a new backup
 
 Reads `DATABASE_URL` from the environment (falling back to `.env`), the same
