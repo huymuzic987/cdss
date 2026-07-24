@@ -45,6 +45,7 @@ from cdss.domain.decision_tree.graph import (
     TreeGraph,
     TreeGraphRepository,
 )
+from cdss.domain.decision_tree.medicine_catalog import Medicine, MedicineRepository
 from cdss.domain.decision_tree.patches import ContextPatchResult, apply_context_patch
 from cdss.domain.decision_tree.paths import resolve_runtime_path
 from cdss.domain.decision_tree.validator import (
@@ -76,6 +77,8 @@ __all__ = [
     "LinkNotEnabled",
     "LinkTargetNodeNotFound",
     "LinkTargetNotFound",
+    "Medicine",
+    "MedicineRepository",
     "MissingRuntimePath",
     "NoMatchingTransition",
     "NodeDefinition",

@@ -1,8 +1,9 @@
 """SQLAlchemy ORM models for the decision-tree schema.
 
-Five tables only: decision_trees, decision_nodes, decision_edges,
-node_source_references, development_runtime_logs. No patient, clinical-term,
-or drug tables exist anywhere in this system.
+Six tables: decision_trees, decision_nodes, decision_edges,
+node_source_references, development_runtime_logs, medicines. No patient or
+clinical-term tables exist anywhere in this system -- medicines is a static
+reference catalog (drug names/doses), not patient prescription data.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -189,3 +191,25 @@ class DevelopmentRuntimeLog(Base):
         Index("ix_development_runtime_logs_request_id", "request_id"),
         Index("ix_development_runtime_logs_created_at", "created_at"),
     )
+
+
+class Medicine(Base):
+    """Static drug reference catalog (name, dose, source), seeded from
+    backups/medicines.sql. Not patient data -- no encounter, patient, or
+    prescription rows exist anywhere in this schema."""
+
+    __tablename__ = "medicines"
+
+    drug_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    drug_class: Mapped[str | None] = mapped_column(Text, nullable=True)
+    subgroup: Mapped[str | None] = mapped_column(Text, nullable=True)
+    route: Mapped[str | None] = mapped_column(Text, nullable=True)
+    dose_low: Mapped[str | None] = mapped_column(Text, nullable=True)
+    dose_usual: Mapped[str | None] = mapped_column(Text, nullable=True)
+    dose_max: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source: Mapped[str | None] = mapped_column(Text, nullable=True)
+    link: Mapped[str | None] = mapped_column(Text, nullable=True)
+    available: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+
+    __table_args__ = (Index("ix_medicines_drug_class", "drug_class"),)

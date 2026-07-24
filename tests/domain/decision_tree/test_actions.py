@@ -7,11 +7,52 @@ import pytest
 
 from cdss.domain.decision_tree import (
     InvalidTreeStructure,
+    Medicine,
     NodeDefinition,
     NodeType,
     RunState,
     collect_action,
 )
+
+_FAKE_MEDICINES = (
+    Medicine(
+        drug_id="DRUG0023",
+        name="Losartan",
+        drug_class="A",
+        subgroup="ARB",
+        route="Thuốc Uống",
+        dose_low="25 mg",
+        dose_usual="50 - 100 mg",
+        dose_max="100 mg",
+        source="Bảng 10",
+        link=None,
+        available=True,
+    ),
+    Medicine(
+        drug_id="DRUG0065",
+        name="Aspirin",
+        drug_class=None,
+        subgroup=None,
+        route=None,
+        dose_low="75 - 81 mg/ngày",
+        dose_usual=None,
+        dose_max="150 - 162 mg/ngày",
+        source=None,
+        link="https://www.drugs.com/dosage/aspirin.html",
+        available=True,
+    ),
+)
+
+
+class _FakeMedicineRepository:
+    def get_by_id(self, drug_id: str) -> Medicine | None:
+        return next((m for m in _FAKE_MEDICINES if m.drug_id == drug_id), None)
+
+    def list_by_class(self, drug_class: str) -> tuple[Medicine, ...]:
+        return tuple(m for m in _FAKE_MEDICINES if m.drug_class == drug_class)
+
+    def list_all(self) -> tuple[Medicine, ...]:
+        return _FAKE_MEDICINES
 
 
 def _node(
@@ -81,3 +122,119 @@ def test_non_action_node_with_payload_is_invalid_structure() -> None:
 
     with pytest.raises(InvalidTreeStructure):
         collect_action(node, state, tree_key="treatment-tree")
+
+
+def test_start_combination_end_node_attaches_medicine_options_from_context() -> None:
+    node = _node(
+        NodeType.END,
+        action_payload={"action_type": "INITIAL_TWO_DRUG_COMBINATION"},
+    )
+    state = RunState.initialize({})
+    state.context["treatment_preferences"] = {
+        "combination_options": [["A", "C"], ["A", "D"]],
+    }
+
+    action = collect_action(
+        node, state, tree_key="drug-combination", medicine_repository=_FakeMedicineRepository()
+    )
+
+    assert action is not None
+    medicine_options = cast(list[dict[str, Any]], action.payload["medicine_options"])
+    assert [o["classes"] for o in medicine_options] == [["A", "C"], ["A", "D"]]
+    first_medicines = cast(dict[str, Any], medicine_options[0]["medicines"])
+    assert "Losartan" in {m["name"] for m in first_medicines["A"]}
+
+
+def test_maintain_regimen_end_node_does_not_attach_medicine_options() -> None:
+    node = _node(
+        NodeType.END,
+        action_payload={"action_type": "MAINTAIN_CURRENT_REGIMEN"},
+    )
+    state = RunState.initialize({})
+    # Simulates a leftover advisory value from an earlier comorbidity tree --
+    # this END node isn't starting anything, so it must not be expanded.
+    state.context["treatment_preferences"] = {
+        "combination_options": [["A", "C"], ["A", "D"]],
+    }
+
+    action = collect_action(
+        node,
+        state,
+        tree_key="essential-treatment-strategy",
+        medicine_repository=_FakeMedicineRepository(),
+    )
+
+    assert action is not None
+    assert action.payload == {"action_type": "MAINTAIN_CURRENT_REGIMEN"}
+
+
+def test_start_combination_action_node_does_not_attach_medicine_options() -> None:
+    # Only END nodes are in scope, even if the action_type matches.
+    node = _node(
+        NodeType.ACTION,
+        action_payload={"action_type": "INITIAL_TWO_DRUG_COMBINATION"},
+    )
+    state = RunState.initialize({})
+    state.context["treatment_preferences"] = {"combination_options": [["A", "C"]]}
+
+    action = collect_action(node, state, tree_key="drug-combination")
+
+    assert action is not None
+    assert action.payload == {"action_type": "INITIAL_TWO_DRUG_COMBINATION"}
+
+
+def test_start_combination_end_node_without_context_leaves_payload_unchanged() -> None:
+    node = _node(
+        NodeType.END,
+        action_payload={"action_type": "CONSIDER_MONOTHERAPY"},
+    )
+    state = RunState.initialize({})
+
+    action = collect_action(
+        node, state, tree_key="drug-combination", medicine_repository=_FakeMedicineRepository()
+    )
+
+    assert action is not None
+    assert action.payload == {"action_type": "CONSIDER_MONOTHERAPY"}
+
+
+def test_single_drug_end_node_attaches_the_named_drug() -> None:
+    node = _node(
+        NodeType.END,
+        action_payload={
+            "action_type": "ASPIRIN_PROPHYLAXIS",
+            "follow_up_mode": "NEW_ENCOUNTER",
+        },
+    )
+    state = RunState.initialize({})
+
+    action = collect_action(
+        node,
+        state,
+        tree_key="hypertension-in-pregnancy",
+        medicine_repository=_FakeMedicineRepository(),
+    )
+
+    assert action is not None
+    medicines = cast(list[dict[str, Any]], action.payload["medicines"])
+    assert [m["name"] for m in medicines] == ["Aspirin"]
+    assert medicines[0]["dose_low"] == "75 - 81 mg/ngày"
+    # Unrelated fields, and the fact this isn't a combination action_type,
+    # are left untouched.
+    assert action.payload["follow_up_mode"] == "NEW_ENCOUNTER"
+    assert "medicine_options" not in action.payload
+
+
+def test_single_drug_action_node_does_not_attach_medicines() -> None:
+    # Both drug-reference mechanisms are END-only, matching where the real
+    # T12_END_ASPIRIN_PROPHYLAXIS node lives.
+    node = _node(
+        NodeType.ACTION,
+        action_payload={"action_type": "ASPIRIN_PROPHYLAXIS"},
+    )
+    state = RunState.initialize({})
+
+    action = collect_action(node, state, tree_key="hypertension-in-pregnancy")
+
+    assert action is not None
+    assert action.payload == {"action_type": "ASPIRIN_PROPHYLAXIS"}

@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from cdss.api.dependencies import get_tree_graph_repository
+from cdss.api.dependencies import get_medicine_repository, get_tree_graph_repository
 from cdss.api.schemas import (
     EvaluationErrorResponse,
     EvaluationRequest,
@@ -12,7 +12,12 @@ from cdss.api.schemas import (
     FollowUpEvaluationRequest,
 )
 from cdss.core.config import Settings, get_settings
-from cdss.domain.decision_tree import MissingRuntimePath, TreeGraphRepository, walk_tree
+from cdss.domain.decision_tree import (
+    MedicineRepository,
+    MissingRuntimePath,
+    TreeGraphRepository,
+    walk_tree,
+)
 
 router = APIRouter(tags=["evaluation"])
 
@@ -35,6 +40,7 @@ _MEDICATION_FOLLOW_UP_TREE_KEY = "treatment-threshold-and-bp-target"
 def evaluate(
     request: EvaluationRequest,
     repository: Annotated[TreeGraphRepository, Depends(get_tree_graph_repository)],
+    medicine_repository: Annotated[MedicineRepository, Depends(get_medicine_repository)],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> EvaluationResponse:
     graph = repository.get_tree(request.start_tree_key)
@@ -43,6 +49,7 @@ def evaluate(
         request.input,
         max_steps=settings.cdss_max_steps,
         repository=repository,
+        medicine_repository=medicine_repository,
     )
     return EvaluationResponse.from_result(result)
 
@@ -60,6 +67,7 @@ def evaluate(
 def evaluate_follow_up(
     request: FollowUpEvaluationRequest,
     repository: Annotated[TreeGraphRepository, Depends(get_tree_graph_repository)],
+    medicine_repository: Annotated[MedicineRepository, Depends(get_medicine_repository)],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> EvaluationResponse:
     """Compare today's follow-up reading against an already-known active BP
@@ -81,5 +89,6 @@ def evaluate_follow_up(
         },
         max_steps=settings.cdss_max_steps,
         repository=repository,
+        medicine_repository=medicine_repository,
     )
     return EvaluationResponse.from_result(result)

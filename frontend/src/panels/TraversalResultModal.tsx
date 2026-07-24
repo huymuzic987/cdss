@@ -1,9 +1,84 @@
-import type { ApiErrorResponse, EvaluationResponse, TraversalTraceEntry } from '../api/types'
+import type { ApiErrorResponse, EvaluationResponse, JsonObject, TraversalTraceEntry } from '../api/types'
 
 interface TraversalResultModalProps {
   result: EvaluationResponse | null
   partial: ApiErrorResponse | null
   onClose: () => void
+}
+
+interface Medicine {
+  drug_id: string
+  name: string
+  subgroup: string
+  route: string
+  dose_low: string
+  dose_usual: string
+  dose_max: string
+  source: string
+  link: string | null
+  available: boolean
+}
+
+interface MedicineOption {
+  classes: string[]
+  medicines: Record<string, Medicine[]>
+}
+
+function asString(value: unknown, fallback = ''): string {
+  return typeof value === 'string' ? value : fallback
+}
+
+function parseMedicine(value: unknown): Medicine | null {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return null
+  const m = value as JsonObject
+  return {
+    drug_id: asString(m.drug_id),
+    name: asString(m.name),
+    subgroup: asString(m.subgroup),
+    route: asString(m.route),
+    dose_low: asString(m.dose_low),
+    dose_usual: asString(m.dose_usual),
+    dose_max: asString(m.dose_max),
+    source: asString(m.source),
+    link: typeof m.link === 'string' ? m.link : null,
+    available: m.available !== false,
+  }
+}
+
+// Reads payload.medicines, the flat single-drug list the backend attaches to
+// END nodes that name one specific drug (e.g. aspirin prophylaxis).
+function getMedicines(payload: JsonObject): Medicine[] | null {
+  const medicines = payload.medicines
+  if (!Array.isArray(medicines)) return null
+  return medicines.map(parseMedicine).filter((m): m is Medicine => m !== null)
+}
+
+// Reads payload.medicine_options, the class-letter -> medicine expansion the
+// backend attaches to "start/escalate drug combination" END nodes only.
+function getMedicineOptions(payload: JsonObject): MedicineOption[] | null {
+  const medicineOptions = payload.medicine_options
+  if (!Array.isArray(medicineOptions)) return null
+
+  const options: MedicineOption[] = []
+  for (const option of medicineOptions) {
+    if (typeof option !== 'object' || option === null || Array.isArray(option)) return null
+    const classes = (option as JsonObject).classes
+    const medicines = (option as JsonObject).medicines
+    if (!Array.isArray(classes) || typeof medicines !== 'object' || medicines === null) return null
+
+    const medicinesByClass: Record<string, Medicine[]> = {}
+    for (const [classLetter, entries] of Object.entries(medicines as JsonObject)) {
+      if (!Array.isArray(entries)) continue
+      medicinesByClass[classLetter] = entries
+        .map(parseMedicine)
+        .filter((m): m is Medicine => m !== null)
+    }
+    options.push({
+      classes: classes.filter((c): c is string => typeof c === 'string'),
+      medicines: medicinesByClass,
+    })
+  }
+  return options
 }
 
 function ConditionRow({ entry }: { entry: TraversalTraceEntry }) {
@@ -115,7 +190,10 @@ export function TraversalResultModal({ result, partial, onClose }: TraversalResu
           {actions.length > 0 && (
             <section className="modal-section">
               <div className="modal-section-title">📋 Clinical Recommendations</div>
-              {actions.map((action, i) => (
+              {actions.map((action, i) => {
+                const medicineOptions = getMedicineOptions(action.payload)
+                const medicines = getMedicines(action.payload)
+                return (
                 <div key={i} className="modal-action-card">
                   <div className="modal-action-header">
                     <span className="modal-action-type">{String(action.payload.action_type ?? 'ACTION')}</span>
@@ -123,6 +201,52 @@ export function TraversalResultModal({ result, partial, onClose }: TraversalResu
                   </div>
                   <div className="modal-action-text-vi">{action.text_vi}</div>
                   <div className="modal-action-text-en">{action.text_en}</div>
+                  {medicineOptions && medicineOptions.length > 0 && (
+                    <div className="modal-medicine-options">
+                      {medicineOptions.map((option, optionIndex) => (
+                        <div key={optionIndex} className="modal-medicine-option">
+                          <div className="modal-medicine-option-classes">
+                            {option.classes.join(' + ')}
+                          </div>
+                          {option.classes.map((classLetter) => (
+                            <div key={classLetter} className="modal-medicine-class-group">
+                              <div className="modal-medicine-class-label">Nhóm {classLetter}</div>
+                              <div className="modal-medicine-list">
+                                {(option.medicines[classLetter] ?? []).map((medicine) => (
+                                  <div key={medicine.drug_id} className="modal-medicine-row">
+                                    <span className="modal-medicine-name">{medicine.name}</span>
+                                    <span className="modal-medicine-dose">
+                                      {medicine.dose_low} · {medicine.dose_usual} · {medicine.dose_max}
+                                    </span>
+                                    <span className="modal-medicine-source">{medicine.source}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {medicines && medicines.length > 0 && (
+                    <div className="modal-medicine-list">
+                      {medicines.map((medicine) => (
+                        <div
+                          key={medicine.drug_id}
+                          className={`modal-medicine-row${medicine.available ? '' : ' unavailable'}`}
+                        >
+                          <span className="modal-medicine-name">{medicine.name}</span>
+                          <span className="modal-medicine-dose">
+                            {medicine.dose_low} · {medicine.dose_usual} · {medicine.dose_max}
+                          </span>
+                          <span className="modal-medicine-source">{medicine.source}</span>
+                          {!medicine.available && (
+                            <span className="modal-medicine-unavailable-badge">Unavailable</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {action.payload && Object.keys(action.payload).length > 0 && (
                     <details className="modal-action-payload">
                       <summary>Payload</summary>
@@ -130,7 +254,8 @@ export function TraversalResultModal({ result, partial, onClose }: TraversalResu
                     </details>
                   )}
                 </div>
-              ))}
+                )
+              })}
             </section>
           )}
 

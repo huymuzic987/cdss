@@ -39,6 +39,7 @@ from cdss.domain.decision_tree.graph import (
     TreeGraph,
     TreeGraphRepository,
 )
+from cdss.domain.decision_tree.medicine_catalog import MedicineRepository
 from cdss.domain.decision_tree.patches import apply_context_patch
 from cdss.domain.decision_tree.validator import validate_tree_graph
 
@@ -51,6 +52,7 @@ def walk_tree(
     *,
     max_steps: int = DEFAULT_MAX_STEPS,
     repository: TreeGraphRepository | None = None,
+    medicine_repository: MedicineRepository | None = None,
     links_enabled: bool = True,
 ) -> TraversalResult:
     """Traverse a graph and tail-transfer through enabled LINK nodes."""
@@ -73,6 +75,7 @@ def walk_tree(
         run_state=run_state,
         max_steps=max_steps,
         repository=repository,
+        medicine_repository=medicine_repository,
         links_enabled=links_enabled,
     )
     session.run()
@@ -92,12 +95,14 @@ class _InternalTraversal:
         run_state: RunState,
         max_steps: int,
         repository: TreeGraphRepository | None,
+        medicine_repository: MedicineRepository | None,
         links_enabled: bool,
     ) -> None:
         self.graph = graph
         self.run_state = run_state
         self.max_steps = max_steps
         self.repository = repository
+        self.medicine_repository = medicine_repository
         self.links_enabled = links_enabled
         # Monotonic trace sequence number (increments on every trace entry) is
         # kept separate from the traversal budget, which counts only actual node
@@ -131,11 +136,21 @@ class _InternalTraversal:
             if current.node_type is NodeType.INFERENCE:
                 changed_paths = self._apply_patch(current)
             elif current.node_type is NodeType.ACTION:
-                collect_action(current, self.run_state, tree_key=self.graph.tree.tree_key)
+                collect_action(
+                    current,
+                    self.run_state,
+                    tree_key=self.graph.tree.tree_key,
+                    medicine_repository=self.medicine_repository,
+                )
                 changed_paths = self._apply_patch(current)
             elif current.node_type is NodeType.END:
                 changed_paths = self._apply_patch(current)
-                collect_action(current, self.run_state, tree_key=self.graph.tree.tree_key)
+                collect_action(
+                    current,
+                    self.run_state,
+                    tree_key=self.graph.tree.tree_key,
+                    medicine_repository=self.medicine_repository,
+                )
             elif current.node_type is NodeType.GLOBAL:
                 raise InvalidTreeStructure(
                     tree_key=self.graph.tree.tree_key,

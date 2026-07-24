@@ -25,7 +25,7 @@ import psycopg2
 from sqlalchemy.engine import make_url
 
 BACKUPS_DIR = Path(__file__).resolve().parent
-DEFAULT_TARGET = "postgresql://cdss:cdss@localhost:5432/cdss"
+DEFAULT_TARGET = "postgresql://cdss:cdss@localhost:54321/cdss"
 LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1", "postgres"})
 
 
@@ -45,7 +45,7 @@ def assert_local_target(url: str) -> str:
             f"REFUSING: target host '{host}' is not local. "
             "restore.py only wipes local databases."
         )
-    return f"{host}:{u.port or 5432}/{u.database}"
+    return f"{host}:{u.port or 54321}/{u.database}"
 
 
 def wipe_and_replay(conn, dump_path: Path) -> None:
