@@ -300,16 +300,38 @@ INSERT INTO public.decision_nodes
 SELECT
   gen_random_uuid(),
   (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease'),
-  'T9_LINK_4_5', 'LINK'::node_type,
-  'Tree 4: Essential Strategy or Tree 5: Optimal Strategy', 'Cây 4: Chiến lược điều trị thiết yếu hoặc Cây 5: Chiến lược điều trị tối ưu',
+  'T9_LINK_ESSENTIAL', 'LINK'::node_type,
+  'Tree 4: Essential Treatment Strategy', 'Cây 4: Chiến lược điều trị thiết yếu',
   NULL, NULL,
   NULL, NULL,
-  'essential-optimal-strategy', NULL,
+  'essential-treatment-strategy', NULL,
   14, NOW(), NOW()
 WHERE NOT EXISTS (
   SELECT 1 FROM public.decision_nodes
   WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
-    AND node_key = 'T9_LINK_4_5'
+    AND node_key = 'T9_LINK_ESSENTIAL'
+);
+
+
+INSERT INTO public.decision_nodes
+  (id, tree_id, node_key, node_type,
+   text_en, text_vi, condition_definition, context_patch,
+   action_payload, global_config,
+   link_target_tree_key, link_target_node_key,
+   display_order, created_at, updated_at)
+SELECT
+  gen_random_uuid(),
+  (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease'),
+  'T9_LINK_OPTIMAL', 'LINK'::node_type,
+  'Tree 5: Optimal Treatment Strategy', 'Cây 5: Chiến lược điều trị tối ưu',
+  NULL, NULL,
+  NULL, NULL,
+  'optimal-treatment-strategy', NULL,
+  15, NOW(), NOW()
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.decision_nodes
+  WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+    AND node_key = 'T9_LINK_OPTIMAL'
 );
 
 
@@ -327,7 +349,7 @@ SELECT
   NULL, NULL,
   NULL, '{"add_on_drugs": ["C", "D", "MRA"], "first_line_drugs": ["A", "B"]}'::jsonb,
   NULL, NULL,
-  15, NOW(), NOW()
+  16, NOW(), NOW()
 WHERE NOT EXISTS (
   SELECT 1 FROM public.decision_nodes
   WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
@@ -343,7 +365,7 @@ SELECT
      AND node_key = 'T9_A_B_3Y'),
   (SELECT id FROM public.decision_nodes
    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
-     AND node_key = 'T9_LINK_4_5'),
+     AND node_key = 'T9_LINK_ESSENTIAL'),
   1
 WHERE NOT EXISTS (
   SELECT 1 FROM public.decision_edges
@@ -352,7 +374,51 @@ WHERE NOT EXISTS (
       AND node_key = 'T9_A_B_3Y')
     AND to_node_id = (SELECT id FROM public.decision_nodes
     WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
-      AND node_key = 'T9_LINK_4_5')
+      AND node_key = 'T9_LINK_ESSENTIAL')
+    AND traversal_order = 1
+);
+
+
+INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
+SELECT
+  gen_random_uuid(),
+  (SELECT id FROM public.decision_nodes
+   WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+     AND node_key = 'T9_A_B_3Y'),
+  (SELECT id FROM public.decision_nodes
+   WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+     AND node_key = 'T9_LINK_OPTIMAL'),
+  2
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.decision_edges
+  WHERE from_node_id = (SELECT id FROM public.decision_nodes
+    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+      AND node_key = 'T9_A_B_3Y')
+    AND to_node_id = (SELECT id FROM public.decision_nodes
+    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+      AND node_key = 'T9_LINK_OPTIMAL')
+    AND traversal_order = 2
+);
+
+
+INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
+SELECT
+  gen_random_uuid(),
+  (SELECT id FROM public.decision_nodes
+   WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+     AND node_key = 'T9_A_B_EARLY'),
+  (SELECT id FROM public.decision_nodes
+   WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+     AND node_key = 'T9_LINK_ESSENTIAL'),
+  1
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.decision_edges
+  WHERE from_node_id = (SELECT id FROM public.decision_nodes
+    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+      AND node_key = 'T9_A_B_EARLY')
+    AND to_node_id = (SELECT id FROM public.decision_nodes
+    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+      AND node_key = 'T9_LINK_ESSENTIAL')
     AND traversal_order = 1
 );
 
@@ -365,8 +431,8 @@ SELECT
      AND node_key = 'T9_A_B_EARLY'),
   (SELECT id FROM public.decision_nodes
    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
-     AND node_key = 'T9_LINK_4_5'),
-  1
+     AND node_key = 'T9_LINK_OPTIMAL'),
+  2
 WHERE NOT EXISTS (
   SELECT 1 FROM public.decision_edges
   WHERE from_node_id = (SELECT id FROM public.decision_nodes
@@ -374,7 +440,29 @@ WHERE NOT EXISTS (
       AND node_key = 'T9_A_B_EARLY')
     AND to_node_id = (SELECT id FROM public.decision_nodes
     WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
-      AND node_key = 'T9_LINK_4_5')
+      AND node_key = 'T9_LINK_OPTIMAL')
+    AND traversal_order = 2
+);
+
+
+INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
+SELECT
+  gen_random_uuid(),
+  (SELECT id FROM public.decision_nodes
+   WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+     AND node_key = 'T9_A_B_OR_C'),
+  (SELECT id FROM public.decision_nodes
+   WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+     AND node_key = 'T9_LINK_ESSENTIAL'),
+  1
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.decision_edges
+  WHERE from_node_id = (SELECT id FROM public.decision_nodes
+    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+      AND node_key = 'T9_A_B_OR_C')
+    AND to_node_id = (SELECT id FROM public.decision_nodes
+    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+      AND node_key = 'T9_LINK_ESSENTIAL')
     AND traversal_order = 1
 );
 
@@ -387,8 +475,8 @@ SELECT
      AND node_key = 'T9_A_B_OR_C'),
   (SELECT id FROM public.decision_nodes
    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
-     AND node_key = 'T9_LINK_4_5'),
-  1
+     AND node_key = 'T9_LINK_OPTIMAL'),
+  2
 WHERE NOT EXISTS (
   SELECT 1 FROM public.decision_edges
   WHERE from_node_id = (SELECT id FROM public.decision_nodes
@@ -396,7 +484,29 @@ WHERE NOT EXISTS (
       AND node_key = 'T9_A_B_OR_C')
     AND to_node_id = (SELECT id FROM public.decision_nodes
     WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
-      AND node_key = 'T9_LINK_4_5')
+      AND node_key = 'T9_LINK_OPTIMAL')
+    AND traversal_order = 2
+);
+
+
+INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
+SELECT
+  gen_random_uuid(),
+  (SELECT id FROM public.decision_nodes
+   WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+     AND node_key = 'T9_A_NO_B'),
+  (SELECT id FROM public.decision_nodes
+   WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+     AND node_key = 'T9_LINK_ESSENTIAL'),
+  1
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.decision_edges
+  WHERE from_node_id = (SELECT id FROM public.decision_nodes
+    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+      AND node_key = 'T9_A_NO_B')
+    AND to_node_id = (SELECT id FROM public.decision_nodes
+    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+      AND node_key = 'T9_LINK_ESSENTIAL')
     AND traversal_order = 1
 );
 
@@ -409,8 +519,8 @@ SELECT
      AND node_key = 'T9_A_NO_B'),
   (SELECT id FROM public.decision_nodes
    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
-     AND node_key = 'T9_LINK_4_5'),
-  1
+     AND node_key = 'T9_LINK_OPTIMAL'),
+  2
 WHERE NOT EXISTS (
   SELECT 1 FROM public.decision_edges
   WHERE from_node_id = (SELECT id FROM public.decision_nodes
@@ -418,8 +528,8 @@ WHERE NOT EXISTS (
       AND node_key = 'T9_A_NO_B')
     AND to_node_id = (SELECT id FROM public.decision_nodes
     WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
-      AND node_key = 'T9_LINK_4_5')
-    AND traversal_order = 1
+      AND node_key = 'T9_LINK_OPTIMAL')
+    AND traversal_order = 2
 );
 
 
@@ -629,7 +739,7 @@ SELECT
      AND node_key = 'T9_C_BP3'),
   (SELECT id FROM public.decision_nodes
    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
-     AND node_key = 'T9_LINK_4_5'),
+     AND node_key = 'T9_LINK_ESSENTIAL'),
   1
 WHERE NOT EXISTS (
   SELECT 1 FROM public.decision_edges
@@ -638,7 +748,51 @@ WHERE NOT EXISTS (
       AND node_key = 'T9_C_BP3')
     AND to_node_id = (SELECT id FROM public.decision_nodes
     WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
-      AND node_key = 'T9_LINK_4_5')
+      AND node_key = 'T9_LINK_ESSENTIAL')
+    AND traversal_order = 1
+);
+
+
+INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
+SELECT
+  gen_random_uuid(),
+  (SELECT id FROM public.decision_nodes
+   WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+     AND node_key = 'T9_C_BP3'),
+  (SELECT id FROM public.decision_nodes
+   WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+     AND node_key = 'T9_LINK_OPTIMAL'),
+  2
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.decision_edges
+  WHERE from_node_id = (SELECT id FROM public.decision_nodes
+    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+      AND node_key = 'T9_C_BP3')
+    AND to_node_id = (SELECT id FROM public.decision_nodes
+    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+      AND node_key = 'T9_LINK_OPTIMAL')
+    AND traversal_order = 2
+);
+
+
+INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
+SELECT
+  gen_random_uuid(),
+  (SELECT id FROM public.decision_nodes
+   WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+     AND node_key = 'T9_C_BP4'),
+  (SELECT id FROM public.decision_nodes
+   WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+     AND node_key = 'T9_LINK_ESSENTIAL'),
+  1
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.decision_edges
+  WHERE from_node_id = (SELECT id FROM public.decision_nodes
+    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+      AND node_key = 'T9_C_BP4')
+    AND to_node_id = (SELECT id FROM public.decision_nodes
+    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+      AND node_key = 'T9_LINK_ESSENTIAL')
     AND traversal_order = 1
 );
 
@@ -651,8 +805,8 @@ SELECT
      AND node_key = 'T9_C_BP4'),
   (SELECT id FROM public.decision_nodes
    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
-     AND node_key = 'T9_LINK_4_5'),
-  1
+     AND node_key = 'T9_LINK_OPTIMAL'),
+  2
 WHERE NOT EXISTS (
   SELECT 1 FROM public.decision_edges
   WHERE from_node_id = (SELECT id FROM public.decision_nodes
@@ -660,8 +814,8 @@ WHERE NOT EXISTS (
       AND node_key = 'T9_C_BP4')
     AND to_node_id = (SELECT id FROM public.decision_nodes
     WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
-      AND node_key = 'T9_LINK_4_5')
-    AND traversal_order = 1
+      AND node_key = 'T9_LINK_OPTIMAL')
+    AND traversal_order = 2
 );
 
 
@@ -1151,7 +1305,7 @@ SELECT
   gen_random_uuid(),
   (SELECT id FROM public.decision_nodes
    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
-     AND node_key = 'T9_LINK_4_5'),
+     AND node_key = 'T9_LINK_ESSENTIAL'),
   'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)',
   '["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]'::jsonb,
   'Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành',
@@ -1164,7 +1318,32 @@ WHERE NOT EXISTS (
   SELECT 1 FROM public.node_source_references
   WHERE node_id = (SELECT id FROM public.decision_nodes
     WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
-      AND node_key = 'T9_LINK_4_5')
+      AND node_key = 'T9_LINK_ESSENTIAL')
+    AND reference_order = 1
+);
+
+
+INSERT INTO public.node_source_references
+  (id, node_id, source_title, section_path, locator, locator_detail,
+   printed_page_numbers, pdf_page_numbers, reference_note, reference_order)
+SELECT
+  gen_random_uuid(),
+  (SELECT id FROM public.decision_nodes
+   WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+     AND node_key = 'T9_LINK_OPTIMAL'),
+  'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)',
+  '["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]'::jsonb,
+  'Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành',
+  NULL,
+  '{33}'::integer[],
+  '{35}'::integer[],
+  NULL,
+  1
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.node_source_references
+  WHERE node_id = (SELECT id FROM public.decision_nodes
+    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease')
+      AND node_key = 'T9_LINK_OPTIMAL')
     AND reference_order = 1
 );
 

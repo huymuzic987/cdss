@@ -90,7 +90,7 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     id: 'hypertensive-emergency-acs-to-cad',
     label: 'Hypertensive Emergency — Acute Coronary Syndrome',
     category: DIAGNOSIS,
-    description: 'Crisis BP with acute coronary syndrome — chains from the emergency tree into the (now-seeded) coronary-artery-disease tree, which itself ends on a documented dead LINK (T9_LINK_4_5 targets a nonexistent tree_key, a pre-existing seed-data bug).',
+    description: 'Crisis BP with acute coronary syndrome — chains from the emergency tree into the coronary-artery-disease tree, which routes to Tree 4 (Essential Treatment Strategy) or Tree 5 (Optimal Treatment Strategy).',
     data: {
       clinic_1_sbp: '200', clinic_1_dbp: '124',
       is_pregnant: false,
@@ -241,7 +241,7 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     id: 'diabetic-cad',
     label: 'Diabetic with Coronary Artery Disease',
     category: DEMOGRAPHIC,
-    description: '62-year-old with type 2 diabetes and established CAD. CAD is checked before type-2-diabetes in Tree 3’s modifier order, so this routes into the coronary-artery-disease tree (CCS angina action); the diabetes flag is recorded but that tree never runs in this same traversal. Ends on a documented dead LINK (T9_LINK_4_5 targets a nonexistent tree_key, a pre-existing seed-data bug — same one hit by the emergency→ACS preset).',
+    description: '62-year-old with type 2 diabetes and established CAD. CAD is checked before type-2-diabetes in Tree 3’s modifier order, so this routes into the coronary-artery-disease tree (CCS angina action); the diabetes flag is recorded but that tree never runs in this same traversal. Routes to Tree 4 (Essential Treatment Strategy) or Tree 5 (Optimal Treatment Strategy).',
     data: {
       clinic_1_sbp: '148', clinic_1_dbp: '94',
       clinic_2_sbp: '146', clinic_2_dbp: '92',
@@ -477,7 +477,7 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     id: 'cad-revascularization',
     label: 'Coronary Artery Disease — Post-Revascularization (No Beta-Blocker)',
     category: MODIFIER_TREES,
-    description: '55-year-old with CAD and a history of CCS revascularization (no AMI/CCS angina) — takes the "no routine beta-blocker" branch. Ends on the same documented dead LINK as the other CAD presets (T9_LINK_4_5 targets a nonexistent tree_key).',
+    description: '55-year-old with CAD and a history of CCS revascularization (no AMI/CCS angina) — takes the "no routine beta-blocker" branch. Routes to Tree 4 (Essential Treatment Strategy) or Tree 5 (Optimal Treatment Strategy).',
     data: {
       clinic_1_sbp: '148', clinic_1_dbp: '94',
       clinic_2_sbp: '146', clinic_2_dbp: '92',
