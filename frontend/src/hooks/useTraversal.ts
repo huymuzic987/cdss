@@ -27,6 +27,9 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
   const [modalPartial, setModalPartial] = useState<ApiErrorResponse | null>(null)
   const [showModal, setShowModal] = useState(false)
 
+  // Drug tolerance popup — shown when manual step reaches T13_A_CHECK_MRA
+  const [showDrugTolerancePopup, setShowDrugTolerancePopup] = useState(false)
+
   // Manual step-through mode: the full trace is fetched up front, but only
   // revealed one node_entered entry at a time, on each canvas click.
   const [manualMode, setManualMode] = useState(false)
@@ -171,8 +174,11 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
     [runEvaluation, finish, setError],
   )
 
+  // Node keys that trigger the drug-tolerance popup
+  const DRUG_TOLERANCE_NODE_KEYS = new Set(['T13_A_CHECK_MRA'])
+
   const handleManualStep = useCallback(() => {
-    if (!manualMode) return
+    if (!manualMode || showDrugTolerancePopup) return
     const entries = manualEntriesRef.current
     if (manualStepIndex >= entries.length) return
 
@@ -193,11 +199,32 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
     const nextIndex = manualStepIndex + 1
     setManualStepIndex(nextIndex)
 
+    // If we just stepped onto the MRA check node, pause and show the popup
+    if (DRUG_TOLERANCE_NODE_KEYS.has(entry.node_key)) {
+      setShowDrugTolerancePopup(true)
+      return
+    }
+
     if (nextIndex >= entries.length) {
       setManualMode(false)
       finish(manualFinalRef.current.result, manualFinalRef.current.partial)
     }
-  }, [manualMode, manualStepIndex, setActiveTreeKey, setFocusNodeKey, finish])
+  }, [manualMode, manualStepIndex, showDrugTolerancePopup, setActiveTreeKey, setFocusNodeKey, finish])
+
+  const handleDrugToleranceConfirm = useCallback(() => {
+    setShowDrugTolerancePopup(false)
+    // Check if that was the last step
+    const entries = manualEntriesRef.current
+    if (manualStepIndex >= entries.length) {
+      setManualMode(false)
+      finish(manualFinalRef.current.result, manualFinalRef.current.partial)
+    }
+    // Otherwise, next canvas click will advance to the next step
+  }, [manualStepIndex, finish])
+
+  const handleDrugToleranceCancel = useCallback(() => {
+    setShowDrugTolerancePopup(false)
+  }, [])
 
   const handleReset = () => {
     runIdRef.current++
@@ -206,6 +233,7 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
     setActiveNodeKey(null)
     setActiveTraversalTreeKey(null)
     setShowModal(false)
+    setShowDrugTolerancePopup(false)
     setFocusNodeKey(null)
     setManualMode(false)
     setManualStepIndex(0)
@@ -224,6 +252,9 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
     modalPartial,
     showModal,
     setShowModal,
+    showDrugTolerancePopup,
+    handleDrugToleranceConfirm,
+    handleDrugToleranceCancel,
     handleStartTraversal,
     handleStartManualTraversal,
     handleManualStep,

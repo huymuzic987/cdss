@@ -12,40 +12,35 @@ export function CareSettingSection({ form, setStr, setBool, disabled }: FormSect
       {form.has_active_bp_target && (
         <div className="ps-bp-target-box">
           <div className="ps-field-hint" style={{ display: 'block', marginBottom: 6 }}>
-            Target is reached when SBP is below the SBP number AND DBP is below the DBP number.
+            Target is reached when SBP is below the SBP target AND DBP is below the DBP target.
           </div>
           <div className="ps-field-row">
             <div className="ps-field">
-              <label className="ps-field-label">Age (years)</label>
+              <label className="ps-field-label">SBP Target (mmHg)</label>
               <input
                 className="ps-num-input"
-                type="number" min={1} max={120}
-                placeholder="e.g. 65"
-                value={form.age}
-                onChange={(e) => setStr('age', e.target.value)}
+                type="number" min={60} max={200}
+                placeholder="e.g. 140"
+                value={form.target_sbp_upper}
+                onChange={(e) => setStr('target_sbp_upper', e.target.value)}
                 disabled={disabled}
               />
             </div>
             <div className="ps-field">
-              <label className="ps-field-label">
-                Risk Factors
-                <span className="ps-field-hint" title="Age >65, Male sex, Smoking, Elevated LDL, Obesity, HR >80, Family history CVD, Premature menopause, Prediabetes, Physical inactivity">ⓘ</span>
-              </label>
+              <label className="ps-field-label">DBP Target (mmHg)</label>
               <input
                 className="ps-num-input"
-                type="number" min={0} max={10}
-                placeholder="0 – 10"
-                value={form.risk_factor_count}
-                onChange={(e) => setStr('risk_factor_count', e.target.value)}
+                type="number" min={40} max={120}
+                placeholder="e.g. 80"
+                value={form.target_dbp_upper}
+                onChange={(e) => setStr('target_dbp_upper', e.target.value)}
                 disabled={disabled}
               />
             </div>
           </div>
-          <div className="ps-toggles">
-            <Toggle label="Pregnant" fieldKey="is_pregnant" form={form} onChange={setBool} disabled={disabled} />
-          </div>
         </div>
       )}
+
 
       <div className="ps-field" style={{ marginTop: 8 }}>
         <label className="ps-field-label">Facility Capability</label>
