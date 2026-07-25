@@ -81,6 +81,14 @@ function getMedicineOptions(payload: JsonObject): MedicineOption[] | null {
   return options
 }
 
+// No backend to record acknowledgements yet — these are inert placeholders.
+const ACKNOWLEDGE_REASONS = [
+  'Will repeat BP',
+  'Will order different dose',
+  'Will discuss with pt',
+  'Remind me next visit',
+]
+
 function ConditionRow({ entry }: { entry: TraversalTraceEntry }) {
   const passed = entry.condition_result === true
   const failed = entry.condition_result === false
@@ -166,135 +174,134 @@ export function TraversalResultModal({ result, partial, onClose }: TraversalResu
         </div>
 
         <div className="modal-body">
-          {/* Stats row */}
-          <div className="modal-stats">
-            <div className="modal-stat">
-              <div className="modal-stat-value">{enteredNodes.length}</div>
-              <div className="modal-stat-label">Nodes Entered</div>
-            </div>
-            <div className="modal-stat">
-              <div className="modal-stat-value">{conditionEntries.length}</div>
-              <div className="modal-stat-label">Conditions Checked</div>
-            </div>
-            <div className="modal-stat">
-              <div className="modal-stat-value">{conditionEntries.filter(e => e.condition_result).length}</div>
-              <div className="modal-stat-label">Passed</div>
-            </div>
-            <div className="modal-stat">
-              <div className="modal-stat-value">{actions.length}</div>
-              <div className="modal-stat-label">Actions</div>
-            </div>
-          </div>
-
           {/* Actions */}
-          {actions.length > 0 && (
-            <section className="modal-section">
-              <div className="modal-section-title">📋 Clinical Recommendations</div>
-              {actions.map((action, i) => {
-                const medicineOptions = getMedicineOptions(action.payload)
-                const medicines = getMedicines(action.payload)
-                return (
-                <div key={i} className="modal-action-card">
-                  <div className="modal-action-header">
-                    <span className="modal-action-type">{String(action.payload.action_type ?? 'ACTION')}</span>
-                    <span className="modal-action-node">{action.node_key}</span>
-                  </div>
-                  <div className="modal-action-text-vi">{action.text_vi}</div>
-                  <div className="modal-action-text-en">{action.text_en}</div>
-                  {medicineOptions && medicineOptions.length > 0 && (
-                    <div className="modal-medicine-options">
-                      {medicineOptions.map((option, optionIndex) => (
-                        <div key={optionIndex} className="modal-medicine-option">
-                          <div className="modal-medicine-option-classes">
-                            {option.classes.join(' + ')}
-                          </div>
+          {actions.map((action, i) => {
+            const medicineOptions = getMedicineOptions(action.payload)
+            const medicines = getMedicines(action.payload)
+            return (
+              <div key={i} className="modal-action-card">
+                <div className="modal-action-header">
+                  <span className="modal-action-type">{String(action.payload.action_type ?? 'ACTION')}</span>
+                  <span className="modal-action-node">{action.node_key}</span>
+                </div>
+                <div className="modal-alert-reason">{action.text_vi}</div>
+                {action.text_en && <div className="modal-alert-detail">{action.text_en}</div>}
+
+                {medicineOptions && medicineOptions.length > 0 && (
+                  <div className="modal-medicine-options">
+                    {medicineOptions.map((option, optionIndex) => (
+                      <div key={optionIndex} className="modal-medicine-option">
+                        <div className="modal-medicine-option-classes">
+                          {option.classes.join(' + ')}
+                        </div>
+                        <div className="modal-drugclass-row">
                           {option.classes.map((classLetter) => (
-                            <div key={classLetter} className="modal-medicine-class-group">
-                              <div className="modal-medicine-class-label">Nhóm {classLetter}</div>
-                              <div className="modal-medicine-list">
+                            <div key={classLetter} className="modal-drugclass-chip" tabIndex={0}>
+                              <span>Nhóm {classLetter}</span>
+                              <div className="modal-drugclass-popover">
                                 {(option.medicines[classLetter] ?? []).map((medicine) => (
                                   <div key={medicine.drug_id} className="modal-medicine-row">
                                     <span className="modal-medicine-name">{medicine.name}</span>
                                     <span className="modal-medicine-dose">
                                       {medicine.dose_low} · {medicine.dose_usual} · {medicine.dose_max}
                                     </span>
-                                    <span className="modal-medicine-source">{medicine.source}</span>
                                   </div>
                                 ))}
                               </div>
                             </div>
                           ))}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                  {medicines && medicines.length > 0 && (
-                    <div className="modal-medicine-list">
-                      {medicines.map((medicine) => (
-                        <div
-                          key={medicine.drug_id}
-                          className={`modal-medicine-row${medicine.available ? '' : ' unavailable'}`}
-                        >
-                          <span className="modal-medicine-name">{medicine.name}</span>
-                          <span className="modal-medicine-dose">
-                            {medicine.dose_low} · {medicine.dose_usual} · {medicine.dose_max}
-                          </span>
-                          <span className="modal-medicine-source">{medicine.source}</span>
-                          {!medicine.available && (
-                            <span className="modal-medicine-unavailable-badge">Unavailable</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {action.payload && Object.keys(action.payload).length > 0 && (
-                    <details className="modal-action-payload">
-                      <summary>Payload</summary>
-                      <pre>{JSON.stringify(action.payload, null, 2)}</pre>
-                    </details>
-                  )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {medicines && medicines.length > 0 && (
+                  <div className="modal-medicine-list">
+                    {medicines.map((medicine) => (
+                      <div
+                        key={medicine.drug_id}
+                        className={`modal-medicine-row${medicine.available ? '' : ' unavailable'}`}
+                      >
+                        <span className="modal-medicine-name">{medicine.name}</span>
+                        <span className="modal-medicine-dose">
+                          {medicine.dose_low} · {medicine.dose_usual} · {medicine.dose_max}
+                        </span>
+                        {!medicine.available && (
+                          <span className="modal-medicine-unavailable-badge">Unavailable</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="modal-ack-row">
+                  {ACKNOWLEDGE_REASONS.map((reason) => (
+                    <button key={reason} type="button" className="modal-ack-btn">{reason}</button>
+                  ))}
                 </div>
-                )
-              })}
-            </section>
-          )}
-
-          {/* Context output */}
-          {Object.keys(context).length > 0 && (
-            <section className="modal-section">
-              <div className="modal-section-title">🧠 Derived Context</div>
-              <pre className="modal-json">{JSON.stringify(context, null, 2)}</pre>
-            </section>
-          )}
-
-          {/* Condition checks */}
-          {conditionEntries.length > 0 && (
-            <section className="modal-section">
-              <div className="modal-section-title">🔍 Condition Checks</div>
-              <div className="modal-conditions">
-                {conditionEntries.map((entry, i) => (
-                  <ConditionRow key={i} entry={entry} />
-                ))}
               </div>
-            </section>
-          )}
+            )
+          })}
 
-          {/* Traversal path */}
-          <section className="modal-section">
-            <div className="modal-section-title">🗺️ Path Taken ({enteredNodes.length} steps)</div>
-            <div className="modal-path">
-              {enteredNodes.map((entry, i) => (
-                <div key={i} className="modal-path-step">
-                  <span className="modal-path-num">{i + 1}</span>
-                  <span className="modal-path-tree">{entry.tree_key.split('-').slice(0, 2).join('-')}</span>
-                  <span className="modal-path-node">{entry.node_key}</span>
-                  <span className={`modal-path-type modal-path-type-${entry.node_type.toLowerCase()}`}>
-                    {entry.node_type}
-                  </span>
+          {/* Everything below is collapsed by default — debug / audit detail, not part of the alert itself */}
+          <details className="modal-debug">
+            <summary>Traversal details</summary>
+            <div className="modal-debug-body">
+              <div className="modal-stats">
+                <div className="modal-stat">
+                  <div className="modal-stat-value">{enteredNodes.length}</div>
+                  <div className="modal-stat-label">Nodes Entered</div>
                 </div>
-              ))}
+                <div className="modal-stat">
+                  <div className="modal-stat-value">{conditionEntries.length}</div>
+                  <div className="modal-stat-label">Conditions Checked</div>
+                </div>
+                <div className="modal-stat">
+                  <div className="modal-stat-value">{conditionEntries.filter(e => e.condition_result).length}</div>
+                  <div className="modal-stat-label">Passed</div>
+                </div>
+                <div className="modal-stat">
+                  <div className="modal-stat-value">{actions.length}</div>
+                  <div className="modal-stat-label">Actions</div>
+                </div>
+              </div>
+
+              {Object.keys(context).length > 0 && (
+                <section className="modal-section">
+                  <div className="modal-section-title">🧠 Derived Context</div>
+                  <pre className="modal-json">{JSON.stringify(context, null, 2)}</pre>
+                </section>
+              )}
+
+              {conditionEntries.length > 0 && (
+                <section className="modal-section">
+                  <div className="modal-section-title">🔍 Condition Checks</div>
+                  <div className="modal-conditions">
+                    {conditionEntries.map((entry, i) => (
+                      <ConditionRow key={i} entry={entry} />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              <section className="modal-section">
+                <div className="modal-section-title">🗺️ Path Taken ({enteredNodes.length} steps)</div>
+                <div className="modal-path">
+                  {enteredNodes.map((entry, i) => (
+                    <div key={i} className="modal-path-step">
+                      <span className="modal-path-num">{i + 1}</span>
+                      <span className="modal-path-tree">{entry.tree_key.split('-').slice(0, 2).join('-')}</span>
+                      <span className="modal-path-node">{entry.node_key}</span>
+                      <span className={`modal-path-type modal-path-type-${entry.node_type.toLowerCase()}`}>
+                        {entry.node_type}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
             </div>
-          </section>
+          </details>
         </div>
 
         <div className="modal-footer">
