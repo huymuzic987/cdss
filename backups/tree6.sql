@@ -1,8 +1,27 @@
 --
--- CDSS decision-tree insert script (sixth pass — specific-clinical-situation
--- beta-blocker check now gates every regimen tier; fifth pass cross-checked
--- against Tree 4/Tree 5 and drug-list removed; fourth pass rebuilt to match
--- the author's own 5-image board description, verbatim)
+-- CDSS decision-tree insert script (seventh pass — internal bookkeeping
+-- nodes reclassified from ACTION to INFERENCE so they stop appearing in the
+-- clinician-facing action trail; sixth pass added the specific-clinical-
+-- situation beta-blocker check to every regimen tier; fifth pass cross-
+-- checked against Tree 4/Tree 5 and drug-list removed; fourth pass rebuilt
+-- to match the author's own 5-image board description, verbatim)
+--
+-- SEVENTH PASS: T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION,
+-- T6_ACTION_ADJUST_REGIMEN, T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT,
+-- T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH, T6_ACTION_KEEP_ONE_DRUG, and
+-- T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE were ACTION nodes even though they
+-- are non-terminal steps in this tree's own internal logic (every node has
+-- an outgoing edge, so none of them end a walk) -- the engine appends one
+-- ExecutedAction per ACTION/END node entered, so a single traversal through
+-- several of these produced a stack of intermediate "actions" on top of the
+-- real terminal recommendation. Reclassified all six to INFERENCE (their
+-- context_patch is preserved; action_payload cleared) so only genuine
+-- terminal nodes populate the action trail. T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS
+-- was removed outright (it did nothing but copy two input fields into
+-- context, exactly like an INFERENCE node, but under an ACTION label with no
+-- real content of its own) -- its context_patch and Bảng-9 citation were
+-- folded into T6_INF_DETERMINE_CONTRAINDICATIONS, which now branches
+-- directly to T6_C_HAS_DUPLICATE_DRUG_CLASS / T6_C_NO_DUPLICATE_DRUG_CLASS.
 --
 -- SIXTH PASS: the specific-clinical-situation check (angina, post-MI, heart
 -- failure, AFib, tachycardia, pregnancy) previously only gated the 2-drug
@@ -207,11 +226,11 @@ node_seed (
         NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 5
     ),
     (
-        'T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION', 'ACTION',
+        'T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION', 'INFERENCE',
         'Compare with current prescription', 'So sánh với đơn thuốc hiện tại',
         NULL::jsonb,
         '{"treatment":{"has_dosage_adjustment_request":false},"operations":[{"op":"COPY_PATH","from_path":"input.has_dosage_adjustment_request","to_path":"context.treatment.has_dosage_adjustment_request","required":false}]}'::jsonb,
-        '{"action_type":"COMPARE_WITH_CURRENT_PRESCRIPTION","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
+        NULL::jsonb,
         NULL::jsonb, NULL::text, NULL::text, 6
     ),
     (
@@ -229,15 +248,15 @@ node_seed (
         NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 8
     ),
     (
-        'T6_ACTION_ADJUST_REGIMEN', 'ACTION', 'Adjust regimen', 'Điều chỉnh phác đồ',
+        'T6_ACTION_ADJUST_REGIMEN', 'INFERENCE', 'Adjust regimen', 'Điều chỉnh phác đồ',
         NULL::jsonb, '{"treatment":{"status":"ADJUST_REGIMEN"}}'::jsonb,
-        '{"action_type":"ADJUST_REGIMEN","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
+        NULL::jsonb,
         NULL::jsonb, NULL::text, NULL::text, 9
     ),
     (
-        'T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT', 'ACTION', 'Maintain regimen', 'Duy trì phác đồ',
+        'T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT', 'INFERENCE', 'Maintain regimen', 'Duy trì phác đồ',
         NULL::jsonb, NULL::jsonb,
-        '{"action_type":"MAINTAIN_CURRENT_REGIMEN","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
+        NULL::jsonb,
         NULL::jsonb, NULL::text, NULL::text, 10
     ),
     -- --- Step 2: contraindication determination (reference lookup, see architecture note) ---
@@ -246,7 +265,7 @@ node_seed (
         'Determine contraindicated drug classes based on patient information and current regimen',
         'Xác định thuốc chống chỉ định dựa trên thông tin bệnh nhân và phác đồ hiện tại',
         NULL::jsonb,
-        '{"operations":[{"op":"COPY_PATH","from_path":"input.contraindicated_drug_classes","to_path":"context.treatment.contraindicated_drug_classes","required":false}]}'::jsonb,
+        '{"treatment":{"has_duplicate_drug_class":false,"has_duplicate_ras_inhibitor":false},"operations":[{"op":"COPY_PATH","from_path":"input.contraindicated_drug_classes","to_path":"context.treatment.contraindicated_drug_classes","required":false},{"op":"COPY_PATH","from_path":"input.has_duplicate_drug_class","to_path":"context.treatment.has_duplicate_drug_class","required":false},{"op":"COPY_PATH","from_path":"input.has_duplicate_ras_inhibitor","to_path":"context.treatment.has_duplicate_ras_inhibitor","required":false}]}'::jsonb,
         NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 11
     ),
     (
@@ -257,15 +276,7 @@ node_seed (
         '{"kind":"REFERENCE_LIST","purpose":"Chống chỉ định bắt buộc/tương đối theo nhóm thuốc, dùng để tính input.contraindicated_drug_classes trước khi vào Cây 6.","input_path":"input.contraindicated_drug_classes","table":{"THIAZIDE_LIKE_DIURETIC":{"absolute":["gout"],"relative":["metabolic_syndrome","glucose_intolerance","pregnancy","hypercalcemia","hypokalemia"]},"BETA_BLOCKER":{"absolute":["asthma","sinoatrial_or_high_grade_av_block","bradycardia_lt_60"],"relative":["metabolic_syndrome","glucose_intolerance","athlete"]},"DIHYDROPYRIDINE_CCB":{"relative":["tachyarrhythmia","heart_failure_reduced_ef_nyha_3_or_4","severe_leg_edema_history"]},"NON_DIHYDROPYRIDINE_CCB":{"absolute":["sinoatrial_or_high_grade_av_block","severe_lv_dysfunction_lvef_lt_40","bradycardia_lt_60"],"relative":["constipation"]},"ACE_INHIBITOR":{"absolute":["pregnancy","angioedema_history","hyperkalemia_gt_5_5","bilateral_renal_artery_stenosis"],"relative":["woman_of_childbearing_age_without_contraception"]},"ARB":{"absolute":["pregnancy","hyperkalemia_gt_5_5","bilateral_renal_artery_stenosis"],"relative":["woman_of_childbearing_age_without_contraception"]},"MRA":{"absolute":["pregnancy","hyperkalemia","severe_acute_renal_failure_egfr_lt_30"]},"DIRECT_RENIN_INHIBITOR_OR_VASODILATOR":{"absolute":["pregnancy"]}}}'::jsonb,
         NULL::text, NULL::text, 12
     ),
-    -- --- Step 3: duplicate drug-class check (runs unconditionally, per author) ---
-    (
-        'T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS', 'ACTION',
-        'Check duplicate drug class', 'Kiểm tra trùng nhóm thuốc',
-        NULL::jsonb,
-        '{"treatment":{"has_duplicate_drug_class":false,"has_duplicate_ras_inhibitor":false},"operations":[{"op":"COPY_PATH","from_path":"input.has_duplicate_drug_class","to_path":"context.treatment.has_duplicate_drug_class","required":false},{"op":"COPY_PATH","from_path":"input.has_duplicate_ras_inhibitor","to_path":"context.treatment.has_duplicate_ras_inhibitor","required":false}]}'::jsonb,
-        '{"action_type":"CHECK_DUPLICATE_DRUG_CLASS","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 13
-    ),
+    -- --- Step 3: duplicate drug-class check (folded into T6_INF_DETERMINE_CONTRAINDICATIONS above) ---
     (
         'T6_C_HAS_DUPLICATE_DRUG_CLASS', 'CONDITION',
         'Has duplicate drug class (e.g. 2 drugs of the same class)',
@@ -294,23 +305,23 @@ node_seed (
         NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 17
     ),
     (
-        'T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH', 'ACTION',
+        'T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH', 'INFERENCE',
         'Keep only 1 drug or remove both; prefer keeping the one already in use, only remove both for a special requirement',
         'Chỉ giữ lại 1 thuốc hoặc loại bỏ cả hai. Ưu tiên giữ lại thuốc đã hoặc đang dùng trước đó, chỉ loại bỏ cả hai khi có yêu cầu đặc biệt',
         NULL::jsonb, NULL::jsonb,
-        '{"action_type":"KEEP_ONE_OR_REMOVE_BOTH_DUPLICATE_RAS_INHIBITORS","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
+        NULL::jsonb,
         NULL::jsonb, NULL::text, NULL::text, 18
     ),
     (
-        'T6_ACTION_KEEP_ONE_DRUG', 'ACTION', 'Keep only 1 drug', 'Chỉ giữ lại 1 thuốc',
+        'T6_ACTION_KEEP_ONE_DRUG', 'INFERENCE', 'Keep only 1 drug', 'Chỉ giữ lại 1 thuốc',
         NULL::jsonb, NULL::jsonb,
-        '{"action_type":"KEEP_ONE_DRUG_DUPLICATE_CLASS","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
+        NULL::jsonb,
         NULL::jsonb, NULL::text, NULL::text, 19
     ),
     (
-        'T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE', 'ACTION', 'Maintain regimen', 'Duy trì phác đồ',
+        'T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE', 'INFERENCE', 'Maintain regimen', 'Duy trì phác đồ',
         NULL::jsonb, NULL::jsonb,
-        '{"action_type":"MAINTAIN_CURRENT_REGIMEN","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
+        NULL::jsonb,
         NULL::jsonb, NULL::text, NULL::text, 20
     ),
     -- --- Encounter-type convergence (reused established field a 2nd time) ---
@@ -604,11 +615,9 @@ edge_seed (from_node_key, to_node_key, traversal_order) AS (
     ('T6_C_NO_DOSAGE_ADJUSTMENT_REQUESTED', 'T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT', 1),
     ('T6_ACTION_ADJUST_REGIMEN', 'T6_INF_DETERMINE_CONTRAINDICATIONS', 1),
     ('T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT', 'T6_INF_DETERMINE_CONTRAINDICATIONS', 1),
-    -- Step 2 -> Step 3 (unconditional, runs for every patient)
-    ('T6_INF_DETERMINE_CONTRAINDICATIONS', 'T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS', 1),
-    -- Step 3
-    ('T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS', 'T6_C_HAS_DUPLICATE_DRUG_CLASS', 1),
-    ('T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS', 'T6_C_NO_DUPLICATE_DRUG_CLASS', 2),
+    -- Step 2 -> Step 3 (duplicate-drug-class check folded into T6_INF_DETERMINE_CONTRAINDICATIONS)
+    ('T6_INF_DETERMINE_CONTRAINDICATIONS', 'T6_C_HAS_DUPLICATE_DRUG_CLASS', 1),
+    ('T6_INF_DETERMINE_CONTRAINDICATIONS', 'T6_C_NO_DUPLICATE_DRUG_CLASS', 2),
     ('T6_C_HAS_DUPLICATE_DRUG_CLASS', 'T6_C_DUPLICATE_IS_RAS_INHIBITOR', 1),
     ('T6_C_HAS_DUPLICATE_DRUG_CLASS', 'T6_C_DUPLICATE_NOT_RAS_INHIBITOR', 2),
     ('T6_C_NO_DUPLICATE_DRUG_CLASS', 'T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE', 1),
@@ -697,13 +706,13 @@ reference_seed (
      'Full absolute/relative contraindication table by drug class, including direct renin inhibitor/vasodilator.',
      ARRAY[23]::smallint[], ARRAY[25]::smallint[],
      'Bảng chống chỉ định đầy đủ theo nhóm thuốc.', 1),
-    ('T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS',
+    ('T6_INF_DETERMINE_CONTRAINDICATIONS',
      'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
      '[{"number": "3.4", "title": "Điều trị Tăng huyết áp bằng thuốc"}]'::jsonb,
      'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc',
      'Dual RAS-inhibitor blockade is not recommended (Class III, Level A).',
      ARRAY[20]::smallint[], ARRAY[22]::smallint[],
-     'Việc phối hợp hai nhóm thuốc ức chế hệ renin-angiotensin không được khuyến cáo.', 1),
+     'Việc phối hợp hai nhóm thuốc ức chế hệ renin-angiotensin không được khuyến cáo.', 2),
     ('T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH',
      'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
      '[{"number": "3.4", "title": "Điều trị Tăng huyết áp bằng thuốc"}]'::jsonb,

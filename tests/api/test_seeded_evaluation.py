@@ -113,9 +113,9 @@ def test_seeded_drug_combination_resolves_link_then_fails_on_new_required_field(
     seeded_api_context: SeededApiContext,
 ) -> None:
     """drug-combination is now seeded (backups/cdss_merged.sql), so the LINK resolves
-    and traversal continues into it, executing several of its own ACTION nodes, until
-    it fails on a required field (`has_heart_failure`) this fixture never had to
-    supply for Trees 1-5, instead of raising LinkTargetNotFound.
+    and traversal continues into it, working through several of its own INFERENCE
+    nodes, until it fails on a required field (`has_heart_failure`) this fixture
+    never had to supply for Trees 1-5, instead of raising LinkTargetNotFound.
     """
     response = _post_read_only(
         seeded_api_context,
@@ -129,7 +129,12 @@ def test_seeded_drug_combination_resolves_link_then_fails_on_new_required_field(
     assert body["details"]["path"] == "input.has_heart_failure"
     partial = body["partial_run_state"]
     assert partial["context"]["treatment"]["bp_target"] == ACTIVE_BP_TARGET
-    assert partial["actions"][-1]["node_key"] == "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE"
+    # T6's own compare/adjust/duplicate-check steps are INFERENCE nodes now, so
+    # T5's fixed-dose recommendation is the only action collected before drug-
+    # combination fails on the missing has_heart_failure input.
+    assert [a["node_key"] for a in partial["actions"]] == [
+        "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION"
+    ]
     assert (
         partial["traversal_log"][-1]["node_key"]
         == "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION"

@@ -1,6 +1,6 @@
 """Public domain contracts for the generic decision-tree engine."""
 
-from cdss.domain.decision_tree.actions import collect_action
+from cdss.domain.decision_tree.actions import collect_action, select_output_actions
 from cdss.domain.decision_tree.conditions import (
     ConditionEvaluation,
     evaluate_candidate_condition,
@@ -87,6 +87,7 @@ __all__ = [
     "NodeType",
     "RunState",
     "resolve_runtime_path",
+    "select_output_actions",
     "SourceReferenceDefinition",
     "TraceEvent",
     "TraversalCycleDetected",

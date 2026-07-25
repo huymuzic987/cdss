@@ -78,3 +78,21 @@ def collect_action(
     )
     run_state.actions.append(action)
     return action
+
+
+def select_output_actions(
+    actions: list[ExecutedAction], *, debug_output: bool
+) -> list[ExecutedAction]:
+    """Collapse a run's action trail down to its single terminal action.
+
+    A tree can walk through several ACTION nodes that exist only to record
+    an intermediate step of that tree's own logic (e.g. drug-combination's
+    duplicate-drug-class and prior-regimen checks) before reaching the node
+    that actually ends the walk -- every one of them gets appended to
+    ``actions`` for audit purposes, but only the last entry is the tree's
+    real recommendation. Non-debug callers get just that; debug_output
+    callers get the full trail unchanged.
+    """
+    if debug_output or len(actions) <= 1:
+        return actions
+    return [actions[-1]]

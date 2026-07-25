@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     cdss_medicine_cache_enabled: bool = Field(default=False)
     # None means "not explicitly configured" -> resolved from app_env below.
     dev_runtime_logging_enabled: bool | None = Field(default=None)
+    # Off by default: the API returns only the traversal's terminal action
+    # (the single combined prescription). Set to true to instead return the
+    # full action audit trail (every ACTION/END node entered, including a
+    # tree's own intermediate steps) as-is, for debugging tree authoring.
+    debug_output: bool = Field(default=False)
 
     @model_validator(mode="after")
     def _resolve_dev_runtime_logging(self) -> Settings:
