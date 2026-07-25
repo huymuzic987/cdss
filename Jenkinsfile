@@ -5,7 +5,8 @@ pipeline {
         TARGET_SERVER = '192.168.1.199'
         TARGET_USER = 'deployer'
 
-        APP_PORT = '3000'
+        // 3000 is already taken by another project (qminh) on this host.
+        APP_PORT = '3001'
 
         DEPLOY_PATH = '/opt/webapps/cdss'
 
