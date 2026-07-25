@@ -61,7 +61,7 @@ def evaluate(
         repository=repository,
         medicine_repository=medicine_repository,
     )
-    return EvaluationResponse.from_result(result)
+    return EvaluationResponse.from_result(result, debug_output=settings.debug_output)
 
 
 @router.post(
@@ -108,4 +108,4 @@ def evaluate_follow_up(
         repository=repository,
         medicine_repository=medicine_repository,
     )
-    return EvaluationResponse.from_result(result)
+    return EvaluationResponse.from_result(result, debug_output=settings.debug_output)

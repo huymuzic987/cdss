@@ -15,6 +15,7 @@ from cdss.domain.decision_tree import (
     TraversalResult,
     TraversalTraceEntry,
     TreeMetadata,
+    select_output_actions,
 )
 
 
@@ -47,12 +48,14 @@ class EvaluationResponse(ApiModel):
     completed_at: datetime
 
     @classmethod
-    def from_result(cls, result: TraversalResult) -> EvaluationResponse:
+    def from_result(
+        cls, result: TraversalResult, *, debug_output: bool = False
+    ) -> EvaluationResponse:
         return cls(
             status=result.status,
             input_snapshot=result.input_snapshot.to_dict(),
             context=result.context,
-            actions=result.actions,
+            actions=select_output_actions(result.actions, debug_output=debug_output),
             traversal_log=result.trace,
             references=result.references,
             tree_metadata=result.tree_metadata,
