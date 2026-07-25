@@ -83,6 +83,7 @@ pipeline {
                         sh '''
                             scp ${SSH_OPTS} $ENV_FILE ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/.env.new
                             ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                                sed -i 's/\\r\$//' ${DEPLOY_PATH}/.env.new
                                 mv -f ${DEPLOY_PATH}/.env.new ${DEPLOY_PATH}/.env
                             "
                         '''
