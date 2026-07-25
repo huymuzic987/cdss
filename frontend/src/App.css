@@ -93,6 +93,11 @@
   border-color: var(--accent-solid);
 }
 
+.dashboard-tab {
+  font-weight: 600;
+  margin-right: 6px;
+}
+
 .error-banner {
   background: var(--danger-bg);
   color: var(--danger-text);
