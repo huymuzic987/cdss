@@ -24,7 +24,15 @@ class ApiModel(BaseModel):
 
 class EvaluationRequest(ApiModel):
     start_tree_key: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-    input: JsonObject
+    input: Annotated[
+        JsonObject,
+        Field(
+            description=(
+                "An HL7 FHIR R4 Bundle (resourceType == 'Bundle'); see "
+                "cdss.api.schemas.fhir_input for the resource-mapping contract."
+            )
+        ),
+    ]
 
 
 class EvaluationResponse(ApiModel):
@@ -54,11 +62,17 @@ class EvaluationResponse(ApiModel):
 
 
 class FollowUpEvaluationRequest(ApiModel):
-    facility_capability: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-    medication_follow_up_stage: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-    active_bp_target: JsonObject
-    current_clinic_sbp: float
-    current_clinic_dbp: float
+    input: Annotated[
+        JsonObject,
+        Field(
+            description=(
+                "An HL7 FHIR R4 Bundle (resourceType == 'Bundle') carrying "
+                "facility_capability, medication_follow_up_stage, "
+                "active_bp_target, current_clinic_sbp, and current_clinic_dbp; "
+                "see cdss.api.schemas.fhir_input for the resource-mapping contract."
+            )
+        ),
+    ]
 
 
 class PartialRunStateResponse(ApiModel):

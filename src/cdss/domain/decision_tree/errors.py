@@ -115,3 +115,8 @@ class TraversalLimitExceeded(DecisionTreeError):
 class LinkNotEnabled(DecisionTreeError):
     code = "link_not_enabled"
     default_message = "Cross-tree link execution is not enabled."
+
+
+class InvalidFhirInput(DecisionTreeError):
+    code = "invalid_fhir_input"
+    default_message = "Request input is not a valid HL7 FHIR R4 Bundle."

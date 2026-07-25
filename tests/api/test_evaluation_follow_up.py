@@ -11,6 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from cdss.api.dependencies import get_tree_graph_repository
+from cdss.api.schemas.fhir_input import input_to_bundle
 from cdss.core.config import Settings, get_settings
 from cdss.domain.decision_tree import (
     EdgeDefinition,
@@ -71,11 +72,15 @@ def test_follow_up_restores_caller_supplied_target_and_reports_target_reached(
     response = api_context.client.post(
         "/evaluate/follow-up",
         json={
-            "facility_capability": "LIMITED_RESOURCES",
-            "medication_follow_up_stage": "INITIAL_REGIMEN",
-            "active_bp_target": ACTIVE_BP_TARGET,
-            "current_clinic_sbp": 125,
-            "current_clinic_dbp": 75,
+            "input": input_to_bundle(
+                {
+                    "facility_capability": "LIMITED_RESOURCES",
+                    "medication_follow_up_stage": "INITIAL_REGIMEN",
+                    "active_bp_target": ACTIVE_BP_TARGET,
+                    "current_clinic_sbp": 125,
+                    "current_clinic_dbp": 75,
+                }
+            )
         },
     )
 
@@ -93,11 +98,15 @@ def test_follow_up_reports_target_not_reached(api_context: ApiTestContext) -> No
     response = api_context.client.post(
         "/evaluate/follow-up",
         json={
-            "facility_capability": "LIMITED_RESOURCES",
-            "medication_follow_up_stage": "INITIAL_REGIMEN",
-            "active_bp_target": ACTIVE_BP_TARGET,
-            "current_clinic_sbp": 145,
-            "current_clinic_dbp": 95,
+            "input": input_to_bundle(
+                {
+                    "facility_capability": "LIMITED_RESOURCES",
+                    "medication_follow_up_stage": "INITIAL_REGIMEN",
+                    "active_bp_target": ACTIVE_BP_TARGET,
+                    "current_clinic_sbp": 145,
+                    "current_clinic_dbp": 95,
+                }
+            )
         },
     )
 
@@ -112,11 +121,15 @@ def test_follow_up_with_unknown_facility_capability_returns_422(
     response = api_context.client.post(
         "/evaluate/follow-up",
         json={
-            "facility_capability": "UNKNOWN_FACILITY",
-            "medication_follow_up_stage": "INITIAL_REGIMEN",
-            "active_bp_target": ACTIVE_BP_TARGET,
-            "current_clinic_sbp": 125,
-            "current_clinic_dbp": 75,
+            "input": input_to_bundle(
+                {
+                    "facility_capability": "UNKNOWN_FACILITY",
+                    "medication_follow_up_stage": "INITIAL_REGIMEN",
+                    "active_bp_target": ACTIVE_BP_TARGET,
+                    "current_clinic_sbp": 125,
+                    "current_clinic_dbp": 75,
+                }
+            )
         },
     )
 
@@ -125,19 +138,39 @@ def test_follow_up_with_unknown_facility_capability_returns_422(
     assert body["code"] == "no_matching_transition"
 
 
+_COMPLETE_FOLLOW_UP_INPUT = {
+    "facility_capability": "LIMITED_RESOURCES",
+    "medication_follow_up_stage": "INITIAL_REGIMEN",
+    "active_bp_target": ACTIVE_BP_TARGET,
+    "current_clinic_sbp": 1,
+    "current_clinic_dbp": 1,
+}
+
+
 @pytest.mark.parametrize(
-    "payload",
-    [
-        {"medication_follow_up_stage": "INITIAL_REGIMEN", "active_bp_target": ACTIVE_BP_TARGET, "current_clinic_sbp": 1, "current_clinic_dbp": 1},
-        {"facility_capability": "LIMITED_RESOURCES", "active_bp_target": ACTIVE_BP_TARGET, "current_clinic_sbp": 1, "current_clinic_dbp": 1},
-        {"facility_capability": "LIMITED_RESOURCES", "medication_follow_up_stage": "INITIAL_REGIMEN", "current_clinic_sbp": 1, "current_clinic_dbp": 1},
-    ],
+    "missing_key",
+    ["facility_capability", "medication_follow_up_stage", "active_bp_target"],
 )
-def test_malformed_follow_up_request_returns_stable_validation_error(
+def test_follow_up_bundle_missing_a_required_field_returns_invalid_fhir_input(
     api_context: ApiTestContext,
-    payload: object,
+    missing_key: str,
 ) -> None:
-    response = api_context.client.post("/evaluate/follow-up", json=payload)
+    incomplete = {k: v for k, v in _COMPLETE_FOLLOW_UP_INPUT.items() if k != missing_key}
+    response = api_context.client.post(
+        "/evaluate/follow-up",
+        json={"input": input_to_bundle(incomplete)},
+    )
+
+    assert response.status_code == 422
+    body = response.json()
+    assert body["code"] == "invalid_fhir_input"
+    assert missing_key in body["details"]["reason"]
+
+
+def test_follow_up_request_missing_input_field_returns_invalid_request(
+    api_context: ApiTestContext,
+) -> None:
+    response = api_context.client.post("/evaluate/follow-up", json={})
 
     assert response.status_code == 422
     body = response.json()
