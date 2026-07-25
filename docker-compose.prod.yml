@@ -2,11 +2,6 @@
 # target host by the Jenkinsfile. `docker compose` auto-loads a `.env` file
 # next to this one for the ${...} substitutions below; that same .env is
 # also passed into the backend container via env_file.
-#
-# IMAGE_TAG selects which previously built image tag to run (set to the
-# Jenkins BUILD_NUMBER during deploys, or a prior build number during a
-# rollback). Defaults to "latest", which the pipeline always points at the
-# last known-good build.
 
 services:
   db:
@@ -29,7 +24,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    image: cdss-backend:${IMAGE_TAG:-latest}
+    image: cdss-backend:latest
     restart: unless-stopped
     env_file: .env
     environment:
@@ -51,7 +46,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    image: cdss-frontend:${IMAGE_TAG:-latest}
+    image: cdss-frontend:latest
     restart: unless-stopped
     ports:
       - "${APP_PORT:-3000}:80"
