@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Editor, TLShapeId } from 'tldraw'
-import type { TreeGraphNode, TreeGraphResponse } from '../api/types'
+import { fetchTreeLayout, saveTreeLayout } from '../api/client'
+import type { TreeGraphNode, TreeGraphResponse, TreeLayoutResponse } from '../api/types'
 import { layoutTree, type NodePosition } from '../layout/elkLayout'
 import { buildTreeScene } from './buildTreeScene'
 
@@ -11,8 +12,10 @@ interface UseTreeCanvasSceneOptions {
   onSelectNode: (node: TreeGraphNode | null) => void
 }
 
+const SAVE_DEBOUNCE_MS = 800
+
 /** Mounts the tldraw editor, lays out the tree, and persists node positions
- * (and arrow style) to localStorage as the user drags nodes around. */
+ * (and arrow style) to the backend as the user drags nodes around. */
 export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }: UseTreeCanvasSceneOptions) {
   const editorRef = useRef<Editor | null>(null)
   const shapeIdsRef = useRef<Map<string, TLShapeId>>(new Map())
@@ -31,6 +34,7 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
 
   const isSceneLoadedRef = useRef(false)
   const lastSavedPositionsRef = useRef<Record<string, { x: number; y: number }>>({})
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleMount = useCallback(
     (editor: Editor) => {
@@ -39,31 +43,22 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
 
       const nodesByKey = new Map(graph.nodes.map((node) => [node.node_key, node]))
 
-      // Retrieve saved configuration from localStorage on mount
-      let savedPositions: Record<string, { x: number; y: number }> | null = null
-      let savedArrowKind: 'straight' | 'elbow' = 'elbow'
-      const savedLayoutStr = localStorage.getItem(`cdss-tree-layout-${graph.tree.tree_key}`)
-      if (savedLayoutStr) {
-        try {
-          const parsed = JSON.parse(savedLayoutStr)
-          if (parsed.positions) savedPositions = parsed.positions
-          if (parsed.arrowKind === 'straight' || parsed.arrowKind === 'elbow') {
-            savedArrowKind = parsed.arrowKind
-          }
-        } catch (e) {
-          console.error('Failed to parse saved layout', e)
-        }
-      }
-      setArrowKind(savedArrowKind)
-
       let cancelled = false
-      void layoutTree(graph.nodes, graph.edges).then((positions) => {
+      void Promise.all([
+        layoutTree(graph.nodes, graph.edges),
+        fetchTreeLayout(graph.tree.tree_key).catch((error): TreeLayoutResponse => {
+          console.error('Failed to load saved layout', error)
+          return { positions: {}, arrow_kind: 'elbow' }
+        }),
+      ]).then(([positions, savedLayout]) => {
         if (cancelled) return
+
+        setArrowKind(savedLayout.arrow_kind)
 
         // Merge calculated ELK layout with saved positions
         const mergedPositions = new Map<string, NodePosition>()
         for (const [nodeKey, pos] of positions.entries()) {
-          const savedPos = savedPositions?.[nodeKey]
+          const savedPos = savedLayout.positions[nodeKey]
           if (savedPos) {
             mergedPositions.set(nodeKey, savedPos)
           } else {
@@ -71,7 +66,7 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
           }
         }
 
-        shapeIdsRef.current = buildTreeScene(editor, graph.nodes, graph.edges, mergedPositions, savedArrowKind, theme)
+        shapeIdsRef.current = buildTreeScene(editor, graph.nodes, graph.edges, mergedPositions, savedLayout.arrow_kind, theme)
 
         if (focusNodeKey) {
           const shapeId = shapeIdsRef.current.get(focusNodeKey)
@@ -95,6 +90,17 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
         isSceneLoadedRef.current = true
         setIsSceneLoaded(true)
       })
+
+      const flushSave = () => {
+        if (saveTimeoutRef.current) {
+          clearTimeout(saveTimeoutRef.current)
+          saveTimeoutRef.current = null
+        }
+        void saveTreeLayout(graph.tree.tree_key, {
+          positions: lastSavedPositionsRef.current,
+          arrow_kind: arrowKindRef.current,
+        }).catch((error) => console.error('Failed to save layout', error))
+      }
 
       const unlisten = editor.store.listen(
         () => {
@@ -132,10 +138,8 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
 
           if (hasMoved) {
             lastSavedPositionsRef.current = currentPositions
-            localStorage.setItem(
-              `cdss-tree-layout-${graph.tree.tree_key}`,
-              JSON.stringify({ positions: currentPositions, arrowKind: arrowKindRef.current }),
-            )
+            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+            saveTimeoutRef.current = setTimeout(flushSave, SAVE_DEBOUNCE_MS)
           }
         },
         { source: 'user', scope: 'all' },
@@ -145,6 +149,9 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
         cancelled = true
         unlisten()
         isSceneLoadedRef.current = false
+        // Flush any pending debounced save immediately so a fast tab switch
+        // doesn't drop the last drag before the debounce timer fires.
+        if (saveTimeoutRef.current) flushSave()
       }
     },
     // Runs once per mount; this component is remounted (via `key`) on tab switch.

@@ -11,6 +11,8 @@ import type {
   OutcomesResponse,
   OverviewResponse,
   TreeGraphResponse,
+  TreeLayoutRequest,
+  TreeLayoutResponse,
   TreeSummary,
   VisitsResponse,
 } from './types'
@@ -38,6 +40,27 @@ async function postJson<T>(path: string): Promise<T> {
   return (await response.json()) as T
 }
 
+async function putJson<T>(path: string, payload: unknown): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!response.ok) {
+    const body = (await response.json()) as ApiErrorResponse
+    throw new Error(body.message ?? `Request to ${path} failed with ${response.status}`)
+  }
+  return (await response.json()) as T
+}
+
+async function deleteRequest(path: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}${path}`, { method: 'DELETE' })
+  if (!response.ok && response.status !== 404) {
+    const body = (await response.json()) as ApiErrorResponse
+    throw new Error(body.message ?? `Request to ${path} failed with ${response.status}`)
+  }
+}
+
 function buildQuery(params: DashboardFilters): string {
   const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== '')
   if (entries.length === 0) return ''
@@ -52,6 +75,18 @@ export function fetchTrees(): Promise<TreeSummary[]> {
 
 export function fetchTreeGraph(treeKey: string): Promise<TreeGraphResponse> {
   return getJson<TreeGraphResponse>(`/trees/${encodeURIComponent(treeKey)}/graph`)
+}
+
+export function fetchTreeLayout(treeKey: string): Promise<TreeLayoutResponse> {
+  return getJson<TreeLayoutResponse>(`/trees/${encodeURIComponent(treeKey)}/layout`)
+}
+
+export function saveTreeLayout(treeKey: string, layout: TreeLayoutRequest): Promise<TreeLayoutResponse> {
+  return putJson<TreeLayoutResponse>(`/trees/${encodeURIComponent(treeKey)}/layout`, layout)
+}
+
+export function resetTreeLayout(treeKey: string): Promise<void> {
+  return deleteRequest(`/trees/${encodeURIComponent(treeKey)}/layout`)
 }
 
 export async function evaluateTree(request: EvaluationRequest): Promise<{
