@@ -244,13 +244,12 @@ The right comparison operand follows the same exclusive `value` or
 
 ### 5.4 Path existence
 
-Seeded Tree 1 selects between out-of-office and clinic-only measurement routes
-with the exact two-key form:
+The exact two-key form tests whether a path is present at all:
 
 ```json
 {
   "op": "exists",
-  "path": "input.home_sbp"
+  "path": "input.clinic_1_sbp"
 }
 ```
 

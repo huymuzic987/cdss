@@ -12,6 +12,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from cdss.api.dependencies import get_tree_graph_repository
+from cdss.api.schemas.fhir_input import input_to_bundle
 from cdss.core.config import Settings, get_settings
 from cdss.infrastructure.db.decision_tree_repository import SqlAlchemyTreeGraphRepository
 from cdss.infrastructure.db.models import (
@@ -74,10 +75,6 @@ def test_seeded_tree_1_normal_bp_is_read_only(seeded_api_context: SeededApiConte
             "is_pregnant": False,
             "clinic_1_sbp": 120,
             "clinic_1_dbp": 80,
-            "clinic_2_sbp": 120,
-            "clinic_2_dbp": 80,
-            "clinic_3_sbp": 120,
-            "clinic_3_dbp": 80,
         },
     )
 
@@ -149,7 +146,7 @@ def _post_read_only(
     before = _database_row_counts(context.session)
     response = context.client.post(
         "/evaluate",
-        json={"start_tree_key": tree_key, "input": runtime_input},
+        json={"start_tree_key": tree_key, "input": input_to_bundle(runtime_input)},
     )
     assert _database_row_counts(context.session) == before
     return response

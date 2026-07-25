@@ -11,8 +11,10 @@ from cdss.api.schemas import (
     EvaluationResponse,
     FollowUpEvaluationRequest,
 )
+from cdss.api.schemas.fhir_input import bundle_to_input
 from cdss.core.config import Settings, get_settings
 from cdss.domain.decision_tree import (
+    InvalidFhirInput,
     MedicineRepository,
     MissingRuntimePath,
     TreeGraphRepository,
@@ -25,6 +27,14 @@ router = APIRouter(tags=["evaluation"])
 # restores that target into context and links onward to the facility's
 # treatment-strategy tree (essential or optimal) based on input.facility_capability.
 _MEDICATION_FOLLOW_UP_TREE_KEY = "treatment-threshold-and-bp-target"
+
+_FOLLOW_UP_REQUIRED_KEYS = (
+    "facility_capability",
+    "medication_follow_up_stage",
+    "active_bp_target",
+    "current_clinic_sbp",
+    "current_clinic_dbp",
+)
 
 
 @router.post(
@@ -46,7 +56,7 @@ def evaluate(
     graph = repository.get_tree(request.start_tree_key)
     result = walk_tree(
         graph,
-        request.input,
+        bundle_to_input(request.input),
         max_steps=settings.cdss_max_steps,
         repository=repository,
         medicine_repository=medicine_repository,
@@ -76,16 +86,23 @@ def evaluate_follow_up(
     re-derive it, it just restores it into context via Tree 3 and lets Tree 3
     route to the facility's treatment-strategy tree.
     """
+    converted = bundle_to_input(request.input)
+    missing = [key for key in _FOLLOW_UP_REQUIRED_KEYS if key not in converted]
+    if missing:
+        raise InvalidFhirInput(
+            details={"reason": f"Bundle is missing required field(s): {', '.join(missing)}"}
+        )
+
     graph = repository.get_tree(_MEDICATION_FOLLOW_UP_TREE_KEY)
     result = walk_tree(
         graph,
         {
             "is_medication_follow_up": True,
-            "medication_follow_up_stage": request.medication_follow_up_stage,
-            "active_bp_target": request.active_bp_target,
-            "current_clinic_sbp": request.current_clinic_sbp,
-            "current_clinic_dbp": request.current_clinic_dbp,
-            "facility_capability": request.facility_capability,
+            "medication_follow_up_stage": converted["medication_follow_up_stage"],
+            "active_bp_target": converted["active_bp_target"],
+            "current_clinic_sbp": converted["current_clinic_sbp"],
+            "current_clinic_dbp": converted["current_clinic_dbp"],
+            "facility_capability": converted["facility_capability"],
         },
         max_steps=settings.cdss_max_steps,
         repository=repository,

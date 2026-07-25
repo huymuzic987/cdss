@@ -11,6 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from cdss.api.dependencies import get_tree_graph_repository
+from cdss.api.schemas.fhir_input import input_to_bundle
 from cdss.core.config import Settings, get_settings
 from cdss.domain.decision_tree import (
     EdgeDefinition,
@@ -64,7 +65,7 @@ def api_context() -> Iterator[ApiTestContext]:
 def test_tree_1_essential_normal_bp_result(api_context: ApiTestContext) -> None:
     response = api_context.client.post(
         "/evaluate",
-        json={"start_tree_key": "hypertension-diagnosis", "input": {}},
+        json={"start_tree_key": "hypertension-diagnosis", "input": input_to_bundle({})},
     )
 
     assert response.status_code == 200
@@ -109,10 +110,22 @@ def test_malformed_input_returns_stable_validation_error(
     assert "traceback" not in body
 
 
+def test_non_bundle_input_returns_invalid_fhir_input(api_context: ApiTestContext) -> None:
+    response = api_context.client.post(
+        "/evaluate",
+        json={"start_tree_key": "hypertension-diagnosis", "input": {"foo": "bar"}},
+    )
+
+    assert response.status_code == 422
+    body = response.json()
+    assert body["code"] == "invalid_fhir_input"
+    assert "traceback" not in body
+
+
 def test_tree_not_found_returns_404(api_context: ApiTestContext) -> None:
     response = api_context.client.post(
         "/evaluate",
-        json={"start_tree_key": "missing-tree", "input": {}},
+        json={"start_tree_key": "missing-tree", "input": input_to_bundle({})},
     )
 
     assert response.status_code == 404
@@ -130,7 +143,10 @@ def test_unresolved_link_returns_424_with_partial_execution_state(
 ) -> None:
     response = api_context.client.post(
         "/evaluate",
-        json={"start_tree_key": "unresolved-tree", "input": {"request_id": "test"}},
+        json={
+            "start_tree_key": "unresolved-tree",
+            "input": input_to_bundle({"request_id": "test"}),
+        },
     )
 
     assert response.status_code == 424
@@ -152,7 +168,7 @@ def test_request_completion_does_not_persist_patient_data(
         "/evaluate",
         json={
             "start_tree_key": "hypertension-diagnosis",
-            "input": {"patient_external_id": "must-not-be-stored"},
+            "input": input_to_bundle({"patient_external_id": "must-not-be-stored"}),
         },
     )
 

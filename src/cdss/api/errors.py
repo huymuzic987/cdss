@@ -14,6 +14,7 @@ from cdss.api.schemas import EvaluationErrorResponse, PartialRunStateResponse
 from cdss.domain.decision_tree import (
     ContextPatchError,
     DecisionTreeError,
+    InvalidFhirInput,
     InvalidRuntimeValueType,
     LinkNotEnabled,
     LinkTargetNodeNotFound,
@@ -100,6 +101,9 @@ def _verbose_error_message(error: DecisionTreeError) -> str:
     elif isinstance(error, TraversalLimitExceeded):
         max_steps = error.details.get("max_steps", 0)
         message = f"Decision-tree traversal exceeded its safety limit of {max_steps} steps."
+    elif isinstance(error, InvalidFhirInput):
+        reason = error.details.get("reason")
+        message = f"{error.message} Reason: {reason}." if reason else error.message
     return message
 
 
@@ -177,7 +181,10 @@ def _status_for_domain_error(error: DecisionTreeError) -> int:
         return status.HTTP_404_NOT_FOUND
     if isinstance(error, (LinkTargetNotFound, LinkTargetNodeNotFound)):
         return status.HTTP_424_FAILED_DEPENDENCY
-    if isinstance(error, (MissingRuntimePath, InvalidRuntimeValueType, NoMatchingTransition)):
+    if isinstance(
+        error,
+        (MissingRuntimePath, InvalidRuntimeValueType, NoMatchingTransition, InvalidFhirInput),
+    ):
         return status.HTTP_422_UNPROCESSABLE_CONTENT
     if isinstance(error, ContextPatchError) and error.details.get("reason") == (
         "required_copy_source_missing"
