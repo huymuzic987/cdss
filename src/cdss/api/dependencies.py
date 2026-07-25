@@ -19,6 +19,7 @@ from cdss.infrastructure.db.caching_repository import (
 from cdss.infrastructure.db.dashboard_repository import DashboardRepository
 from cdss.infrastructure.db.decision_tree_repository import SqlAlchemyTreeGraphRepository
 from cdss.infrastructure.db.medicine_repository import SqlAlchemyMedicineRepository
+from cdss.infrastructure.db.tree_layout_repository import TreeLayoutRepository
 
 
 def get_tree_graph_repository(
@@ -43,3 +44,9 @@ def get_medicine_repository(
 
 def get_dashboard_repository(session: Annotated[Session, Depends(get_db)]) -> DashboardRepository:
     return DashboardRepository(session)
+
+
+def get_tree_layout_repository(
+    session: Annotated[Session, Depends(get_db)],
+) -> TreeLayoutRepository:
+    return TreeLayoutRepository(session)
