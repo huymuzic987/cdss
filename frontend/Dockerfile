@@ -13,6 +13,13 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .
+
+# Vite inlines import.meta.env.VITE_* at build time, so the tldraw license
+# key has to be present here, not just as a runtime container env var -
+# without it, tldraw silently hides the whole canvas 5s after mount in any
+# build served over https from a non-localhost domain.
+ARG VITE_TLDRAW_LICENSE_KEY
+ENV VITE_TLDRAW_LICENSE_KEY=$VITE_TLDRAW_LICENSE_KEY
 RUN pnpm build
 
 FROM nginx:1.27-alpine AS runtime
