@@ -35,4 +35,4 @@ else
 fi
 
 echo "Applying Alembic migrations..."
-$COMPOSE run --rm backend uv run alembic upgrade head
+$COMPOSE run --rm backend alembic upgrade head
