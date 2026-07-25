@@ -7,6 +7,7 @@ from cdss.api.schemas.evaluation import (
     FollowUpEvaluationRequest,
     PartialRunStateResponse,
 )
+from cdss.api.schemas.fhir_input import bundle_to_input, input_to_bundle
 from cdss.api.schemas.tree_graph import (
     TreeGraphEdge,
     TreeGraphGlobalNode,
@@ -17,10 +18,12 @@ from cdss.api.schemas.tree_graph import (
 )
 
 __all__ = [
+    "bundle_to_input",
     "EvaluationErrorResponse",
     "EvaluationRequest",
     "EvaluationResponse",
     "FollowUpEvaluationRequest",
+    "input_to_bundle",
     "PartialRunStateResponse",
     "TreeGraphEdge",
     "TreeGraphGlobalNode",

@@ -262,10 +262,6 @@ def test_tree_1_normal_bp_route(seeded_trees: SeededTrees) -> None:
         "is_pregnant": False,
         "clinic_1_sbp": 120,
         "clinic_1_dbp": 80,
-        "clinic_2_sbp": 120,
-        "clinic_2_dbp": 80,
-        "clinic_3_sbp": 120,
-        "clinic_3_dbp": 80,
     }
 
     result = walk_tree(seeded_trees.graphs[T1], runtime_input, repository=seeded_trees.repository)
@@ -288,17 +284,9 @@ def test_tree_1_normal_bp_route(seeded_trees: SeededTrees) -> None:
             _candidate(T1, "T1_C_IS_NOT_PREGNANT", "T1_C_CLINIC_1_CRISIS", False),
             _candidate(T1, "T1_C_IS_NOT_PREGNANT", "T1_C_CLINIC_1_NON_CRISIS", True),
             _entered(T1, "T1_C_CLINIC_1_NON_CRISIS"),
-            _candidate(T1, "T1_C_CLINIC_1_NON_CRISIS", "T1_C_CLINIC_2_DIRECT_RANGE", False),
-            _candidate(T1, "T1_C_CLINIC_1_NON_CRISIS", "T1_C_CLINIC_2_LOWER", True),
-            _entered(T1, "T1_C_CLINIC_2_LOWER"),
-            _candidate(T1, "T1_C_CLINIC_2_LOWER", "T1_C_OPTIMAL_MEASUREMENT_ROUTE", False),
-            _candidate(T1, "T1_C_CLINIC_2_LOWER", "T1_C_ESSENTIAL_MEASUREMENT_ROUTE", True),
-            _entered(T1, "T1_C_ESSENTIAL_MEASUREMENT_ROUTE"),
-            _candidate(T1, "T1_C_ESSENTIAL_MEASUREMENT_ROUTE", "T1_C_CLINIC_3_AVAILABLE", True),
-            _entered(T1, "T1_C_CLINIC_3_AVAILABLE"),
-            _candidate(T1, "T1_C_CLINIC_3_AVAILABLE", "T1_C_ESSENTIAL_HYPERTENSION", False),
-            _candidate(T1, "T1_C_CLINIC_3_AVAILABLE", "T1_C_ESSENTIAL_HIGH_NORMAL_BP", False),
-            _candidate(T1, "T1_C_CLINIC_3_AVAILABLE", "T1_C_ESSENTIAL_NORMAL_BP", True),
+            _candidate(T1, "T1_C_CLINIC_1_NON_CRISIS", "T1_C_ESSENTIAL_HYPERTENSION", False),
+            _candidate(T1, "T1_C_CLINIC_1_NON_CRISIS", "T1_C_ESSENTIAL_HIGH_NORMAL_BP", False),
+            _candidate(T1, "T1_C_CLINIC_1_NON_CRISIS", "T1_C_ESSENTIAL_NORMAL_BP", True),
             _entered(T1, "T1_C_ESSENTIAL_NORMAL_BP"),
             _candidate(T1, "T1_C_ESSENTIAL_NORMAL_BP", "T1_END_ESSENTIAL_NORMAL_BP", True),
             _entered(T1, "T1_END_ESSENTIAL_NORMAL_BP"),
@@ -309,10 +297,6 @@ def test_tree_1_normal_bp_route(seeded_trees: SeededTrees) -> None:
         [
             (T1, "T1_C_CLINIC_1_NON_CRISIS", 1),
             (T1, "T1_C_CLINIC_1_NON_CRISIS", 2),
-            (T1, "T1_C_CLINIC_2_LOWER", 1),
-            (T1, "T1_C_CLINIC_2_LOWER", 2),
-            (T1, "T1_C_ESSENTIAL_MEASUREMENT_ROUTE", 1),
-            (T1, "T1_C_CLINIC_3_AVAILABLE", 1),
             (T1, "T1_C_ESSENTIAL_NORMAL_BP", 1),
             (T1, "T1_C_ESSENTIAL_NORMAL_BP", 2),
             (T1, "T1_END_ESSENTIAL_NORMAL_BP", 1),
@@ -571,19 +555,12 @@ DRUG_COMBINATION_STARTED_MISSING_HEART_FAILURE_INPUT = [
     _candidate(
         "drug-combination",
         "T6_INF_DETERMINE_CONTRAINDICATIONS",
-        "T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS",
-        True,
-    ),
-    _entered("drug-combination", "T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS"),
-    _candidate(
-        "drug-combination",
-        "T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS",
         "T6_C_HAS_DUPLICATE_DRUG_CLASS",
         False,
     ),
     _candidate(
         "drug-combination",
-        "T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS",
+        "T6_INF_DETERMINE_CONTRAINDICATIONS",
         "T6_C_NO_DUPLICATE_DRUG_CLASS",
         True,
     ),
@@ -664,9 +641,9 @@ def test_tree_5_initial_regimen_not_reached_resolves_link_then_needs_more_input(
     active_bp_target: dict[str, Any],
 ) -> None:
     """drug-combination is now seeded (backups/cdss_merged.sql), so the LINK resolves
-    and traversal continues into it, executing several of its own ACTION nodes,
-    until it fails on a required field (`has_heart_failure`) this fixture never had
-    to supply for Trees 1-5, instead of raising LinkTargetNotFound.
+    and traversal continues into it, working through several of its own INFERENCE
+    nodes, until it fails on a required field (`has_heart_failure`) this fixture
+    never had to supply for Trees 1-5, instead of raising LinkTargetNotFound.
     """
     runtime_input = _medication_input(
         active_bp_target,
@@ -707,6 +684,9 @@ def test_tree_5_initial_regimen_not_reached_resolves_link_then_needs_more_input(
             ],
         },
     }
+    # T6's own compare/adjust/duplicate-check steps are INFERENCE nodes now (they
+    # only ever fed context forward), so drug-combination contributes no action of
+    # its own here -- T5's fixed-dose recommendation is the only one collected.
     assert [
         (action.tree_key, action.node_key, action.text_vi, action.payload["action_type"])
         for action in state.actions
@@ -716,30 +696,6 @@ def test_tree_5_initial_regimen_not_reached_resolves_link_then_needs_more_input(
             "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION",
             "VIÊN PHỐI HỢP 3 THUỐC (1 viên): A+C+D",
             "FIXED_DOSE_THREE_DRUG_COMBINATION",
-        ),
-        (
-            "drug-combination",
-            "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION",
-            "So sánh với đơn thuốc hiện tại",
-            "COMPARE_WITH_CURRENT_PRESCRIPTION",
-        ),
-        (
-            "drug-combination",
-            "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT",
-            "Duy trì phác đồ",
-            "MAINTAIN_CURRENT_REGIMEN",
-        ),
-        (
-            "drug-combination",
-            "T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS",
-            "Kiểm tra trùng nhóm thuốc",
-            "CHECK_DUPLICATE_DRUG_CLASS",
-        ),
-        (
-            "drug-combination",
-            "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE",
-            "Duy trì phác đồ",
-            "MAINTAIN_CURRENT_REGIMEN",
         ),
     ]
     _assert_trace(
@@ -756,7 +712,7 @@ def test_tree_5_initial_regimen_not_reached_resolves_link_then_needs_more_input(
             (T5, "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION", 1),
             ("drug-combination", "T6_START_PATIENT_INFO_AND_PRESCRIPTIONS", 1),
             ("drug-combination", "T6_INF_DETERMINE_CONTRAINDICATIONS", 1),
-            ("drug-combination", "T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS", 1),
+            ("drug-combination", "T6_INF_DETERMINE_CONTRAINDICATIONS", 2),
             ("drug-combination", "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG", 1),
         ],
     )

@@ -12,6 +12,7 @@ from cdss.domain.decision_tree import (
     NodeType,
     RunState,
     collect_action,
+    select_output_actions,
 )
 
 _FAKE_MEDICINES = (
@@ -238,3 +239,55 @@ def test_single_drug_action_node_does_not_attach_medicines() -> None:
 
     assert action is not None
     assert action.payload == {"action_type": "ASPIRIN_PROPHYLAXIS"}
+
+
+def _collect(state: RunState, *action_types: str) -> None:
+    for i, action_type in enumerate(action_types):
+        node = NodeDefinition(
+            id=UUID(int=100 + i),
+            tree_id=UUID(int=2),
+            node_key=f"node-{i}",
+            node_type=NodeType.ACTION,
+            text_en=action_type,
+            text_vi=action_type,
+            action_payload={"action_type": action_type},
+        )
+        collect_action(node, state, tree_key="drug-combination")
+
+
+def test_select_output_actions_collapses_to_the_terminal_action_by_default() -> None:
+    state = RunState.initialize({})
+    _collect(
+        state,
+        "CHECK_DUPLICATE_DRUG_CLASS",
+        "MAINTAIN_CURRENT_REGIMEN",
+        "INITIAL_TWO_DRUG_COMBINATION",
+    )
+
+    selected = select_output_actions(state.actions, debug_output=False)
+
+    assert [a.payload["action_type"] for a in selected] == ["INITIAL_TWO_DRUG_COMBINATION"]
+
+
+def test_select_output_actions_returns_full_trail_when_debug_output_is_on() -> None:
+    state = RunState.initialize({})
+    _collect(
+        state,
+        "CHECK_DUPLICATE_DRUG_CLASS",
+        "MAINTAIN_CURRENT_REGIMEN",
+        "INITIAL_TWO_DRUG_COMBINATION",
+    )
+
+    selected = select_output_actions(state.actions, debug_output=True)
+
+    assert selected == state.actions
+
+
+def test_select_output_actions_is_a_noop_for_zero_or_one_actions() -> None:
+    state = RunState.initialize({})
+
+    assert select_output_actions(state.actions, debug_output=False) == []
+
+    _collect(state, "INITIAL_TWO_DRUG_COMBINATION")
+
+    assert select_output_actions(state.actions, debug_output=False) == state.actions

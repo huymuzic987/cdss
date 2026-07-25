@@ -16,6 +16,7 @@ from cdss.infrastructure.db.caching_repository import (
     CachingTreeGraphRepository,
     get_graph_cache,
 )
+from cdss.infrastructure.db.dashboard_repository import DashboardRepository
 from cdss.infrastructure.db.decision_tree_repository import SqlAlchemyTreeGraphRepository
 from cdss.infrastructure.db.medicine_repository import SqlAlchemyMedicineRepository
 
@@ -38,3 +39,7 @@ def get_medicine_repository(
     if settings.cdss_medicine_cache_enabled:
         repository = CachingMedicineRepository(repository, get_medicine_catalog_cache())
     return repository
+
+
+def get_dashboard_repository(session: Annotated[Session, Depends(get_db)]) -> DashboardRepository:
+    return DashboardRepository(session)

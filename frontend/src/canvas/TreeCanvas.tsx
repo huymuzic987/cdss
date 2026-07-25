@@ -126,7 +126,12 @@ export function TreeCanvas({
           Reset
         </button>
       </div>
-      <Tldraw shapeUtils={SHAPE_UTILS} components={HIDDEN_COMPONENTS} onMount={handleMount} />
+      <Tldraw
+        shapeUtils={SHAPE_UTILS}
+        components={HIDDEN_COMPONENTS}
+        onMount={handleMount}
+        licenseKey={import.meta.env.VITE_TLDRAW_LICENSE_KEY}
+      />
       {manualMode && (
         <div className="manual-overlay">
           {manualStepInfo && (

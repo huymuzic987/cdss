@@ -139,3 +139,122 @@ export interface EvaluationRequest {
   start_tree_key: string
   input: JsonObject
 }
+
+// ---- Dashboard (mirrors src/cdss/api/schemas/dashboard.py) ----
+
+export interface Count {
+  label: string
+  count: number
+}
+
+export interface RatePoint {
+  label: string
+  count: number
+  rate: number
+}
+
+export interface OverviewResponse {
+  total_patients: number
+  total_visits: number
+  new_patients_last_30_days: number
+  age_distribution: Count[]
+  gender_distribution: Count[]
+  comorbidity_prevalence: RatePoint[]
+}
+
+export interface OverdueVisit {
+  patient_fhir_id: string
+  last_visit_date: string
+  scheduled_next_visit_date: string
+  days_overdue: number
+}
+
+export interface VisitsResponse {
+  total_visits: number
+  follow_up_visit_count: number
+  on_schedule_rate: number
+  early_revisit_rate: number
+  early_revisit_reason_breakdown: Count[]
+  avg_days_between_visits: number | null
+  visits_by_visit_number: Count[]
+  overdue_patients: OverdueVisit[]
+}
+
+export interface VisitNumberOutcome {
+  visit_number: number
+  count: number
+  bp_controlled_rate: number
+  avg_sbp: number | null
+  avg_dbp: number | null
+}
+
+export interface OutcomesResponse {
+  bp_target_distribution: Count[]
+  outcomes_by_visit_number: VisitNumberOutcome[]
+}
+
+export interface CdssUsageResponse {
+  facility_capability_distribution: Count[]
+  hypertension_class_distribution: Count[]
+  risk_level_distribution: Count[]
+  recommended_action_frequency: Count[]
+}
+
+export interface AdherenceByVisitNumber {
+  visit_number: number
+  adherence_rate: number
+  count: number
+}
+
+export interface EfficacyResponse {
+  overall_adherence_rate: number
+  bp_control_rate_when_adherent: number
+  bp_control_rate_when_not_adherent: number
+  effectiveness_delta: number
+  medication_change_count: number
+  medication_change_rate: number
+  adherence_rate_by_visit_number: AdherenceByVisitNumber[]
+}
+
+export interface ImportBatchSummary {
+  source_label: string
+  imported_at: string
+  patient_count: number
+  visit_count: number
+  error_count: number
+}
+
+export interface FhirImportStatusResponse {
+  batches: ImportBatchSummary[]
+  total_patients: number
+  total_encounters: number
+  total_observations: number
+  total_medication_requests: number
+}
+
+export interface NeedsAttentionPatient {
+  patient_fhir_id: string
+  reasons: string[]
+  last_visit_date: string
+  clinic_sbp: number | null
+  clinic_dbp: number | null
+  bp_target_sbp: number | null
+  bp_target_dbp: number | null
+}
+
+export interface NeedsAttentionResponse {
+  patients: NeedsAttentionPatient[]
+}
+
+export interface ImportResult {
+  source_label: string
+  patients_imported: number
+  visits_imported: number
+  error_count: number
+  errors: { resource: string; message: string }[]
+}
+
+export interface DashboardFilters {
+  facility_capability?: string
+  comorbidity_icd10?: string
+}

@@ -11,6 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from cdss.api.dependencies import get_tree_graph_repository
+from cdss.api.schemas.fhir_input import input_to_bundle
 from cdss.core.config import Settings, get_settings
 from cdss.domain.decision_tree import (
     EdgeDefinition,
@@ -64,7 +65,7 @@ def api_context() -> Iterator[ApiTestContext]:
 def test_tree_1_essential_normal_bp_result(api_context: ApiTestContext) -> None:
     response = api_context.client.post(
         "/evaluate",
-        json={"start_tree_key": "hypertension-diagnosis", "input": {}},
+        json={"start_tree_key": "hypertension-diagnosis", "input": input_to_bundle({})},
     )
 
     assert response.status_code == 200
@@ -109,10 +110,22 @@ def test_malformed_input_returns_stable_validation_error(
     assert "traceback" not in body
 
 
+def test_non_bundle_input_returns_invalid_fhir_input(api_context: ApiTestContext) -> None:
+    response = api_context.client.post(
+        "/evaluate",
+        json={"start_tree_key": "hypertension-diagnosis", "input": {"foo": "bar"}},
+    )
+
+    assert response.status_code == 422
+    body = response.json()
+    assert body["code"] == "invalid_fhir_input"
+    assert "traceback" not in body
+
+
 def test_tree_not_found_returns_404(api_context: ApiTestContext) -> None:
     response = api_context.client.post(
         "/evaluate",
-        json={"start_tree_key": "missing-tree", "input": {}},
+        json={"start_tree_key": "missing-tree", "input": input_to_bundle({})},
     )
 
     assert response.status_code == 404
@@ -130,7 +143,10 @@ def test_unresolved_link_returns_424_with_partial_execution_state(
 ) -> None:
     response = api_context.client.post(
         "/evaluate",
-        json={"start_tree_key": "unresolved-tree", "input": {"request_id": "test"}},
+        json={
+            "start_tree_key": "unresolved-tree",
+            "input": input_to_bundle({"request_id": "test"}),
+        },
     )
 
     assert response.status_code == 424
@@ -145,6 +161,51 @@ def test_unresolved_link_returns_424_with_partial_execution_state(
     assert "traceback" not in body
 
 
+def test_evaluate_collapses_action_trail_to_the_terminal_action_by_default(
+    api_context: ApiTestContext,
+) -> None:
+    api_context.repository.graphs["multi-action-tree"] = _multi_action_graph()
+
+    response = api_context.client.post(
+        "/evaluate",
+        json={"start_tree_key": "multi-action-tree", "input": input_to_bundle({})},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert [a["node_key"] for a in body["actions"]] == ["final"]
+    # The full trail is still visible in the audit log.
+    assert [
+        e["node_key"] for e in body["traversal_log"] if e["event"] == "node_entered"
+    ] == ["start", "intermediate-1", "intermediate-2", "final"]
+
+
+def test_evaluate_returns_full_action_trail_when_debug_output_is_enabled() -> None:
+    repository = RecordingRepository([_multi_action_graph()])
+    settings = Settings(
+        _env_file=None,  # type: ignore[call-arg]
+        app_env="test",
+        database_url="postgresql://unused:unused@127.0.0.1:1/unused",
+        debug_output=True,
+    )
+    app = create_app()
+    app.dependency_overrides[get_tree_graph_repository] = lambda: repository
+    app.dependency_overrides[get_settings] = lambda: settings
+    with TestClient(app) as client:
+        response = client.post(
+            "/evaluate",
+            json={"start_tree_key": "multi-action-tree", "input": input_to_bundle({})},
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert [a["node_key"] for a in body["actions"]] == [
+        "intermediate-1",
+        "intermediate-2",
+        "final",
+    ]
+
+
 def test_request_completion_does_not_persist_patient_data(
     api_context: ApiTestContext,
 ) -> None:
@@ -152,7 +213,7 @@ def test_request_completion_does_not_persist_patient_data(
         "/evaluate",
         json={
             "start_tree_key": "hypertension-diagnosis",
-            "input": {"patient_external_id": "must-not-be-stored"},
+            "input": input_to_bundle({"patient_external_id": "must-not-be-stored"}),
         },
     )
 
@@ -172,6 +233,43 @@ def _normal_bp_graph() -> TreeGraph:
         context_patch={"diagnosis": {"hypertension_class": "NORMAL_BP"}},
     )
     return _graph(tree, [start, end], [_edge(tree, 110, start, end)])
+
+
+def _multi_action_graph() -> TreeGraph:
+    """Mirrors drug-combination's shape: several non-terminal ACTION nodes
+    (each recording an intermediate step) chained before the terminal END."""
+    tree = _tree(300, "multi-action-tree")
+    start = _node(tree, 301, "start", NodeType.START)
+    intermediate_1 = _node(
+        tree,
+        302,
+        "intermediate-1",
+        NodeType.ACTION,
+        action_payload={"action_type": "CHECK_DUPLICATE_DRUG_CLASS"},
+    )
+    intermediate_2 = _node(
+        tree,
+        303,
+        "intermediate-2",
+        NodeType.ACTION,
+        action_payload={"action_type": "MAINTAIN_CURRENT_REGIMEN"},
+    )
+    final = _node(
+        tree,
+        304,
+        "final",
+        NodeType.END,
+        action_payload={"action_type": "INITIAL_TWO_DRUG_COMBINATION"},
+    )
+    return _graph(
+        tree,
+        [start, intermediate_1, intermediate_2, final],
+        [
+            _edge(tree, 310, start, intermediate_1),
+            _edge(tree, 311, intermediate_1, intermediate_2),
+            _edge(tree, 312, intermediate_2, final),
+        ],
+    )
 
 
 def _unresolved_link_graph() -> TreeGraph:

@@ -1,4 +1,5 @@
 import type { JsonObject } from '../../api/types'
+import { flatToBundle } from './fhirBundle'
 import type { PatientFormData } from './types'
 
 /** Convert string to number or omit if empty */
@@ -7,7 +8,12 @@ function num(v: string): number | undefined {
   return isNaN(n) ? undefined : n
 }
 
+/** Build the request `input`: an HL7 FHIR R4 Bundle, per /evaluate's contract. */
 export function formToPayload(form: PatientFormData): JsonObject {
+  return flatToBundle(formToFlatInput(form))
+}
+
+function formToFlatInput(form: PatientFormData): JsonObject {
   const out: JsonObject = {}
 
   const set = (key: string, v: number | boolean | string | JsonObject | undefined) => {

@@ -93,6 +93,11 @@
   border-color: var(--accent-solid);
 }
 
+.dashboard-tab {
+  font-weight: 600;
+  margin-right: 6px;
+}
+
 .error-banner {
   background: var(--danger-bg);
   color: var(--danger-text);
@@ -1284,17 +1289,19 @@
   font-family: ui-monospace, Consolas, monospace;
 }
 
-.modal-action-text-vi {
-  font-size: 14px;
-  font-weight: 600;
+.modal-alert-reason {
+  font-size: 16px;
+  font-weight: 700;
   color: var(--text-bright);
-  margin-bottom: 2px;
+  line-height: 1.35;
+  margin-bottom: 4px;
 }
 
-.modal-action-text-en {
-  font-size: 12px;
+.modal-alert-detail {
+  font-size: 13px;
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  line-height: 1.5;
+  margin-bottom: 10px;
 }
 
 .modal-medicine-options {
@@ -1319,21 +1326,57 @@
   margin-bottom: 6px;
 }
 
-.modal-medicine-class-group {
-  margin-bottom: 6px;
+.modal-drugclass-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.modal-medicine-class-group:last-child {
-  margin-bottom: 0;
-}
-
-.modal-medicine-class-label {
-  font-size: 10px;
+.modal-drugclass-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  font-size: 11px;
   font-weight: 700;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  margin-bottom: 3px;
+  color: var(--accent-text);
+  cursor: default;
+}
+
+.modal-drugclass-chip::after {
+  content: '▾';
+  font-size: 8px;
+  color: var(--text-muted);
+}
+
+.modal-drugclass-popover {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  width: max-content;
+  min-width: 240px;
+  max-width: 360px;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.modal-drugclass-chip:hover .modal-drugclass-popover,
+.modal-drugclass-chip:focus .modal-drugclass-popover,
+.modal-drugclass-chip:focus-within .modal-drugclass-popover {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .modal-medicine-list {
@@ -1367,11 +1410,7 @@
 
 .modal-medicine-dose {
   flex: 1;
-}
-
-.modal-medicine-source {
-  font-size: 10px;
-  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .modal-medicine-unavailable-badge {
@@ -1386,22 +1425,54 @@
   letter-spacing: 0.3px;
 }
 
-.modal-action-payload summary {
-  font-size: 11px;
-  color: var(--accent-text);
-  cursor: pointer;
-  margin-bottom: 4px;
+/* Acknowledge reason buttons */
+.modal-ack-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
 }
 
-.modal-action-payload pre {
-  background: var(--bg-inset);
-  border-radius: 6px;
-  padding: 8px;
-  font-size: 11px;
-  overflow-x: auto;
-  margin: 0;
+.modal-ack-btn {
+  padding: 5px 12px;
+  border-radius: 999px;
   border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.modal-ack-btn:hover {
+  border-color: var(--accent-border);
   color: var(--accent-text);
+  background: var(--bg-panel-hover);
+}
+
+/* Collapsed debug detail */
+.modal-debug {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-inset);
+}
+
+.modal-debug summary {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.modal-debug-body {
+  padding: 4px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 /* Context JSON */
