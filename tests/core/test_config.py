@@ -9,7 +9,13 @@ _DB_URL = "postgresql://u:p@localhost:54321/db"
 @pytest.fixture(autouse=True)
 def _clear_env(monkeypatch: pytest.MonkeyPatch) -> None:
     """Isolate tests from any ambient CDSS environment variables."""
-    for var in ("APP_ENV", "DATABASE_URL", "CDSS_MAX_STEPS", "DEV_RUNTIME_LOGGING_ENABLED"):
+    for var in (
+        "APP_ENV",
+        "DATABASE_URL",
+        "CDSS_MAX_STEPS",
+        "DEV_RUNTIME_LOGGING_ENABLED",
+        "DEBUG_OUTPUT",
+    ):
         monkeypatch.delenv(var, raising=False)
 
 
@@ -50,3 +56,12 @@ def test_database_url_required() -> None:
 
 def test_cdss_max_steps_has_default() -> None:
     assert make_settings().cdss_max_steps == 300
+
+
+def test_debug_output_defaults_to_false() -> None:
+    assert make_settings().debug_output is False
+
+
+def test_debug_output_can_be_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DEBUG_OUTPUT", "true")
+    assert make_settings().debug_output is True
