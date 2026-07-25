@@ -10,6 +10,11 @@ export default defineConfig({
       '/evaluate': 'http://localhost:8000',
       '/fhir': 'http://localhost:8000',
       '/health': 'http://localhost:8000',
+      '/dashboard': 'http://localhost:8000',
+
     },
+    allowedHosts: [
+      "cdss.click",
+    ],
   },
 })

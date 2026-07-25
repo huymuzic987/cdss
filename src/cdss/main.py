@@ -5,7 +5,7 @@ from scalar_fastapi import get_scalar_api_reference
 from starlette.middleware.cors import CORSMiddleware
 
 from cdss.api.errors import register_error_handlers
-from cdss.api.routes import evaluation, fhir, health, tree_graph
+from cdss.api.routes import dashboard, evaluation, fhir, health, tree_graph
 
 # The Vite dev server for the read-only tree-graph frontend. No patient data
 # crosses this API, so a small static allow-list for GET is sufficient.
@@ -26,6 +26,7 @@ def create_app() -> FastAPI:
     app.include_router(evaluation.router)
     app.include_router(tree_graph.router)
     app.include_router(fhir.router)
+    app.include_router(dashboard.router)
 
     @app.get("/docs", include_in_schema=False)
     def scalar_docs():
