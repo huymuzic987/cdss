@@ -37,7 +37,7 @@ pipeline {
 
                     for f in pyproject.toml uv.lock frontend/package.json frontend/pnpm-lock.yaml \
                              Dockerfile.backend frontend/Dockerfile docker-compose.prod.yml \
-                             backups/cdss_prod.sql backups/medicines.sql; do
+                             backups/backup.sql backups/seed.sql; do
                         if [ ! -f "$f" ]; then
                             echo "ERROR: required file missing: $f"
                             exit 1
