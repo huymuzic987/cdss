@@ -267,6 +267,32 @@ class Medicine(Base):
     __table_args__ = (Index("ix_medicines_drug_class", "drug_class"),)
 
 
+class Symptom(Base):
+    """Static symptoms reference catalog, seeded from backups/seed.sql."""
+
+    __tablename__ = "symptoms"
+
+    symptom_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    type: Mapped[str | None] = mapped_column(Text, nullable=True)
+    subgroup: Mapped[str | None] = mapped_column(Text, nullable=True)
+    name_vn: Mapped[str] = mapped_column(Text, nullable=False)
+    name_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description_vn: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source: Mapped[str | None] = mapped_column(Text, nullable=True)
+    icd10_code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    snomed_code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    loinc_code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    loinc_common_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    decision_tree_vn: Mapped[str | None] = mapped_column(Text, nullable=True)
+    decision_tree_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    __table_args__ = (
+        Index("ix_symptoms_type", "type"),
+        Index("ix_symptoms_subgroup", "subgroup"),
+    )
+
+
 class Patient(Base):
     """A patient imported from a FHIR R4 Patient resource.
 
