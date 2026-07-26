@@ -3,27 +3,19 @@
 // ---------------------------------------------------------------------------
 
 export interface PatientFormData {
-  // BP — initial clinic
+  // BP — clinic reading
   clinic_1_sbp: string
   clinic_1_dbp: string
-  clinic_2_sbp: string
-  clinic_2_dbp: string
-  clinic_3_sbp: string
-  clinic_3_dbp: string
   // BP — follow-up
   current_clinic_sbp: string
   current_clinic_dbp: string
-  pre_lifestyle_clinic_sbp: string
-  pre_lifestyle_clinic_dbp: string
-  // BP — out-of-office
+  previous_sbp: string
+  previous_dbp: string
+  previous_target_sbp: string
+  previous_target_dbp: string
+  // BP — home (pregnancy gestational-hypertension classification)
   home_sbp: string
   home_dbp: string
-  daytime_sbp: string
-  daytime_dbp: string
-  morning_sbp: string
-  morning_dbp: string
-  bp_24h_sbp: string
-  bp_24h_dbp: string
   // Demographics
   age: string
   risk_factor_count: string
@@ -98,22 +90,17 @@ export interface PatientFormData {
   is_lifestyle_follow_up: boolean
   is_medication_follow_up: boolean
   medication_follow_up_stage: 'INITIAL_REGIMEN' | 'ESCALATED_REGIMEN' | ''
-  // Active BP target
-  has_active_bp_target: boolean
+  // Active BP target (required for medication follow-up)
   target_sbp_upper: string
   target_dbp_upper: string
 }
 
 export const DEFAULT_FORM: PatientFormData = {
   clinic_1_sbp: '', clinic_1_dbp: '',
-  clinic_2_sbp: '', clinic_2_dbp: '',
-  clinic_3_sbp: '', clinic_3_dbp: '',
   current_clinic_sbp: '', current_clinic_dbp: '',
-  pre_lifestyle_clinic_sbp: '', pre_lifestyle_clinic_dbp: '',
+  previous_sbp: '', previous_dbp: '',
+  previous_target_sbp: '', previous_target_dbp: '',
   home_sbp: '', home_dbp: '',
-  daytime_sbp: '', daytime_dbp: '',
-  morning_sbp: '', morning_dbp: '',
-  bp_24h_sbp: '', bp_24h_dbp: '',
   age: '',
   risk_factor_count: '',
   is_pregnant: false,
@@ -179,7 +166,6 @@ export const DEFAULT_FORM: PatientFormData = {
   is_lifestyle_follow_up: false,
   is_medication_follow_up: false,
   medication_follow_up_stage: '',
-  has_active_bp_target: false,
   target_sbp_upper: '',
   target_dbp_upper: '',
 }

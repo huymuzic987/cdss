@@ -1,14 +1,16 @@
 """Statistics dashboard aggregation endpoints, plus the seed-data loader.
 
-Aggregation is done in Python over the full patient/visit set (see
-``DashboardRepository``) rather than SQL GROUP BY -- simpler to write
-correctly at this data scale.
+``overview``/``outcomes`` aggregate with SQL GROUP BY (see
+``DashboardRepository.overview_counts``/``outcomes_counts``). The rest still
+aggregate in Python over the full patient/visit set, which needs
+cross-visit sequential logic that doesn't reduce to a single GROUP BY --
+see ``DashboardRepository`` for why.
 """
 
 from __future__ import annotations
 
 import json
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -35,7 +37,7 @@ from cdss.api.schemas.dashboard import (
 from cdss.api.schemas.fhir_clinical import ImportResult
 from cdss.core.database import get_db
 from cdss.infrastructure.db.clinical_import import import_bundle
-from cdss.infrastructure.db.dashboard_repository import DashboardRepository
+from cdss.infrastructure.db.dashboard_repository import DashboardRepository, invalidate_cache
 from cdss.infrastructure.db.models import Patient, Visit
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -47,23 +49,6 @@ _TEST_CASE_DIR = _REPO_ROOT / "backups" / "test_case"
 
 def _today() -> date:
     return datetime.now(UTC).date()
-
-
-def _age_bucket(birth_date: date | None, today: date) -> str:
-    if birth_date is None:
-        return "Unknown"
-    age = (
-        today.year
-        - birth_date.year
-        - ((today.month, today.day) < (birth_date.month, birth_date.day))
-    )
-    if age < 40:
-        return "<40"
-    if age < 55:
-        return "40-54"
-    if age < 70:
-        return "55-69"
-    return "70+"
 
 
 def _rate(numerator: int, denominator: int) -> float:
@@ -92,6 +77,7 @@ def seed_dashboard_data(
             visits_imported += result.visits_imported
             error_count += result.error_count
             errors.extend(result.errors)
+        invalidate_cache()
         return ImportResult(
             source_label=source,
             patients_imported=patients_imported,
@@ -104,7 +90,9 @@ def seed_dashboard_data(
     if not path.exists():
         raise HTTPException(status_code=404, detail=f"seed file not found: {path.name}")
     bundle = json.loads(path.read_text(encoding="utf-8"))
-    return import_bundle(session, bundle, source_label=source)
+    result = import_bundle(session, bundle, source_label=source)
+    invalidate_cache()
+    return result
 
 
 @router.get("/overview", response_model=OverviewResponse)
@@ -113,46 +101,23 @@ def get_overview(
     facility_capability: str | None = Query(default=None),
     comorbidity_icd10: str | None = Query(default=None),
 ) -> OverviewResponse:
-    patients = repository.list_patients(
-        facility_capability=facility_capability, comorbidity_icd10=comorbidity_icd10
+    stats = repository.overview_counts(
+        today=_today(),
+        facility_capability=facility_capability,
+        comorbidity_icd10=comorbidity_icd10,
     )
-    today = _today()
-
-    total_visits = sum(len(p.visits) for p in patients)
-    new_patients = sum(
-        1
-        for p in patients
-        if p.visits and min(v.visit_date for v in p.visits) >= today - timedelta(days=30)
-    )
-
-    age_counts: dict[str, int] = {}
-    gender_counts: dict[str, int] = {}
-    comorbidity_counts: dict[str, int] = {}
-    for p in patients:
-        age_counts[_age_bucket(p.birth_date, today)] = (
-            age_counts.get(_age_bucket(p.birth_date, today), 0) + 1
-        )
-        gender_key = p.gender or "unknown"
-        gender_counts[gender_key] = gender_counts.get(gender_key, 0) + 1
-        # Exclude the primary hypertension diagnosis (I10) -- every patient has
-        # it by definition, so it isn't a useful "comorbidity" prevalence stat.
-        for condition in p.conditions:
-            if condition.icd10_code and condition.icd10_code != "I10":
-                comorbidity_counts[condition.icd10_code] = (
-                    comorbidity_counts.get(condition.icd10_code, 0) + 1
-                )
-
-    total_patients = len(patients)
     return OverviewResponse(
-        total_patients=total_patients,
-        total_visits=total_visits,
-        new_patients_last_30_days=new_patients,
-        age_distribution=[Count(label=k, count=v) for k, v in sorted(age_counts.items())],
-        gender_distribution=[Count(label=k, count=v) for k, v in sorted(gender_counts.items())],
+        total_patients=stats.total_patients,
+        total_visits=stats.total_visits,
+        new_patients_last_30_days=stats.new_patients_last_30_days,
+        age_distribution=[Count(label=k, count=v) for k, v in sorted(stats.age_counts.items())],
+        gender_distribution=[
+            Count(label=k, count=v) for k, v in sorted(stats.gender_counts.items())
+        ],
         comorbidity_prevalence=sorted(
             (
-                RatePoint(label=k, count=v, rate=_rate(v, total_patients))
-                for k, v in comorbidity_counts.items()
+                RatePoint(label=k, count=v, rate=_rate(v, stats.total_patients))
+                for k, v in stats.comorbidity_counts.items()
             ),
             key=lambda r: r.count,
             reverse=True,
@@ -226,45 +191,25 @@ def get_outcomes(
     facility_capability: str | None = Query(default=None),
     comorbidity_icd10: str | None = Query(default=None),
 ) -> OutcomesResponse:
-    patients = repository.list_patients(
+    stats = repository.outcomes_counts(
         facility_capability=facility_capability, comorbidity_icd10=comorbidity_icd10
     )
-    all_visits = [v for p in patients for v in p.visits]
-
-    target_counts: dict[str, int] = {}
-    for v in all_visits:
-        if v.bp_target_sbp and v.bp_target_dbp:
-            key = f"{v.bp_target_sbp}/{v.bp_target_dbp}"
-            target_counts[key] = target_counts.get(key, 0) + 1
-
-    by_number: dict[int, list[Visit]] = {}
-    for v in all_visits:
-        by_number.setdefault(v.visit_number, []).append(v)
-
-    outcomes = []
-    for number, visits in sorted(by_number.items()):
-        controlled = [v for v in visits if v.bp_controlled is not None]
-        sbps = [v.clinic_sbp for v in visits if v.clinic_sbp is not None]
-        dbps = [v.clinic_dbp for v in visits if v.clinic_dbp is not None]
-        outcomes.append(
-            VisitNumberOutcome(
-                visit_number=number,
-                count=len(visits),
-                bp_controlled_rate=_rate(
-                    sum(1 for v in controlled if v.bp_controlled), len(controlled)
-                ),
-                avg_sbp=(sum(sbps) / len(sbps)) if sbps else None,
-                avg_dbp=(sum(dbps) / len(dbps)) if dbps else None,
-            )
-        )
-
     return OutcomesResponse(
         bp_target_distribution=sorted(
-            (Count(label=k, count=v) for k, v in target_counts.items()),
+            (Count(label=k, count=v) for k, v in stats.target_counts.items()),
             key=lambda c: c.count,
             reverse=True,
         ),
-        outcomes_by_visit_number=outcomes,
+        outcomes_by_visit_number=[
+            VisitNumberOutcome(
+                visit_number=agg.visit_number,
+                count=agg.count,
+                bp_controlled_rate=agg.bp_controlled_rate,
+                avg_sbp=agg.avg_sbp,
+                avg_dbp=agg.avg_dbp,
+            )
+            for agg in stats.by_visit_number
+        ],
     )
 
 

@@ -14,11 +14,7 @@ const FOLLOW_UP = 'Follow-Up Visits'
 const MODIFIER_TREES = 'Modifier & Complication Trees'
 const PREGNANCY = 'Pregnancy & Postpartum'
 
-const MEDICATION_TARGET: Pick<
-  PatientFormData,
-  'has_active_bp_target' | 'target_sbp_upper' | 'target_dbp_upper'
-> = {
-  has_active_bp_target: true,
+const MEDICATION_TARGET: Pick<PatientFormData, 'target_sbp_upper' | 'target_dbp_upper'> = {
   target_sbp_upper: '130',
   target_dbp_upper: '80',
 }
@@ -29,11 +25,9 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     id: 'normal-bp',
     label: 'Healthy Adult — Normal BP',
     category: DIAGNOSIS,
-    description: 'Textbook normal readings, no risk factors.',
+    description: 'Textbook normal clinic reading, no risk factors.',
     data: {
       clinic_1_sbp: '120', clinic_1_dbp: '80',
-      clinic_2_sbp: '120', clinic_2_dbp: '80',
-      clinic_3_sbp: '120', clinic_3_dbp: '80',
       age: '42', risk_factor_count: '0',
     },
   },
@@ -41,11 +35,9 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     id: 'stage1-htn',
     label: 'Stage 1 Hypertension — Newly Diagnosed',
     category: DIAGNOSIS,
-    description: 'Borderline elevated clinic readings; typical new-diagnosis presentation.',
+    description: 'Borderline elevated clinic reading; typical new-diagnosis presentation.',
     data: {
       clinic_1_sbp: '135', clinic_1_dbp: '85',
-      clinic_2_sbp: '138', clinic_2_dbp: '86',
-      clinic_3_sbp: '136', clinic_3_dbp: '84',
       age: '50', risk_factor_count: '2',
     },
   },
@@ -53,11 +45,9 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     id: 'stage2-htn',
     label: 'Stage 2 Hypertension',
     category: DIAGNOSIS,
-    description: 'Clearly elevated clinic readings across all three visits.',
+    description: 'Clearly elevated clinic reading.',
     data: {
       clinic_1_sbp: '150', clinic_1_dbp: '95',
-      clinic_2_sbp: '148', clinic_2_dbp: '93',
-      clinic_3_sbp: '152', clinic_3_dbp: '96',
       age: '55', risk_factor_count: '3',
       facility_capability: 'FULL_RESOURCES',
     },
@@ -206,22 +196,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
       age: '32', risk_factor_count: '2',
     },
   },
-  {
-    id: 'ambulatory-confirmation',
-    label: 'Borderline BP — Home/Ambulatory Confirmation',
-    category: DIAGNOSIS,
-    description: 'Ambiguous clinic readings plus a full set of out-of-office measurements.',
-    data: {
-      clinic_1_sbp: '138', clinic_1_dbp: '86',
-      clinic_2_sbp: '136', clinic_2_dbp: '85',
-      clinic_3_sbp: '139', clinic_3_dbp: '87',
-      home_sbp: '135', home_dbp: '85',
-      daytime_sbp: '138', daytime_dbp: '87',
-      morning_sbp: '140', morning_dbp: '88',
-      bp_24h_sbp: '132', bp_24h_dbp: '84',
-      age: '50', risk_factor_count: '2',
-    },
-  },
 
   // ---- Demographic & Comorbidity Diversity ----
   {
@@ -231,8 +205,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '78-year-old with chronic kidney disease and target organ damage.',
     data: {
       clinic_1_sbp: '155', clinic_1_dbp: '92',
-      clinic_2_sbp: '152', clinic_2_dbp: '90',
-      clinic_3_sbp: '156', clinic_3_dbp: '93',
       age: '78', risk_factor_count: '4',
       has_ckd: true, has_ckd_stage_3_or_higher: true, has_target_organ_damage: true,
     },
@@ -244,8 +216,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '62-year-old with type 2 diabetes and established CAD. CAD is checked before type-2-diabetes in Tree 3’s modifier order, so this routes into the coronary-artery-disease tree (CCS angina action); the diabetes flag is recorded but that tree never runs in this same traversal. Routes to Tree 4 (Essential Treatment Strategy) or Tree 5 (Optimal Treatment Strategy).',
     data: {
       clinic_1_sbp: '148', clinic_1_dbp: '94',
-      clinic_2_sbp: '146', clinic_2_dbp: '92',
-      clinic_3_sbp: '150', clinic_3_dbp: '95',
       current_clinic_sbp: '150', current_clinic_dbp: '95',
       age: '62', risk_factor_count: '5',
       has_type_2_diabetes: true, has_diabetes: true,
@@ -261,8 +231,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '70-year-old with prior stroke and TIA.',
     data: {
       clinic_1_sbp: '150', clinic_1_dbp: '92',
-      clinic_2_sbp: '148', clinic_2_dbp: '90',
-      clinic_3_sbp: '151', clinic_3_dbp: '93',
       age: '70', risk_factor_count: '4',
       has_stroke: true, has_tia: true, has_cardiovascular_disease: true,
     },
@@ -274,8 +242,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '85-year-old, frailty syndrome and heart failure. Heart failure is checked before the (unseeded) older-adult modifier at Tree 3, so this now routes into the heart-failure tree — HFrEF, target not yet reached — instead of the older-adult dead link.',
     data: {
       clinic_1_sbp: '158', clinic_1_dbp: '96',
-      clinic_2_sbp: '156', clinic_2_dbp: '94',
-      clinic_3_sbp: '159', clinic_3_dbp: '97',
       current_clinic_sbp: '159', current_clinic_dbp: '97',
       age: '85', risk_factor_count: '2',
       has_frailty_syndrome: true, has_heart_failure: true,
@@ -291,8 +257,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '45-year-old, no diagnosed comorbidities yet but 8 risk factors.',
     data: {
       clinic_1_sbp: '138', clinic_1_dbp: '88',
-      clinic_2_sbp: '140', clinic_2_dbp: '89',
-      clinic_3_sbp: '137', clinic_3_dbp: '87',
       age: '45', risk_factor_count: '8',
       facility_capability: 'FULL_RESOURCES',
     },
@@ -307,7 +271,8 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     data: {
       clinic_1_sbp: '140', clinic_1_dbp: '90',
       is_lifestyle_follow_up: true,
-      pre_lifestyle_clinic_sbp: '150', pre_lifestyle_clinic_dbp: '95',
+      previous_sbp: '150', previous_dbp: '95',
+      previous_target_sbp: '140', previous_target_dbp: '90',
       current_clinic_sbp: '140', current_clinic_dbp: '90',
       age: '55', risk_factor_count: '2',
     },
@@ -434,8 +399,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '50-year-old, CKD only (no heart failure/CAD, which take precedence at Tree 3) — reaches the chronic-kidney-disease tree’s default path (no prior creatinine test on file, so it tests and monitors), then continues into the mainline optimal-treatment-strategy/drug-combination trees.',
     data: {
       clinic_1_sbp: '148', clinic_1_dbp: '92',
-      clinic_2_sbp: '146', clinic_2_dbp: '90',
-      clinic_3_sbp: '150', clinic_3_dbp: '93',
       current_clinic_sbp: '135', current_clinic_dbp: '92',
       age: '50', risk_factor_count: '2',
       has_ckd: true,
@@ -449,8 +412,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '50-year-old, type-2 diabetes with cardiovascular disease and BP above target — reaches the type-2-diabetes tree’s CV-risk branch (adds SGLT2 inhibitor / GLP-1 RA), then continues into the mainline optimal-treatment-strategy/drug-combination trees.',
     data: {
       clinic_1_sbp: '145', clinic_1_dbp: '90',
-      clinic_2_sbp: '143', clinic_2_dbp: '88',
-      clinic_3_sbp: '146', clinic_3_dbp: '91',
       current_clinic_sbp: '135', current_clinic_dbp: '88',
       age: '50', risk_factor_count: '3',
       has_type_2_diabetes: true,
@@ -465,8 +426,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '50-year-old, type-2 diabetes with no cardiovascular disease/stroke/CAD and BP above target — takes the no-CV-risk branch (maintain current regimen, no SGLT2i/GLP-1 RA added), contrasting with the CV-risk preset above.',
     data: {
       clinic_1_sbp: '145', clinic_1_dbp: '90',
-      clinic_2_sbp: '143', clinic_2_dbp: '88',
-      clinic_3_sbp: '146', clinic_3_dbp: '91',
       current_clinic_sbp: '135', current_clinic_dbp: '88',
       age: '50', risk_factor_count: '1',
       has_type_2_diabetes: true,
@@ -480,8 +439,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '55-year-old with CAD and a history of CCS revascularization (no AMI/CCS angina) — takes the "no routine beta-blocker" branch. Routes to Tree 4 (Essential Treatment Strategy) or Tree 5 (Optimal Treatment Strategy).',
     data: {
       clinic_1_sbp: '148', clinic_1_dbp: '94',
-      clinic_2_sbp: '146', clinic_2_dbp: '92',
-      clinic_3_sbp: '150', clinic_3_dbp: '95',
       current_clinic_sbp: '150', current_clinic_dbp: '95',
       age: '55', risk_factor_count: '3',
       has_coronary_artery_disease: true, has_cardiovascular_disease: true,
@@ -496,8 +453,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '55-year-old with CAD and a history of CABG (no AMI/angina/revasc flags) — takes the "early beta-blocker" branch, the last of the four CAD drug-recommendation branches. Same documented dead-LINK ending.',
     data: {
       clinic_1_sbp: '148', clinic_1_dbp: '94',
-      clinic_2_sbp: '146', clinic_2_dbp: '92',
-      clinic_3_sbp: '150', clinic_3_dbp: '95',
       current_clinic_sbp: '150', current_clinic_dbp: '95',
       age: '55', risk_factor_count: '3',
       has_coronary_artery_disease: true, has_cardiovascular_disease: true,
@@ -512,8 +467,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '55-year-old with CAD whose current BP is already below Tree 3’s own "at or above threshold" gate (which requires sbp≥130 or dbp≥90 before it will even present the comorbidity flag to a modifier tree). Result: the patient never reaches the coronary-artery-disease tree at all and instead exits via Tree 3’s generic lifestyle/follow-up action — meaning the "already at target" bypass branches inside the CAD, heart-failure, and type-2-diabetes trees (T9_C_BP3/BP4, T10_C_BP1, T8_C_BELOW_TARGET) are all structurally unreachable via normal routing, not exercisable by any preset.',
     data: {
       clinic_1_sbp: '148', clinic_1_dbp: '94',
-      clinic_2_sbp: '146', clinic_2_dbp: '92',
-      clinic_3_sbp: '150', clinic_3_dbp: '95',
       current_clinic_sbp: '125', current_clinic_dbp: '80',
       age: '55', risk_factor_count: '3',
       has_coronary_artery_disease: true, has_cardiovascular_disease: true,
@@ -527,8 +480,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '65-year-old with HFmrEF, BP target not yet reached — adds SGLT2i/aldosterone antagonist then ARNI/CTTA, distinct from the HFrEF branch tested elsewhere.',
     data: {
       clinic_1_sbp: '158', clinic_1_dbp: '96',
-      clinic_2_sbp: '156', clinic_2_dbp: '94',
-      clinic_3_sbp: '159', clinic_3_dbp: '97',
       current_clinic_sbp: '159', current_clinic_dbp: '97',
       age: '65', risk_factor_count: '2',
       has_heart_failure: true,
@@ -544,8 +495,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '65-year-old with HFpEF, BP target not yet reached — combines diuretic/SGLT2i/aldosterone antagonist then ARNI/CTTA, the third of the four EF-category branches.',
     data: {
       clinic_1_sbp: '158', clinic_1_dbp: '96',
-      clinic_2_sbp: '156', clinic_2_dbp: '94',
-      clinic_3_sbp: '159', clinic_3_dbp: '97',
       current_clinic_sbp: '159', current_clinic_dbp: '97',
       age: '65', risk_factor_count: '2',
       has_heart_failure: true,
@@ -561,8 +510,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '65-year-old with left ventricular hypertrophy but no HFrEF/HFmrEF/HFpEF flag, BP target not yet reached — the fourth and last EF-evaluation branch, adds an A+C or A+D combination.',
     data: {
       clinic_1_sbp: '158', clinic_1_dbp: '96',
-      clinic_2_sbp: '156', clinic_2_dbp: '94',
-      clinic_3_sbp: '159', clinic_3_dbp: '97',
       current_clinic_sbp: '159', current_clinic_dbp: '97',
       age: '65', risk_factor_count: '2',
       has_heart_failure: true,
@@ -578,8 +525,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '65-year-old with HFrEF whose BP is above the entry threshold but already at the personal target — after EF evaluation, maintains the current regimen instead of adding a CCB/adjusting dosage.',
     data: {
       clinic_1_sbp: '158', clinic_1_dbp: '96',
-      clinic_2_sbp: '156', clinic_2_dbp: '94',
-      clinic_3_sbp: '159', clinic_3_dbp: '97',
       current_clinic_sbp: '132', current_clinic_dbp: '86',
       age: '65', risk_factor_count: '2',
       has_heart_failure: true,
@@ -595,8 +540,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '50-year-old with CKD and a kidney transplant — uses the stricter post-transplant BP target (130/80) and a narrower combination list, then maintains the current regimen.',
     data: {
       clinic_1_sbp: '148', clinic_1_dbp: '92',
-      clinic_2_sbp: '146', clinic_2_dbp: '90',
-      clinic_3_sbp: '150', clinic_3_dbp: '93',
       current_clinic_sbp: '135', current_clinic_dbp: '92',
       age: '50', risk_factor_count: '2',
       has_ckd: true,
@@ -611,8 +554,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '50-year-old with CKD, has a prior creatinine test on file, and is no longer on a RAS inhibitor — maintains the current regimen without re-testing creatinine.',
     data: {
       clinic_1_sbp: '148', clinic_1_dbp: '92',
-      clinic_2_sbp: '146', clinic_2_dbp: '90',
-      clinic_3_sbp: '150', clinic_3_dbp: '93',
       current_clinic_sbp: '135', current_clinic_dbp: '92',
       age: '50', risk_factor_count: '2',
       has_ckd: true,
@@ -628,8 +569,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '50-year-old with CKD, still on a RAS inhibitor, prior creatinine test shows a >30% rise — reduces the dose or stops the RAS inhibitor and flags for clinician review.',
     data: {
       clinic_1_sbp: '148', clinic_1_dbp: '92',
-      clinic_2_sbp: '146', clinic_2_dbp: '90',
-      clinic_3_sbp: '150', clinic_3_dbp: '93',
       current_clinic_sbp: '135', current_clinic_dbp: '92',
       age: '50', risk_factor_count: '2',
       has_ckd: true,
@@ -646,8 +585,6 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     description: '50-year-old with CKD, still on a RAS inhibitor, prior creatinine test shows no significant rise — maintains the current regimen since creatinine is stable.',
     data: {
       clinic_1_sbp: '148', clinic_1_dbp: '92',
-      clinic_2_sbp: '146', clinic_2_dbp: '90',
-      clinic_3_sbp: '150', clinic_3_dbp: '93',
       current_clinic_sbp: '135', current_clinic_dbp: '92',
       age: '50', risk_factor_count: '2',
       has_ckd: true,
