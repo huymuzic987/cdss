@@ -1,19 +1,36 @@
-import { Toggle } from './FormControls'
+import { BpRow, Toggle } from './FormControls'
 import type { FormSectionProps } from './types'
 
 export function CareSettingSection({ form, setStr, setBool, disabled }: FormSectionProps) {
+  // Medication follow-up always compares against a personalized target (the engine
+  // requires input.active_bp_target for is_medication_follow_up traversals), so
+  // turning that on forces the target section on and locks it there.
+  const targetRequired = form.is_medication_follow_up
+  const setBoolWithTargetLock = (k: keyof typeof form, v: boolean) => {
+    setBool(k, v)
+    if (k === 'is_medication_follow_up' && v) setBool('has_active_bp_target', true)
+  }
+
   return (
     <>
       {/* Active BP Target — kept up top since it drives the follow-up comparison below */}
       <div className="ps-toggles">
-        <Toggle label="Has Active BP Target" fieldKey="has_active_bp_target" form={form} onChange={setBool} disabled={disabled} note="Patient already on therapy" />
+        <Toggle
+          label="Has Active BP Target"
+          fieldKey="has_active_bp_target"
+          form={form}
+          onChange={setBool}
+          disabled={disabled || targetRequired}
+          note={targetRequired ? 'Required for medication follow-up' : 'Patient already on therapy'}
+        />
       </div>
 
-      {form.has_active_bp_target && (
+      {(form.has_active_bp_target || targetRequired) && (
         <div className="ps-bp-target-box">
           <div className="ps-field-hint" style={{ display: 'block', marginBottom: 6 }}>
             Target is reached when SBP is below the SBP number AND DBP is below the DBP number.
           </div>
+          <BpRow label="Upper Limit" sbpKey="target_sbp_upper" dbpKey="target_dbp_upper" form={form} onChange={setStr} disabled={disabled} />
           <div className="ps-field-row">
             <div className="ps-field">
               <label className="ps-field-label">Age (years)</label>
@@ -71,7 +88,7 @@ export function CareSettingSection({ form, setStr, setBool, disabled }: FormSect
 
       <div className="ps-toggles" style={{ marginTop: 8 }}>
         <Toggle label="Lifestyle Follow-Up Visit" fieldKey="is_lifestyle_follow_up" form={form} onChange={setBool} disabled={disabled} />
-        <Toggle label="Medication Follow-Up Visit" fieldKey="is_medication_follow_up" form={form} onChange={setBool} disabled={disabled} />
+        <Toggle label="Medication Follow-Up Visit" fieldKey="is_medication_follow_up" form={form} onChange={setBoolWithTargetLock} disabled={disabled} />
       </div>
 
       {form.is_medication_follow_up && (

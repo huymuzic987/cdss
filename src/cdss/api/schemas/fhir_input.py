@@ -4,7 +4,7 @@ the decision-tree engine consumes (`walk_tree`'s second argument), and back.
 The engine's `input.*` namespace (frozen per tree in
 `docs/cdss/context-contract.md`) is a flat bag of ~90 ad-hoc keys accumulated
 across 13 seeded trees: numeric vitals (a handful of distinct blood-pressure
-"reading roles" -- current clinic, pre-lifestyle clinic, the single diagnostic
+"reading roles" -- current clinic, previous visit, the single diagnostic
 clinic reading), boolean clinical flags (comorbidities, presenting symptoms,
 pregnancy status), and a long tail of workflow/orchestration state (follow-up
 stage, facility capability, caller-supplied BP targets, medication-review
@@ -67,11 +67,11 @@ _ARRAY_ITEM_NAME = "item"
 
 # reading role -> (systolic input key, diastolic input key). All roles share
 # the same LOINC-coded BP panel/components; the role is this CDSS's own
-# follow-up-workflow distinction (e.g. "the clinic reading before lifestyle
-# change started" vs "today's clinic reading"), not a standard FHIR concept.
+# follow-up-workflow distinction (e.g. "the most recent previous visit's
+# reading" vs "today's clinic reading"), not a standard FHIR concept.
 _BP_READING_ROLES: dict[str, tuple[str, str]] = {
     "current_clinic": ("current_clinic_sbp", "current_clinic_dbp"),
-    "pre_lifestyle_clinic": ("pre_lifestyle_clinic_sbp", "pre_lifestyle_clinic_dbp"),
+    "previous_visit": ("previous_sbp", "previous_dbp"),
     "clinic_1": ("clinic_1_sbp", "clinic_1_dbp"),
 }
 

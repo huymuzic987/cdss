@@ -24,7 +24,7 @@ const ARRAY_ITEM_NAME = 'item'
 
 const BP_READING_ROLES: Record<string, [string, string]> = {
   current_clinic: ['current_clinic_sbp', 'current_clinic_dbp'],
-  pre_lifestyle_clinic: ['pre_lifestyle_clinic_sbp', 'pre_lifestyle_clinic_dbp'],
+  previous_visit: ['previous_sbp', 'previous_dbp'],
   clinic_1: ['clinic_1_sbp', 'clinic_1_dbp'],
 }
 
