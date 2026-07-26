@@ -9,6 +9,7 @@ import { Legend } from './panels/Legend'
 import { MockPatientSidebar } from './panels/MockPatientSidebar'
 import { NodeDetailPanel } from './panels/NodeDetailPanel'
 import { TraversalResultModal } from './panels/TraversalResultModal'
+import { DrugToleranceCheckbox } from './panels/DrugToleranceCheckbox'
 import './App.css'
 
 type Theme = 'dark' | 'light'
@@ -51,6 +52,10 @@ function App() {
     modalPartial,
     showModal,
     setShowModal,
+    showDrugTolerancePopup,
+    handleDrugToleranceConfirm,
+    handleDrugToleranceCancel,
+    handleDrugToleranceChange,
     handleStartTraversal,
     handleStartManualTraversal,
     handleManualStep,
@@ -288,6 +293,15 @@ function App() {
           result={modalResult}
           partial={modalPartial}
           onClose={() => setShowModal(false)}
+        />
+      )}
+
+      {/* ---- Drug tolerance popup (MRA check) ---- */}
+      {showDrugTolerancePopup && (
+        <DrugToleranceCheckbox
+          onConfirm={handleDrugToleranceConfirm}
+          onCancel={handleDrugToleranceCancel}
+          onChange={handleDrugToleranceChange}
         />
       )}
     </div>
