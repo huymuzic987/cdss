@@ -102,7 +102,7 @@ function formToFlatInput(form: PatientFormData): JsonObject {
   out['is_medication_follow_up'] = form.is_medication_follow_up
   if (form.medication_follow_up_stage) out['medication_follow_up_stage'] = form.medication_follow_up_stage
   // Active BP target — SBP/DBP must each be below the given threshold
-  if (form.has_active_bp_target) {
+  if (form.is_medication_follow_up) {
     const target: JsonObject = {}
     if (form.target_sbp_upper) target['sbp'] = { upper_exclusive_mmhg: num(form.target_sbp_upper)! }
     if (form.target_dbp_upper) target['dbp'] = { upper_exclusive_mmhg: num(form.target_dbp_upper)! }

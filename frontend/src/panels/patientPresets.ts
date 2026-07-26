@@ -14,11 +14,7 @@ const FOLLOW_UP = 'Follow-Up Visits'
 const MODIFIER_TREES = 'Modifier & Complication Trees'
 const PREGNANCY = 'Pregnancy & Postpartum'
 
-const MEDICATION_TARGET: Pick<
-  PatientFormData,
-  'has_active_bp_target' | 'target_sbp_upper' | 'target_dbp_upper'
-> = {
-  has_active_bp_target: true,
+const MEDICATION_TARGET: Pick<PatientFormData, 'target_sbp_upper' | 'target_dbp_upper'> = {
   target_sbp_upper: '130',
   target_dbp_upper: '80',
 }

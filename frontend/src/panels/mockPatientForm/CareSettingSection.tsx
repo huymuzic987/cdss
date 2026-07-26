@@ -2,30 +2,11 @@ import { BpRow, Toggle } from './FormControls'
 import type { FormSectionProps } from './types'
 
 export function CareSettingSection({ form, setStr, setBool, disabled }: FormSectionProps) {
-  // Medication follow-up always compares against a personalized target (the engine
-  // requires input.active_bp_target for is_medication_follow_up traversals), so
-  // turning that on forces the target section on and locks it there.
-  const targetRequired = form.is_medication_follow_up
-  const setBoolWithTargetLock = (k: keyof typeof form, v: boolean) => {
-    setBool(k, v)
-    if (k === 'is_medication_follow_up' && v) setBool('has_active_bp_target', true)
-  }
-
   return (
     <>
-      {/* Active BP Target — kept up top since it drives the follow-up comparison below */}
-      <div className="ps-toggles">
-        <Toggle
-          label="Has Active BP Target"
-          fieldKey="has_active_bp_target"
-          form={form}
-          onChange={setBool}
-          disabled={disabled || targetRequired}
-          note={targetRequired ? 'Required for medication follow-up' : 'Patient already on therapy'}
-        />
-      </div>
-
-      {(form.has_active_bp_target || targetRequired) && (
+      {/* Active BP Target — the engine only ever reads active_bp_target on the
+          medication-follow-up branch, so it's shown/required exactly there. */}
+      {form.is_medication_follow_up && (
         <div className="ps-bp-target-box">
           <div className="ps-field-hint" style={{ display: 'block', marginBottom: 6 }}>
             Target is reached when SBP is below the SBP number AND DBP is below the DBP number.
@@ -88,7 +69,7 @@ export function CareSettingSection({ form, setStr, setBool, disabled }: FormSect
 
       <div className="ps-toggles" style={{ marginTop: 8 }}>
         <Toggle label="Lifestyle Follow-Up Visit" fieldKey="is_lifestyle_follow_up" form={form} onChange={setBool} disabled={disabled} />
-        <Toggle label="Medication Follow-Up Visit" fieldKey="is_medication_follow_up" form={form} onChange={setBoolWithTargetLock} disabled={disabled} />
+        <Toggle label="Medication Follow-Up Visit" fieldKey="is_medication_follow_up" form={form} onChange={setBool} disabled={disabled} />
       </div>
 
       {form.is_medication_follow_up && (
