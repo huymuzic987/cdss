@@ -33,6 +33,14 @@ REQUIRED_TABLES = {
     "node_source_references",
     "development_runtime_logs",
     "medicines",
+    "patients",
+    "patient_conditions",
+    "visits",
+    "visit_observations",
+    "visit_medications",
+    "fhir_import_batches",
+    "tree_layouts",
+    "symptoms",
 }
 ENUM_LABELS = ["START", "CONDITION", "INFERENCE", "ACTION", "END", "LINK", "GLOBAL"]
 

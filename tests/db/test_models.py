@@ -15,6 +15,7 @@ from cdss.infrastructure.db.models import (
     Medicine,
     NodeSourceReference,
     NodeType,
+    Symptom,
 )
 
 
@@ -38,6 +39,14 @@ def test_table_names() -> None:
         "node_source_references",
         "development_runtime_logs",
         "medicines",
+        "patients",
+        "patient_conditions",
+        "visits",
+        "visit_observations",
+        "visit_medications",
+        "fhir_import_batches",
+        "tree_layouts",
+        "symptoms",
     }
 
 
@@ -148,3 +157,21 @@ def test_medicine_field_assignment() -> None:
     assert medicine.drug_id == "DRUG0003"
     assert medicine.drug_class == "C"
     assert medicine.available is True
+
+
+def test_symptom_uses_symptom_id_as_primary_key() -> None:
+    assert [c.name for c in _table(Symptom).primary_key.columns] == ["symptom_id"]
+
+
+def test_symptom_field_assignment() -> None:
+    symptom = Symptom(
+        symptom_id="SYM0001",
+        type="Bệnh",
+        subgroup="Tăng huyết áp",
+        name_vn="Tăng huyết áp",
+        name_en="Hypertensive diseases",
+    )
+    assert symptom.symptom_id == "SYM0001"
+    assert symptom.name_vn == "Tăng huyết áp"
+    assert symptom.type == "Bệnh"
+
