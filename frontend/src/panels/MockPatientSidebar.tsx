@@ -59,7 +59,7 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
     const riskVal = parseFloat(form.risk_factor_count)
 
     if (!form.clinic_1_sbp || !form.clinic_1_dbp || isNaN(s1) || isNaN(d1) || s1 <= 0 || d1 <= 0) {
-      setValidationError('Clinic Measure 1 SBP and DBP are required positive numbers.')
+      setValidationError('Clinic SBP and DBP are required positive numbers.')
       return null
     }
     if (!form.age || isNaN(ageVal) || ageVal <= 0) {
@@ -70,14 +70,22 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
       setValidationError('Risk Factor Count is required and must be 0 or higher.')
       return null
     }
+    if (form.is_medication_follow_up) {
+      const targetSbp = parseFloat(form.target_sbp_upper)
+      const targetDbp = parseFloat(form.target_dbp_upper)
+      if (!form.target_sbp_upper || !form.target_dbp_upper || isNaN(targetSbp) || isNaN(targetDbp) || targetSbp <= 0 || targetDbp <= 0) {
+        setValidationError('Target SBP and DBP are required for medication follow-up visits.')
+        return null
+      }
+    }
 
     setValidationError(null)
     return formToPayload(form)
   }
 
-  /** Tree 1 (initial diagnosis) has no awareness of follow-up visits — it always
-   * requires clinic_2/clinic_3 readings. Follow-up patients must enter at Tree 3,
-   * which reads is_lifestyle_follow_up / is_medication_follow_up directly. */
+  /** Tree 1 (initial diagnosis) has no awareness of follow-up visits. Follow-up
+   * patients must enter at Tree 3, which reads is_lifestyle_follow_up /
+   * is_medication_follow_up directly. */
   const startTreeKey = form.is_lifestyle_follow_up || form.is_medication_follow_up
     ? 'treatment-threshold-and-bp-target'
     : 'hypertension-diagnosis'

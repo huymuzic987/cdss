@@ -24,24 +24,14 @@ function formToFlatInput(form: PatientFormData): JsonObject {
   // BP clinic
   set('clinic_1_sbp', num(form.clinic_1_sbp))
   set('clinic_1_dbp', num(form.clinic_1_dbp))
-  set('clinic_2_sbp', num(form.clinic_2_sbp))
-  set('clinic_2_dbp', num(form.clinic_2_dbp))
-  set('clinic_3_sbp', num(form.clinic_3_sbp))
-  set('clinic_3_dbp', num(form.clinic_3_dbp))
   // BP follow-up
   set('current_clinic_sbp', num(form.current_clinic_sbp))
   set('current_clinic_dbp', num(form.current_clinic_dbp))
-  set('pre_lifestyle_clinic_sbp', num(form.pre_lifestyle_clinic_sbp))
-  set('pre_lifestyle_clinic_dbp', num(form.pre_lifestyle_clinic_dbp))
-  // BP OOB
+  set('previous_sbp', num(form.previous_sbp))
+  set('previous_dbp', num(form.previous_dbp))
+  // BP home (pregnancy)
   set('home_sbp', num(form.home_sbp))
   set('home_dbp', num(form.home_dbp))
-  set('daytime_sbp', num(form.daytime_sbp))
-  set('daytime_dbp', num(form.daytime_dbp))
-  set('morning_sbp', num(form.morning_sbp))
-  set('morning_dbp', num(form.morning_dbp))
-  set('bp_24h_sbp', num(form.bp_24h_sbp))
-  set('bp_24h_dbp', num(form.bp_24h_dbp))
   // Demographics
   set('age', num(form.age))
   set('risk_factor_count', num(form.risk_factor_count))
@@ -112,11 +102,18 @@ function formToFlatInput(form: PatientFormData): JsonObject {
   out['is_medication_follow_up'] = form.is_medication_follow_up
   if (form.medication_follow_up_stage) out['medication_follow_up_stage'] = form.medication_follow_up_stage
   // Active BP target — SBP/DBP must each be below the given threshold
-  if (form.has_active_bp_target) {
+  if (form.is_medication_follow_up) {
     const target: JsonObject = {}
     if (form.target_sbp_upper) target['sbp'] = { upper_exclusive_mmhg: num(form.target_sbp_upper)! }
     if (form.target_dbp_upper) target['dbp'] = { upper_exclusive_mmhg: num(form.target_dbp_upper)! }
     out['active_bp_target'] = target
+  }
+  // Previous visit's BP target — record only, kept alongside previous_sbp/dbp
+  if (form.previous_target_sbp || form.previous_target_dbp) {
+    const previousTarget: JsonObject = {}
+    if (form.previous_target_sbp) previousTarget['sbp'] = { upper_exclusive_mmhg: num(form.previous_target_sbp)! }
+    if (form.previous_target_dbp) previousTarget['dbp'] = { upper_exclusive_mmhg: num(form.previous_target_dbp)! }
+    out['previous_bp_target'] = previousTarget
   }
 
   return out

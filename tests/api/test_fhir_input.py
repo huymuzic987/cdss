@@ -11,7 +11,7 @@ from cdss.domain.decision_tree import InvalidFhirInput
 
 _BP_ROLES = [
     ("current_clinic", "current_clinic_sbp", "current_clinic_dbp"),
-    ("pre_lifestyle_clinic", "pre_lifestyle_clinic_sbp", "pre_lifestyle_clinic_dbp"),
+    ("previous_visit", "previous_sbp", "previous_dbp"),
     ("clinic_1", "clinic_1_sbp", "clinic_1_dbp"),
 ]
 
@@ -179,8 +179,8 @@ def test_full_representative_round_trip() -> None:
         "has_heart_failure": False,
         "current_clinic_sbp": 150,
         "current_clinic_dbp": 95,
-        "pre_lifestyle_clinic_sbp": 160,
-        "pre_lifestyle_clinic_dbp": 100,
+        "previous_sbp": 160,
+        "previous_dbp": 100,
         "acr_mg_mmol": 4.2,
         "facility_capability": "FULL_RESOURCES",
         "is_medication_follow_up": True,

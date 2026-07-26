@@ -345,8 +345,8 @@ def test_tree_3_lifestyle_follow_up_meets_stored_10_5_rule(
     runtime_input = {
         "is_medication_follow_up": False,
         "is_lifestyle_follow_up": True,
-        "pre_lifestyle_clinic_sbp": 150,
-        "pre_lifestyle_clinic_dbp": 95,
+        "previous_sbp": 150,
+        "previous_dbp": 95,
         "current_clinic_sbp": 140,
         "current_clinic_dbp": 90,
     }

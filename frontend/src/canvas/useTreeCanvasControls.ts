@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Editor, TLShapeId } from 'tldraw'
+import { resetTreeLayout, saveTreeLayout } from '../api/client'
 import type { TreeGraphResponse } from '../api/types'
 import { layoutTree } from '../layout/elkLayout'
 
@@ -17,17 +18,37 @@ function updateArrowShapes(editor: Editor, kind: 'straight' | 'elbow') {
   )
 }
 
+function currentNodePositions(editor: Editor): Record<string, { x: number; y: number }> {
+  const positions: Record<string, { x: number; y: number }> = {}
+  const nodes = editor.getCurrentPageShapes().filter((s) => s.type === 'decisionNode')
+  for (const shape of nodes) {
+    const nodeKey = (shape.props as any).nodeKey
+    if (nodeKey) {
+      positions[nodeKey] = { x: shape.x, y: shape.y }
+    }
+  }
+  return positions
+}
+
 interface UseTreeCanvasControlsOptions {
   editorRef: React.RefObject<Editor | null>
   shapeIdsRef: React.RefObject<Map<string, TLShapeId>>
   lastSavedPositionsRef: React.RefObject<Record<string, { x: number; y: number }>>
+  lastSavedArrowKindRef: React.RefObject<'straight' | 'elbow'>
   graph: TreeGraphResponse
   setArrowKind: (kind: 'straight' | 'elbow') => void
 }
 
 /** Toolbar behaviors: node search, arrow-style toggle, and resetting the
  * layout back to the ELK-computed default. */
-export function useTreeCanvasControls({ editorRef, shapeIdsRef, lastSavedPositionsRef, graph, setArrowKind }: UseTreeCanvasControlsOptions) {
+export function useTreeCanvasControls({
+  editorRef,
+  shapeIdsRef,
+  lastSavedPositionsRef,
+  lastSavedArrowKindRef,
+  graph,
+  setArrowKind,
+}: UseTreeCanvasControlsOptions) {
   const [searchQuery, setSearchQuery] = useState('')
 
   const handleSearch = (query: string) => {
@@ -49,30 +70,15 @@ export function useTreeCanvasControls({ editorRef, shapeIdsRef, lastSavedPositio
 
   const handleChangeArrowKind = (kind: 'straight' | 'elbow') => {
     setArrowKind(kind)
+    lastSavedArrowKindRef.current = kind
     const editor = editorRef.current
     if (editor) {
       updateArrowShapes(editor, kind)
     }
 
-    const savedLayoutStr = localStorage.getItem(`cdss-tree-layout-${graph.tree.tree_key}`)
-    let positions: Record<string, { x: number; y: number }> = {}
-    if (savedLayoutStr) {
-      try {
-        positions = JSON.parse(savedLayoutStr).positions || {}
-      } catch {}
-    }
-    if (Object.keys(positions).length === 0 && editor) {
-      const nodes = editor.getCurrentPageShapes().filter((s) => s.type === 'decisionNode')
-      for (const shape of nodes) {
-        const nodeKey = (shape.props as any).nodeKey
-        if (nodeKey) {
-          positions[nodeKey] = { x: shape.x, y: shape.y }
-        }
-      }
-    }
-    localStorage.setItem(
-      `cdss-tree-layout-${graph.tree.tree_key}`,
-      JSON.stringify({ positions, arrowKind: kind }),
+    const positions = editor ? currentNodePositions(editor) : {}
+    void saveTreeLayout(graph.tree.tree_key, { positions, arrow_kind: kind }).catch((error) =>
+      console.error('Failed to save layout', error),
     )
   }
 
@@ -80,7 +86,7 @@ export function useTreeCanvasControls({ editorRef, shapeIdsRef, lastSavedPositio
     const editor = editorRef.current
     if (!editor) return
 
-    localStorage.removeItem(`cdss-tree-layout-${graph.tree.tree_key}`)
+    void resetTreeLayout(graph.tree.tree_key).catch((error) => console.error('Failed to reset layout', error))
     setArrowKind('elbow')
 
     // Run ELK layout
@@ -104,8 +110,9 @@ export function useTreeCanvasControls({ editorRef, shapeIdsRef, lastSavedPositio
     // Update arrows in-place to elbow
     updateArrowShapes(editor, 'elbow')
 
-    // Clear last saved positions cache to match defaults
+    // Clear last saved positions and arrow kind cache to match defaults
     lastSavedPositionsRef.current = {}
+    lastSavedArrowKindRef.current = 'elbow'
 
     // Zoom to fit
     editor.zoomToFit({ animation: { duration: 200 } })
@@ -113,3 +120,4 @@ export function useTreeCanvasControls({ editorRef, shapeIdsRef, lastSavedPositio
 
   return { searchQuery, handleSearch, handleChangeArrowKind, handleResetLayout }
 }
+

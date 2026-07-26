@@ -71,6 +71,23 @@ export interface TreeGraphResponse {
   references: TreeGraphSourceReference[]
 }
 
+// ---- Tree layout (mirrors src/cdss/api/schemas/tree_layout.py) ----
+
+export interface TreeNodePosition {
+  x: number
+  y: number
+}
+
+export interface TreeLayoutResponse {
+  positions: Record<string, TreeNodePosition>
+  arrow_kind: 'straight' | 'elbow'
+}
+
+export interface TreeLayoutRequest {
+  positions: Record<string, TreeNodePosition>
+  arrow_kind: 'straight' | 'elbow'
+}
+
 export interface ApiErrorResponse {
   code: string
   message: string

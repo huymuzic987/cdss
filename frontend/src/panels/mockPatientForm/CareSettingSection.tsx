@@ -1,19 +1,17 @@
-import { Toggle } from './FormControls'
+import { BpRow, Toggle } from './FormControls'
 import type { FormSectionProps } from './types'
 
 export function CareSettingSection({ form, setStr, setBool, disabled }: FormSectionProps) {
   return (
     <>
-      {/* Active BP Target — kept up top since it drives the follow-up comparison below */}
-      <div className="ps-toggles">
-        <Toggle label="Has Active BP Target" fieldKey="has_active_bp_target" form={form} onChange={setBool} disabled={disabled} note="Patient already on therapy" />
-      </div>
-
-      {form.has_active_bp_target && (
+      {/* Active BP Target — the engine only ever reads active_bp_target on the
+          medication-follow-up branch, so it's shown/required exactly there. */}
+      {form.is_medication_follow_up && (
         <div className="ps-bp-target-box">
           <div className="ps-field-hint" style={{ display: 'block', marginBottom: 6 }}>
             Target is reached when SBP is below the SBP number AND DBP is below the DBP number.
           </div>
+          <BpRow label="Upper Limit" sbpKey="target_sbp_upper" dbpKey="target_dbp_upper" form={form} onChange={setStr} disabled={disabled} />
           <div className="ps-field-row">
             <div className="ps-field">
               <label className="ps-field-label">Age (years)</label>

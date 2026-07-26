@@ -1,8 +1,8 @@
 """SQLAlchemy ORM models for the decision-tree schema.
 
-Thirteen tables: decision_trees, decision_nodes, decision_edges,
-node_source_references, development_runtime_logs, medicines, patients,
-patient_conditions, visits, visit_observations, visit_medications,
+Fourteen tables: decision_trees, decision_nodes, decision_edges,
+node_source_references, tree_layouts, development_runtime_logs, medicines,
+patients, patient_conditions, visits, visit_observations, visit_medications,
 fhir_import_batches. medicines is a static drug reference catalog (with an
 ATC code column for the future drugs-table integration). patients/
 patient_conditions/visits/visit_observations/visit_medications/
@@ -175,6 +175,45 @@ class NodeSourceReference(Base):
     )
 
     decision_node: Mapped[DecisionNode] = relationship(back_populates="source_references")
+
+
+class TreeLayout(Base):
+    """Editor-canvas layout for a tree: per-node (x, y) position plus the
+    connector style, keyed one-to-one with ``decision_trees``. Replaces the
+    browser-localStorage persistence the tldraw canvas used previously, so
+    layouts are shared across users/machines instead of per-browser.
+
+    ``node_positions`` stays a JSONB blob keyed by ``node_key`` (not a
+    normalized per-node table) because it is always read and written as one
+    whole object by the canvas -- never queried per node -- and this way a
+    node renamed/removed from ``decision_nodes`` leaves a harmless stale key
+    rather than an orphaned row; the frontend already tolerates missing/extra
+    keys when merging against the auto-computed layout.
+    """
+
+    __tablename__ = "tree_layouts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tree_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("decision_trees.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    arrow_kind: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'elbow'"))
+    node_positions: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow
+    )
+
+    __table_args__ = (
+        CheckConstraint("arrow_kind IN ('straight', 'elbow')", name="ck_tree_layouts_arrow_kind"),
+    )
 
 
 class DevelopmentRuntimeLog(Base):
