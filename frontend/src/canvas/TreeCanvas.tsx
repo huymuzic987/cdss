@@ -54,8 +54,16 @@ export function TreeCanvas({
   manualStepInfo,
   onCanvasClick,
 }: TreeCanvasProps) {
-  const { editorRef, shapeIdsRef, lastSavedPositionsRef, isSceneLoaded, arrowKind, setArrowKind, handleMount } =
-    useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode })
+  const {
+    editorRef,
+    shapeIdsRef,
+    lastSavedPositionsRef,
+    lastSavedArrowKindRef,
+    isSceneLoaded,
+    arrowKind,
+    setArrowKind,
+    handleMount,
+  } = useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode })
 
   useTreeCanvasSync({ editorRef, shapeIdsRef, isSceneLoaded, theme, focusNodeKey, highlightedNodeKeys, activeNodeKey })
 
@@ -63,9 +71,11 @@ export function TreeCanvas({
     editorRef,
     shapeIdsRef,
     lastSavedPositionsRef,
+    lastSavedArrowKindRef,
     graph,
     setArrowKind,
   })
+
 
   const { handlePointerDownCapture, handlePointerUpCapture, handleClickCapture } = useManualModeClicks(manualMode, onCanvasClick)
 
