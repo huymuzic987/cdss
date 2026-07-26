@@ -1,23 +1,19 @@
 #!/usr/bin/env bash
 # Starts the database container, applies Alembic migrations, then restores
-# backups/cdss_prod.sql and backups/medicines.sql the first time each is
-# empty.
+# backups/backup.sql (or backups/seed.sql) the first time the database is empty.
 #
-# cdss_prod.sql is a from-scratch dump (plain CREATE TABLE, wrapped in one
-# transaction, sets alembic_version) meant for an EMPTY database - re-running
-# it against an already-seeded database would fail outright, so this only
-# applies it once. It runs BEFORE `alembic upgrade head` so any migrations
-# newer than the dump's revision still apply on top of it afterward.
+# backup.sql is a from-scratch snapshot (DDL + data, sets alembic_version)
+# meant for an EMPTY database - re-running it against an already-seeded
+# database would fail outright, so this only applies it once on fresh DBs.
+# It runs BEFORE `alembic upgrade head` so any migrations newer than the dump's
+# revision still apply on top of it afterward.
 #
-# medicines.sql is a bare INSERT with no ON CONFLICT handling (same
-# re-run-fails-outright constraint), and it targets the medicines table,
-# which is created by a migration rather than by cdss_prod.sql - so it runs
-# AFTER `alembic upgrade head`, once that table is guaranteed to exist.
+# seed.sql contains pure data INSERT statements (no DDL schema) for decision
+# trees and medicines reference data. It can be re-run after Alembic migrations
+# if decision_trees is empty.
 #
-# Both restores go straight through `psql` against the already-running db
-# container (same as the health-check/readiness calls below) rather than
-# spinning up a throwaway backend container for it - cheaper and there's
-# nothing backend-specific about loading a SQL file.
+# Restores go straight through `psql` against the already-running db container
+# rather than spinning up a throwaway backend container.
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 resolve_compose
@@ -39,19 +35,19 @@ done
 
 existing="$($COMPOSE exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "select to_regclass('public.decision_trees')")"
 if [ -z "$existing" ]; then
-    echo "Fresh database detected - restoring backups/cdss_prod.sql..."
-    $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" < backups/cdss_prod.sql
+    echo "Fresh database detected - restoring backups/backup.sql..."
+    $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" < backups/backup.sql
 else
-    echo "decision_trees already exists - skipping backups/cdss_prod.sql (already seeded)."
+    echo "decision_trees table already exists - skipping backups/backup.sql."
 fi
 
 echo "Applying Alembic migrations..."
 $COMPOSE run --rm backend alembic upgrade head
 
-medicine_count="$($COMPOSE exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "select count(*) from medicines")"
-if [ "$medicine_count" -eq 0 ]; then
-    echo "medicines table is empty - restoring backups/medicines.sql..."
-    $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" < backups/medicines.sql
+tree_count="$($COMPOSE exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "select count(*) from decision_trees")"
+if [ "$tree_count" -eq 0 ]; then
+    echo "decision_trees table is empty - seeding data from backups/seed.sql..."
+    $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" < backups/seed.sql
 else
-    echo "medicines table already has $medicine_count rows - skipping backups/medicines.sql."
+    echo "decision_trees table already has $tree_count rows - skipping backups/seed.sql."
 fi
