@@ -71,7 +71,7 @@ ON CONFLICT (tree_key) DO UPDATE SET name_en = EXCLUDED.name_en, name_vi = EXCLU
 
 
 -- ==========================================================================
--- 2. DECISION NODES (379 nodes)
+-- 2. DECISION NODES (378 nodes)
 -- ==========================================================================
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
 VALUES ('e3b9491f-a5db-4d53-942e-0834fa0f25a0', (SELECT id FROM public.decision_trees WHERE tree_key = 'drug-combination'), 'T6_START_PATIENT_INFO_AND_PRESCRIPTIONS', 'START'::public.node_type, 'Patient information + prescribed medications', 'Thông tin bệnh nhân + Các đơn thuốc chỉ định', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2026-07-25 11:46:28.021853+00:00', '2026-07-25 11:46:28.021853+00:00')
@@ -527,10 +527,6 @@ ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_v
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
 VALUES ('bc668dbe-04db-5f5d-a80d-fd1a51f5037b', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease'), 'T9_A_B_EARLY', 'INFERENCE'::public.node_type, 'Start Beta-blocker as early as possible', 'Bắt đầu thuốc B sớm nhất có thể', NULL, '{"regimen_modifier": "early_beta_blocker"}'::jsonb, '{"action_type": "EARLY_BETA_BLOCKER"}'::jsonb, NULL, NULL, NULL, 13, '2026-07-05 00:00:00+00:00', '2026-07-05 00:00:00+00:00')
-ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
-
-INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-VALUES ('de89d76b-1556-5e3c-b13d-902195434de3', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-coronary-artery-disease'), 'T9_LINK_4_5', 'LINK'::public.node_type, 'Tree 4: Essential Strategy or Tree 5: Optimal Strategy', 'Cây 4: Chiến lược điều trị thiết yếu hoặc Cây 5: Chiến lược điều trị tối ưu', NULL, NULL, NULL, NULL, 'essential-optimal-strategy', NULL, 14, '2026-07-05 00:00:00+00:00', '2026-07-05 00:00:00+00:00')
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
@@ -3385,7 +3381,7 @@ ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.
 
 
 -- ==========================================================================
--- 4. NODE SOURCE REFERENCES (270 references)
+-- 4. NODE SOURCE REFERENCES (269 references)
 -- ==========================================================================
 INSERT INTO public.node_source_references (id, node_id, source_title, section_path, locator, locator_detail, printed_page_numbers, pdf_page_numbers, reference_note, reference_order)
 VALUES ('96e0979e-efe1-4b1f-9b19-eadfd7f94e2c', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'drug-combination' AND n.node_key = 'T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH'), 'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)', '[{"title": "Điều trị Tăng huyết áp bằng thuốc", "number": "3.4"}]'::jsonb, 'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc', 'Dual RAS-inhibitor blockade is not recommended (Class III, Level A).', ARRAY[20]::smallint[], ARRAY[22]::smallint[], 'Việc phối hợp hai nhóm thuốc ức chế hệ renin-angiotensin không được khuyến cáo.', 1)
@@ -3565,10 +3561,6 @@ ON CONFLICT (node_id, reference_order) DO UPDATE SET source_title = EXCLUDED.sou
 
 INSERT INTO public.node_source_references (id, node_id, source_title, section_path, locator, locator_detail, printed_page_numbers, pdf_page_numbers, reference_note, reference_order)
 VALUES ('d2f45d1c-fc7e-42ef-959b-bdd8a0dd40d0', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-coronary-artery-disease' AND n.node_key = 'T9_G_DRUGS'), 'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)', '["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]'::jsonb, 'Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành', NULL, ARRAY[33]::smallint[], ARRAY[35]::smallint[], NULL, 1)
-ON CONFLICT (node_id, reference_order) DO UPDATE SET source_title = EXCLUDED.source_title, section_path = EXCLUDED.section_path, locator = EXCLUDED.locator, locator_detail = EXCLUDED.locator_detail, printed_page_numbers = EXCLUDED.printed_page_numbers, pdf_page_numbers = EXCLUDED.pdf_page_numbers, reference_note = EXCLUDED.reference_note;
-
-INSERT INTO public.node_source_references (id, node_id, source_title, section_path, locator, locator_detail, printed_page_numbers, pdf_page_numbers, reference_note, reference_order)
-VALUES ('27f0b687-5e2f-42fc-8b13-77afea294e6b', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-coronary-artery-disease' AND n.node_key = 'T9_LINK_4_5'), 'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)', '["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]'::jsonb, 'Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành', NULL, ARRAY[33]::smallint[], ARRAY[35]::smallint[], NULL, 1)
 ON CONFLICT (node_id, reference_order) DO UPDATE SET source_title = EXCLUDED.source_title, section_path = EXCLUDED.section_path, locator = EXCLUDED.locator, locator_detail = EXCLUDED.locator_detail, printed_page_numbers = EXCLUDED.printed_page_numbers, pdf_page_numbers = EXCLUDED.pdf_page_numbers, reference_note = EXCLUDED.reference_note;
 
 INSERT INTO public.node_source_references (id, node_id, source_title, section_path, locator, locator_detail, printed_page_numbers, pdf_page_numbers, reference_note, reference_order)
