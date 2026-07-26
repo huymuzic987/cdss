@@ -6,7 +6,7 @@ credentials are never written to the output.
 
 Usage (reads DATABASE_URL from the environment, like the app):
 
-    uv run python backups/dump.py                      # -> backups/cdss_prod_<UTC-date>.sql
+    uv run python backups/dump.py                      # -> backups/backup.sql
     uv run python backups/dump.py path/to/backup.sql   # explicit output path
 """
 
@@ -27,6 +27,14 @@ DATA_ORDER = [
     "decision_nodes",
     "decision_edges",
     "node_source_references",
+    "tree_layouts",
+    "medicines",
+    "patients",
+    "patient_conditions",
+    "visits",
+    "visit_observations",
+    "visit_medications",
+    "fhir_import_batches",
     "development_runtime_logs",
     "alembic_version",
 ]
@@ -196,8 +204,7 @@ def main() -> None:
     if len(sys.argv) > 1:
         target = Path(sys.argv[1])
     else:
-        date = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d")
-        target = Path(__file__).resolve().parent / f"cdss_prod_{date}.sql"
+        target = Path(__file__).resolve().parent / "backup.sql"
 
     conn = psycopg2.connect(_database_url())
     try:

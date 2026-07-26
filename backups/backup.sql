@@ -1,45 +1,23 @@
 --
--- CDSS database backup (merged)
--- Source database : neondb
--- Server version  : PostgreSQL 18.4 (eaf151e) on aarch64-unknown-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
---
--- Merged from, in order:
---   1. cdss_prod_20260701.sql  - schema (types/tables/constraints/indexes) and
---      base data for 5 trees: risk-classification, treatment-threshold-and-bp-target,
---      essential-treatment-strategy, optimal-treatment-strategy, hypertension-diagnosis
---   2. tree6.sql                                        -> drug-combination
---   3. tree8.sql                                        -> hypertension-type-2-diabetes
---   4. seed_hypertension_coronary_artery_disease.sql     -> hypertension-coronary-artery-disease
---   5. seed_hypertension_heart_failure.sql               -> hypertension-heart-failure
---   6. tree11.sql                                        -> hypertension-chronic-kidney-disease
---   7. tree12.sql                                        -> hypertension-in-pregnancy
---   8. seed_resistant_hypertension.sql                   -> resistant-hypertension
---   9. tree14.sql                                        -> hypertensive-emergency
---  10. tree7_hypertension_older_adults_v2.sql             -> hypertension-older-adults
---      (added later - closes the dangling LINK from Tree 3's
---      T3_LINK_AGE_70_OR_HIGHER_OLDER_ADULT_MODIFIER node, which previously
---      pointed at a tree_key absent from every prior merge input)
---  11. medicines.sql                                      -> medicines (drug lookup table)
---      (added later - the `medicines` table/index (Alembic revision
---      8cd7e7adc1fb, one past this file's prior 5c43058f54be stamp) plus its
---      65-row seed data (DRUG0001-DRUG0065) were missing entirely; the
---      alembic_version stamp below has been bumped accordingly)
---
--- seed_hypertension_coronary_artery_disease_v2.sql, seed_hypertension_heart_failure_v2.sql,
--- and seed_resistant_hypertension_v2.sql were compared against the v1 files
--- already merged above (sources 4, 5, 8): identical node/edge/reference content,
--- reformatted only (COPY bulk-load -> idempotent INSERT/SELECT/WHERE NOT EXISTS).
--- Not re-merged since they would not change tree content.
---
--- cdss_prod_20260705.sql intentionally excluded (per request) - it is a later
--- snapshot that already contains the result of applying scripts 2-9 above
--- (plus hypertension-type-2-diabetes/hypertension-in-pregnancy data that here
--- instead comes from tree8.sql/tree12.sql), so it is not a merge input.
---
--- Individual per-tree scripts were originally separate, standalone
--- transactions; they have been spliced into this file's single BEGIN/COMMIT,
--- in dependency-safe order (each tree's own DELETE-then-insert or
--- insert-only body is preserved verbatim, including its original comments).
+-- CDSS database backup
+-- Source database : cdss
+-- Server version  : PostgreSQL 16.14 (Debian 16.14-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+-- Generated (UTC) : 2026-07-26T08:43:59.165668+00:00
+-- Row counts:
+--   decision_trees: 14
+--   decision_nodes: 377
+--   decision_edges: 422
+--   node_source_references: 268
+--   tree_layouts: 3
+--   medicines: 65
+--   patients: 0
+--   patient_conditions: 0
+--   visits: 0
+--   visit_observations: 0
+--   visit_medications: 0
+--   fhir_import_batches: 0
+--   development_runtime_logs: 0
+--   alembic_version: 1
 --
 -- Restore into an EMPTY database:
 --   createdb cdss_restore
@@ -105,17 +83,14 @@ CREATE TABLE public.development_runtime_logs (
     "created_at" timestamp with time zone NOT NULL
 );
 
-CREATE TABLE public.node_source_references (
+CREATE TABLE public.fhir_import_batches (
     "id" uuid NOT NULL,
-    "node_id" uuid NOT NULL,
-    "source_title" text NOT NULL,
-    "section_path" jsonb NOT NULL,
-    "locator" text,
-    "locator_detail" text,
-    "printed_page_numbers" smallint[],
-    "pdf_page_numbers" smallint[],
-    "reference_note" text,
-    "reference_order" integer DEFAULT 0 NOT NULL
+    "source_label" text NOT NULL,
+    "patient_count" integer DEFAULT 0 NOT NULL,
+    "visit_count" integer DEFAULT 0 NOT NULL,
+    "error_count" integer DEFAULT 0 NOT NULL,
+    "errors" jsonb DEFAULT '[]'::jsonb NOT NULL,
+    "imported_at" timestamp with time zone NOT NULL
 );
 
 CREATE TABLE public.medicines (
@@ -129,7 +104,93 @@ CREATE TABLE public.medicines (
     "dose_max" text,
     "source" text,
     "link" text,
-    "available" boolean DEFAULT true NOT NULL
+    "available" boolean DEFAULT true NOT NULL,
+    "atc_code" text
+);
+
+CREATE TABLE public.node_source_references (
+    "id" uuid NOT NULL,
+    "node_id" uuid NOT NULL,
+    "source_title" text NOT NULL,
+    "section_path" jsonb NOT NULL,
+    "locator" text,
+    "locator_detail" text,
+    "printed_page_numbers" smallint[],
+    "pdf_page_numbers" smallint[],
+    "reference_note" text,
+    "reference_order" integer DEFAULT 0 NOT NULL
+);
+
+CREATE TABLE public.patient_conditions (
+    "id" uuid NOT NULL,
+    "patient_id" uuid NOT NULL,
+    "fhir_condition_id" text NOT NULL,
+    "icd10_code" text,
+    "snomed_code" text,
+    "condition_text" text,
+    "created_at" timestamp with time zone NOT NULL
+);
+
+CREATE TABLE public.patients (
+    "id" uuid NOT NULL,
+    "fhir_id" text NOT NULL,
+    "gender" text,
+    "birth_date" date,
+    "risk_factor_count" integer DEFAULT 0 NOT NULL,
+    "created_at" timestamp with time zone NOT NULL,
+    "department" text
+);
+
+CREATE TABLE public.tree_layouts (
+    "id" uuid NOT NULL,
+    "tree_id" uuid NOT NULL,
+    "arrow_kind" text DEFAULT 'elbow'::text NOT NULL,
+    "node_positions" jsonb DEFAULT '{}'::jsonb NOT NULL,
+    "created_at" timestamp with time zone NOT NULL,
+    "updated_at" timestamp with time zone NOT NULL
+);
+
+CREATE TABLE public.visit_medications (
+    "id" uuid NOT NULL,
+    "visit_id" uuid NOT NULL,
+    "drug_id" text,
+    "drug_name" text NOT NULL,
+    "drug_class_note" text,
+    "dose_value" double precision,
+    "dose_unit" text,
+    "created_at" timestamp with time zone NOT NULL
+);
+
+CREATE TABLE public.visit_observations (
+    "id" uuid NOT NULL,
+    "visit_id" uuid NOT NULL,
+    "loinc_code" text NOT NULL,
+    "display_name" text,
+    "value" double precision NOT NULL,
+    "unit" text,
+    "created_at" timestamp with time zone NOT NULL
+);
+
+CREATE TABLE public.visits (
+    "id" uuid NOT NULL,
+    "patient_id" uuid NOT NULL,
+    "fhir_encounter_id" text NOT NULL,
+    "visit_number" integer NOT NULL,
+    "visit_date" date NOT NULL,
+    "facility_capability" text,
+    "is_early_revisit" boolean DEFAULT false NOT NULL,
+    "early_revisit_reason" text,
+    "scheduled_next_visit_date" date,
+    "clinic_sbp" integer,
+    "clinic_dbp" integer,
+    "bp_target_sbp" integer,
+    "bp_target_dbp" integer,
+    "bp_controlled" boolean,
+    "hypertension_class" text,
+    "risk_level" text,
+    "cdss_recommended_action" text,
+    "adherent_to_cdss" boolean,
+    "created_at" timestamp with time zone NOT NULL
 );
 
 -- Primary keys, unique and check constraints
@@ -145,23 +206,50 @@ ALTER TABLE public.decision_trees ADD CONSTRAINT decision_trees_pkey PRIMARY KEY
 ALTER TABLE public.decision_trees ADD CONSTRAINT decision_trees_tree_key_key UNIQUE (tree_key);
 ALTER TABLE public.development_runtime_logs ADD CONSTRAINT ck_development_runtime_logs_environment CHECK ((environment = ANY (ARRAY['development'::text, 'test'::text])));
 ALTER TABLE public.development_runtime_logs ADD CONSTRAINT development_runtime_logs_pkey PRIMARY KEY (id);
+ALTER TABLE public.fhir_import_batches ADD CONSTRAINT fhir_import_batches_pkey PRIMARY KEY (id);
+ALTER TABLE public.medicines ADD CONSTRAINT medicines_pkey PRIMARY KEY (drug_id);
 ALTER TABLE public.node_source_references ADD CONSTRAINT node_source_references_pkey PRIMARY KEY (id);
 ALTER TABLE public.node_source_references ADD CONSTRAINT uq_node_source_references_node_id_reference_order UNIQUE (node_id, reference_order);
-ALTER TABLE public.medicines ADD CONSTRAINT medicines_pkey PRIMARY KEY (drug_id);
+ALTER TABLE public.patient_conditions ADD CONSTRAINT patient_conditions_pkey PRIMARY KEY (id);
+ALTER TABLE public.patient_conditions ADD CONSTRAINT uq_patient_conditions_patient_id_fhir_id UNIQUE (patient_id, fhir_condition_id);
+ALTER TABLE public.patients ADD CONSTRAINT patients_fhir_id_key UNIQUE (fhir_id);
+ALTER TABLE public.patients ADD CONSTRAINT patients_pkey PRIMARY KEY (id);
+ALTER TABLE public.tree_layouts ADD CONSTRAINT ck_tree_layouts_arrow_kind CHECK ((arrow_kind = ANY (ARRAY['straight'::text, 'elbow'::text])));
+ALTER TABLE public.tree_layouts ADD CONSTRAINT tree_layouts_pkey PRIMARY KEY (id);
+ALTER TABLE public.tree_layouts ADD CONSTRAINT uq_tree_layouts_tree_id UNIQUE (tree_id);
+ALTER TABLE public.visit_medications ADD CONSTRAINT visit_medications_pkey PRIMARY KEY (id);
+ALTER TABLE public.visit_observations ADD CONSTRAINT visit_observations_pkey PRIMARY KEY (id);
+ALTER TABLE public.visits ADD CONSTRAINT uq_visits_patient_id_visit_number UNIQUE (patient_id, visit_number);
+ALTER TABLE public.visits ADD CONSTRAINT visits_fhir_encounter_id_key UNIQUE (fhir_encounter_id);
+ALTER TABLE public.visits ADD CONSTRAINT visits_pkey PRIMARY KEY (id);
 
 -- Foreign keys
 ALTER TABLE public.decision_edges ADD CONSTRAINT decision_edges_from_node_id_fkey FOREIGN KEY (from_node_id) REFERENCES decision_nodes(id);
 ALTER TABLE public.decision_edges ADD CONSTRAINT decision_edges_to_node_id_fkey FOREIGN KEY (to_node_id) REFERENCES decision_nodes(id);
 ALTER TABLE public.decision_nodes ADD CONSTRAINT decision_nodes_tree_id_fkey FOREIGN KEY (tree_id) REFERENCES decision_trees(id);
 ALTER TABLE public.node_source_references ADD CONSTRAINT node_source_references_node_id_fkey FOREIGN KEY (node_id) REFERENCES decision_nodes(id);
+ALTER TABLE public.patient_conditions ADD CONSTRAINT patient_conditions_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES patients(id);
+ALTER TABLE public.tree_layouts ADD CONSTRAINT tree_layouts_tree_id_fkey FOREIGN KEY (tree_id) REFERENCES decision_trees(id) ON DELETE CASCADE;
+ALTER TABLE public.visit_medications ADD CONSTRAINT visit_medications_drug_id_fkey FOREIGN KEY (drug_id) REFERENCES medicines(drug_id);
+ALTER TABLE public.visit_medications ADD CONSTRAINT visit_medications_visit_id_fkey FOREIGN KEY (visit_id) REFERENCES visits(id);
+ALTER TABLE public.visit_observations ADD CONSTRAINT visit_observations_visit_id_fkey FOREIGN KEY (visit_id) REFERENCES visits(id);
+ALTER TABLE public.visits ADD CONSTRAINT visits_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES patients(id);
 
 -- Indexes
 CREATE INDEX ix_decision_edges_from_node_id ON public.decision_edges USING btree (from_node_id);
 CREATE INDEX ix_decision_edges_to_node_id ON public.decision_edges USING btree (to_node_id);
 CREATE INDEX ix_development_runtime_logs_created_at ON public.development_runtime_logs USING btree (created_at);
 CREATE INDEX ix_development_runtime_logs_request_id ON public.development_runtime_logs USING btree (request_id);
-CREATE INDEX ix_node_source_references_node_id ON public.node_source_references USING btree (node_id);
 CREATE INDEX ix_medicines_drug_class ON public.medicines USING btree (drug_class);
+CREATE INDEX ix_node_source_references_node_id ON public.node_source_references USING btree (node_id);
+CREATE INDEX ix_patient_conditions_icd10_code ON public.patient_conditions USING btree (icd10_code);
+CREATE INDEX ix_patient_conditions_patient_id ON public.patient_conditions USING btree (patient_id);
+CREATE INDEX ix_visit_medications_drug_id ON public.visit_medications USING btree (drug_id);
+CREATE INDEX ix_visit_medications_visit_id ON public.visit_medications USING btree (visit_id);
+CREATE INDEX ix_visit_observations_loinc_code ON public.visit_observations USING btree (loinc_code);
+CREATE INDEX ix_visit_observations_visit_id ON public.visit_observations USING btree (visit_id);
+CREATE INDEX ix_visits_patient_id ON public.visits USING btree (patient_id);
+CREATE INDEX ix_visits_visit_date ON public.visits USING btree (visit_date);
 
 -- Data
 COPY public.decision_trees ("id", "tree_key", "name_en", "name_vi", "created_at", "updated_at") FROM stdin;
@@ -170,13 +258,22 @@ COPY public.decision_trees ("id", "tree_key", "name_en", "name_vi", "created_at"
 e7ffabdc-c629-b367-585c-5c081b7e3ee5	essential-treatment-strategy	Essential treatment strategy	Cây chiến lược điều trị thiết yếu	2026-06-27 16:01:18.770793+00	2026-06-28 04:53:28.115396+00
 5be98c95-06f2-e474-21d9-cb52308e0455	optimal-treatment-strategy	Optimal treatment strategy	Cây chiến lược điều trị tối ưu	2026-06-28 04:55:48.876854+00	2026-06-28 04:55:48.876854+00
 3897f50b-1c59-f954-5bef-89650cc45e5a	hypertension-diagnosis	Hypertension Diagnosis	Chẩn đoán THA	2026-06-27 07:20:49.313128+00	2026-06-28 07:51:47.889206+00
+506f278f-6b14-4d36-b16c-6dd24768fd83	drug-combination	Drug Combination	Phối hợp thuốc	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+fb619e2e-f9f2-4f79-8ac4-12561707ed21	hypertension-type-2-diabetes	Hypertension With Type 2 Diabetes	THA + Đái Tháo Đường Týp 2	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+c185afaa-623f-5f0d-b8b2-792899dee988	hypertension-coronary-artery-disease	Hypertension + Coronary Artery Disease	Cây 9: THA + bệnh mạch vành	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+1c456604-8db8-59b5-8811-6e638ca7ab6e	hypertension-heart-failure	Hypertension + Heart Failure	Cây 10: THA + suy tim	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+6a355fe7-8488-463f-b9f6-3d89d7531387	hypertension-chronic-kidney-disease	Hypertension With Chronic Kidney Disease	THA + Bệnh Thận Mạn	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+f3e7fca1-cff8-40ec-b798-9de6f1d80e66	hypertension-in-pregnancy	Hypertension in Pregnancy	THA trong thai kỳ	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+8dffe102-09fa-4e81-b2d1-6035da07ad0b	resistant-hypertension	Resistant Hypertension	THA Kháng trị	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	hypertensive-emergency	Hypertensive Emergency	Tăng Huyết Áp Cấp Cứu	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+812adc37-8380-4f46-ba92-2d48f582e5da	hypertension-older-adults	Hypertension in Older Adults	Cây 7: THA Người cao tuổi	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
 \.
 
 COPY public.decision_nodes ("id", "tree_id", "node_key", "node_type", "text_en", "text_vi", "condition_definition", "context_patch", "action_payload", "global_config", "link_target_tree_key", "link_target_node_key", "display_order", "created_at", "updated_at") FROM stdin;
 854590f4-9e9c-3158-47af-43695e29611e	3897f50b-1c59-f954-5bef-89650cc45e5a	T1_START_PATIENT_INFORMATION	START	Patient information	Thông tin bệnh nhân	\N	\N	\N	\N	\N	\N	1	2026-06-27 07:20:49.313128+00	2026-06-27 07:20:49.313128+00
-af62ea0d-827f-488d-9218-ffb2d0e4e0b0	3897f50b-1c59-f954-5bef-89650cc45e5a	T1_C_IS_PREGNANT	CONDITION	Patient is pregnant	Bệnh nhân đang mang thai	{"path": "input.is_pregnant", "op": "eq", "value": true}	\N	\N	\N	\N	\N	65	2026-06-27 07:20:49.313128+00	2026-06-27 07:20:49.313128+00
+af62ea0d-827f-488d-9218-ffb2d0e4e0b0	3897f50b-1c59-f954-5bef-89650cc45e5a	T1_C_IS_PREGNANT	CONDITION	Patient is pregnant	Bệnh nhân đang mang thai	{"op": "eq", "path": "input.is_pregnant", "value": true}	\N	\N	\N	\N	\N	65	2026-06-27 07:20:49.313128+00	2026-06-27 07:20:49.313128+00
 8a526e4b-cfd9-4b7b-8fc5-06c18cad2dd8	3897f50b-1c59-f954-5bef-89650cc45e5a	T1_LINK_HYPERTENSION_IN_PREGNANCY	LINK	Hypertension in Pregnancy Tree	Cây: Tăng huyết áp thai kỳ	\N	\N	\N	\N	hypertension-in-pregnancy	\N	66	2026-06-27 07:20:49.313128+00	2026-06-27 07:20:49.313128+00
-8a14e0bd-3f41-4672-9b28-f236d56cfe99	3897f50b-1c59-f954-5bef-89650cc45e5a	T1_C_IS_NOT_PREGNANT	CONDITION	Patient is not pregnant	Bệnh nhân không mang thai	{"path": "input.is_pregnant", "op": "eq", "value": false}	\N	\N	\N	\N	\N	67	2026-06-27 07:20:49.313128+00	2026-06-27 07:20:49.313128+00
+8a14e0bd-3f41-4672-9b28-f236d56cfe99	3897f50b-1c59-f954-5bef-89650cc45e5a	T1_C_IS_NOT_PREGNANT	CONDITION	Patient is not pregnant	Bệnh nhân không mang thai	{"op": "eq", "path": "input.is_pregnant", "value": false}	\N	\N	\N	\N	\N	67	2026-06-27 07:20:49.313128+00	2026-06-27 07:20:49.313128+00
 a04f0087-1e67-7368-d086-d6fcccdaedb1	3897f50b-1c59-f954-5bef-89650cc45e5a	T1_C_CLINIC_1_CRISIS	CONDITION	SBP ≥ 180 mmHg OR DBP ≥ 120 mmHg	HATT ≥ 180 hoặc HATTr ≥ 120 mmHg	{"any": [{"op": "gte", "path": "input.clinic_1_sbp", "value": 180}, {"op": "gte", "path": "input.clinic_1_dbp", "value": 120}]}	\N	\N	\N	\N	\N	2	2026-06-27 07:20:49.313128+00	2026-06-27 07:20:49.313128+00
 bfbb746b-d5ff-6d27-a5e6-5376a31d2841	3897f50b-1c59-f954-5bef-89650cc45e5a	T1_INF_HYPERTENSIVE_EMERGENCY	INFERENCE	Hypertensive emergency	THA CẤP CỨU	\N	{"diagnosis": {"hypertension_class": "HYPERTENSIVE_EMERGENCY"}}	\N	\N	\N	\N	3	2026-06-27 07:20:49.313128+00	2026-06-27 07:20:49.313128+00
 b8778eca-3e96-47d7-fc9d-c8ff3c68e3f7	3897f50b-1c59-f954-5bef-89650cc45e5a	T1_LINK_HYPERTENSIVE_EMERGENCY	LINK	Hypertensive Emergency Tree	Cây 14: THA CẤP CỨU	\N	\N	\N	\N	hypertensive-emergency	\N	4	2026-06-27 07:20:49.313128+00	2026-06-27 07:20:49.313128+00
@@ -228,6 +325,7 @@ b9153f61-98ce-673a-b1bf-9bcb80671d62	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_C_A
 a8e8f94a-73e3-90e0-bb13-d5391d228a46	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_C_NO_COMORBIDITY	CONDITION	No comorbidity	Không có bệnh đồng mắc	{"all": [{"op": "eq", "path": "input.has_coronary_artery_disease", "value": false}, {"op": "eq", "path": "input.has_type_2_diabetes", "value": false}, {"op": "eq", "path": "input.has_heart_failure", "value": false}, {"op": "eq", "path": "input.has_ckd", "value": false}]}	\N	\N	\N	\N	\N	5	2026-06-27 10:16:47.50998+00	2026-06-27 10:16:47.50998+00
 24dbca8b-981c-416b-e3c9-3189ff36c8d7	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_C_COMORBIDITY_PRESENT	CONDITION	Comorbidity present	Có bệnh đồng mắc	{"any": [{"op": "eq", "path": "input.has_coronary_artery_disease", "value": true}, {"op": "eq", "path": "input.has_type_2_diabetes", "value": true}, {"op": "eq", "path": "input.has_heart_failure", "value": true}, {"op": "eq", "path": "input.has_ckd", "value": true}]}	\N	\N	\N	\N	\N	6	2026-06-27 10:16:47.50998+00	2026-06-27 10:16:47.50998+00
 a568efbe-4123-a88c-7824-dce7c9f4744c	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD	CONDITION	SBP <140 mmHg AND DBP <90 mmHg	HATT < 140 VÀ HATTr < 90	{"all": [{"op": "lt", "path": "input.current_clinic_sbp", "value": 140}, {"op": "lt", "path": "input.current_clinic_dbp", "value": 90}]}	\N	\N	\N	\N	\N	7	2026-06-27 10:16:47.50998+00	2026-06-27 10:16:47.50998+00
+455fcd4a-e8f2-4b03-b67a-71784b796683	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_C_LIMITED	CONDITION	Essential standard	Tiêu chuẩn thiết yếu	{"op": "eq", "path": "input.facility_capability", "value": "LIMITED_RESOURCES"}	\N	\N	\N	\N	\N	2	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
 86deea06-0fd7-f7d1-052f-80aadbd34f2d	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_C_18_69_NO_COMORBIDITY_AT_OR_ABOVE_THRESHOLD	CONDITION	SBP ≥140 mmHg OR DBP ≥90 mmHg	HATT >= 140 HOẶC HATTr >= 90	{"any": [{"op": "gte", "path": "input.current_clinic_sbp", "value": 140}, {"op": "gte", "path": "input.current_clinic_dbp", "value": 90}]}	\N	\N	\N	\N	\N	8	2026-06-27 10:16:47.50998+00	2026-06-27 10:16:47.50998+00
 0c92a137-09dd-cc40-8d65-a16871ae8176	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_ACTION_18_69_NO_COMORBIDITY_LIFESTYLE_AND_FOLLOW_UP	ACTION	Lifestyle modification and continued monitoring	Thay đổi lối sống và tiếp tục theo dõi	\N	\N	{"action_type": "LIFESTYLE_AND_CONTINUED_MONITORING", "follow_up_mode": "NEW_ENCOUNTER", "restart_tree_key": "hypertension-diagnosis", "follow_up_required": true}	\N	\N	\N	9	2026-06-27 10:16:47.50998+00	2026-06-27 10:16:47.50998+00
 732bb6a9-f802-9e67-8377-bec03ab0ccab	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_INF_18_69_NO_COMORBIDITY_BP_TARGET	INFERENCE	Target SBP 120–<140 mmHg or lower\nTarget DBP <80 mmHg	Đích điều trị HATT 120 - < 140 mmHg hoặc thấp hơn\nĐích điều trị HATTr <80	\N	{"treatment": {"bp_target": {"dbp": {"upper_exclusive_mmhg": 80}, "sbp": {"or_lower": true, "lower_reference_mmhg": 120, "upper_exclusive_mmhg": 140}, "source": "TREE_3_GENERIC"}}}	\N	\N	\N	\N	10	2026-06-27 10:16:47.50998+00	2026-06-27 10:16:47.50998+00
@@ -267,8 +365,6 @@ d49ed998-c9d4-c06f-9859-ebd4459f4457	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_C_1
 b262908e-c083-362b-db10-0d10ca4ed024	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_C_IS_MEDICATION_FOLLOW_UP	CONDITION	Medication follow-up visit	Tái khám sau điều trị thuốc	{"all": [{"op": "eq", "path": "input.is_medication_follow_up", "value": true}]}	\N	\N	\N	\N	\N	3	2026-06-27 15:49:12.978633+00	2026-06-27 15:49:12.978633+00
 377554d0-1f57-6179-b0ee-6f03230ff8b0	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_C_IS_LIFESTYLE_FOLLOW_UP	CONDITION	Lifestyle-management follow-up visit	Tái khám sau thay đổi lối sống	{"all": [{"op": "eq", "path": "input.is_medication_follow_up", "value": false}, {"op": "eq", "path": "input.is_lifestyle_follow_up", "value": true}]}	\N	\N	\N	\N	\N	4	2026-06-27 15:49:12.978633+00	2026-06-27 15:49:12.978633+00
 c8edac54-9f97-7fd4-3867-9e14861e3ba2	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_C_INITIAL_ENCOUNTER	CONDITION	Initial encounter or non-follow-up encounter	Lần khám đầu tiên hoặc không phải lần tái khám	{"all": [{"op": "eq", "path": "input.is_medication_follow_up", "value": false}, {"op": "eq", "path": "input.is_lifestyle_follow_up", "value": false}]}	\N	\N	\N	\N	\N	5	2026-06-27 15:49:12.978633+00	2026-06-27 15:49:12.978633+00
-98253717-e67b-66a9-3791-fafcd2bedf4c	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_C_LIFESTYLE_RESPONSE_ADEQUATE	CONDITION	Lifestyle BP response adequate	Đáp ứng thay đổi lối sống đạt yêu cầu	{"all": [{"op": "gte", "left": {"left_path": "input.pre_lifestyle_clinic_sbp", "expression": "subtract", "right_path": "input.current_clinic_sbp"}, "value": 10}, {"op": "gte", "left": {"left_path": "input.pre_lifestyle_clinic_dbp", "expression": "subtract", "right_path": "input.current_clinic_dbp"}, "value": 5}]}	\N	\N	\N	\N	\N	6	2026-06-27 15:49:12.978633+00	2026-06-27 15:49:12.978633+00
-82d39f73-488c-3113-49e7-b92795bd4623	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_C_LIFESTYLE_RESPONSE_INADEQUATE	CONDITION	Lifestyle BP response inadequate	Đáp ứng thay đổi lối sống chưa đạt yêu cầu	{"not": {"all": [{"op": "gte", "left": {"left_path": "input.pre_lifestyle_clinic_sbp", "expression": "subtract", "right_path": "input.current_clinic_sbp"}, "value": 10}, {"op": "gte", "left": {"left_path": "input.pre_lifestyle_clinic_dbp", "expression": "subtract", "right_path": "input.current_clinic_dbp"}, "value": 5}]}}	\N	\N	\N	\N	\N	7	2026-06-27 15:49:12.978633+00	2026-06-27 15:49:12.978633+00
 0a1a022d-3fba-8a24-a6ca-602eb97b1936	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_ACTION_LIFESTYLE_FOLLOW_UP_CONTINUE_MONITORING	ACTION	Continue lifestyle management and monitoring	Tiếp tục thay đổi lối sống và theo dõi	\N	\N	{"action_type": "CONTINUE_LIFESTYLE_AND_MONITORING", "rule_origin": "LOCAL_PROJECT_POLICY", "follow_up_mode": "NEW_ENCOUNTER", "restart_tree_key": "hypertension-diagnosis", "follow_up_required": true, "lifestyle_response_threshold_mmhg": {"require_both": true, "minimum_dbp_reduction": 5, "minimum_sbp_reduction": 10}}	\N	\N	\N	8	2026-06-27 15:49:12.978633+00	2026-06-27 15:49:12.978633+00
 fe2929b6-a17a-269e-7ffd-23d3ce77c5b5	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_INF_RESTORE_ACTIVE_BP_TARGET	INFERENCE	Restore active BP target from medication follow-up input	Khôi phục đích huyết áp đang áp dụng từ thông tin tái khám điều trị thuốc	\N	{"operations": [{"op": "COPY_PATH", "to_path": "context.treatment.bp_target", "required": true, "from_path": "input.active_bp_target"}]}	\N	\N	\N	\N	9	2026-06-27 15:51:59.041846+00	2026-06-27 15:51:59.041846+00
 c8850768-6a93-5c31-5348-b20795ed8aa2	e7ffabdc-c629-b367-585c-5c081b7e3ee5	T4_START_BP_AND_AGE_INFORMATION	START	Patient blood pressure and age information	Thông tin huyết áp bệnh nhân và tuổi	\N	\N	\N	\N	\N	\N	1	2026-06-27 16:01:18.770793+00	2026-06-27 16:01:18.770793+00
@@ -298,6 +394,7 @@ c7a3b86a-95cb-9fe8-0e5b-39cb6e6ca392	e7ffabdc-c629-b367-585c-5c081b7e3ee5	T4_LIN
 74f3cdc3-0390-aa3d-5f21-9d8128a6f3d7	5be98c95-06f2-e474-21d9-cb52308e0455	T5_GLOBAL_BP_TARGET_OVERRIDE_NOTE	GLOBAL	Comorbidities may have their own treatment target and override Tree 3 general target. Applies to every BP-target achievement check.	Nếu có bệnh đồng mắc thì có thể bệnh đồng mắc sẽ có đích điều trị riêng và override đích điều trị general của cây 3. Áp dụng cho mọi node condition check HA đã đạt đích điều trị hay chưa	\N	\N	\N	{"applies_to": ["T5_C_INITIAL_REGIMEN_BP_TARGET_REACHED", "T5_C_INITIAL_REGIMEN_BP_TARGET_NOT_REACHED", "T5_C_ESCALATED_REGIMEN_BP_TARGET_REACHED", "T5_C_ESCALATED_REGIMEN_BP_TARGET_NOT_REACHED"], "target_path": "context.treatment.bp_target", "override_rule": "MODIFIER_TREE_TARGET_OVERRIDES_TREE_3_TARGET", "comparison_contract": {"systolic_input_path": "input.current_clinic_sbp", "diastolic_input_path": "input.current_clinic_dbp", "systolic_target_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg", "diastolic_target_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"}}	\N	\N	2	2026-06-28 04:55:48.876854+00	2026-06-28 04:55:48.876854+00
 7c65f813-54a4-e49b-6761-998010679793	5be98c95-06f2-e474-21d9-cb52308e0455	T5_C_IS_MEDICATION_FOLLOW_UP	CONDITION	Medication follow-up visit	Tái khám sau điều trị thuốc	{"op": "eq", "path": "input.is_medication_follow_up", "value": true}	\N	\N	\N	\N	\N	3	2026-06-28 04:55:48.876854+00	2026-06-28 04:55:48.876854+00
 cad9430a-f29b-3654-69d2-6522e78fd10b	5be98c95-06f2-e474-21d9-cb52308e0455	T5_C_MEDICATION_FOLLOW_UP_INITIAL_REGIMEN	CONDITION	Follow-up after initial regimen	Tái khám sau phác đồ điều trị ban đầu	{"op": "eq", "path": "input.medication_follow_up_stage", "value": "INITIAL_REGIMEN"}	\N	\N	\N	\N	\N	4	2026-06-28 04:55:48.876854+00	2026-06-28 04:55:48.876854+00
+90b23d3e-8b13-43f3-9c2d-8f8858c6c643	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_ACTION_CLASSIFY_HTN_TYPE	ACTION	Determine type of hypertensive disorder of pregnancy	Xác định kiểu THA trong thai kỳ	\N	\N	{"action_type": "CLASSIFY_PREGNANCY_HYPERTENSION_TYPE", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}	\N	\N	\N	5	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
 98a3e03c-3fe0-aefc-fa04-b34573372eab	5be98c95-06f2-e474-21d9-cb52308e0455	T5_C_INITIAL_REGIMEN_BP_TARGET_REACHED	CONDITION	Blood pressure target reached	HA đã đạt đích điều trị	{"all": [{"op": "lt", "path": "input.current_clinic_sbp", "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"}, {"op": "lt", "path": "input.current_clinic_dbp", "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"}]}	\N	\N	\N	\N	\N	5	2026-06-28 04:55:48.876854+00	2026-06-28 04:55:48.876854+00
 0380de58-e79b-5348-28bb-b502643bdf13	5be98c95-06f2-e474-21d9-cb52308e0455	T5_END_INITIAL_REGIMEN_TARGET_REACHED	END	Continue monitoring and maintain regimen	Tiếp tục theo dõi và duy trì phác đồ	\N	\N	{"action_type": "CONTINUE_MONITORING_AND_MAINTAIN_REGIMEN", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true, "next_medication_follow_up_stage": "INITIAL_REGIMEN"}	\N	\N	\N	6	2026-06-28 04:55:48.876854+00	2026-06-28 04:55:48.876854+00
 35bc4ca0-b4e1-eb55-4aec-24103ff89e87	5be98c95-06f2-e474-21d9-cb52308e0455	T5_C_INITIAL_REGIMEN_BP_TARGET_NOT_REACHED	CONDITION	Blood pressure target not reached	HA chưa đạt đích điều trị	{"not": {"all": [{"op": "lt", "path": "input.current_clinic_sbp", "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"}, {"op": "lt", "path": "input.current_clinic_dbp", "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"}]}}	\N	\N	\N	\N	\N	7	2026-06-28 04:55:48.876854+00	2026-06-28 04:55:48.876854+00
@@ -314,9 +411,242 @@ fd5f90fd-3e68-39f1-46ab-441095c17fd8	5be98c95-06f2-e474-21d9-cb52308e0455	T5_C_T
 c3ba5d02-6f67-3af6-016c-6d9649bed79b	5be98c95-06f2-e474-21d9-cb52308e0455	T5_ACTION_FIXED_DOSE_TWO_DRUG_COMBINATION	ACTION	Fixed-dose two-drug combination in one pill: A + C or A + D; start at half the usual dose	VIÊN PHỐI HỢP 2 THUỐC (1 viên): A+C hoặc A+D (Khởi đầu 1/2 liều thông thường)	\N	\N	{"pill_count": 1, "action_type": "FIXED_DOSE_TWO_DRUG_COMBINATION", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true, "combination_options": [["A", "C"], ["A", "D"]], "fixed_dose_combination": true, "requires_clinician_review": true, "next_medication_follow_up_stage": "INITIAL_REGIMEN", "starting_dose_fraction_of_usual": 0.5}	\N	\N	\N	18	2026-06-28 04:55:48.876854+00	2026-06-28 04:55:48.876854+00
 f9fd109c-05a1-f132-af67-590edb731f71	5be98c95-06f2-e474-21d9-cb52308e0455	T5_LINK_INITIAL_TWO_DRUG_TO_TREE_6	LINK	Tree 6: Drug combination	Cây 6: Phối hợp thuốc	\N	\N	\N	\N	drug-combination	\N	19	2026-06-28 04:55:48.876854+00	2026-06-28 04:55:48.876854+00
 aa012536-8918-710b-0209-3b1da478cd70	5be98c95-06f2-e474-21d9-cb52308e0455	T5_C_HABTC_LOW_OR_MEDIUM_RISK	CONDITION	High-normal BP with low or intermediate risk	HABTC + nguy cơ thấp/TB	{"all": [{"op": "lt", "path": "input.current_clinic_sbp", "value": 140}, {"op": "lt", "path": "input.current_clinic_dbp", "value": 90}, {"any": [{"op": "gte", "path": "input.current_clinic_sbp", "value": 130}, {"op": "gte", "path": "input.current_clinic_dbp", "value": 85}]}, {"any": [{"op": "eq", "path": "context.risk.level", "value": "LOW"}, {"op": "eq", "path": "context.risk.level", "value": "MEDIUM"}]}]}	\N	\N	\N	\N	\N	20	2026-06-28 04:55:48.876854+00	2026-06-28 04:55:48.876854+00
+3a9fa478-e803-489f-a13e-0f616615f529	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_PULMONARY_EDEMA	CONDITION	Pulmonary edema	Phù phổi	{"op": "eq", "path": "input.has_pulmonary_edema", "value": true}	\N	\N	\N	\N	\N	26	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
 94a026fb-28af-8d31-f0d7-f05073711e3c	5be98c95-06f2-e474-21d9-cb52308e0455	T5_C_MONOTHERAPY_ELIGIBILITY	CONDITION	Persistent high-normal BP after lifestyle management, age 80 or older, or frailty syndrome	HABTC không đạt mục tiêu sau thay đổi lối sống hoặc tuổi >= 80 hoặc hội chứng lão hóa	{"any": [{"op": "eq", "path": "input.is_lifestyle_follow_up", "value": true}, {"op": "gte", "path": "input.age", "value": 80}, {"op": "eq", "path": "input.has_frailty_syndrome", "value": true}]}	\N	\N	\N	\N	\N	21	2026-06-28 04:55:48.876854+00	2026-06-28 04:55:48.876854+00
 88a2ff70-ecc2-23e0-97e7-ebc3213188cd	5be98c95-06f2-e474-21d9-cb52308e0455	T5_ACTION_CONSIDER_MONOTHERAPY_ONE_PILL	ACTION	Consider monotherapy in one pill: A (ACE inhibitor/ARB/ARNI), B, C (calcium-channel blocker), or D (thiazide-like diuretic)	Xem xét ĐƠN TRỊ LIỆU (1 viên): A (ƯCMC/CTTA/ARNI), B, C (CKCa), hoặc D (Lợi tiểu Thiazide-like)	\N	\N	{"pill_count": 1, "action_type": "CONSIDER_MONOTHERAPY", "drug_options": [{"class": "A", "description": "ACE inhibitor, ARB, or ARNI"}, {"class": "B", "description": "Beta-blocker", "requires_indication": true}, {"class": "C", "description": "Calcium-channel blocker"}, {"class": "D", "description": "Thiazide-like diuretic"}], "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true, "requires_clinician_review": true, "next_medication_follow_up_stage": "INITIAL_REGIMEN", "beta_blocker_requires_indication": true}	\N	\N	\N	22	2026-06-28 04:55:48.876854+00	2026-06-28 04:55:48.876854+00
 61c0ccb8-5d7d-d019-86c6-9a94b712064e	5be98c95-06f2-e474-21d9-cb52308e0455	T5_LINK_MONOTHERAPY_TO_TREE_6	LINK	Tree 6: Drug combination	Cây 6: Phối hợp thuốc	\N	\N	\N	\N	drug-combination	\N	23	2026-06-28 04:55:48.876854+00	2026-06-28 04:55:48.876854+00
+e3b9491f-a5db-4d53-942e-0834fa0f25a0	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_START_PATIENT_INFO_AND_PRESCRIPTIONS	START	Patient information + prescribed medications	Thông tin bệnh nhân + Các đơn thuốc chỉ định	\N	\N	\N	\N	\N	\N	0	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+749bb74c-d4df-4e72-a946-df93f71e960f	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_FIRST_VISIT	CONDITION	First visit	Khám lần đầu	{"op": "eq", "path": "input.is_medication_follow_up", "value": false}	\N	\N	\N	\N	\N	1	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+8134a5b7-29c2-4a22-bf6c-2d9976e340eb	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_FOLLOW_UP_VISIT	CONDITION	Follow-up visit	Tái khám	{"op": "eq", "path": "input.is_medication_follow_up", "value": true}	\N	\N	\N	\N	\N	2	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+e6ce4a56-4b14-433f-b8fd-5c04096f103e	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS	INFERENCE	Determine whether a prior prescription exists	Xác định có đơn thuốc trước đó hay không	\N	{"treatment": {"has_prior_prescription": true}, "operations": [{"op": "COPY_PATH", "to_path": "context.treatment.has_prior_prescription", "required": false, "from_path": "input.has_prior_prescription"}]}	\N	\N	\N	\N	3	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+1f779704-25f9-4894-9210-6c34167af7af	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_HAS_PRIOR_PRESCRIPTION	CONDITION	Has prior prescription	Có đơn thuốc trước đó	{"op": "eq", "path": "context.treatment.has_prior_prescription", "value": true}	\N	\N	\N	\N	\N	4	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+5570eaf9-e0ba-4144-a77b-56579f6c0a0a	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_NO_PRIOR_PRESCRIPTION	CONDITION	No prior prescription	Không có đơn thuốc trước đó	{"op": "eq", "path": "context.treatment.has_prior_prescription", "value": false}	\N	\N	\N	\N	\N	5	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+2e194809-a5d8-4c47-a42f-f938b0391772	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_DOSAGE_ADJUSTMENT_REQUESTED	CONDITION	Dosage adjustment requested in current prescription	Có yêu cầu điều chỉnh liều lượng trong đơn thuốc hiện tại	{"op": "eq", "path": "context.treatment.has_dosage_adjustment_request", "value": true}	\N	\N	\N	\N	\N	7	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+1459f200-6322-4b81-bda0-a959b39a41d5	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_NO_DOSAGE_ADJUSTMENT_REQUESTED	CONDITION	No dosage adjustment requested in current prescription	Không có yêu cầu điều chỉnh liều lượng trong đơn thuốc hiện tại	{"op": "eq", "path": "context.treatment.has_dosage_adjustment_request", "value": false}	\N	\N	\N	\N	\N	8	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+52d3b005-e25a-4240-a3b9-6cf05642eaa5	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_GLOBAL_CONTRAINDICATION_REFERENCE_TABLE	GLOBAL	Drug-class contraindication reference table (Bảng 11)	Bảng chống chỉ định theo nhóm thuốc (Bảng 11)	\N	\N	\N	{"kind": "REFERENCE_LIST", "table": {"ARB": {"absolute": ["pregnancy", "hyperkalemia_gt_5_5", "bilateral_renal_artery_stenosis"], "relative": ["woman_of_childbearing_age_without_contraception"]}, "MRA": {"absolute": ["pregnancy", "hyperkalemia", "severe_acute_renal_failure_egfr_lt_30"]}, "BETA_BLOCKER": {"absolute": ["asthma", "sinoatrial_or_high_grade_av_block", "bradycardia_lt_60"], "relative": ["metabolic_syndrome", "glucose_intolerance", "athlete"]}, "ACE_INHIBITOR": {"absolute": ["pregnancy", "angioedema_history", "hyperkalemia_gt_5_5", "bilateral_renal_artery_stenosis"], "relative": ["woman_of_childbearing_age_without_contraception"]}, "DIHYDROPYRIDINE_CCB": {"relative": ["tachyarrhythmia", "heart_failure_reduced_ef_nyha_3_or_4", "severe_leg_edema_history"]}, "THIAZIDE_LIKE_DIURETIC": {"absolute": ["gout"], "relative": ["metabolic_syndrome", "glucose_intolerance", "pregnancy", "hypercalcemia", "hypokalemia"]}, "NON_DIHYDROPYRIDINE_CCB": {"absolute": ["sinoatrial_or_high_grade_av_block", "severe_lv_dysfunction_lvef_lt_40", "bradycardia_lt_60"], "relative": ["constipation"]}, "DIRECT_RENIN_INHIBITOR_OR_VASODILATOR": {"absolute": ["pregnancy"]}}, "purpose": "Chống chỉ định bắt buộc/tương đối theo nhóm thuốc, dùng để tính input.contraindicated_drug_classes trước khi vào Cây 6.", "input_path": "input.contraindicated_drug_classes"}	\N	\N	12	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+54dafeb4-5f46-4ed4-b7fb-fec57a3c0029	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_INF_IV_NITROGLYCERIN	INFERENCE	IV nitroglycerin infusion	Truyền Nitroglycerin tĩnh mạch	\N	{"treatment_preferences": {"route": "IV_INFUSION"}}	\N	\N	\N	\N	27	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+a604674f-7384-4fb2-a663-bc3944337246	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_INF_MAGNESIUM_SUPPLEMENT	INFERENCE	Add magnesium	Bổ sung magie	\N	\N	\N	\N	\N	\N	28	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+5dd8e03f-953a-40e4-a2f5-eae62f0353d2	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT	INFERENCE	Maintain regimen	Duy trì phác đồ	\N	\N	\N	\N	\N	\N	10	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+31ecadcc-6279-4b3f-9a9b-2f2d38931c49	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_HAS_DUPLICATE_DRUG_CLASS	CONDITION	Has duplicate drug class (e.g. 2 drugs of the same class)	Có nhiều thuốc trùng nhóm (VD 2 thuốc cùng nhóm ƯCMC)	{"op": "eq", "path": "context.treatment.has_duplicate_drug_class", "value": true}	\N	\N	\N	\N	\N	14	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+dc85f5d5-6dac-417f-8dba-e7e49a5abde5	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_NO_DUPLICATE_DRUG_CLASS	CONDITION	No duplicate drug class	Không có thuốc trùng nhóm	{"op": "eq", "path": "context.treatment.has_duplicate_drug_class", "value": false}	\N	\N	\N	\N	\N	15	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+f1d6e2a0-b370-4527-b02b-9dab71fb396f	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_DUPLICATE_IS_RAS_INHIBITOR	CONDITION	Regimen uses more than 2 RAS-inhibitor classes in parallel	Phác đồ dùng >2 loại ức chế RAS song song	{"op": "eq", "path": "context.treatment.has_duplicate_ras_inhibitor", "value": true}	\N	\N	\N	\N	\N	16	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+760b3f49-a111-474a-90f0-7957d8b96d1c	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_DUPLICATE_NOT_RAS_INHIBITOR	CONDITION	Duplicate is within a single non-RAS drug class	Trùng nhóm không thuộc nhóm ức chế RAS	{"op": "eq", "path": "context.treatment.has_duplicate_ras_inhibitor", "value": false}	\N	\N	\N	\N	\N	17	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+b2d606f3-6ad1-461c-8975-72195cb6afc7	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_IS_FIRST_VISIT_FOR_REGIMEN	CONDITION	Encounter is a fresh-therapy visit	Đây là lần khám điều trị lần đầu	{"op": "eq", "path": "input.is_medication_follow_up", "value": false}	\N	\N	\N	\N	\N	21	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+cc087716-cecc-44ef-8850-a6261b5ac065	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_IS_FOLLOW_UP_FOR_REGIMEN	CONDITION	Encounter is a medication follow-up visit	Đây là lần tái khám điều trị thuốc	{"op": "eq", "path": "input.is_medication_follow_up", "value": true}	\N	\N	\N	\N	\N	22	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+b671f1b7-c554-49f0-b066-a7adc4deabda	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_SPECIAL_POPULATION	CONDITION	Persistent high-normal BP after lifestyle management, age 80 or older, or frailty syndrome	HABTC không đạt mục tiêu sau thay đổi lối sống hoặc tuổi >= 80 hoặc hội chứng lão hóa	{"any": [{"op": "eq", "path": "input.is_lifestyle_follow_up", "value": true}, {"op": "gte", "path": "input.age", "value": 80}, {"op": "eq", "path": "input.has_frailty_syndrome", "value": true}]}	\N	\N	\N	\N	\N	23	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+0e9d7de8-1104-4c68-a267-193a7556328f	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_NOT_SPECIAL_POPULATION	CONDITION	Not a special population	BỆNH NHÂN KHÔNG THUỘC NHÓM ĐẶC BIỆT	{"not": {"any": [{"op": "eq", "path": "input.is_lifestyle_follow_up", "value": true}, {"op": "gte", "path": "input.age", "value": 80}, {"op": "eq", "path": "input.has_frailty_syndrome", "value": true}]}}	\N	\N	\N	\N	\N	24	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+b50e184c-1830-4d00-93d4-f95a5bf02330	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_INF_INITIATE_MONOTHERAPY	INFERENCE	Drug therapy: start with 1 drug (A, C, or D)	Điều trị thuốc KHỞI ĐẦU BẰNG 1 THUỐC (A, C, hoặc D)	\N	{"treatment_preferences": {"dose_strategy": "LOW_TO_USUAL_DOSE", "combination_options": [["A"], ["C"], ["D"]]}}	\N	\N	\N	\N	25	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+c76f5495-f86f-4ab5-b1c7-95367d21eaad	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY	INFERENCE	Determine specific clinical situations relevant to beta-blocker add-on (monotherapy tier)	Xác định tình huống lâm sàng đặc hiệu liên quan đến việc thêm chẹn Beta (bậc đơn trị)	\N	{"treatment": {"has_angina": false, "is_pregnant": false, "has_prior_mi": false, "has_tachycardia": false, "has_atrial_fibrillation": false}, "operations": [{"op": "COPY_PATH", "to_path": "context.treatment.has_angina", "required": false, "from_path": "input.has_angina"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_prior_mi", "required": false, "from_path": "input.has_prior_mi"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_atrial_fibrillation", "required": false, "from_path": "input.has_atrial_fibrillation"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_tachycardia", "required": false, "from_path": "input.has_tachycardia"}, {"op": "COPY_PATH", "to_path": "context.treatment.is_pregnant", "required": false, "from_path": "input.is_pregnant"}]}	\N	\N	\N	\N	250	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+8f28660a-6643-482f-b2fa-b801fa6f8e02	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY	CONDITION	Has specific clinical situation (monotherapy tier)	CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc đơn trị)	{"any": [{"op": "eq", "path": "input.has_heart_failure", "value": true}, {"op": "eq", "path": "context.treatment.has_angina", "value": true}, {"op": "eq", "path": "context.treatment.has_prior_mi", "value": true}, {"op": "eq", "path": "context.treatment.has_atrial_fibrillation", "value": true}, {"op": "eq", "path": "context.treatment.has_tachycardia", "value": true}, {"op": "eq", "path": "context.treatment.is_pregnant", "value": true}]}	\N	\N	\N	\N	\N	251	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+4272f994-cbfc-4040-b6ca-7b1c05404ef0	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_NO_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY	CONDITION	No specific clinical situation (monotherapy tier)	KHÔNG CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc đơn trị)	{"not": {"any": [{"op": "eq", "path": "input.has_heart_failure", "value": true}, {"op": "eq", "path": "context.treatment.has_angina", "value": true}, {"op": "eq", "path": "context.treatment.has_prior_mi", "value": true}, {"op": "eq", "path": "context.treatment.has_atrial_fibrillation", "value": true}, {"op": "eq", "path": "context.treatment.has_tachycardia", "value": true}, {"op": "eq", "path": "context.treatment.is_pregnant", "value": true}]}}	\N	\N	\N	\N	\N	252	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+d7d01197-dad4-4378-aeac-cf5c8645a7fc	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_INF_MONOTHERAPY_ADD_BETA_BLOCKER	INFERENCE	Mandate beta-blocker monotherapy	Bắt buộc đơn trị bằng chẹn Beta	\N	{"treatment_preferences": {"combination_options": [["B"]]}}	\N	\N	\N	\N	253	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+296eaf5f-75a3-4190-9ba9-a81544b7f977	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_END_INITIAL_MONOTHERAPY_WITH_BETA_BLOCKER	END	Start beta-blocker monotherapy; reassess at next encounter	Bắt đầu đơn trị bằng chẹn Beta; đánh giá lại ở lần tái khám kế tiếp	\N	\N	{"action_type": "CONSIDER_MONOTHERAPY", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true, "next_medication_follow_up_stage": "INITIAL_REGIMEN"}	\N	\N	\N	254	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+0ab7150b-4413-4da6-a901-dd0339c1efcb	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_END_INITIAL_MONOTHERAPY	END	Start monotherapy; reassess at next encounter	Bắt đầu đơn trị; đánh giá lại ở lần tái khám kế tiếp	\N	\N	{"action_type": "CONSIDER_MONOTHERAPY", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true, "next_medication_follow_up_stage": "INITIAL_REGIMEN"}	\N	\N	\N	26	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+5543a801-eb27-49fd-ac53-d66968aa5d85	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_INF_INITIATE_TWO_DRUG_LOW_DOSE	INFERENCE	Drug therapy: start with 2 low-dose drugs (A combined with C or D)	Điều trị thuốc KHỞI ĐẦU BẰNG 2 THUỐC LIỀU THẤP (kết hợp A cùng C hoặc D)	\N	{"treatment_preferences": {"dose_strategy": "LOW_DOSE", "combination_options": [["A", "C"], ["A", "D"]]}}	\N	\N	\N	\N	27	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+3ad64952-2466-4c45-abc4-454a7312c8e8	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS	INFERENCE	Determine specific clinical situations relevant to beta-blocker add-on	Xác định tình huống lâm sàng đặc hiệu liên quan đến việc thêm chẹn Beta	\N	{"treatment": {"has_angina": false, "is_pregnant": false, "has_prior_mi": false, "has_tachycardia": false, "has_atrial_fibrillation": false}, "operations": [{"op": "COPY_PATH", "to_path": "context.treatment.has_angina", "required": false, "from_path": "input.has_angina"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_prior_mi", "required": false, "from_path": "input.has_prior_mi"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_atrial_fibrillation", "required": false, "from_path": "input.has_atrial_fibrillation"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_tachycardia", "required": false, "from_path": "input.has_tachycardia"}, {"op": "COPY_PATH", "to_path": "context.treatment.is_pregnant", "required": false, "from_path": "input.is_pregnant"}]}	\N	\N	\N	\N	28	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+26bbd0c2-0892-4a12-bf29-f7d6ce9c7fcc	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_HAS_SPECIFIC_CLINICAL_SITUATION	CONDITION	Has specific clinical situation (heart failure, angina, post-MI, atrial fibrillation, tachycardia, or pregnancy)	CÓ CÁC TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU: SUY TIM, ĐAU THẮT NGỰC, SAU NMCT, RUNG NHĨ, NHỊP TIM NHANH, THAI KỲ	{"any": [{"op": "eq", "path": "input.has_heart_failure", "value": true}, {"op": "eq", "path": "context.treatment.has_angina", "value": true}, {"op": "eq", "path": "context.treatment.has_prior_mi", "value": true}, {"op": "eq", "path": "context.treatment.has_atrial_fibrillation", "value": true}, {"op": "eq", "path": "context.treatment.has_tachycardia", "value": true}, {"op": "eq", "path": "context.treatment.is_pregnant", "value": true}]}	\N	\N	\N	\N	\N	29	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+66f9169d-4cff-485d-a4b1-03595a6b73fd	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_NO_SPECIFIC_CLINICAL_SITUATION	CONDITION	No specific clinical situation	KHÔNG CÓ CÁC TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU	{"not": {"any": [{"op": "eq", "path": "input.has_heart_failure", "value": true}, {"op": "eq", "path": "context.treatment.has_angina", "value": true}, {"op": "eq", "path": "context.treatment.has_prior_mi", "value": true}, {"op": "eq", "path": "context.treatment.has_atrial_fibrillation", "value": true}, {"op": "eq", "path": "context.treatment.has_tachycardia", "value": true}, {"op": "eq", "path": "context.treatment.is_pregnant", "value": true}]}}	\N	\N	\N	\N	\N	30	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+bfa41aac-49c8-4783-a749-c16d1ab6630b	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_INF_ADD_BETA_BLOCKER	INFERENCE	Add beta-blocker	Thêm thuốc chẹn Beta	\N	{"treatment_preferences": {"additional_drug_classes": ["B"]}}	\N	\N	\N	\N	31	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+b34dd726-10bb-4a65-9ae8-04e45c9e0a7d	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_END_INITIAL_TWO_DRUG_WITH_BETA_BLOCKER	END	Start 2-drug low-dose combination plus beta-blocker; reassess at next encounter	Bắt đầu phối hợp 2 thuốc liều thấp kèm chẹn Beta; đánh giá lại ở lần tái khám kế tiếp	\N	\N	{"action_type": "INITIAL_TWO_DRUG_COMBINATION", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true, "next_medication_follow_up_stage": "INITIAL_REGIMEN"}	\N	\N	\N	32	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+befb1aa1-6f93-4950-81c3-1a3dedf33415	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_END_INITIAL_TWO_DRUG	END	Start 2-drug low-dose combination; reassess at next encounter	Bắt đầu phối hợp 2 thuốc liều thấp; đánh giá lại ở lần tái khám kế tiếp	\N	\N	{"action_type": "INITIAL_TWO_DRUG_COMBINATION", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true, "next_medication_follow_up_stage": "INITIAL_REGIMEN"}	\N	\N	\N	33	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+32c801c0-624b-40dd-b2b0-b9c8d7389aaa	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_TARGET_ACHIEVED	CONDITION	BP target achieved on current regimen	Đạt đích điều trị với phác đồ hiện tại	{"all": [{"op": "lt", "path": "input.current_clinic_sbp", "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"}, {"op": "lt", "path": "input.current_clinic_dbp", "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"}]}	\N	\N	\N	\N	\N	34	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+2f8e22b6-cd6c-4f5d-ac45-741362c3d8db	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_TARGET_NOT_ACHIEVED	CONDITION	BP target not achieved on current regimen	Không đạt đích điều trị với phác đồ hiện tại	{"any": [{"op": "gte", "path": "input.current_clinic_sbp", "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"}, {"op": "gte", "path": "input.current_clinic_dbp", "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"}]}	\N	\N	\N	\N	\N	35	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+a9119f90-ae41-462e-ab81-c79045e2583a	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_END_MAINTAIN_AND_MONITOR	END	Maintain current regimen and monitor	Duy trì phác đồ hiện tại và theo dõi	\N	\N	{"action_type": "MAINTAIN_CURRENT_REGIMEN", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}	\N	\N	\N	36	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+2e946eea-c9f9-4e03-b9b8-5bc05acfc569	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_FOLLOWUP_INITIAL_STAGE	CONDITION	Follow-up on the initial regimen, target not achieved	Tái khám ở giai đoạn phác đồ ban đầu, chưa đạt đích	{"op": "eq", "path": "input.medication_follow_up_stage", "value": "INITIAL_REGIMEN"}	\N	\N	\N	\N	\N	37	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+b5369af0-b0bc-4359-93c4-1a21e128604b	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_FOLLOWUP_ESCALATED_STAGE	CONDITION	Follow-up already on an escalated 3-drug regimen, still not achieved	Tái khám đã ở phác đồ 3 thuốc, vẫn chưa đạt đích	{"op": "eq", "path": "input.medication_follow_up_stage", "value": "ESCALATED_REGIMEN"}	\N	\N	\N	\N	\N	38	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+94fda433-bcf3-4f59-9f9f-19a26e18ea1f	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY	INFERENCE	Determine whether the prior regimen was monotherapy or a 2-drug combination	Xác định phác đồ trước đó là đơn trị hay phối hợp 2 thuốc	\N	{"treatment": {"was_on_monotherapy": false}, "operations": [{"op": "COPY_PATH", "to_path": "context.treatment.was_on_monotherapy", "required": false, "from_path": "input.was_on_monotherapy"}]}	\N	\N	\N	\N	39	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+d08684eb-bc5d-4802-92ec-dd584cbe87f3	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_WAS_ON_MONOTHERAPY	CONDITION	Prior regimen was monotherapy	Phác đồ trước đó là đơn trị	{"op": "eq", "path": "context.treatment.was_on_monotherapy", "value": true}	\N	\N	\N	\N	\N	40	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+9dd09dfd-b54f-4bb4-a6ae-9ddce4b1d125	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_WAS_NOT_ON_MONOTHERAPY	CONDITION	Prior regimen was already a 2-drug combination	Phác đồ trước đó đã là phối hợp 2 thuốc	{"op": "eq", "path": "context.treatment.was_on_monotherapy", "value": false}	\N	\N	\N	\N	\N	41	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+1f681bf7-e18d-4a04-927e-5d0a1cf08174	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG	INFERENCE	Increase dose of 2-drug combination, or move to 3-drug combination (A+C+D)	Tăng liều phối hợp 2 thuốc, hoặc chuyển phối hợp 3 thuốc (A+C+D)	\N	{"treatment_preferences": {"escalation_options": [{"strategy": "INCREASE_DOSE_TWO_DRUG"}, {"classes": ["A", "C", "D"], "strategy": "THREE_DRUG_COMBINATION"}]}}	\N	\N	\N	\N	42	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+fa4f7d03-e5d2-4dc5-b57b-224aec159421	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION	INFERENCE	Determine specific clinical situations relevant to beta-blocker add-on (escalation tier)	Xác định tình huống lâm sàng đặc hiệu liên quan đến việc thêm chẹn Beta (bậc leo thang)	\N	{"treatment": {"has_angina": false, "is_pregnant": false, "has_prior_mi": false, "has_tachycardia": false, "has_atrial_fibrillation": false}, "operations": [{"op": "COPY_PATH", "to_path": "context.treatment.has_angina", "required": false, "from_path": "input.has_angina"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_prior_mi", "required": false, "from_path": "input.has_prior_mi"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_atrial_fibrillation", "required": false, "from_path": "input.has_atrial_fibrillation"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_tachycardia", "required": false, "from_path": "input.has_tachycardia"}, {"op": "COPY_PATH", "to_path": "context.treatment.is_pregnant", "required": false, "from_path": "input.is_pregnant"}]}	\N	\N	\N	\N	260	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+6967695d-669f-4cb2-baec-e8ff9d9b50fa	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION	CONDITION	Has specific clinical situation (escalation tier)	CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc leo thang)	{"any": [{"op": "eq", "path": "input.has_heart_failure", "value": true}, {"op": "eq", "path": "context.treatment.has_angina", "value": true}, {"op": "eq", "path": "context.treatment.has_prior_mi", "value": true}, {"op": "eq", "path": "context.treatment.has_atrial_fibrillation", "value": true}, {"op": "eq", "path": "context.treatment.has_tachycardia", "value": true}, {"op": "eq", "path": "context.treatment.is_pregnant", "value": true}]}	\N	\N	\N	\N	\N	261	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+33ab6f43-a6bc-416c-9fe9-72eb2bbb3bc1	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_C_NO_SPECIFIC_CLINICAL_SITUATION_ESCALATION	CONDITION	No specific clinical situation (escalation tier)	KHÔNG CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc leo thang)	{"not": {"any": [{"op": "eq", "path": "input.has_heart_failure", "value": true}, {"op": "eq", "path": "context.treatment.has_angina", "value": true}, {"op": "eq", "path": "context.treatment.has_prior_mi", "value": true}, {"op": "eq", "path": "context.treatment.has_atrial_fibrillation", "value": true}, {"op": "eq", "path": "context.treatment.has_tachycardia", "value": true}, {"op": "eq", "path": "context.treatment.is_pregnant", "value": true}]}}	\N	\N	\N	\N	\N	262	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+a115f19f-3daa-48dd-ae07-51c72fd81f35	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_INF_ESCALATE_ADD_BETA_BLOCKER	INFERENCE	Add beta-blocker to escalated regimen	Thêm chẹn Beta vào phác đồ leo thang	\N	{"treatment_preferences": {"additional_drug_classes": ["B"]}}	\N	\N	\N	\N	263	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+80cb6ee6-60b8-4e3a-a1be-5e4d6c679252	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_END_ESCALATE_REGIMEN_WITH_BETA_BLOCKER	END	Increase dose or move to 3-drug combination plus beta-blocker; reassess at next encounter	Tăng liều hoặc chuyển phối hợp 3 thuốc kèm chẹn Beta; đánh giá lại ở lần tái khám kế tiếp	\N	\N	{"action_type": "INCREASE_DOSE_OR_THREE_DRUG_COMBINATION", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true, "next_medication_follow_up_stage": "ESCALATED_REGIMEN"}	\N	\N	\N	264	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+86d48bf7-b0e6-4a4a-82c8-d43a246eec43	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_END_ESCALATE_REGIMEN	END	Increase dose or move to 3-drug combination; reassess at next encounter	Tăng liều hoặc chuyển phối hợp 3 thuốc; đánh giá lại ở lần tái khám kế tiếp	\N	\N	{"action_type": "INCREASE_DOSE_OR_THREE_DRUG_COMBINATION", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true, "next_medication_follow_up_stage": "ESCALATED_REGIMEN"}	\N	\N	\N	43	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+e2b4390c-7ec9-454c-b177-020388b33592	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_LINK_RESISTANT_HYPERTENSION	LINK	Tree 14: Resistant Hypertension	Cây 14: THA Kháng Trị	\N	\N	\N	\N	resistant-hypertension	\N	44	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+edc2fa79-a2e7-46fe-b08b-72d652082cec	fb619e2e-f9f2-4f79-8ac4-12561707ed21	T8_START_BP_TARGET_STATUS	START	Tree 3: Blood pressure threshold and treatment target	Cây 3: Ngưỡng huyết áp và đích điều trị	\N	\N	\N	\N	\N	\N	0	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+68d798f3-7959-472a-b269-77b25ce17f15	fb619e2e-f9f2-4f79-8ac4-12561707ed21	T8_C_BELOW_TARGET	CONDITION	SBP < 130 mmHg and DBP < 85 mmHg	HATT < 130 mmHg và HATTr < 85 mmHg	{"all": [{"op": "lt", "path": "input.current_clinic_sbp", "value": 130}, {"op": "lt", "path": "input.current_clinic_dbp", "value": 85}]}	\N	\N	\N	\N	\N	1	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+3fdce53a-e7ae-49cf-846e-81c2b57bc203	fb619e2e-f9f2-4f79-8ac4-12561707ed21	T8_C_ABOVE_TARGET	CONDITION	SBP >= 130 mmHg or DBP >= 85 mmHg	HATT >= 130 mmHg hoặc HATTr >= 85 mmHg	{"any": [{"op": "gte", "path": "input.current_clinic_sbp", "value": 130}, {"op": "gte", "path": "input.current_clinic_dbp", "value": 85}]}	\N	\N	\N	\N	\N	2	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+00182e46-02d8-44f3-90aa-aeed4b86eb4e	fb619e2e-f9f2-4f79-8ac4-12561707ed21	T8_INF_REGIMEN_OPTIONS	INFERENCE	A + C, or A + D (ACE inhibitor/ARB + calcium-channel blocker, or ACE inhibitor/ARB + thiazide-like diuretic)	A + C, hoặc A + D (ƯCMC/CTTA + CKCa, hoặc ƯCMC/CTTA + LT Thiazide-like)	\N	{"treatment_preferences": {"combination_options": [["A", "C"], ["A", "D"]]}}	\N	\N	\N	\N	3	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+01ffe021-3e41-4b3c-a235-0449afedf1a8	fb619e2e-f9f2-4f79-8ac4-12561707ed21	T8_C_HAS_CV_RISK	CONDITION	Has atherosclerotic cardiovascular disease (coronary artery disease, stroke, or cardiovascular disease) or high cardiovascular risk	Có bệnh tim mạch do xơ vữa (bệnh mạch vành, đột quỵ, bệnh tim mạch) hoặc nguy cơ tim mạch cao	{"any": [{"op": "eq", "path": "input.has_coronary_artery_disease", "value": true}, {"op": "eq", "path": "input.has_stroke", "value": true}, {"op": "eq", "path": "input.has_cardiovascular_disease", "value": true}, {"op": "eq", "path": "context.risk.level", "value": "HIGH"}]}	\N	\N	\N	\N	\N	4	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+b52652c1-3b14-4859-af3f-07d26ff3dbce	fb619e2e-f9f2-4f79-8ac4-12561707ed21	T8_C_NO_CV_RISK	CONDITION	No atherosclerotic cardiovascular disease and not high cardiovascular risk	Không có bệnh tim mạch do xơ vữa và không thuộc nhóm nguy cơ tim mạch cao	{"not": {"any": [{"op": "eq", "path": "input.has_coronary_artery_disease", "value": true}, {"op": "eq", "path": "input.has_stroke", "value": true}, {"op": "eq", "path": "input.has_cardiovascular_disease", "value": true}, {"op": "eq", "path": "context.risk.level", "value": "HIGH"}]}}	\N	\N	\N	\N	\N	5	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+5020708d-fda3-4d55-aa4f-b30692011a7f	fb619e2e-f9f2-4f79-8ac4-12561707ed21	T8_INF_ADD_SGLT2I_GLP1RA	INFERENCE	Add SGLT2i or GLP-1RA	Bổ sung SGLT2i hoặc GLP-1RA	\N	{"treatment_preferences": {"additional_drug_classes": ["SGLT2_INHIBITOR", "GLP1_RECEPTOR_AGONIST"]}}	\N	\N	\N	\N	6	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+e726ffd6-3e0f-483b-aa91-846208d522c1	fb619e2e-f9f2-4f79-8ac4-12561707ed21	T8_INF_MAINTAIN_REGIMEN	INFERENCE	Maintain current regimen	Duy trì phác đồ	\N	{"treatment": {"status": "MAINTAIN_CURRENT_REGIMEN"}}	\N	\N	\N	\N	7	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+ec234a72-148a-4e64-ade2-27d5d8ee5657	fb619e2e-f9f2-4f79-8ac4-12561707ed21	T8_LINK_A_ESSENTIAL_TREATMENT_STRATEGY	LINK	Tree 4: Essential treatment strategy	Cây 4: Chiến lược điều trị thiết yếu	{"op": "eq", "path": "input.facility_capability", "value": "LIMITED_RESOURCES"}	\N	\N	\N	essential-treatment-strategy	\N	8	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+c118920d-cb09-4538-9c63-60bb03669b67	fb619e2e-f9f2-4f79-8ac4-12561707ed21	T8_LINK_A_OPTIMAL_TREATMENT_STRATEGY	LINK	Tree 5: Optimal treatment strategy	Cây 5: Chiến lược điều trị tối ưu	{"op": "eq", "path": "input.facility_capability", "value": "FULL_RESOURCES"}	\N	\N	\N	optimal-treatment-strategy	\N	9	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+6a12facf-1a70-4baf-ba74-c9eed313d3dd	fb619e2e-f9f2-4f79-8ac4-12561707ed21	T8_LINK_B_ESSENTIAL_TREATMENT_STRATEGY	LINK	Tree 4: Essential treatment strategy	Cây 4: Chiến lược điều trị thiết yếu	{"op": "eq", "path": "input.facility_capability", "value": "LIMITED_RESOURCES"}	\N	\N	\N	essential-treatment-strategy	\N	10	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+31bd32b3-6acc-4654-9f8e-fc68e7f395d9	fb619e2e-f9f2-4f79-8ac4-12561707ed21	T8_LINK_B_OPTIMAL_TREATMENT_STRATEGY	LINK	Tree 5: Optimal treatment strategy	Cây 5: Chiến lược điều trị tối ưu	{"op": "eq", "path": "input.facility_capability", "value": "FULL_RESOURCES"}	\N	\N	\N	optimal-treatment-strategy	\N	11	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+eff9029d-c3bb-4106-8fc6-7cfda5d04df6	fb619e2e-f9f2-4f79-8ac4-12561707ed21	T8_GLOBAL_ABBREVIATION_GLOSSARY	GLOBAL	Abbreviation glossary	Chú giải viết tắt	\N	\N	\N	{"kind": "ABBREVIATION_GLOSSARY", "entries": {"6_MRA": {"label": "MRA: thuốc đối kháng thụ thể mineralocorticoid"}, "5_SGLT2i": {"label": "SGLT2i: thuốc ức chế đồng vận chuyển Natri-glucose 2"}, "2_D_loi_tieu": {"LT": "lợi tiểu", "label": "D: lợi tiểu"}, "4_B_chen_Beta": {"CB": "chẹn Beta", "label": "B: chẹn Beta"}, "1_A_uc_che_he_RAS": {"ARNI": "chẹn thụ thể Angiotensine-neprisyline", "CTTA": "chẹn thụ thể angiotensin II", "UCMC": "ức chế men chuyển", "label": "A: ức chế hệ RAS"}, "3_C_chen_kenh_Canxi": {"CKCa": "chẹn kênh Canxi", "label": "C: chẹn kênh Canxi"}}, "purpose": "Chú giải các chữ viết tắt nhóm thuốc dùng trong Cây 8 (hệ thống A/B/C/D), theo chú thích Bảng 18."}	\N	\N	99	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+d4a79b1e-2fd3-5526-ba61-0afcc5e4549e	c185afaa-623f-5f0d-b8b2-792899dee988	T9_START	START	Tree 3: Blood Pressure Thresholds and Targets	Cây 3 Ngưỡng huyết áp và đích điều trị	\N	\N	\N	\N	\N	\N	1	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+8b75cbfa-8d26-519f-a80b-d346aa4c37fb	c185afaa-623f-5f0d-b8b2-792899dee988	T9_C_BP1	CONDITION	18-69 years and SBP >= 130 or DBP >= 85	18-69 tuổi và HATT >= 130 mmHg HATTr >= 85 mmHg	{"all": [{"all": [{"op": "gte", "path": "input.age", "value": 18}, {"op": "lte", "path": "input.age", "value": 69}]}, {"any": [{"op": "gte", "path": "input.current_clinic_sbp", "value": 130}, {"op": "gte", "path": "input.current_clinic_dbp", "value": 85}]}]}	\N	\N	\N	\N	\N	2	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+103a7134-7357-55fd-922e-a4bfb6d3fe11	c185afaa-623f-5f0d-b8b2-792899dee988	T9_C_BP2	CONDITION	>70 years and SBP >= 140 or DBP >= 90	>70 tuổi và HATT >= 140 mmHg HATTr >= 90 mmHg	{"all": [{"op": "gt", "path": "input.age", "value": 70}, {"any": [{"op": "gte", "path": "input.current_clinic_sbp", "value": 140}, {"op": "gte", "path": "input.current_clinic_dbp", "value": 90}]}]}	\N	\N	\N	\N	\N	3	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+0eca67b2-9c2e-5614-993f-951e970b34ef	c185afaa-623f-5f0d-b8b2-792899dee988	T9_C_BP3	CONDITION	18-69 years and SBP < 130 and DBP < 85	18-69 tuổi và HATT < 130 mmHg HATTr < 85 mmHg	{"all": [{"op": "gte", "path": "input.age", "value": 18}, {"op": "lte", "path": "input.age", "value": 69}, {"op": "lt", "path": "input.current_clinic_sbp", "value": 130}, {"op": "lt", "path": "input.current_clinic_dbp", "value": 85}]}	\N	\N	\N	\N	\N	4	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+d4050ff3-58a2-53b2-ba4a-876f8d3fc3e7	c185afaa-623f-5f0d-b8b2-792899dee988	T9_C_BP4	CONDITION	>70 years and SBP < 140 and DBP < 90	>70 tuổi và HATT < 140 mmHg HATTr < 90 mmHg	{"all": [{"op": "gt", "path": "input.age", "value": 70}, {"op": "lt", "path": "input.current_clinic_sbp", "value": 140}, {"op": "lt", "path": "input.current_clinic_dbp", "value": 90}]}	\N	\N	\N	\N	\N	5	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+f551f2cf-18f7-5261-a322-a02e58f1bf30	c185afaa-623f-5f0d-b8b2-792899dee988	T9_C_AMI	CONDITION	Myocardial Infarction or Acute Coronary Syndrome	Nhồi máu cơ tim hoặc hội chứng vành cấp	{"op": "eq", "path": "input.has_mi_acs", "value": true}	\N	\N	\N	\N	\N	6	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+d26f0496-b35f-5909-8975-c2329b388ea9	c185afaa-623f-5f0d-b8b2-792899dee988	T9_C_CCS_ANGINA	CONDITION	Chronic Coronary Syndrome with Angina	Hội chứng vành mạn có cơn đau thắt ngực	{"op": "eq", "path": "input.has_ccs_angina", "value": true}	\N	\N	\N	\N	\N	7	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+6de65559-da01-52b5-94e5-a2a916e248e8	c185afaa-623f-5f0d-b8b2-792899dee988	T9_C_CCS_REVASC	CONDITION	Chronic Coronary Syndrome after Revascularization	Hội chứng vành mạn sau tái thông	{"op": "eq", "path": "input.has_ccs_revasc", "value": true}	\N	\N	\N	\N	\N	8	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+e178b23e-f8e8-5d9f-8207-34404155166b	c185afaa-623f-5f0d-b8b2-792899dee988	T9_C_CABG	CONDITION	Post CABG	Sau phẫu thuật bắc cầu vành CABG	{"op": "eq", "path": "input.has_cabg", "value": true}	\N	\N	\N	\N	\N	9	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+6299ea87-2ba4-52b4-9752-bbd2a796e0ff	c185afaa-623f-5f0d-b8b2-792899dee988	T9_A_B_3Y	INFERENCE	Combine Beta-blocker for 3 years	Phối hợp thuốc B trong 3 năm	\N	{"regimen_modifier": "add_beta_blocker_3_years"}	{"action_type": "BETA_BLOCKER_3_YEARS"}	\N	\N	\N	10	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+b2f92cb6-82fc-52ba-a4ca-54257fc2f0b7	c185afaa-623f-5f0d-b8b2-792899dee988	T9_A_B_OR_C	INFERENCE	Combine Beta-blocker or CCB	Phối hợp thuốc B hoặc C	\N	{"regimen_modifier": "add_beta_blocker_or_ccb"}	{"action_type": "BETA_BLOCKER_OR_CCB"}	\N	\N	\N	11	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+ef39acd8-3c32-5eda-bca8-a6c79adfcaf2	c185afaa-623f-5f0d-b8b2-792899dee988	T9_A_NO_B	INFERENCE	No routine indication for Beta-blocker	Không có chỉ định thuốc B thường quy	\N	{"regimen_modifier": "no_routine_beta_blocker"}	{"action_type": "NO_ROUTINE_BETA_BLOCKER"}	\N	\N	\N	12	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+bc668dbe-04db-5f5d-a80d-fd1a51f5037b	c185afaa-623f-5f0d-b8b2-792899dee988	T9_A_B_EARLY	INFERENCE	Start Beta-blocker as early as possible	Bắt đầu thuốc B sớm nhất có thể	\N	{"regimen_modifier": "early_beta_blocker"}	{"action_type": "EARLY_BETA_BLOCKER"}	\N	\N	\N	13	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+de89d76b-1556-5e3c-b13d-902195434de3	c185afaa-623f-5f0d-b8b2-792899dee988	T9_LINK_4_5	LINK	Tree 4: Essential Strategy or Tree 5: Optimal Strategy	Cây 4: Chiến lược điều trị thiết yếu hoặc Cây 5: Chiến lược điều trị tối ưu	\N	\N	\N	\N	essential-optimal-strategy	\N	14	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+c92773f1-5078-502d-b5eb-a9a8c72f9b52	c185afaa-623f-5f0d-b8b2-792899dee988	T9_G_DRUGS	GLOBAL	First-line drugs: A + B. Add C, D or MRA when necessary	Thuốc chỉ định hàng đầu: A + B thêm thuốc C, D hoặc MRA khi cần	\N	\N	\N	{"add_on_drugs": ["C", "D", "MRA"], "first_line_drugs": ["A", "B"]}	\N	\N	15	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+0878afaa-2a79-5188-94f6-c27d064f9402	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_START	START	Tree 3: Blood Pressure Thresholds and Targets	Cây 3 Ngưỡng huyết áp và đích điều trị	\N	\N	\N	\N	\N	\N	1	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+9bc0e11b-2f69-5420-a680-6165ec1e61fd	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_C_BP1	CONDITION	SBP < 130 and DBP < 85	HATT < 130 mmHg và HATTr < 85 mmHg	{"all": [{"op": "lt", "path": "input.current_clinic_sbp", "value": 130}, {"op": "lt", "path": "input.current_clinic_dbp", "value": 85}]}	\N	\N	\N	\N	\N	2	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+0d880900-1578-512f-993d-012bf287ed9c	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_C_BP2	CONDITION	SBP >= 130 or DBP >= 85	HATT >= 130 mmHg Hoặc HATTr >= 85 mmHg	{"any": [{"op": "gte", "path": "input.current_clinic_sbp", "value": 130}, {"op": "gte", "path": "input.current_clinic_dbp", "value": 85}]}	\N	\N	\N	\N	\N	3	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+31a12b62-51e6-595b-bb87-5e214f2f8f97	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_A_EVAL_EF	INFERENCE	Evaluate ejection fraction (EF) and heart structure	Đánh giá phân suất tống máu(EF) và cấu trúc tim	\N	\N	{"action_type": "EVALUATE_EF_AND_STRUCTURE"}	\N	\N	\N	4	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+4e8ed9cf-1693-5ca9-9c3e-6c1abbfc8143	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_C_HFREF	CONDITION	Heart Failure with reduced EF (HFrEF)	Suy tim EF giảm (HFrEF)	{"op": "eq", "path": "input.has_hfref", "value": true}	\N	\N	\N	\N	\N	5	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+3bef0da4-1b69-573b-b077-07a8d46a1584	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_C_HFMREF	CONDITION	Heart Failure with mildly reduced EF (HFmrEF)	Suy tim EF giảm nhẹ (HFmrEF)	{"op": "eq", "path": "input.has_hfmref", "value": true}	\N	\N	\N	\N	\N	6	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+4227dbf8-f310-59cc-9f5f-75bdf08459c8	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_C_HFPEF	CONDITION	Heart Failure with preserved EF (HFpEF)	Suy tim EF bảo tồn (HFpEF)	{"op": "eq", "path": "input.has_hfpef", "value": true}	\N	\N	\N	\N	\N	7	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+49dfc288-d480-5262-a05e-9edad085b25a	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_C_LVH	CONDITION	Left ventricular hypertrophy (LVH)	Phì đại thất trái (LVH)	{"op": "eq", "path": "input.has_lvh", "value": true}	\N	\N	\N	\N	\N	8	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+877ac137-c482-5091-9494-bd882b0cf7cd	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_HFREF	INFERENCE	Combine A + B + D and/or Aldosterone antagonist + SGLT2i. B: (bisoprolol, carvedilol, metoprolol, nebivolol)	Phối hợp A + B + D và/hoặc kháng aldosterone + SGLT2i. B: (bisoprolol, carvedilol, metoprolol, nebivolol)	\N	\N	{"action_type": "COMBINE_ABD_ALDO_SGLT2I"}	\N	\N	\N	9	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+465565d5-433a-563c-8b06-78b98785b814	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_HFMREF_1	INFERENCE	Combine D and SGLT2i and Aldosterone antagonist	Phối hợp D và SGLT2i và kháng Aldosterone	\N	\N	{"action_type": "COMBINE_D_SGLT2I_ALDO"}	\N	\N	\N	10	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+339634e2-d9f3-5366-b8b0-60cba53abba6	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_HFMREF_2	INFERENCE	Add A (ARNI or CTTA or UCMC)	Phối hợp thêm A (ARNI hoặc CTTA hoặc UCMC)	\N	\N	{"action_type": "ADD_A_ARNI_CTTA_UCMC"}	\N	\N	\N	11	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+30cee5c4-7eba-556e-8b51-dea56475179e	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_HFPEF_1	INFERENCE	Combine D and SGLT2i and Aldosterone antagonist	Phối hợp D và SGLT2i và kháng Aldosterone	\N	\N	{"action_type": "COMBINE_D_SGLT2I_ALDO"}	\N	\N	\N	12	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+debdecef-88df-5601-8cfc-b5eb91b8b08f	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_HFPEF_2	INFERENCE	Add A (ARNI and CTTA)	Phối hợp thêm A (ARNI và CTTA)	\N	\N	{"action_type": "ADD_A_ARNI_CTTA"}	\N	\N	\N	13	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+5880accb-c184-5bfe-a6c0-78845c4ba7be	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_LVH	INFERENCE	Combine A + C or A + D	Phối hợp A + C hoặc A + D	\N	\N	{"action_type": "COMBINE_AC_OR_AD"}	\N	\N	\N	14	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_C_TARGET_NOT_REACHED	CONDITION	BP target not reached	HA không đạt đích điều trị	{"op": "eq", "path": "input.bp_target_reached", "value": false}	\N	\N	\N	\N	\N	15	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+d8271d2d-79ff-50e5-be69-ee29cc68f432	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_C_TARGET_REACHED	CONDITION	BP target reached	HA đã đạt đích điều trị	{"op": "eq", "path": "input.bp_target_reached", "value": true}	\N	\N	\N	\N	\N	16	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+3f8ae7a2-1a20-5a7a-8f80-0abb5eed489e	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_ADD_CCB	INFERENCE	Add Dihydropyridine CCB	Thêm CKCa nhóm Dihydropyridine	\N	\N	{"action_type": "ADD_DIHYDROPYRIDINE_CCB"}	\N	\N	\N	17	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+ca0c7576-4117-510d-b28b-6eff717791f7	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_ADJUST	INFERENCE	Adjust drug dosage and monitor	Điều chỉnh liều lượng thuốc và theo dõi	\N	\N	{"action_type": "ADJUST_DOSAGE_AND_MONITOR"}	\N	\N	\N	18	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+1208d7cb-f28c-5131-afad-9249828c164c	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_MAINTAIN	INFERENCE	Maintain regimen	Duy trì phác đồ	\N	\N	{"action_type": "MAINTAIN_REGIMEN"}	\N	\N	\N	19	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+a1b2c3d4-e5f6-5a7b-8c9d-0e1f2a3b4c5d	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_LINK_ESSENTIAL	LINK	Tree 4: Essential Treatment Strategy	Cây 4: Chiến lược điều trị thiết yếu	\N	\N	\N	\N	essential-treatment-strategy	\N	20	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+b2c3d4e5-f6a7-5b8c-9d0e-1f2a3b4c5d6e	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_LINK_OPTIMAL	LINK	Tree 5: Optimal Treatment Strategy	Cây 5: Chiến lược điều trị tối ưu	\N	\N	\N	\N	optimal-treatment-strategy	\N	21	2026-07-05 00:00:00+00	2026-07-05 00:00:00+00
+b091a990-61f9-47c6-bb4b-a0a34ac6e375	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_START_BP_TARGET_STATUS	START	Tree 3: Blood pressure threshold and treatment target	Cây 3: Ngưỡng huyết áp và đích điều trị	\N	\N	\N	\N	\N	\N	0	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+2284cf0e-04f3-4f9e-9d37-22559644355b	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_INF_DETERMINE_TRANSPLANT_STATUS	INFERENCE	Determine kidney transplant status	Xác định tình trạng ghép thận	\N	{"treatment": {"has_kidney_transplant": false}, "operations": [{"op": "COPY_PATH", "to_path": "context.treatment.has_kidney_transplant", "required": false, "from_path": "input.has_kidney_transplant"}]}	\N	\N	\N	\N	1	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+54d4f809-2b6b-4bef-9c19-2a8a1b68b85a	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_C_NOT_TRANSPLANTED	CONDITION	Not kidney-transplanted	BỆNH NHÂN KHÔNG GHÉP THẬN	{"op": "eq", "path": "context.treatment.has_kidney_transplant", "value": false}	\N	\N	\N	\N	\N	2	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+5b5060fb-0a8d-4172-a2b4-d5dea8cb61ef	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_C_TRANSPLANTED	CONDITION	Kidney-transplanted	BỆNH NHÂN ĐÃ GHÉP THẬN	{"op": "eq", "path": "context.treatment.has_kidney_transplant", "value": true}	\N	\N	\N	\N	\N	3	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+8a867ec1-5ea6-4ce3-8e0c-840f333a5aa4	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_INF_REGIMEN_OPTIONS	INFERENCE	A + C, or A + D (ACE inhibitor/ARB + calcium-channel blocker, or ACE inhibitor/ARB + thiazide-like diuretic)	A + C, hoặc A + D (ƯCMC/CTTA + CKCa, hoặc ƯCMC/CTTA + LT Thiazide-like)	\N	{"treatment_preferences": {"combination_options": [["A", "C"], ["A", "D"]]}}	\N	\N	\N	\N	4	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+6dc877e2-2d2a-46c7-a8d1-cc3a4388401d	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_INF_DETERMINE_CREATININE_TEST_STATUS	INFERENCE	Determine whether baseline creatinine was tested before	Xác định đã xét nghiệm chỉ số creatinine nền trước đó hay chưa	\N	{"treatment": {"has_prior_creatinine_test": false}, "operations": [{"op": "COPY_PATH", "to_path": "context.treatment.has_prior_creatinine_test", "required": false, "from_path": "input.has_prior_creatinine_test"}]}	\N	\N	\N	\N	5	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+8e360d41-4cb5-48bf-a6b2-5cd1f5796d5f	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_C_NO_PRIOR_CREATININE_TEST	CONDITION	No prior creatinine test	Chưa xét nghiệm chỉ số creatinine trước đó	{"op": "eq", "path": "context.treatment.has_prior_creatinine_test", "value": false}	\N	\N	\N	\N	\N	6	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+02ab528c-3f90-46e7-a135-db9778870b64	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_C_HAS_PRIOR_CREATININE_TEST	CONDITION	Creatinine tested 2-4 weeks prior	Từng xét nghiệm chỉ số creatinine trước đó 2-4 tuần	{"op": "eq", "path": "context.treatment.has_prior_creatinine_test", "value": true}	\N	\N	\N	\N	\N	7	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+c3e81015-fa4a-462e-ba74-369fb405da78	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_ACTION_TEST_CREATININE_AND_MONITOR	ACTION	Test creatinine and monitor after 2-4 weeks	Xét nghiệm chỉ số creatinine và theo dõi sau 2-4 tuần	\N	\N	{"action_type": "TEST_CREATININE_AND_MONITOR", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}	\N	\N	\N	8	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+d5af70df-5c22-4524-96e9-a6fd37acfaff	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_INF_LABETALOL_MGSO4	INFERENCE	Labetalol + Magnesium Sulfate	Labetalol (Chẹn Beta) +\nMagnesium Sulfate	\N	\N	\N	\N	\N	\N	29	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+13a3e412-984a-467f-84ac-27c0c70cb892	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_INF_DETERMINE_RAS_INHIBITOR_USE_STATUS	INFERENCE	Determine whether the patient is still using the RAS-inhibitor (class A)	Xác định còn dùng thuốc nhóm A (ức chế RAS) hay không	\N	{"treatment": {"still_using_ras_inhibitor": true}, "operations": [{"op": "COPY_PATH", "to_path": "context.treatment.still_using_ras_inhibitor", "required": false, "from_path": "input.still_using_ras_inhibitor"}]}	\N	\N	\N	\N	9	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+bbf8316d-9146-4b49-87c0-0af67392130b	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_C_STILL_USING_RAS_INHIBITOR	CONDITION	Still using the RAS-inhibitor (class A)	Có còn dùng thuốc nhóm A (ức chế RAS)	{"op": "eq", "path": "context.treatment.still_using_ras_inhibitor", "value": true}	\N	\N	\N	\N	\N	10	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+7b695edb-dd31-4e32-af13-3feb66c48e66	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_C_NOT_USING_RAS_INHIBITOR	CONDITION	Has stopped or is not using the RAS-inhibitor (class A)	Đã ngừng A hoặc không dùng A	{"op": "eq", "path": "context.treatment.still_using_ras_inhibitor", "value": false}	\N	\N	\N	\N	\N	11	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+c82a074a-7873-40a8-9874-29f2f9a627a4	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_ACTION_TEST_CREATININE_COMPARE_PRIOR	ACTION	Test creatinine and compare with the prior measurement	Xét nghiệm chỉ số creatinine và đối chiếu với lần đo trước	\N	\N	{"action_type": "TEST_CREATININE_COMPARE_PRIOR", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false}	\N	\N	\N	12	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+6e9613bd-09ce-484f-858c-0dfc5d120cce	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_INF_DETERMINE_CREATININE_INCREASE_STATUS	INFERENCE	Determine whether creatinine increased by more than 30%	Xác định creatinine có tăng >30% hay không	\N	{"treatment": {"creatinine_increased_over_30_percent": false}, "operations": [{"op": "COPY_PATH", "to_path": "context.treatment.creatinine_increased_over_30_percent", "required": false, "from_path": "input.creatinine_increased_over_30_percent"}]}	\N	\N	\N	\N	13	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+5c4039b9-84d2-4187-bf8c-b02fe2350063	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_C_CREATININE_NOT_INCREASED	CONDITION	Creatinine has not increased by more than 30%	Creatinine không tăng >30%	{"op": "eq", "path": "context.treatment.creatinine_increased_over_30_percent", "value": false}	\N	\N	\N	\N	\N	14	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+29a1413a-e96e-45ec-b43c-db26c11789bb	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_C_CREATININE_INCREASED_OVER_30_PERCENT	CONDITION	Creatinine increased by more than 30%	Creatinine tăng >30%	{"op": "eq", "path": "context.treatment.creatinine_increased_over_30_percent", "value": true}	\N	\N	\N	\N	\N	15	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+392b6a0b-7c8e-419b-8fb5-f14a90c3b2f8	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE	ACTION	Maintain regimen	Duy trì phác đồ	\N	\N	{"action_type": "MAINTAIN_CURRENT_REGIMEN", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false}	\N	\N	\N	16	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+8943a52d-445d-4c5f-a33d-e7f71edcda20	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR	ACTION	Reduce dose or stop the RAS-inhibitor (class A) combination	Giảm liều hoặc ngừng phối hợp A	\N	\N	{"action_type": "REDUCE_DOSE_OR_STOP_RAS_INHIBITOR", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false, "requires_clinician_review": true}	\N	\N	\N	17	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+ecc9c7d9-6ed8-4add-b908-f4a36b29bdfa	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR	ACTION	Maintain regimen	Duy trì phác đồ	\N	\N	{"action_type": "MAINTAIN_CURRENT_REGIMEN", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false}	\N	\N	\N	18	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+ab407d81-938c-4f6a-9937-0259bdf2a4b8	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_INF_POST_TRANSPLANT_REGIMEN_OPTIONS	INFERENCE	First-line choice after kidney transplant: C (dihydropyridine CCB) or A (ARB); BP target <130/80 mmHg	Lựa chọn đầu tay sau ghép thận: C (CKCa nhóm Dihydropyridine) hoặc A (CTTA); Mục tiêu HA <130/80 mmHg	\N	{"treatment": {"bp_target": {"dbp": {"upper_exclusive_mmhg": 80}, "sbp": {"upper_exclusive_mmhg": 130}, "source": "TREE_11_POST_TRANSPLANT"}}, "treatment_preferences": {"combination_options": [["C"], ["A"]]}}	\N	\N	\N	\N	19	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+3eaff7e6-b016-4775-907e-d57b14316bf2	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_ACTION_MAINTAIN_REGIMEN_POST_TRANSPLANT	ACTION	Maintain regimen	Duy trì phác đồ	\N	\N	{"action_type": "MAINTAIN_CURRENT_REGIMEN", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false}	\N	\N	\N	20	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+27c5cb2b-1182-402d-9bb4-2ec3739941d2	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_LINK_ESSENTIAL_TREATMENT_STRATEGY	LINK	Tree 4: Essential treatment strategy	Cây 4: Chiến lược điều trị thiết yếu	{"op": "eq", "path": "input.facility_capability", "value": "LIMITED_RESOURCES"}	\N	\N	\N	essential-treatment-strategy	\N	21	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+9f5cb5d2-dff6-44c4-83c0-38f4470cc3d0	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_LINK_OPTIMAL_TREATMENT_STRATEGY	LINK	Tree 5: Optimal treatment strategy	Cây 5: Chiến lược điều trị tối ưu	{"op": "eq", "path": "input.facility_capability", "value": "FULL_RESOURCES"}	\N	\N	\N	optimal-treatment-strategy	\N	22	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+5a4f65a4-1bfd-495f-9b54-9b2413b925ce	6a355fe7-8488-463f-b9f6-3d89d7531387	T11_GLOBAL_ABBREVIATION_GLOSSARY	GLOBAL	Abbreviation glossary	Chú giải viết tắt	\N	\N	\N	{"kind": "ABBREVIATION_GLOSSARY", "entries": {"6_MRA": {"label": "MRA: thuốc đối kháng thụ thể mineralocorticoid"}, "5_SGLT2i": {"label": "SGLT2i: thuốc ức chế đồng vận chuyển Natri-glucose 2"}, "2_D_loi_tieu": {"LT": "lợi tiểu", "label": "D: lợi tiểu"}, "4_B_chen_Beta": {"CB": "chẹn Beta", "label": "B: chẹn Beta"}, "1_A_uc_che_he_RAS": {"ARNI": "chẹn thụ thể Angiotensine-neprisyline", "CTTA": "chẹn thụ thể angiotensin II", "UCMC": "ức chế men chuyển", "label": "A: ức chế hệ RAS"}, "3_C_chen_kenh_Canxi": {"CKCa": "chẹn kênh Canxi", "label": "C: chẹn kênh Canxi"}}, "purpose": "Chú giải các chữ viết tắt nhóm thuốc dùng trong Cây 11 (hệ thống A/B/C/D), theo chú thích Bảng 22."}	\N	\N	99	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+dc98e224-0743-49ec-9111-3c6f66e6fec5	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_START_PREGNANCY_HTN_SEQUENCE	START	Tree 13: Pregnancy sequence / Tree 17: Tree 8 sequence	Cây 13: Trình tự thai kỳ\nCây 17: Trình tự Cây 8	\N	\N	\N	\N	\N	\N	0	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+a671d656-ad9f-4285-aa95-e1fc83c18f34	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_HOME_BP_HIGH	CONDITION	HATN: SBP>=135 mmHg and DBP>=85 mmHg	HATN\nHATT >= 135 mmHg\nvà\nHATTr >= 85 mmHg	{"all": [{"op": "gte", "path": "input.home_sbp", "value": 135}, {"op": "gte", "path": "input.home_dbp", "value": 85}]}	\N	\N	\N	\N	\N	1	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+cb4e7627-8be2-46d7-ba61-75027fcadd61	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_CLINIC_BP_HIGH	CONDITION	HAPK: SBP>=140 mmHg and DBP>=90 mmHg	HAPK\nHATT >= 140 mmHg\nvà\nHATTr >= 90 mmHg	{"all": [{"op": "gte", "path": "input.current_clinic_sbp", "value": 140}, {"op": "gte", "path": "input.current_clinic_dbp", "value": 90}]}	\N	\N	\N	\N	\N	2	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+e9806f6f-d538-4d91-81cc-0d90a1c9609c	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_CLINIC_BP_NORMAL	CONDITION	HAPK: SBP<140 mmHg and DBP<90 mmHg	HAPK\nHATT < 140 mmHg\nvà\nHATTr < 90 mmHg	{"all": [{"op": "lt", "path": "input.current_clinic_sbp", "value": 140}, {"op": "lt", "path": "input.current_clinic_dbp", "value": 90}]}	\N	\N	\N	\N	\N	3	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+defd8834-a6f4-4f01-b748-9c06a1ef9963	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_END_FOLLOW_UP_MONITOR	END	Follow-up / monitor	Theo dõi	\N	\N	{"action_type": "CONTINUE_MONITORING", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}	\N	\N	\N	4	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+1290beb3-4be1-42be-8e86-80361913f907	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_INF_NICARDIPINE_MGSO4	INFERENCE	Nicardipine + Magnesium Sulfate	Nicardipine (CKCa) +\nMagnesium Sulfate	\N	\N	\N	\N	\N	\N	30	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+c3bd2db9-7aba-4717-9374-4d782a694759	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_CHRONIC_HTN	CONDITION	Chronic HTN before pregnancy/before week 20, persisting >6 weeks postpartum with proteinuria	THA trước khi mang thai hoặc trước tuần 20, tồn tại > 6 tuần sau sinh với protein niệu.	{"all": [{"any": [{"op": "eq", "path": "input.has_pre_pregnancy_hypertension", "value": true}, {"op": "eq", "path": "input.has_hypertension_before_week_20", "value": true}]}, {"all": [{"op": "gt", "path": "input.weeks_persisting_postpartum", "value": 6}, {"op": "eq", "path": "input.has_proteinuria", "value": true}]}]}	\N	\N	\N	\N	\N	6	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+ffc06448-0a7d-43a4-8295-ed6d52ad6978	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_END_PRE_EXISTING_HTN	END	Pre-existing (chronic) hypertension	THA từ trước	\N	\N	{"action_type": "PRE_EXISTING_HYPERTENSION_DIAGNOSIS", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}	\N	\N	\N	7	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+5f02e857-990d-4ebe-a0a9-68884e31d737	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_GESTATIONAL_HTN	CONDITION	Gestational HTN after week 20, resolving <6 weeks postpartum	THA sau tuần 20, kéo dài < 6 tuần sau sinh	{"all": [{"op": "eq", "path": "input.has_hypertension_after_week_20", "value": true}, {"op": "lt", "path": "input.weeks_resolved_postpartum", "value": 6}]}	\N	\N	\N	\N	\N	8	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+5c2989f1-d68f-48af-9c9b-7a3a72f1ba35	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_INF_GESTATIONAL_HTN_CLASSIFICATION	INFERENCE	Gestational hypertension	Thai kỳ	\N	{"diagnosis": {"pregnancy_hypertension_type": "GESTATIONAL_HYPERTENSION"}}	\N	\N	\N	\N	9	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+f331fd19-bb3e-4b33-89c8-93a42f9c33c5	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_PREECLAMPSIA_PROTEINURIA	CONDITION	or gestational HTN with proteinuria >300mg/24h or ACR>=30mg/mmol	hoặc THA thai kỳ có Protein niệu >300mg/24h\nhoặc ACR >= 30 mg/mmol	{"any": [{"op": "gt", "path": "input.proteinuria_24h_mg", "value": 300}, {"op": "gte", "path": "input.acr_mg_mmol", "value": 30}]}	\N	\N	\N	\N	\N	10	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+836153af-e9e1-4dc0-b287-de2eafea3910	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_PREECLAMPSIA_RISK_FACTOR	CONDITION	or has >=1 risk factor (prior gestational HTN, diabetes, chronic kidney disease, autoimmune disease, etc.) [text partly illegible in source image]	hoặc có 1 trong các Yếu Tố Nguy Cơ:\nTHA trong lần thai trước đó / đái tháo đường / bệnh thận mạn / thai lần đầu hoặc nhiều lần / bệnh tự miễn	{"any": [{"op": "eq", "path": "input.has_prior_gestational_hypertension", "value": true}, {"op": "eq", "path": "input.has_diabetes", "value": true}, {"op": "eq", "path": "input.has_ckd", "value": true}, {"op": "eq", "path": "input.has_autoimmune_disease", "value": true}]}	\N	\N	\N	\N	\N	11	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+3bf12557-a06e-44ac-adfb-da0004db5e47	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_INF_PREECLAMPSIA_CLASSIFICATION	INFERENCE	Preeclampsia	Tiền sản giật	\N	{"diagnosis": {"pregnancy_hypertension_type": "PREECLAMPSIA"}}	\N	\N	\N	\N	12	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+dd42c4e2-e3c5-4120-9af0-638bd8d6860c	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_SEVERE_SIGNS	CONDITION	Severe features: seizure, severe headache, visual disturbance, epigastric pain, hemolysis, elevated liver enzymes, low platelets [column boundary in source image uncertain — see note]	Tán huyết, tăng men gan, giảm tiểu cầu (Hemolysis, elevated liver enzymes, low platelets); có thể kèm co giật, đau đầu dữ dội, rối loạn thị giác, đau thượng vị	{"any": [{"op": "eq", "path": "input.has_seizure", "value": true}, {"op": "eq", "path": "input.has_severe_headache", "value": true}, {"op": "eq", "path": "input.has_visual_disturbance", "value": true}, {"op": "eq", "path": "input.has_epigastric_pain", "value": true}, {"op": "eq", "path": "input.has_hemolysis", "value": true}, {"op": "eq", "path": "input.has_elevated_liver_enzymes", "value": true}, {"op": "eq", "path": "input.has_low_platelets", "value": true}]}	\N	\N	\N	\N	\N	13	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+1f19d5a8-96a5-4292-8a65-e2e14ca3aefc	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_INF_ECLAMPSIA_CLASSIFICATION	INFERENCE	Eclampsia	Sản giật	\N	{"diagnosis": {"pregnancy_hypertension_type": "ECLAMPSIA"}}	\N	\N	\N	\N	14	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+30b3b86e-8ce8-4ae1-8e0f-bf899c225544	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_INF_HELLP_SYNDROME_CLASSIFICATION	INFERENCE	HELLP syndrome	Hội chứng HELLP	\N	{"diagnosis": {"pregnancy_hypertension_type": "HELLP_SYNDROME"}}	\N	\N	\N	\N	15	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+dbe30126-44ec-4c56-829c-708a70377dc5	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_BP_MILD_MODERATE	CONDITION	SBP 140-159 mmHg OR DBP 90-109 mmHg	HATT 140-159 mmHg\nHOẶC\nHATTr 90-109 mmHg	{"any": [{"all": [{"op": "gte", "path": "input.current_clinic_sbp", "value": 140}, {"op": "lte", "path": "input.current_clinic_sbp", "value": 159}]}, {"all": [{"op": "gte", "path": "input.current_clinic_dbp", "value": 90}, {"op": "lte", "path": "input.current_clinic_dbp", "value": 109}]}]}	\N	\N	\N	\N	\N	16	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+e751565d-5998-4447-b42c-eefe0875ccb7	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_BP_SEVERE	CONDITION	SBP>=160 mmHg OR DBP>=110 mmHg	HATT >= 160 mmHg\nHOẶC\nHATTr >= 110 mmHg	{"any": [{"op": "gte", "path": "input.current_clinic_sbp", "value": 160}, {"op": "gte", "path": "input.current_clinic_dbp", "value": 110}]}	\N	\N	\N	\N	\N	17	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+af8bcf05-a21b-4088-8a63-46fa63185b7a	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_INF_MILD_MODERATE_SEVERITY	INFERENCE	Mild-moderate	Tính nhẹ - trung bình	\N	{"treatment": {"severity": "MILD_MODERATE"}}	\N	\N	\N	\N	18	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+04b4e1d5-11ab-4d25-9f07-13d058f2fe9d	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_INF_SEVERE_SEVERITY	INFERENCE	Severe hypertension	THA nặng	\N	{"treatment": {"severity": "SEVERE"}}	\N	\N	\N	\N	19	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+36028c0b-d677-4efd-9d89-6868f677300f	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_INF_METHYLDOPA	INFERENCE	(Central alpha-2 agonist) Methyldopa	(Chủ vận chọn lọc alpha-2 giao cảm)\nMethyldopa	\N	{"treatment_preferences": {"drug_class": "CENTRAL_ALPHA2_AGONIST"}}	\N	\N	\N	\N	20	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+df96c137-3378-4753-b2a8-dccd72a244f8	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_INF_LABETALOL_ORAL	INFERENCE	(Beta blocker) Labetalol	(Chẹn Beta)\nLabetalol	\N	{"treatment_preferences": {"drug_class": "BETA_BLOCKER"}}	\N	\N	\N	\N	21	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+82d04526-8de0-42f0-85ac-3d4e1b603ab6	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_INF_NIFEDIPINE_OR_NICARDIPINE	INFERENCE	(Dihydropyridine CCB) Nifedipine (avoid capsule form) or Nicardipine	(CKCa - Dihydropyridine)\nNifedipine [trừ viên dạng nang]\nhoặc\nNicardipine	\N	{"treatment_preferences": {"drug_class": "DIHYDROPYRIDINE_CCB"}}	\N	\N	\N	\N	22	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+e8197786-f1f5-4718-b574-ddca2e736978	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_INF_ABSOLUTE_CONTRAINDICATIONS	INFERENCE	Absolute contraindication: A (ACEI, ARB), ARNI	Chống chỉ định tuyệt đối:\nA (ƯCMC, CTTA)\nARNI	\N	{"treatment": {"absolute_contraindications": ["ƯCMC (ức chế men chuyển)", "CTTA (chẹn thụ thể angiotensin II)", "ARNI"]}}	\N	\N	\N	\N	23	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+35f6bea4-1c2c-46b8-a0a3-d0f08fecebcd	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_INF_SEVERE_DRUG_OPTIONS	INFERENCE	Methyldopa oral, or Nifedipine/Nicardipine, or IV Labetalol/Nicardipine, or Esmolol, Hydralazine, Urapidil	Methyldopa uống\nhoặc (CKCa-Dihydropyridine) Nifedipine [trừ viên dạng nang] hoặc Nicardipine\nhoặc Labetalol tĩnh mạch\nhoặc Nicardipine tĩnh mạch\nhoặc Esmolol (Chẹn Beta)\nhoặc Hydralazine (Giãn mạch)\nhoặc Urapidil	\N	\N	\N	\N	\N	\N	24	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+963bbde1-3b32-4072-96ba-66d230aca8bf	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_HYPERTENSIVE_CRISIS	CONDITION	Hypertensive crisis	Liên cơn THA	{"op": "eq", "path": "input.has_hypertensive_crisis", "value": true}	\N	\N	\N	\N	\N	25	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+dbe4c15b-a6ef-452d-a318-b050d1bf9d5d	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_IMMEDIATE_TARGET	CONDITION	Immediate treatment target: SBP<160 mmHg and DBP<105 mmHg	Đích điều trị\nNgay lập tức hạ HA\nHATT < 160 mmHg\nvà\nHATTr < 105 mmHg	{"all": [{"op": "lt", "path": "input.current_clinic_sbp", "value": 160}, {"op": "lt", "path": "input.current_clinic_dbp", "value": 105}]}	\N	\N	\N	\N	\N	31	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+ef92df48-2219-45a1-a5e8-818b052a6b60	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_TARGET_NOT_MET	CONDITION	If target not reached, or visual disturbance / coagulopathy present [exact timing text illegible in source image]	Nếu không đạt được đích điều trị,\nhoặc có rối loạn thị giác, rối loạn đông cầm máu	{"any": [{"op": "eq", "path": "input.is_treatment_target_not_achieved", "value": true}, {"op": "eq", "path": "input.has_visual_disturbance", "value": true}, {"op": "eq", "path": "input.has_coagulopathy", "value": true}]}	\N	\N	\N	\N	\N	32	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+6a3f79b6-dee1-4f2a-962c-9b3fa96a3d48	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_END_EMERGENCY_DELIVERY	END	Emergency delivery, terminate pregnancy	Lấy thai cấp cứu, chấm dứt thai kỳ	\N	\N	{"action_type": "EMERGENCY_DELIVERY", "follow_up_mode": "IMMEDIATE", "follow_up_required": false}	\N	\N	\N	33	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+a3aafcec-6a7b-4dec-903e-c3fea2be4dad	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM	ACTION	Monitor pregnancy status and postpartum	Theo dõi tình trạng thai kỳ và hậu sản	\N	\N	{"action_type": "MONITOR_PREGNANCY_AND_POSTPARTUM", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}	\N	\N	\N	34	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+10eb7a06-764c-4ae7-9391-01a868025771	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_CURRENTLY_PREGNANT	CONDITION	Currently pregnant	Đang mang thai	{"op": "eq", "path": "input.is_pregnant", "value": true}	\N	\N	\N	\N	\N	35	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+cd911f23-23ea-4a2e-9fee-05d41c2ededc	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_POSTPARTUM	CONDITION	Postpartum	Sau sinh	{"op": "eq", "path": "input.is_postpartum", "value": true}	\N	\N	\N	\N	\N	36	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+be39376c-bcc1-458e-9c14-666190a3b2cb	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_HIGH_PREECLAMPSIA_RISK	CONDITION	High risk of preeclampsia	Nguy cơ tiền sản giật cao	{"op": "eq", "path": "input.has_high_preeclampsia_risk", "value": true}	\N	\N	\N	\N	\N	37	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+4348e7a3-9c1a-440f-8a9f-48569e6cb142	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_END_ASPIRIN_PROPHYLAXIS	END	Aspirin 75-162mg from week 12-36	Aspirin 75-162 mg từ tuần 12-36	\N	\N	{"action_type": "ASPIRIN_PROPHYLAXIS", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}	\N	\N	\N	38	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+201508d7-82e4-485c-b683-755af31dd8ef	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_BP_TARGET_ACHIEVED	CONDITION	BP target achieved: SBP 110-140 mmHg and DBP ~85 mmHg [exact DBP figure uncertain in source image]	HA Đạt Đích Điều Trị\nHATT 110 - 140 mmHg\nvà\nHATTr 85 mmHg	{"all": [{"op": "gte", "path": "input.current_clinic_sbp", "value": 110}, {"op": "lte", "path": "input.current_clinic_sbp", "value": 140}, {"op": "eq", "path": "input.current_clinic_dbp", "value": 85}]}	\N	\N	\N	\N	\N	39	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+7a568755-5190-484b-a63b-e0508a7dbeeb	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_END_MAINTAIN_REGIMEN_PREGNANT	END	Maintain regimen	Duy trì phác đồ	\N	\N	{"action_type": "MAINTAIN_CURRENT_REGIMEN", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}	\N	\N	\N	40	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+a2abca12-7f23-4c2c-a074-4550d807c223	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_BP_TARGET_NOT_ACHIEVED	CONDITION	BP target not achieved [criteria text partly illegible in source image, appears identical range to the achieved box]	HA Không Đạt Đích Điều Trị\nHATT 110 - 140 mmHg\nvà\nHATTr 85 mmHg	{"not": {"all": [{"op": "gte", "path": "input.current_clinic_sbp", "value": 110}, {"op": "lte", "path": "input.current_clinic_sbp", "value": 140}, {"op": "eq", "path": "input.current_clinic_dbp", "value": 85}]}}	\N	\N	\N	\N	\N	41	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+5176834b-7f0f-464c-96b6-0aeb52b4121b	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_END_REFER_OBGYN	END	Refer to OB specialist	Chuyển chuyên khoa Sản	\N	\N	{"action_type": "REFER_TO_OBGYN_SPECIALIST", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}	\N	\N	\N	42	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+f5ccb0d9-96f5-444b-bfe9-202afa69e1bc	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_BREASTFEEDING	CONDITION	Currently breastfeeding	Đang cho con bú	{"op": "eq", "path": "input.is_breastfeeding", "value": true}	\N	\N	\N	\N	\N	43	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+ebfc17f2-78bb-4f0f-a2d2-2960ab0a2cbf	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_BP_STILL_HIGH	CONDITION	BP still high: SBP>=140mmHg or DBP>=90mmHg	HA còn cao\nHATT >= 140 mmHg\nhoặc\nHATTr >= 90 mmHg	{"any": [{"op": "gte", "path": "input.current_clinic_sbp", "value": 140}, {"op": "gte", "path": "input.current_clinic_dbp", "value": 90}]}	\N	\N	\N	\N	\N	44	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+c4601693-22d1-4b02-b02e-385ced0783f4	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_C_BP_NOT_HIGH	CONDITION	BP no longer high: SBP<140mmHg and DBP<90mmHg	HA không còn cao\nHATT < 140 mmHg\nvà\nHATTr < 90 mmHg	{"all": [{"op": "lt", "path": "input.current_clinic_sbp", "value": 140}, {"op": "lt", "path": "input.current_clinic_dbp", "value": 90}]}	\N	\N	\N	\N	\N	45	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+ba46f4c2-f4e3-49fe-87ec-dc2091a2580d	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_ACTION_POSTPARTUM_CONTRAINDICATIONS	ACTION	Mandatory contraindications while breastfeeding / BP still high	Chống chỉ định bắt buộc: Nicardipine\nTránh Atenolol, Propranolol, Nifedipine\nƯu tiên dùng Methyldopa / CKCa kéo dài	\N	\N	{"action_type": "POSTPARTUM_DRUG_CONTRAINDICATIONS", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}	\N	\N	\N	46	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+c172f668-f132-49f4-bacb-2fe7b18391d9	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_END_MAINTAIN_REGIMEN_POSTPARTUM	END	Maintain regimen	Duy trì phác đồ	\N	\N	{"action_type": "MAINTAIN_CURRENT_REGIMEN", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}	\N	\N	\N	47	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+e51643fe-2444-4f18-ab9b-32e4f4c06232	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_GLOBAL_ABBREVIATION_GLOSSARY	GLOBAL	Abbreviation glossary	Chú giải viết tắt	\N	\N	\N	{"kind": "ABBREVIATION_GLOSSARY", "entries": {"6_MRA": {"label": "MRA: thuốc đối kháng thụ thể mineralocorticoid"}, "5_SGLT2i": {"label": "SGLT2i: thuốc ức chế đồng vận chuyển Natri-glucose 2"}, "2_D_loi_tieu": {"LT": "lợi tiểu", "label": "D: lợi tiểu"}, "4_B_chen_Beta": {"CB": "chẹn Beta", "label": "B: chẹn Beta"}, "1_A_uc_che_he_RAS": {"ARNI": "chẹn thụ thể Angiotensine-neprisyline", "CTTA": "chẹn thụ thể angiotensin II", "UCMC": "ức chế men chuyển", "label": "A: ức chế hệ RAS"}, "3_C_chen_kenh_Canxi": {"CKCa": "chẹn kênh Canxi", "label": "C: chẹn kênh Canxi"}}, "purpose": "Chú giải các chữ viết tắt nhóm thuốc dùng trong Cây 12."}	\N	\N	98	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+b6d2b7c0-1bb6-45e2-9bbd-72c98a861cf8	f3e7fca1-cff8-40ec-b798-9de6f1d80e66	T12_GLOBAL_PREGNANCY_DRUG_CONTRAINDICATIONS	GLOBAL	Drug contraindications in pregnancy	Chống chỉ định thuốc trong thai kỳ	\N	\N	\N	{"kind": "OVERRIDE_NOTE", "details": {"chong_chi_dinh_uc_che_he_RAS": {"items": ["Ức chế men chuyển (ƯCMC)", "Chẹn thụ thể Angiotensin II (CTTA)", "Ức chế renin trực tiếp", "thuốc kháng thụ thể Mineralocorticoid (MRA)"], "label": "Chống chỉ định các thuốc ức chế hệ RAS gồm"}}, "purpose": "Chống chỉ định thuốc bắt buộc trong thai kỳ, áp dụng cho mọi lựa chọn thuốc hạ áp trong Cây 12."}	\N	\N	99	2026-07-25 11:46:28.101935+00	2026-07-25 11:46:28.101935+00
+bb6dadda-b610-4172-8435-88e0111ee741	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_START	START	Essential Treatment Strategy Tree (Tree 4) or Optimal Treatment Strategy Tree (Tree 5)	Cây 4: cây chiến lược điều trị thiết yếu hoặc Cây 5: cây chiến lược điều trị tối ưu	\N	\N	\N	\N	\N	\N	1	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+d98b6c15-9c2b-4b7b-a6cb-f869f625f98a	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_ESSENTIAL_TREATMENT	ACTION	Treat according to essential standard and enhance lifestyle changes	Điều trị theo tiêu chuẩn thiết yếu và Tăng cường biện pháp tđls, đặc biệt là hạn chế muối	\N	\N	{"action_type": "LIFESTYLE_CHANGES", "salt_restriction": true}	\N	\N	\N	3	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+583fb951-4f9f-48ef-b652-85c8d6fe7101	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_CHECK_MRA	ACTION	Check MRA tolerance	Kiểm tra khả năng dung nạp MRA	\N	\N	{"action_type": "CHECK_MRA"}	\N	\N	\N	4	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+379b8afc-b896-410f-bb13-c2e38bef13ad	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_C_MRA_TOLERATED	CONDITION	Tolerates MRA	Có khả năng dung nạp MRA	{"op": "eq", "path": "input.tolerates_mra", "value": true}	\N	\N	\N	\N	\N	5	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+ac540e55-906b-437f-a6af-2eccb619bbb5	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_ADD_MRA	ACTION	Combine A + C + D and MRA	Phối hợp 3 nhóm thuốc A + C + D và MRA	\N	\N	{"action_type": "COMBINE_ACD_MRA"}	\N	\N	\N	6	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+39319a8a-753e-4b85-8611-24d214b78327	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_C_MRA_NOT_TOLERATED	CONDITION	Does not tolerate MRA	Không có khả năng dung nạp MRA	{"op": "eq", "path": "input.tolerates_mra", "value": false}	\N	\N	\N	\N	\N	7	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+da1ba865-b2d4-4677-85ad-15496aad4653	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_ADD_D	ACTION	Add D	Thêm D	\N	\N	{"action_type": "ADD_D"}	\N	\N	\N	8	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+d79e31dd-3e3f-43f9-bc55-29657d900c2f	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_CHECK_SPIRONOLACTONE	ACTION	Check Spironolactone tolerance	Kiểm tra khả năng dung nạp Spironolactone (lợi tiểu giữ kali)	\N	\N	{"action_type": "CHECK_SPIRONOLACTONE"}	\N	\N	\N	9	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+de43bad7-f682-477d-85ab-a0627f596c6a	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_C_SPIRONOLACTONE_TOLERATED	CONDITION	Tolerates Spironolactone	Có khả năng dung nạp Spironolactone	{"op": "eq", "path": "input.tolerates_spironolactone", "value": true}	\N	\N	\N	\N	\N	10	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+8e783a9b-44d4-4246-9ab1-4bf9a9190d3b	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_ADD_SPIRONOLACTONE	ACTION	Add low-dose Spironolactone to current regimen	Thêm Spironolactone liều thấp kết hợp với liều thuốc điều trị hiện có	\N	\N	{"action_type": "ADD_SPIRONOLACTONE"}	\N	\N	\N	11	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+9479b0ab-7060-4663-8246-d2206d4bc5e5	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_C_SPIRONOLACTONE_NOT_TOLERATED	CONDITION	Does not tolerate Spironolactone	Không có khả năng dung nạp Spironolactone	{"op": "eq", "path": "input.tolerates_spironolactone", "value": false}	\N	\N	\N	\N	\N	12	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+29baba0e-818b-41db-a911-96f799a5b584	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_ALTERNATIVES	ACTION	Alternatives: Add K-sparing D, Increase D dose, or Add Bisoprolol/Doxazosin	Thêm nhóm D giữ kali, Tăng liều nhóm D, hoặc Thêm Bisoprolol/Doxazosin	\N	\N	{"action_type": "THERAPEUTIC_ALTERNATIVES"}	\N	\N	\N	13	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+8b2fa240-abcb-47e8-9e3c-9b0a15cb9958	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_C_BP_TARGET_REACHED	CONDITION	BP reaches target	HA đạt đích điều trị	{"op": "eq", "path": "input.bp_target_reached", "value": true}	\N	\N	\N	\N	\N	14	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+3b5b88f1-65e0-4a2d-934b-fb5a965b6df6	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_END_MAINTAIN	END	Maintain regimen	Duy trì phác đồ	\N	\N	{"action_type": "MAINTAIN_REGIMEN"}	\N	\N	\N	15	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+879486a4-d0bf-42f2-a772-dcb944ddbb93	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_C_BP_TARGET_NOT_REACHED	CONDITION	BP does not reach target	HA không đạt đích điều trị	{"op": "eq", "path": "input.bp_target_reached", "value": false}	\N	\N	\N	\N	\N	16	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+e2dcd8e5-7a19-4dc6-a11c-94bc504ba8a4	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_END_REFER	END	Refer to specialized center	Chuyển lên trung tâm chuyên khoa	\N	\N	{"action_type": "REFER_TO_SPECIALIZED_CENTER"}	\N	\N	\N	17	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+b52de82a-7ee3-4efd-b12b-199031f33beb	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_C_FULL	CONDITION	Optimal standard	Tiêu chuẩn tối ưu	{"op": "eq", "path": "input.facility_capability", "value": "FULL_RESOURCES"}	\N	\N	\N	\N	\N	18	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+0b167ff7-f286-4da4-8a3a-0ae20545c7b4	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_OPTIMAL_TREATMENT	ACTION	Treat according to optimal standard and enhance lifestyle changes	Điều trị theo tiêu chuẩn tối ưu và Tăng cường biện pháp tđls, đặc biệt là hạn chế muối	\N	\N	{"action_type": "LIFESTYLE_CHANGES", "salt_restriction": true}	\N	\N	\N	19	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+84342fec-0e0c-4bb5-a676-49c8df14fcc3	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_CONSIDER_DEVICE	ACTION	Consider device intervention	Xem xét điều trị can thiệp dụng cụ	\N	\N	{"action_type": "CONSIDER_DEVICE_INTERVENTION"}	\N	\N	\N	20	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
+166ba4ee-6c47-441b-8ad6-17d2fc69073e	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_START_SEVERE_HYPERTENSION	START	Severe hypertension (SBP >=180 and/or DBP >=120 mmHg)	Bệnh nhân tăng huyết áp nặng (HATT >= 180 và/hoặc HATTr >= 120 mmHg)	\N	\N	\N	\N	\N	\N	0	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+251b8883-c8d8-4e89-b918-09a70b97bdb8	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_C_NO_ACUTE_TARGET_ORGAN_DAMAGE	CONDITION	No acute target organ damage	Không tổn thương cơ quan đích cấp tính	{"op": "eq", "path": "input.has_target_organ_damage", "value": false}	\N	\N	\N	\N	\N	1	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+52d61845-6472-4822-b946-cdc48444e479	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_C_HAS_ACUTE_TARGET_ORGAN_DAMAGE	CONDITION	Has acute target organ damage	Có tổn thương cơ quan đích cấp tính	{"op": "eq", "path": "input.has_target_organ_damage", "value": true}	\N	\N	\N	\N	\N	2	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+9687ecd1-fc18-40e2-affd-f28fd287fad2	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_END_URGENT_HYPERTENSION	END	Urgent hypertension: oral antihypertensive therapy; outpatient/inpatient monitoring; gradual BP lowering	Tăng huyết áp khẩn trương: Điều trị thuốc uống. Theo dõi ngoại trú/nội trú. Hạ huyết áp từ từ	\N	\N	{"action_type": "ORAL_ANTIHYPERTENSIVE_THERAPY", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true, "bp_lowering_strategy": "GRADUAL"}	\N	\N	\N	3	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+bc430b73-8c5f-4d47-a3a7-9f6eef544edc	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_ACTION_ADMIT_AND_DETERMINE_TARGET_ORGAN	ACTION	Emergency hypertension: admit to hospital, apply IV antihypertensive therapy, determine target organ	Tăng huyết áp cấp cứu: Nhập viện. Áp dụng thuốc hạ áp đường tĩnh mạch. Xác định cơ quan đích	\N	\N	{"route": "IV_INFUSION", "action_type": "ADMIT_AND_DETERMINE_TARGET_ORGAN", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false}	\N	\N	\N	4	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+4ce0d75e-7416-4381-b4eb-18e83f1df2c1	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA	ACTION	Acute cardiogenic pulmonary edema: Labetalol or Metoprolol; target SBP <140 mmHg, immediate	Phù phổi cấp do tim: Labetalol hoặc Metoprolol; mục tiêu HATT <140 mmHg, ngay lập tức	\N	\N	{"action_type": "ACUTE_CARDIOGENIC_PULMONARY_EDEMA_THERAPY", "target_timing": "IMMEDIATE", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false, "target_sbp_upper_mmhg": 140}	\N	\N	\N	19	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+f7121ea4-d4ab-45aa-9995-9b8c9416656f	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_LINK_HEART_FAILURE	LINK	Tree 10: Hypertension With Heart Failure	Cây 10: THA + Suy Tim	\N	\N	\N	\N	hypertension-heart-failure	\N	20	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+2302e8ed-f322-40b0-872a-c9d8b863d984	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_C_ACUTE_AORTIC_SYNDROME	CONDITION	Acute aortic syndrome	Bệnh động mạch chủ cấp	{"op": "eq", "path": "context.treatment.has_acute_aortic_syndrome", "value": true}	\N	\N	\N	\N	\N	21	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+f0c3396e-aaf3-48e9-9198-aa9b1a701e98	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH	INFERENCE	Keep only 1 drug or remove both; prefer keeping the one already in use, only remove both for a special requirement	Chỉ giữ lại 1 thuốc hoặc loại bỏ cả hai. Ưu tiên giữ lại thuốc đã hoặc đang dùng trước đó, chỉ loại bỏ cả hai khi có yêu cầu đặc biệt	\N	\N	\N	\N	\N	\N	18	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+1d806eec-96f8-45e5-ac29-0ba677bea528	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_ACTION_KEEP_ONE_DRUG	INFERENCE	Keep only 1 drug	Chỉ giữ lại 1 thuốc	\N	\N	\N	\N	\N	\N	19	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+5f9327f7-08f3-433b-b6cf-4f8d989ed0d1	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS	INFERENCE	Determine which of the 9 specific hypertensive-emergency clinical scenarios applies (Bảng 14)	Xác định bệnh cảnh lâm sàng cấp cứu cụ thể (Bảng 14)	\N	{"treatment": {"has_acute_aortic_syndrome": false, "has_acute_ischemic_stroke": false, "is_thrombolysis_candidate": false, "has_acute_coronary_syndrome": false, "has_hypertensive_encephalopathy": false, "has_acute_intracerebral_hemorrhage": false, "has_acute_cardiogenic_pulmonary_edema": false, "has_eclampsia_severe_preeclampsia_or_hellp": false}, "operations": [{"op": "COPY_PATH", "to_path": "context.treatment.has_hypertensive_encephalopathy", "required": false, "from_path": "input.has_hypertensive_encephalopathy"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_acute_ischemic_stroke", "required": false, "from_path": "input.has_acute_ischemic_stroke"}, {"op": "COPY_PATH", "to_path": "context.treatment.is_thrombolysis_candidate", "required": false, "from_path": "input.is_thrombolysis_candidate"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_acute_intracerebral_hemorrhage", "required": false, "from_path": "input.has_acute_intracerebral_hemorrhage"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_acute_coronary_syndrome", "required": false, "from_path": "input.has_acute_coronary_syndrome"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_acute_cardiogenic_pulmonary_edema", "required": false, "from_path": "input.has_acute_cardiogenic_pulmonary_edema"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_acute_aortic_syndrome", "required": false, "from_path": "input.has_acute_aortic_syndrome"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_eclampsia_severe_preeclampsia_or_hellp", "required": false, "from_path": "input.has_eclampsia_severe_preeclampsia_or_hellp"}]}	\N	\N	\N	\N	5	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+fb9b6b61-9c8b-40d0-bd35-d1f6f7639a4a	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_C_HYPERTENSIVE_ENCEPHALOPATHY	CONDITION	Hypertensive encephalopathy (coma, seizures, cortical blindness)	Bệnh não do THA (hôn mê, co giật, mù vỏ não)	{"op": "eq", "path": "context.treatment.has_hypertensive_encephalopathy", "value": true}	\N	\N	\N	\N	\N	6	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+b15c9c78-c837-4451-af49-19c97d368b36	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY	ACTION	Hypertensive encephalopathy: primary Labetalol/Nicardipine; alternative Nitroprusside; target MAP -20% to -25%, immediate	Bệnh não do THA: ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside; mục tiêu MAP giảm 20-25%, ngay lập tức	\N	\N	{"action_type": "HYPERTENSIVE_ENCEPHALOPATHY_ACUTE_THERAPY", "target_timing": "IMMEDIATE", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false, "target_map_reduction_percent_max": 25, "target_map_reduction_percent_min": 20}	\N	\N	\N	7	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+d8769fb4-d8e4-42f5-ad62-eb0df756145c	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_C_AIS_THROMBOLYSIS_CANDIDATE	CONDITION	Acute ischemic stroke, thrombolysis candidate, SBP >185 or DBP >110 mmHg	Nhồi máu não cấp có chỉ định tiêu sợi huyết, HATT >185 hoặc HATTr >110 mmHg	{"all": [{"op": "eq", "path": "context.treatment.has_acute_ischemic_stroke", "value": true}, {"op": "eq", "path": "context.treatment.is_thrombolysis_candidate", "value": true}, {"any": [{"op": "gt", "path": "input.clinic_1_sbp", "value": 185}, {"op": "gt", "path": "input.clinic_1_dbp", "value": 110}]}]}	\N	\N	\N	\N	\N	8	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+61f81d80-845e-452c-b80f-02a0bae3e88d	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE	ACTION	AIS, thrombolysis candidate: primary Labetalol/Nicardipine; alternative Urapidil; target MAP -15%, within 1 hour	Nhồi máu não cấp có chỉ định tiêu sợi huyết: ưu tiên Labetalol/Nicardipine; thay thế Urapidil; mục tiêu MAP giảm 15%, trong 1 giờ	\N	\N	{"action_type": "ACUTE_ISCHEMIC_STROKE_THROMBOLYSIS_CANDIDATE_THERAPY", "target_timing": "WITHIN_1_HOUR", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false, "bp_threshold_dbp_mmhg": 110, "bp_threshold_sbp_mmhg": 185, "target_map_reduction_percent": 15}	\N	\N	\N	9	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+85899c37-f375-4798-95be-5ea4d3bcce47	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_C_AIS_SEVERE	CONDITION	Acute ischemic stroke, SBP >220 or DBP >120 mmHg	Nhồi máu não cấp, HATT >220 hoặc HATTr >120 mmHg	{"all": [{"op": "eq", "path": "context.treatment.has_acute_ischemic_stroke", "value": true}, {"any": [{"op": "gt", "path": "input.clinic_1_sbp", "value": 220}, {"op": "gt", "path": "input.clinic_1_dbp", "value": 120}]}]}	\N	\N	\N	\N	\N	10	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+5f03a0ba-fc0d-4ac1-9e06-f40641921048	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_ACTION_AIS_SEVERE	ACTION	AIS: primary Labetalol/Nicardipine; alternative Nitroprusside; target MAP -15%, within 1 hour	Nhồi máu não cấp: ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside; mục tiêu MAP giảm 15%, trong 1 giờ	\N	\N	{"action_type": "ACUTE_ISCHEMIC_STROKE_THERAPY", "target_timing": "WITHIN_1_HOUR", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false, "bp_threshold_dbp_mmhg": 120, "bp_threshold_sbp_mmhg": 220, "target_map_reduction_percent": 15}	\N	\N	\N	11	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+38207a6c-91d3-425d-a512-79014c6b1b23	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_C_ACUTE_ICH	CONDITION	Acute intracerebral hemorrhage, SBP >180 mmHg	Xuất huyết não cấp, HATT >180 mmHg	{"all": [{"op": "eq", "path": "context.treatment.has_acute_intracerebral_hemorrhage", "value": true}, {"op": "gt", "path": "input.clinic_1_sbp", "value": 180}]}	\N	\N	\N	\N	\N	12	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+2ae327a8-8199-4851-b979-000fadf9edb1	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_ACTION_ACUTE_ICH	ACTION	Acute ICH: primary Nitroglycerine/Labetalol; alternative Urapidil; target 130<SBP<180 mmHg	Xuất huyết não cấp: ưu tiên Nitroglycerine/Labetalol; thay thế Urapidil; mục tiêu 130<HATT<180 mmHg	\N	\N	{"action_type": "ACUTE_INTRACEREBRAL_HEMORRHAGE_THERAPY", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false, "target_sbp_lower_mmhg": 130, "target_sbp_upper_mmhg": 180}	\N	\N	\N	13	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+4ecdbf64-7473-438a-ab27-9de45aa83eb2	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_END_REFER_STROKE_MANAGEMENT	END	Refer to stroke management	Điều trị đột quỵ	\N	\N	{"action_type": "REFER_STROKE_MANAGEMENT", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true, "requires_clinician_review": true}	\N	\N	\N	14	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+e0e3257a-6ea7-4eba-8ec2-6e34688c6331	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_C_ACS	CONDITION	Acute coronary syndrome	Hội chứng vành cấp	{"op": "eq", "path": "context.treatment.has_acute_coronary_syndrome", "value": true}	\N	\N	\N	\N	\N	15	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+f57f80db-de51-40ad-a751-626056ee90ec	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_ACTION_ACS	ACTION	ACS: primary Nitroprusside or Nitroglycerine (with a loop diuretic); alternative Urapidil (with a loop diuretic); target SBP <140 mmHg, immediate	Hội chứng vành cấp: ưu tiên Nitroprusside hoặc Nitroglycerine (kèm lợi tiểu quai); thay thế Urapidil (kèm lợi tiểu quai); mục tiêu HATT <140 mmHg, ngay lập tức	\N	\N	{"action_type": "ACUTE_CORONARY_SYNDROME_THERAPY", "target_timing": "IMMEDIATE", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false, "target_sbp_upper_mmhg": 140}	\N	\N	\N	16	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+1e51a517-fe6e-456d-ac5d-c6e58deb5454	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_LINK_CORONARY_ARTERY_DISEASE	LINK	Tree 9: Hypertension With Coronary Artery Disease	Cây 9: THA + Bệnh Mạch Vành	\N	\N	\N	\N	hypertension-coronary-artery-disease	\N	17	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+247dbdb6-5338-4a9c-8138-10b7578bc149	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_C_ACUTE_CARDIOGENIC_PULMONARY_EDEMA	CONDITION	Acute cardiogenic pulmonary edema	Phù phổi cấp do tim	{"op": "eq", "path": "context.treatment.has_acute_cardiogenic_pulmonary_edema", "value": true}	\N	\N	\N	\N	\N	18	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+02e181de-de5e-42fd-af3a-b71095aadab0	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_END_ACUTE_AORTIC_SYNDROME	END	Acute aortic syndrome: Esmolol plus Nitroprusside, Nitroglycerine, or Nicardipine; target SBP <120 mmHg and heart rate <60 bpm, immediate	Bệnh động mạch chủ cấp: Esmolol phối hợp Nitroprusside, Nitroglycerine, hoặc Nicardipine; mục tiêu HATT <120 mmHg và nhịp tim <60 lần/phút, ngay lập tức	\N	\N	{"action_type": "ACUTE_AORTIC_SYNDROME_THERAPY", "target_timing": "IMMEDIATE", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true, "target_sbp_upper_mmhg": 120, "requires_clinician_review": true, "target_heart_rate_upper_bpm": 60}	\N	\N	\N	22	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+a2fdc976-e5d7-4cc8-a4ec-83a1098ffd36	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_C_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP	CONDITION	Eclampsia, severe preeclampsia, or HELLP syndrome	Sản giật, tiền sản giật nặng, hoặc hội chứng HELLP	{"op": "eq", "path": "context.treatment.has_eclampsia_severe_preeclampsia_or_hellp", "value": true}	\N	\N	\N	\N	\N	23	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+c684b8bb-1b9e-4742-8c55-d17ebd14ce36	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP	ACTION	Eclampsia/severe preeclampsia/HELLP: Labetalol or Nicardipine plus magnesium sulfate; target SBP <160 mmHg and DBP <105 mmHg, immediate	Sản giật/tiền sản giật nặng/HELLP: Labetalol hoặc Nicardipine phối hợp Magnesium sulfate; mục tiêu HATT <160 mmHg và HATTr <105 mmHg, ngay lập tức	\N	\N	{"action_type": "ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP_THERAPY", "target_timing": "IMMEDIATE", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false, "target_dbp_upper_mmhg": 105, "target_sbp_upper_mmhg": 160}	\N	\N	\N	24	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+291548d1-0a58-4d93-88ae-e488665970c3	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_LINK_PREGNANCY	LINK	Tree 12: Hypertension in Pregnancy	Cây 13: THA Thai Kỳ	\N	\N	\N	\N	hypertension-in-pregnancy	\N	25	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+961295af-8239-437a-8106-a6fb9da5d24c	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_ACTION_MALIGNANT_HTN_TMA_AKI	ACTION	Hypertensive emergency with or without TMA/acute kidney injury: primary Labetalol/Nicardipine; alternative Nitroprusside/Urapidil; target MAP -20% to -25%, within hours	THA cấp cứu có hoặc không có TMA/Suy thận cấp: ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside/Urapidil; mục tiêu MAP giảm 20-25%, trong vài giờ	\N	\N	{"action_type": "MALIGNANT_HYPERTENSION_TMA_AKI_THERAPY", "target_timing": "WITHIN_HOURS", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false, "target_map_reduction_percent_max": 25, "target_map_reduction_percent_min": 20}	\N	\N	\N	26	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+8e4b0979-c291-4f98-9032-4293a2bfc8fd	fe13cf9b-5aec-4ce3-aea8-7bf8d10a7f39	T14_GLOBAL_ABBREVIATION_GLOSSARY	GLOBAL	Abbreviation glossary	Chú giải viết tắt	\N	\N	\N	{"kind": "ABBREVIATION_GLOSSARY", "entries": {"MAP": {"label": "MAP: Mean arterial pressure - Huyết áp trung bình"}, "TMA": {"label": "TMA: Thrombotic microangiopathy - Bệnh vi mạch huyết khối"}, "HELLP": {"label": "HELLP: Hemolysis, Elevated Liver Enzymes and Low Platelets - Hội chứng liên quan tiền sản giật nặng"}}, "purpose": "Chú giải các chữ viết tắt dùng trong Cây 14, theo chú thích Bảng 14.", "source_permission_note": "Bảng 14 được trích dẫn theo Van den Born và cộng sự, với sự cho phép của Tạp chí European Heart Journal - Cardiovascular Pharmacotherapy, Oxford University Press."}	\N	\N	99	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+63aeac94-609f-4799-baaf-6aff6229e8c3	812adc37-8380-4f46-ba92-2d48f582e5da	T7_START	START	Tree 3: Blood Pressure Thresholds and Targets	Cây 3 Ngưỡng huyết áp và đích điều trị	\N	\N	\N	\N	\N	\N	1	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+e281b92f-39f7-404a-b2b3-8134c7df2865	812adc37-8380-4f46-ba92-2d48f582e5da	T7_A_CLASSIFY	INFERENCE	Classify hypertension in elderly and very elderly patients	Phân loại THA bệnh nhân cao tuổi và bệnh nhân rất già	\N	\N	{"action_type": "CLASSIFY_ELDERLY_PATIENT"}	\N	\N	\N	2	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+cdcd1de6-9367-43ea-ac81-7ecf282c62a9	812adc37-8380-4f46-ba92-2d48f582e5da	T7_C_AGE_70_79	CONDITION	Patient age is in range 70-79	Tuổi bệnh nhân thuộc khoảng 70-79	{"all": [{"op": "gte", "path": "input.age", "value": 70}, {"op": "lte", "path": "input.age", "value": 79}]}	\N	\N	\N	\N	\N	3	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+e951a670-b220-4ef0-8034-24f1928808a1	812adc37-8380-4f46-ba92-2d48f582e5da	T7_C_AGE_80_PLUS	CONDITION	Patient age >= 80 (very elderly)	Tuổi bệnh nhân >=80	{"op": "gte", "path": "input.age", "value": 80}	\N	\N	\N	\N	\N	4	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+8dee04a9-d059-4004-bc44-2bdf62d04469	812adc37-8380-4f46-ba92-2d48f582e5da	T7_I_DC_70_79	INFERENCE	Prescribe D + C combination, prioritize thiazide-like D	Chỉ định điều trị thuốc D + C, Ưu tiên D thiazide-like	\N	\N	{"drugs": ["D_THIAZIDE_LIKE", "C"], "action_type": "PRESCRIBE_D_C_THIAZIDE_PRIORITY"}	\N	\N	\N	5	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+537e515a-56ae-4e09-a235-20420f20806b	812adc37-8380-4f46-ba92-2d48f582e5da	T7_LINK_ESSENTIAL	LINK	Tree 4: Essential Treatment Strategy	Cây 4: Chiến lược điều trị thiết yếu	\N	\N	\N	\N	essential-treatment-strategy	\N	6	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+29abe152-42d2-48ea-9780-a0062e2010fc	812adc37-8380-4f46-ba92-2d48f582e5da	T7_LINK_OPTIMAL	LINK	Tree 5: Optimal Treatment Strategy	Cây 5: Chiến lược điều trị tối ưu	\N	\N	\N	\N	optimal-treatment-strategy	\N	7	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+a19f31da-7fc5-439a-bffc-34aaddbba2dd	812adc37-8380-4f46-ba92-2d48f582e5da	T7_G_DRUGS	GLOBAL	First-line drugs: D (thiazide-like) + C. Add A or MRA when necessary	Thuốc chỉ định hàng đầu: D (thiazide-like) + C. Thêm A hoặc MRA khi cần	\N	\N	\N	{"drug_classes": {"A": {"label": "Ức chế hệ RAS", "subtypes": ["UCMC: Ức chế men chuyển", "CTTA: chẹn thụ thể angiotensin II", "ARNI: chẹn thụ thể Angiotensine-neprisyline"]}, "B": {"label": "Chẹn Beta", "subtypes": ["CB"]}, "C": {"label": "Chẹn kênh Canxi", "subtypes": ["CKCa"]}, "D": {"label": "Lợi tiểu", "subtypes": ["LT"]}, "MRA": {"label": "Thuốc đối kháng thụ thể mineral coticoid"}, "SGLT2i": {"label": "dapagliflozin / empagliflozin"}}}	\N	\N	8	2026-07-25 11:46:28.205822+00	2026-07-25 11:46:28.205822+00
+dbf3fc69-278c-4e51-9487-242f9de4a9cc	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_INF_DETERMINE_CONTRAINDICATIONS	INFERENCE	Determine contraindicated drug classes based on patient information and current regimen	Xác định thuốc chống chỉ định dựa trên thông tin bệnh nhân và phác đồ hiện tại	\N	{"treatment": {"has_duplicate_drug_class": false, "has_duplicate_ras_inhibitor": false}, "operations": [{"op": "COPY_PATH", "to_path": "context.treatment.contraindicated_drug_classes", "required": false, "from_path": "input.contraindicated_drug_classes"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_duplicate_drug_class", "required": false, "from_path": "input.has_duplicate_drug_class"}, {"op": "COPY_PATH", "to_path": "context.treatment.has_duplicate_ras_inhibitor", "required": false, "from_path": "input.has_duplicate_ras_inhibitor"}]}	\N	\N	\N	\N	11	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+d9b335f6-6b90-41cb-8b33-99e05e6a1e02	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION	INFERENCE	Compare with current prescription	So sánh với đơn thuốc hiện tại	\N	{"treatment": {"has_dosage_adjustment_request": false}, "operations": [{"op": "COPY_PATH", "to_path": "context.treatment.has_dosage_adjustment_request", "required": false, "from_path": "input.has_dosage_adjustment_request"}]}	\N	\N	\N	\N	6	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+e4bf6aee-e795-4eab-8bc2-dfc5613a06da	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_ACTION_ADJUST_REGIMEN	INFERENCE	Adjust regimen	Điều chỉnh phác đồ	\N	{"treatment": {"status": "ADJUST_REGIMEN"}}	\N	\N	\N	\N	9	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+b6da12a7-922a-4c29-98c0-d6315bd7804f	506f278f-6b14-4d36-b16c-6dd24768fd83	T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE	INFERENCE	Maintain regimen	Duy trì phác đồ	\N	\N	\N	\N	\N	\N	20	2026-07-25 11:46:28.021853+00	2026-07-25 11:46:28.021853+00
+98253717-e67b-66a9-3791-fafcd2bedf4c	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_C_LIFESTYLE_RESPONSE_ADEQUATE	CONDITION	Lifestyle BP response adequate	Đáp ứng thay đổi lối sống đạt yêu cầu	{"all": [{"op": "gte", "left": {"left_path": "input.previous_sbp", "expression": "subtract", "right_path": "input.current_clinic_sbp"}, "value": 10}, {"op": "gte", "left": {"left_path": "input.previous_dbp", "expression": "subtract", "right_path": "input.current_clinic_dbp"}, "value": 5}]}	\N	\N	\N	\N	\N	6	2026-06-27 15:49:12.978633+00	2026-06-27 15:49:12.978633+00
+82d39f73-488c-3113-49e7-b92795bd4623	723b3d9d-5052-a626-1ab8-5f3a2145173e	T3_C_LIFESTYLE_RESPONSE_INADEQUATE	CONDITION	Lifestyle BP response inadequate	Đáp ứng thay đổi lối sống chưa đạt yêu cầu	{"not": {"all": [{"op": "gte", "left": {"left_path": "input.previous_sbp", "expression": "subtract", "right_path": "input.current_clinic_sbp"}, "value": 10}, {"op": "gte", "left": {"left_path": "input.previous_dbp", "expression": "subtract", "right_path": "input.current_clinic_dbp"}, "value": 5}]}}	\N	\N	\N	\N	\N	7	2026-06-27 15:49:12.978633+00	2026-06-27 15:49:12.978633+00
 \.
 
 COPY public.decision_edges ("id", "from_node_id", "to_node_id", "traversal_order") FROM stdin;
@@ -463,6 +793,285 @@ cd454155-994d-581b-6794-e62240d2b7bd	88a2ff70-ecc2-23e0-97e7-ebc3213188cd	61c0cc
 b22c358f-eda9-4438-9b88-b34e83d76b9b	6538e358-5110-978e-fdeb-9f9163930524	0da5ee04-82fe-8681-957d-0ab16678ad1f	1
 ad72a65f-a011-457b-8052-23e8d6cb9603	6538e358-5110-978e-fdeb-9f9163930524	cd0e9072-3ea2-ae16-3d22-9c27c95e0bf5	2
 6b04a2fc-57f9-4c8b-8e25-fa1c6db85fd2	6538e358-5110-978e-fdeb-9f9163930524	578ce908-3403-1df1-378a-79136a9eedb3	3
+923acbb9-422c-4ddd-b1b7-26bef040f0ba	e3b9491f-a5db-4d53-942e-0834fa0f25a0	749bb74c-d4df-4e72-a946-df93f71e960f	1
+ccdf8c11-671b-4014-b5bc-0950f62433d5	e3b9491f-a5db-4d53-942e-0834fa0f25a0	8134a5b7-29c2-4a22-bf6c-2d9976e340eb	2
+c35c399f-392b-4134-9366-110b96da0a60	749bb74c-d4df-4e72-a946-df93f71e960f	dbf3fc69-278c-4e51-9487-242f9de4a9cc	1
+0aa46c7c-e1a2-4c66-acc3-dc10645af309	8134a5b7-29c2-4a22-bf6c-2d9976e340eb	e6ce4a56-4b14-433f-b8fd-5c04096f103e	1
+c0133fe6-932d-495a-9f75-e40a289a6ea2	e6ce4a56-4b14-433f-b8fd-5c04096f103e	1f779704-25f9-4894-9210-6c34167af7af	1
+33535156-a740-45c6-a7e4-60556e07028a	e6ce4a56-4b14-433f-b8fd-5c04096f103e	5570eaf9-e0ba-4144-a77b-56579f6c0a0a	2
+4ceeef05-33ba-4a9b-83a3-0de63dc75bb8	5570eaf9-e0ba-4144-a77b-56579f6c0a0a	dbf3fc69-278c-4e51-9487-242f9de4a9cc	1
+17ae5cb4-aa0a-4327-b4bf-352dc54e6a3b	1f779704-25f9-4894-9210-6c34167af7af	d9b335f6-6b90-41cb-8b33-99e05e6a1e02	1
+a1a1f1a7-641a-4e2d-a7a3-ac250536b18f	d9b335f6-6b90-41cb-8b33-99e05e6a1e02	2e194809-a5d8-4c47-a42f-f938b0391772	1
+7e31b8a2-c250-459a-a9ab-4f68a7b6f217	d9b335f6-6b90-41cb-8b33-99e05e6a1e02	1459f200-6322-4b81-bda0-a959b39a41d5	2
+799b7cd8-b5a2-4b5f-8b16-c7122bba6015	2e194809-a5d8-4c47-a42f-f938b0391772	e4bf6aee-e795-4eab-8bc2-dfc5613a06da	1
+00c80789-c420-4aa2-974d-678c344853ab	1459f200-6322-4b81-bda0-a959b39a41d5	5dd8e03f-953a-40e4-a2f5-eae62f0353d2	1
+e79a8a91-b8d2-439b-a27d-6023d1e66ce6	e4bf6aee-e795-4eab-8bc2-dfc5613a06da	dbf3fc69-278c-4e51-9487-242f9de4a9cc	1
+f9fea92e-c64c-48da-a6c1-494be04d0cc6	5dd8e03f-953a-40e4-a2f5-eae62f0353d2	dbf3fc69-278c-4e51-9487-242f9de4a9cc	1
+65fbd9f5-5bbe-40d8-8b07-dd3c35a680f5	31ecadcc-6279-4b3f-9a9b-2f2d38931c49	f1d6e2a0-b370-4527-b02b-9dab71fb396f	1
+485bc969-ab69-46dd-8b93-70e073d3259a	31ecadcc-6279-4b3f-9a9b-2f2d38931c49	760b3f49-a111-474a-90f0-7957d8b96d1c	2
+49917e4c-7d31-4e9a-b82c-1d1f075501b7	dc85f5d5-6dac-417f-8dba-e7e49a5abde5	b6da12a7-922a-4c29-98c0-d6315bd7804f	1
+4b5ba756-3893-4775-87bf-35e5880186c1	f1d6e2a0-b370-4527-b02b-9dab71fb396f	f0c3396e-aaf3-48e9-9198-aa9b1a701e98	1
+fe804a8f-ea53-4de5-94b5-e3c9579451df	760b3f49-a111-474a-90f0-7957d8b96d1c	1d806eec-96f8-45e5-ac29-0ba677bea528	1
+4870ffa7-9554-4d08-885b-efcd2976c941	f0c3396e-aaf3-48e9-9198-aa9b1a701e98	b2d606f3-6ad1-461c-8975-72195cb6afc7	1
+469a46c6-8bd1-479e-b311-aa31e73e8ccd	f0c3396e-aaf3-48e9-9198-aa9b1a701e98	cc087716-cecc-44ef-8850-a6261b5ac065	2
+cb27582d-dd82-4271-a09d-4e1872160500	1d806eec-96f8-45e5-ac29-0ba677bea528	b2d606f3-6ad1-461c-8975-72195cb6afc7	1
+fd2021f4-18f7-4888-85f8-913535cf3e4a	1d806eec-96f8-45e5-ac29-0ba677bea528	cc087716-cecc-44ef-8850-a6261b5ac065	2
+855b721f-0d7e-40b6-ad59-258674a420f0	b6da12a7-922a-4c29-98c0-d6315bd7804f	b2d606f3-6ad1-461c-8975-72195cb6afc7	1
+438a073d-4528-44d4-bf42-8b0e6b5378f4	b6da12a7-922a-4c29-98c0-d6315bd7804f	cc087716-cecc-44ef-8850-a6261b5ac065	2
+30a879f7-3dfb-4f87-a4af-4f793d57fc60	b2d606f3-6ad1-461c-8975-72195cb6afc7	b671f1b7-c554-49f0-b066-a7adc4deabda	1
+04d4233a-cc45-4c70-88d6-93b153a477dd	b2d606f3-6ad1-461c-8975-72195cb6afc7	0e9d7de8-1104-4c68-a267-193a7556328f	2
+da4207a3-b288-4b25-8251-762f1b1d8eba	b671f1b7-c554-49f0-b066-a7adc4deabda	b50e184c-1830-4d00-93d4-f95a5bf02330	1
+a5e4e0f8-924f-4c51-977a-6c0f2af0bf97	b50e184c-1830-4d00-93d4-f95a5bf02330	c76f5495-f86f-4ab5-b1c7-95367d21eaad	1
+ad7b8c0f-a386-4479-b82d-b0381c7d7e0e	c76f5495-f86f-4ab5-b1c7-95367d21eaad	8f28660a-6643-482f-b2fa-b801fa6f8e02	1
+f8f5085e-78bb-4694-9c79-5de4817316a0	c76f5495-f86f-4ab5-b1c7-95367d21eaad	4272f994-cbfc-4040-b6ca-7b1c05404ef0	2
+e1f6967d-6a67-4069-96c6-3aa3feb74ac0	8f28660a-6643-482f-b2fa-b801fa6f8e02	d7d01197-dad4-4378-aeac-cf5c8645a7fc	1
+5821964a-0ce5-43bb-a836-af2acd92ab02	d7d01197-dad4-4378-aeac-cf5c8645a7fc	296eaf5f-75a3-4190-9ba9-a81544b7f977	1
+f66dfb44-f67d-49ad-aa5a-1949b85aaf25	4272f994-cbfc-4040-b6ca-7b1c05404ef0	0ab7150b-4413-4da6-a901-dd0339c1efcb	1
+a896d15b-f58c-44ef-b615-97329faa2b3f	0e9d7de8-1104-4c68-a267-193a7556328f	5543a801-eb27-49fd-ac53-d66968aa5d85	1
+c6fa9f2d-9281-482a-9b3d-09f48ad585b2	5543a801-eb27-49fd-ac53-d66968aa5d85	3ad64952-2466-4c45-abc4-454a7312c8e8	1
+4e11e36f-387d-4717-86ba-49cb1a464641	3ad64952-2466-4c45-abc4-454a7312c8e8	26bbd0c2-0892-4a12-bf29-f7d6ce9c7fcc	1
+06ce72e6-656b-4187-b552-fd1ed02fb1b3	3ad64952-2466-4c45-abc4-454a7312c8e8	66f9169d-4cff-485d-a4b1-03595a6b73fd	2
+b655f2db-db39-4c55-a2d8-602586019249	26bbd0c2-0892-4a12-bf29-f7d6ce9c7fcc	bfa41aac-49c8-4783-a749-c16d1ab6630b	1
+f57465f2-ed23-4c17-889d-5da9b772103b	bfa41aac-49c8-4783-a749-c16d1ab6630b	b34dd726-10bb-4a65-9ae8-04e45c9e0a7d	1
+a5ef2feb-8756-4389-a9c8-19615d14a2e3	66f9169d-4cff-485d-a4b1-03595a6b73fd	befb1aa1-6f93-4950-81c3-1a3dedf33415	1
+450f6ca4-8655-44c8-9a9d-b9fb0a7aa277	cc087716-cecc-44ef-8850-a6261b5ac065	32c801c0-624b-40dd-b2b0-b9c8d7389aaa	1
+edbd89cb-ea58-4e2e-9fc1-fa28afe2c91e	cc087716-cecc-44ef-8850-a6261b5ac065	2f8e22b6-cd6c-4f5d-ac45-741362c3d8db	2
+af8184c9-9cff-4106-9ecc-edaafaa79ef6	32c801c0-624b-40dd-b2b0-b9c8d7389aaa	a9119f90-ae41-462e-ab81-c79045e2583a	1
+dede8ed4-1ad4-4593-b1a2-5d88c79d2bc2	2f8e22b6-cd6c-4f5d-ac45-741362c3d8db	2e946eea-c9f9-4e03-b9b8-5bc05acfc569	1
+a2a8c348-1821-4046-a7bd-178a4d53de36	2f8e22b6-cd6c-4f5d-ac45-741362c3d8db	b5369af0-b0bc-4359-93c4-1a21e128604b	2
+80a27155-0200-49c3-878a-afdc99596c52	2e946eea-c9f9-4e03-b9b8-5bc05acfc569	94fda433-bcf3-4f59-9f9f-19a26e18ea1f	1
+ca64459f-e350-4a64-a13a-497a231fda6f	94fda433-bcf3-4f59-9f9f-19a26e18ea1f	d08684eb-bc5d-4802-92ec-dd584cbe87f3	1
+b3aa749c-0e03-4846-9b98-b4d6d6f64a1b	94fda433-bcf3-4f59-9f9f-19a26e18ea1f	9dd09dfd-b54f-4bb4-a6ae-9ddce4b1d125	2
+1c6f975f-67c0-46d7-82d5-6f2d7ac62ff9	d08684eb-bc5d-4802-92ec-dd584cbe87f3	5543a801-eb27-49fd-ac53-d66968aa5d85	1
+fa5df9bc-84ae-49fd-913a-3863e556cec1	9dd09dfd-b54f-4bb4-a6ae-9ddce4b1d125	1f681bf7-e18d-4a04-927e-5d0a1cf08174	1
+430a309e-ffc0-44c0-bc06-d483f569218a	1f681bf7-e18d-4a04-927e-5d0a1cf08174	fa4f7d03-e5d2-4dc5-b57b-224aec159421	1
+b15b8934-aeff-45ed-8bab-ae771dcf624b	fa4f7d03-e5d2-4dc5-b57b-224aec159421	6967695d-669f-4cb2-baec-e8ff9d9b50fa	1
+8a7a43c9-a250-4556-917f-4132b26a18d2	fa4f7d03-e5d2-4dc5-b57b-224aec159421	33ab6f43-a6bc-416c-9fe9-72eb2bbb3bc1	2
+18402157-c98b-4503-8f16-d4399d624a4e	6967695d-669f-4cb2-baec-e8ff9d9b50fa	a115f19f-3daa-48dd-ae07-51c72fd81f35	1
+fc086152-b737-42d5-b842-e197f00589d5	a115f19f-3daa-48dd-ae07-51c72fd81f35	80cb6ee6-60b8-4e3a-a1be-5e4d6c679252	1
+d087b6f4-0f18-4009-9d0d-71009096ba9c	33ab6f43-a6bc-416c-9fe9-72eb2bbb3bc1	86d48bf7-b0e6-4a4a-82c8-d43a246eec43	1
+c41f578b-700f-4935-8500-8b0dd00f6b6c	b5369af0-b0bc-4359-93c4-1a21e128604b	e2b4390c-7ec9-454c-b177-020388b33592	1
+5ef7806e-ad6c-43a2-9b3d-7b6fd484c715	3fdce53a-e7ae-49cf-846e-81c2b57bc203	00182e46-02d8-44f3-90aa-aeed4b86eb4e	1
+a71f14dc-d476-4353-89ae-4aacef57f840	68d798f3-7959-472a-b269-77b25ce17f15	ec234a72-148a-4e64-ade2-27d5d8ee5657	1
+7ff3ec4b-80dc-4a72-97c6-c7b7cd5e6287	68d798f3-7959-472a-b269-77b25ce17f15	c118920d-cb09-4538-9c63-60bb03669b67	2
+d9b67463-7ae1-41cc-b508-f3928c710f31	01ffe021-3e41-4b3c-a235-0449afedf1a8	5020708d-fda3-4d55-aa4f-b30692011a7f	1
+668194a9-4326-42af-afba-ee9a11bf73b2	b52652c1-3b14-4859-af3f-07d26ff3dbce	e726ffd6-3e0f-483b-aa91-846208d522c1	1
+73fbf622-a00b-45e4-96f4-e8bfa30be9a2	5020708d-fda3-4d55-aa4f-b30692011a7f	6a12facf-1a70-4baf-ba74-c9eed313d3dd	1
+11a5ea21-2561-4f47-a5fa-f55191b5ef6b	5020708d-fda3-4d55-aa4f-b30692011a7f	31bd32b3-6acc-4654-9f8e-fc68e7f395d9	2
+4aea4df0-6a55-4fdc-9f3b-5ecb3c82bdc9	e726ffd6-3e0f-483b-aa91-846208d522c1	6a12facf-1a70-4baf-ba74-c9eed313d3dd	1
+694f2d3f-53eb-40b5-b632-70b569ef0390	e726ffd6-3e0f-483b-aa91-846208d522c1	31bd32b3-6acc-4654-9f8e-fc68e7f395d9	2
+22498c75-387a-4483-b205-53638ccf0f80	00182e46-02d8-44f3-90aa-aeed4b86eb4e	01ffe021-3e41-4b3c-a235-0449afedf1a8	1
+0878b552-bb3c-4839-9d61-062adbe891ad	00182e46-02d8-44f3-90aa-aeed4b86eb4e	b52652c1-3b14-4859-af3f-07d26ff3dbce	2
+f3fcd1fa-65f9-4207-ab6a-e07369f6b0f3	edc2fa79-a2e7-46fe-b08b-72d652082cec	68d798f3-7959-472a-b269-77b25ce17f15	1
+dccabbf2-fbc6-4f16-b5f4-05aa5140caf3	edc2fa79-a2e7-46fe-b08b-72d652082cec	3fdce53a-e7ae-49cf-846e-81c2b57bc203	2
+d1dde666-6bc9-558f-b5f3-32de9f51c365	d4a79b1e-2fd3-5526-ba61-0afcc5e4549e	8b75cbfa-8d26-519f-a80b-d346aa4c37fb	1
+34aac5e5-71d5-5f2e-a9b0-aa85b828c887	d4a79b1e-2fd3-5526-ba61-0afcc5e4549e	103a7134-7357-55fd-922e-a4bfb6d3fe11	2
+3196bcf2-a70e-57a4-b3f1-ea1b2c1e31cf	d4a79b1e-2fd3-5526-ba61-0afcc5e4549e	0eca67b2-9c2e-5614-993f-951e970b34ef	3
+e0d6cefe-8a23-5104-b12e-c48071b4633a	d4a79b1e-2fd3-5526-ba61-0afcc5e4549e	d4050ff3-58a2-53b2-ba4a-876f8d3fc3e7	4
+486a05a6-3946-569d-bb93-39059f287955	8b75cbfa-8d26-519f-a80b-d346aa4c37fb	f551f2cf-18f7-5261-a322-a02e58f1bf30	1
+a7a360e8-8941-591b-9429-1e2754e9aeca	8b75cbfa-8d26-519f-a80b-d346aa4c37fb	d26f0496-b35f-5909-8975-c2329b388ea9	2
+0c8f0fb6-9c0f-50dc-975e-5038bd665202	8b75cbfa-8d26-519f-a80b-d346aa4c37fb	6de65559-da01-52b5-94e5-a2a916e248e8	3
+26a29ff7-6426-552e-8bee-ace4f234ca1e	8b75cbfa-8d26-519f-a80b-d346aa4c37fb	e178b23e-f8e8-5d9f-8207-34404155166b	4
+beee2c29-de53-5a58-a91d-8dba76522a72	103a7134-7357-55fd-922e-a4bfb6d3fe11	f551f2cf-18f7-5261-a322-a02e58f1bf30	1
+25b975f1-3232-5263-8f5e-26e81e7c3fda	103a7134-7357-55fd-922e-a4bfb6d3fe11	d26f0496-b35f-5909-8975-c2329b388ea9	2
+0e3ca9b1-e038-5377-9f4d-0de3d703b3ef	103a7134-7357-55fd-922e-a4bfb6d3fe11	6de65559-da01-52b5-94e5-a2a916e248e8	3
+8a0de5cc-fce5-55b1-b98b-5c170a49ecd6	103a7134-7357-55fd-922e-a4bfb6d3fe11	e178b23e-f8e8-5d9f-8207-34404155166b	4
+f02c666c-2fa8-56a7-a8ec-16c4fa0e1279	0eca67b2-9c2e-5614-993f-951e970b34ef	de89d76b-1556-5e3c-b13d-902195434de3	1
+28765cdf-5c26-5be5-baec-da1903ff58e7	d4050ff3-58a2-53b2-ba4a-876f8d3fc3e7	de89d76b-1556-5e3c-b13d-902195434de3	1
+4fa5272a-e55b-575c-97dc-41c1fffdd7a8	f551f2cf-18f7-5261-a322-a02e58f1bf30	6299ea87-2ba4-52b4-9752-bbd2a796e0ff	1
+fc87d331-7753-507f-b254-cf8f0e048988	d26f0496-b35f-5909-8975-c2329b388ea9	b2f92cb6-82fc-52ba-a4ca-54257fc2f0b7	1
+7ade7690-1566-57d2-ad0f-e0bbae54c049	6de65559-da01-52b5-94e5-a2a916e248e8	ef39acd8-3c32-5eda-bca8-a6c79adfcaf2	1
+d13e07b4-3771-539d-a3c4-f7224cfd25a9	e178b23e-f8e8-5d9f-8207-34404155166b	bc668dbe-04db-5f5d-a80d-fd1a51f5037b	1
+1a1582ce-e757-5d37-8e27-65ac488187cd	6299ea87-2ba4-52b4-9752-bbd2a796e0ff	de89d76b-1556-5e3c-b13d-902195434de3	1
+efe639d5-0fdb-5d06-826c-e3b960beeb7d	b2f92cb6-82fc-52ba-a4ca-54257fc2f0b7	de89d76b-1556-5e3c-b13d-902195434de3	1
+f40d14d7-364c-5418-b791-bceda4a77b1f	ef39acd8-3c32-5eda-bca8-a6c79adfcaf2	de89d76b-1556-5e3c-b13d-902195434de3	1
+d2b8bd11-6a7f-5c6e-b8ba-4c6de0a40f73	bc668dbe-04db-5f5d-a80d-fd1a51f5037b	de89d76b-1556-5e3c-b13d-902195434de3	1
+17ec4ab3-c516-5bbc-8d3f-7939b2750532	0878afaa-2a79-5188-94f6-c27d064f9402	9bc0e11b-2f69-5420-a680-6165ec1e61fd	1
+4da9327a-b69b-56ca-a9e1-30e035facb51	0878afaa-2a79-5188-94f6-c27d064f9402	0d880900-1578-512f-993d-012bf287ed9c	2
+1ec8426a-e5ac-5944-bc14-f2db7559fd2f	0d880900-1578-512f-993d-012bf287ed9c	31a12b62-51e6-595b-bb87-5e214f2f8f97	1
+d3a01d27-5f8a-5c7b-9125-073e76eb67a4	31a12b62-51e6-595b-bb87-5e214f2f8f97	4e8ed9cf-1693-5ca9-9c3e-6c1abbfc8143	1
+3838d992-8e37-51f2-8daa-5897392c54a8	31a12b62-51e6-595b-bb87-5e214f2f8f97	3bef0da4-1b69-573b-b077-07a8d46a1584	2
+be94686c-fc70-5479-a28b-3c5209e9cff7	31a12b62-51e6-595b-bb87-5e214f2f8f97	4227dbf8-f310-59cc-9f5f-75bdf08459c8	3
+e8580ea2-2802-5ac6-ace9-f14cfb1b4d42	31a12b62-51e6-595b-bb87-5e214f2f8f97	49dfc288-d480-5262-a05e-9edad085b25a	4
+0c873821-a364-52f2-be42-f66535f910ed	4e8ed9cf-1693-5ca9-9c3e-6c1abbfc8143	877ac137-c482-5091-9494-bd882b0cf7cd	1
+34d494d9-586f-5727-8e6b-eefde78de6d0	877ac137-c482-5091-9494-bd882b0cf7cd	93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	1
+9f1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c	877ac137-c482-5091-9494-bd882b0cf7cd	d8271d2d-79ff-50e5-be69-ee29cc68f432	2
+dfee59ac-2d23-559e-80ba-b60dd8ba33a7	49dfc288-d480-5262-a05e-9edad085b25a	5880accb-c184-5bfe-a6c0-78845c4ba7be	1
+c71a44d1-0412-568b-a36b-1bb7bd699b77	5880accb-c184-5bfe-a6c0-78845c4ba7be	93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	1
+a2b3c4d5-e6f7-8a9b-0c1d-2e3f4a5b6c7d	5880accb-c184-5bfe-a6c0-78845c4ba7be	d8271d2d-79ff-50e5-be69-ee29cc68f432	2
+adf69fd5-7e4b-5b38-aa2d-57308eaa3de9	3bef0da4-1b69-573b-b077-07a8d46a1584	465565d5-433a-563c-8b06-78b98785b814	1
+4fbfb060-bf0b-58c9-8d2c-17982208f3ba	465565d5-433a-563c-8b06-78b98785b814	339634e2-d9f3-5366-b8b0-60cba53abba6	1
+a69f9f2c-096d-5fb9-972e-f2695b740a25	339634e2-d9f3-5366-b8b0-60cba53abba6	93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	1
+383f2b44-bb73-5080-b05a-95cd2e96db8b	339634e2-d9f3-5366-b8b0-60cba53abba6	d8271d2d-79ff-50e5-be69-ee29cc68f432	2
+a7637926-2376-53d3-9cad-9de5387ee27e	4227dbf8-f310-59cc-9f5f-75bdf08459c8	30cee5c4-7eba-556e-8b51-dea56475179e	1
+6181d575-f571-53a0-a64a-a57cbde419dc	30cee5c4-7eba-556e-8b51-dea56475179e	debdecef-88df-5601-8cfc-b5eb91b8b08f	1
+88179ad8-1767-5b18-97d4-f38fd9b34b8a	debdecef-88df-5601-8cfc-b5eb91b8b08f	93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	1
+e14458f3-a3d0-5aa2-8d38-1f7a5d9735a4	debdecef-88df-5601-8cfc-b5eb91b8b08f	d8271d2d-79ff-50e5-be69-ee29cc68f432	2
+b1f6e489-a934-5a25-a8de-4b4d8ce64eea	93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	3f8ae7a2-1a20-5a7a-8f80-0abb5eed489e	1
+fe0dae5c-3849-5dc1-ae5b-0c6c8e84ac63	93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	ca0c7576-4117-510d-b28b-6eff717791f7	2
+cf52cec7-bdb7-5907-b4bd-3cde3b124370	d8271d2d-79ff-50e5-be69-ee29cc68f432	1208d7cb-f28c-5131-afad-9249828c164c	1
+712a167a-71d8-49ee-b18e-1cabfb1d9c13	9bc0e11b-2f69-5420-a680-6165ec1e61fd	a1b2c3d4-e5f6-5a7b-8c9d-0e1f2a3b4c5d	1
+c6d98ae7-1ad1-46e0-addb-f5d3445262ac	9bc0e11b-2f69-5420-a680-6165ec1e61fd	b2c3d4e5-f6a7-5b8c-9d0e-1f2a3b4c5d6e	2
+58ae285c-a1de-42c1-9f96-d71f8e00b424	3f8ae7a2-1a20-5a7a-8f80-0abb5eed489e	a1b2c3d4-e5f6-5a7b-8c9d-0e1f2a3b4c5d	1
+fb4d0f5d-fa87-4a9d-850d-50b5674c7046	3f8ae7a2-1a20-5a7a-8f80-0abb5eed489e	b2c3d4e5-f6a7-5b8c-9d0e-1f2a3b4c5d6e	2
+47890d90-00f5-4639-b3d2-339470b7fa26	1208d7cb-f28c-5131-afad-9249828c164c	a1b2c3d4-e5f6-5a7b-8c9d-0e1f2a3b4c5d	1
+89193e6d-857f-40fd-b3c2-9a4783e4efa2	1208d7cb-f28c-5131-afad-9249828c164c	b2c3d4e5-f6a7-5b8c-9d0e-1f2a3b4c5d6e	2
+cc1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c	ca0c7576-4117-510d-b28b-6eff717791f7	a1b2c3d4-e5f6-5a7b-8c9d-0e1f2a3b4c5d	1
+dd2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d	ca0c7576-4117-510d-b28b-6eff717791f7	b2c3d4e5-f6a7-5b8c-9d0e-1f2a3b4c5d6e	2
+1de61262-4c5c-49cc-a11c-4d4478ff38ff	b091a990-61f9-47c6-bb4b-a0a34ac6e375	2284cf0e-04f3-4f9e-9d37-22559644355b	1
+944c5af8-b9e5-4b1e-9c76-c031ccf53d66	2284cf0e-04f3-4f9e-9d37-22559644355b	54d4f809-2b6b-4bef-9c19-2a8a1b68b85a	1
+2dc3c18b-8920-4928-9c53-0b699cb293f3	2284cf0e-04f3-4f9e-9d37-22559644355b	5b5060fb-0a8d-4172-a2b4-d5dea8cb61ef	2
+64bd5138-5a0b-4d57-b1ed-3cfc4e5e4cbc	54d4f809-2b6b-4bef-9c19-2a8a1b68b85a	8a867ec1-5ea6-4ce3-8e0c-840f333a5aa4	1
+e5545262-c543-4ba6-8dfe-829de11de0a8	8a867ec1-5ea6-4ce3-8e0c-840f333a5aa4	6dc877e2-2d2a-46c7-a8d1-cc3a4388401d	1
+86533ef2-ebd1-41fa-a3b5-bb43255d51d4	6dc877e2-2d2a-46c7-a8d1-cc3a4388401d	8e360d41-4cb5-48bf-a6b2-5cd1f5796d5f	1
+c66bf3da-75bd-46df-8559-d3e3afc3d8f5	6dc877e2-2d2a-46c7-a8d1-cc3a4388401d	02ab528c-3f90-46e7-a135-db9778870b64	2
+8e732f42-09e4-4441-9945-c149cfbc6d9b	8e360d41-4cb5-48bf-a6b2-5cd1f5796d5f	c3e81015-fa4a-462e-ba74-369fb405da78	1
+55ee9a33-2bef-45ba-8031-ce233e886066	c3e81015-fa4a-462e-ba74-369fb405da78	27c5cb2b-1182-402d-9bb4-2ec3739941d2	1
+01fee17a-e123-484e-8720-1429a6ad1d4d	c3e81015-fa4a-462e-ba74-369fb405da78	9f5cb5d2-dff6-44c4-83c0-38f4470cc3d0	2
+18d3547f-f6f7-4182-8130-e3d544c81780	02ab528c-3f90-46e7-a135-db9778870b64	13a3e412-984a-467f-84ac-27c0c70cb892	1
+562a28cc-a107-40be-abfb-9feedee11938	13a3e412-984a-467f-84ac-27c0c70cb892	bbf8316d-9146-4b49-87c0-0af67392130b	1
+09bc6707-5ef3-472b-ae1a-1341687b6550	13a3e412-984a-467f-84ac-27c0c70cb892	7b695edb-dd31-4e32-af13-3feb66c48e66	2
+5601d1ee-a006-482d-b4a6-394bb8b5fba9	bbf8316d-9146-4b49-87c0-0af67392130b	c82a074a-7873-40a8-9874-29f2f9a627a4	1
+59b4b88a-2752-43f6-b4c7-a58349d3fc1d	c82a074a-7873-40a8-9874-29f2f9a627a4	6e9613bd-09ce-484f-858c-0dfc5d120cce	1
+ba5e044b-d6b8-47d5-a435-f44f4951206d	6e9613bd-09ce-484f-858c-0dfc5d120cce	5c4039b9-84d2-4187-bf8c-b02fe2350063	1
+bb2ad36f-4e30-4093-8ca1-5e133759bff2	6e9613bd-09ce-484f-858c-0dfc5d120cce	29a1413a-e96e-45ec-b43c-db26c11789bb	2
+fbc42b77-88b0-4ff1-9f38-02971463d0e8	5c4039b9-84d2-4187-bf8c-b02fe2350063	392b6a0b-7c8e-419b-8fb5-f14a90c3b2f8	1
+f6f3c61f-0037-4a1c-a096-5164b4c801ca	392b6a0b-7c8e-419b-8fb5-f14a90c3b2f8	27c5cb2b-1182-402d-9bb4-2ec3739941d2	1
+422b1987-8145-40c7-835d-d2070263f3c3	392b6a0b-7c8e-419b-8fb5-f14a90c3b2f8	9f5cb5d2-dff6-44c4-83c0-38f4470cc3d0	2
+7ec23be2-ad42-4e72-aa99-fbb1a76b2b6d	29a1413a-e96e-45ec-b43c-db26c11789bb	8943a52d-445d-4c5f-a33d-e7f71edcda20	1
+c22ad075-8e7a-45e4-8560-ff9ac3a65b41	8943a52d-445d-4c5f-a33d-e7f71edcda20	27c5cb2b-1182-402d-9bb4-2ec3739941d2	1
+5fc8fadb-55d1-46dd-977f-958c7f850a75	8943a52d-445d-4c5f-a33d-e7f71edcda20	9f5cb5d2-dff6-44c4-83c0-38f4470cc3d0	2
+e1a435c7-174d-4639-ace0-011c073dadbe	7b695edb-dd31-4e32-af13-3feb66c48e66	ecc9c7d9-6ed8-4add-b908-f4a36b29bdfa	1
+ffe76e1f-d26f-48c3-97ff-793a3064c128	ecc9c7d9-6ed8-4add-b908-f4a36b29bdfa	27c5cb2b-1182-402d-9bb4-2ec3739941d2	1
+0edfe696-a12c-43e1-aeef-89f1fc93fb7c	ecc9c7d9-6ed8-4add-b908-f4a36b29bdfa	9f5cb5d2-dff6-44c4-83c0-38f4470cc3d0	2
+511bd4db-9191-4462-850f-fec12b68eb16	5b5060fb-0a8d-4172-a2b4-d5dea8cb61ef	ab407d81-938c-4f6a-9937-0259bdf2a4b8	1
+51717c50-7d45-44f8-94b3-ea71d76d9784	ab407d81-938c-4f6a-9937-0259bdf2a4b8	3eaff7e6-b016-4775-907e-d57b14316bf2	1
+bc324331-9147-4d0d-9a09-6bd1a8f5f5ed	3eaff7e6-b016-4775-907e-d57b14316bf2	27c5cb2b-1182-402d-9bb4-2ec3739941d2	1
+e222a5ab-5c7e-4ea1-8544-2f8cc8527f26	3eaff7e6-b016-4775-907e-d57b14316bf2	9f5cb5d2-dff6-44c4-83c0-38f4470cc3d0	2
+2bc20b0c-e635-4678-9a91-9792ae207979	dc98e224-0743-49ec-9111-3c6f66e6fec5	a671d656-ad9f-4285-aa95-e1fc83c18f34	1
+bbf524db-be4c-4184-93fc-792a97761819	dc98e224-0743-49ec-9111-3c6f66e6fec5	cb4e7627-8be2-46d7-ba61-75027fcadd61	2
+a27d6e7c-c91f-4514-9e7e-87a5139bd679	dc98e224-0743-49ec-9111-3c6f66e6fec5	e9806f6f-d538-4d91-81cc-0d90a1c9609c	3
+b186e2a7-6356-4879-ae45-0b2c87782c62	e9806f6f-d538-4d91-81cc-0d90a1c9609c	defd8834-a6f4-4f01-b748-9c06a1ef9963	1
+44f2ce67-6484-4980-83d2-7af0b782f9d6	a671d656-ad9f-4285-aa95-e1fc83c18f34	90b23d3e-8b13-43f3-9c2d-8f8858c6c643	1
+9b5397f1-0a75-4b8f-a1aa-697e3836fca5	cb4e7627-8be2-46d7-ba61-75027fcadd61	90b23d3e-8b13-43f3-9c2d-8f8858c6c643	1
+d071d4b0-d8f0-4572-89bf-f07e4ee5281d	90b23d3e-8b13-43f3-9c2d-8f8858c6c643	c3bd2db9-7aba-4717-9374-4d782a694759	1
+fd33a9a6-4bcc-4f6c-a3e6-668a8f430a3b	90b23d3e-8b13-43f3-9c2d-8f8858c6c643	5f02e857-990d-4ebe-a0a9-68884e31d737	2
+c8bc36c6-6877-48d4-9041-852a8457f0cb	90b23d3e-8b13-43f3-9c2d-8f8858c6c643	f331fd19-bb3e-4b33-89c8-93a42f9c33c5	3
+19e25e87-b188-4c01-b7a1-479d4f69252d	90b23d3e-8b13-43f3-9c2d-8f8858c6c643	836153af-e9e1-4dc0-b287-de2eafea3910	4
+fc0a35a8-d7cc-4e20-bb6a-0f0875eecc81	90b23d3e-8b13-43f3-9c2d-8f8858c6c643	dd42c4e2-e3c5-4120-9af0-638bd8d6860c	5
+a2db5d85-5a71-41b9-8b63-ebc7273df6bc	c3bd2db9-7aba-4717-9374-4d782a694759	ffc06448-0a7d-43a4-8295-ed6d52ad6978	1
+05b09f96-5f56-493e-9843-befdba7765e6	5f02e857-990d-4ebe-a0a9-68884e31d737	5c2989f1-d68f-48af-9c9b-7a3a72f1ba35	1
+0d5f3611-2098-4733-9713-e0a3ad5b1ca1	f331fd19-bb3e-4b33-89c8-93a42f9c33c5	3bf12557-a06e-44ac-adfb-da0004db5e47	1
+8ff2da8b-670a-4cf9-99f2-5856aeb0215e	836153af-e9e1-4dc0-b287-de2eafea3910	3bf12557-a06e-44ac-adfb-da0004db5e47	1
+ec6930d0-52cc-4e73-b65d-1dcd9b2741b9	dd42c4e2-e3c5-4120-9af0-638bd8d6860c	1f19d5a8-96a5-4292-8a65-e2e14ca3aefc	1
+22f6edfc-c75d-4f58-b9d7-adf070aad30d	dd42c4e2-e3c5-4120-9af0-638bd8d6860c	30b3b86e-8ce8-4ae1-8e0f-bf899c225544	2
+283c7285-67fa-413d-b2d6-63d5f2ab2d7f	5c2989f1-d68f-48af-9c9b-7a3a72f1ba35	dbe30126-44ec-4c56-829c-708a70377dc5	1
+976cba79-409c-4cb5-8df3-85f57b3441ad	5c2989f1-d68f-48af-9c9b-7a3a72f1ba35	e751565d-5998-4447-b42c-eefe0875ccb7	2
+2f7141df-55a8-4ec9-87ea-d01c4071bb17	3bf12557-a06e-44ac-adfb-da0004db5e47	dbe30126-44ec-4c56-829c-708a70377dc5	1
+5772df3a-f561-4f80-ba2d-12c8b78873bd	3bf12557-a06e-44ac-adfb-da0004db5e47	e751565d-5998-4447-b42c-eefe0875ccb7	2
+7bbedfd8-dafa-4251-9876-c1b48abdc128	dbe30126-44ec-4c56-829c-708a70377dc5	af8bcf05-a21b-4088-8a63-46fa63185b7a	1
+75417199-4a3d-4e83-9fa0-372a24cff2f7	e751565d-5998-4447-b42c-eefe0875ccb7	04b4e1d5-11ab-4d25-9f07-13d058f2fe9d	1
+c1b371c7-9d07-4d44-9996-6145feacabb3	af8bcf05-a21b-4088-8a63-46fa63185b7a	36028c0b-d677-4efd-9d89-6868f677300f	1
+0e2c6738-b945-4abc-84d1-0db7b7f74b50	af8bcf05-a21b-4088-8a63-46fa63185b7a	df96c137-3378-4753-b2a8-dccd72a244f8	2
+9d538074-c040-431b-b8fc-458537364017	af8bcf05-a21b-4088-8a63-46fa63185b7a	82d04526-8de0-42f0-85ac-3d4e1b603ab6	3
+f336e7a9-91ad-4b3e-ae62-865a622662c4	36028c0b-d677-4efd-9d89-6868f677300f	e8197786-f1f5-4718-b574-ddca2e736978	1
+67fb48e9-fd62-4710-9794-cb4bf004af09	df96c137-3378-4753-b2a8-dccd72a244f8	e8197786-f1f5-4718-b574-ddca2e736978	1
+39341121-b3da-4984-b285-ba44e1eff9c7	82d04526-8de0-42f0-85ac-3d4e1b603ab6	e8197786-f1f5-4718-b574-ddca2e736978	1
+dccdc020-ac9d-4ddc-8222-952a54c4ee41	04b4e1d5-11ab-4d25-9f07-13d058f2fe9d	35f6bea4-1c2c-46b8-a0a3-d0f08fecebcd	1
+c8bff402-3701-461d-820b-9148044f17e7	35f6bea4-1c2c-46b8-a0a3-d0f08fecebcd	963bbde1-3b32-4072-96ba-66d230aca8bf	1
+de84d0ef-7d5f-49e2-a293-a3b5133cfd6c	35f6bea4-1c2c-46b8-a0a3-d0f08fecebcd	3a9fa478-e803-489f-a13e-0f616615f529	2
+6e0e3f71-7e4b-4c73-9ef7-c677e151b885	963bbde1-3b32-4072-96ba-66d230aca8bf	54dafeb4-5f46-4ed4-b7fb-fec57a3c0029	1
+f9e32734-2daa-420e-912b-1205b85f47b1	3a9fa478-e803-489f-a13e-0f616615f529	a604674f-7384-4fb2-a663-bc3944337246	1
+9e72baec-cf51-4bf7-b36d-c4502cd61f08	1f19d5a8-96a5-4292-8a65-e2e14ca3aefc	d5af70df-5c22-4524-96e9-a6fd37acfaff	1
+c9065c54-22f6-4b2d-91ea-3318e09ebebc	1f19d5a8-96a5-4292-8a65-e2e14ca3aefc	1290beb3-4be1-42be-8e86-80361913f907	2
+d7bf1139-997e-4e2d-9d2f-502cf921be8b	30b3b86e-8ce8-4ae1-8e0f-bf899c225544	d5af70df-5c22-4524-96e9-a6fd37acfaff	1
+b624b514-c41d-4fce-90e4-b4e0ca4f6abd	30b3b86e-8ce8-4ae1-8e0f-bf899c225544	1290beb3-4be1-42be-8e86-80361913f907	2
+ab119443-91f4-48eb-9acf-53de2ac629ac	d5af70df-5c22-4524-96e9-a6fd37acfaff	dbe4c15b-a6ef-452d-a318-b050d1bf9d5d	1
+bbb57722-986a-42d5-be40-79167bf6193f	1290beb3-4be1-42be-8e86-80361913f907	dbe4c15b-a6ef-452d-a318-b050d1bf9d5d	1
+e994686b-35f3-49f0-9b08-ad4403145c54	54dafeb4-5f46-4ed4-b7fb-fec57a3c0029	dbe4c15b-a6ef-452d-a318-b050d1bf9d5d	1
+d5b1cbf6-3440-4a2d-8f46-65e2a5fa2723	a604674f-7384-4fb2-a663-bc3944337246	dbe4c15b-a6ef-452d-a318-b050d1bf9d5d	1
+ce82f1b8-1cba-4891-9be3-b2db3daf8b6a	dbe4c15b-a6ef-452d-a318-b050d1bf9d5d	ef92df48-2219-45a1-a5e8-818b052a6b60	1
+488bc096-a048-4b88-9717-86b733c0156a	ef92df48-2219-45a1-a5e8-818b052a6b60	6a3f79b6-dee1-4f2a-962c-9b3fa96a3d48	1
+a9c49f9f-cb8f-4ee7-9c5b-02ddfe81f810	e8197786-f1f5-4718-b574-ddca2e736978	a3aafcec-6a7b-4dec-903e-c3fea2be4dad	1
+e772f765-723d-4f48-a145-cfbebfc295f1	a3aafcec-6a7b-4dec-903e-c3fea2be4dad	10eb7a06-764c-4ae7-9391-01a868025771	1
+d8fe00d6-c2f8-4dc0-b546-8dc141095168	a3aafcec-6a7b-4dec-903e-c3fea2be4dad	cd911f23-23ea-4a2e-9fee-05d41c2ededc	2
+c4b52cf4-3e93-4947-a550-1d81a6bdf54a	10eb7a06-764c-4ae7-9391-01a868025771	be39376c-bcc1-458e-9c14-666190a3b2cb	1
+7eef7a67-bfd3-419e-a60e-9aba01de6d8c	10eb7a06-764c-4ae7-9391-01a868025771	201508d7-82e4-485c-b683-755af31dd8ef	2
+5ab367d0-2f2f-477c-8f29-9c7008601a82	10eb7a06-764c-4ae7-9391-01a868025771	a2abca12-7f23-4c2c-a074-4550d807c223	3
+67726c13-71ee-4b13-b76f-254f406a9f29	be39376c-bcc1-458e-9c14-666190a3b2cb	4348e7a3-9c1a-440f-8a9f-48569e6cb142	1
+8cca6817-9e91-4b2b-9e36-e6084da11b7a	201508d7-82e4-485c-b683-755af31dd8ef	7a568755-5190-484b-a63b-e0508a7dbeeb	1
+44f6f2f1-38d4-461a-8ea4-0087dea673c0	a2abca12-7f23-4c2c-a074-4550d807c223	5176834b-7f0f-464c-96b6-0aeb52b4121b	1
+dd867a65-48bf-43da-bcdb-587fcdee602c	cd911f23-23ea-4a2e-9fee-05d41c2ededc	f5ccb0d9-96f5-444b-bfe9-202afa69e1bc	1
+849e7193-ae71-4935-8ae6-7c557d3c52fb	cd911f23-23ea-4a2e-9fee-05d41c2ededc	ebfc17f2-78bb-4f0f-a2d2-2960ab0a2cbf	2
+9f9b9534-54ca-4eed-b9b4-07021708ed8e	cd911f23-23ea-4a2e-9fee-05d41c2ededc	c4601693-22d1-4b02-b02e-385ced0783f4	3
+b389d8cd-6c6e-421d-8391-b5397af71e15	f5ccb0d9-96f5-444b-bfe9-202afa69e1bc	ba46f4c2-f4e3-49fe-87ec-dc2091a2580d	1
+b6f52e45-28b0-4e7f-97c6-dc23e8a17cdd	ebfc17f2-78bb-4f0f-a2d2-2960ab0a2cbf	ba46f4c2-f4e3-49fe-87ec-dc2091a2580d	1
+5295b925-31ae-4d32-8d6c-92e2fc62c662	c4601693-22d1-4b02-b02e-385ced0783f4	c172f668-f132-49f4-bacb-2fe7b18391d9	1
+46b94323-0fca-475a-b323-213fd5c0ac80	ba46f4c2-f4e3-49fe-87ec-dc2091a2580d	c172f668-f132-49f4-bacb-2fe7b18391d9	1
+7153540d-f210-47eb-9bdf-67a5b40e77b4	bb6dadda-b610-4172-8435-88e0111ee741	455fcd4a-e8f2-4b03-b67a-71784b796683	1
+7f55db0f-7bde-4030-ad2f-85c335f5f718	bb6dadda-b610-4172-8435-88e0111ee741	b52de82a-7ee3-4efd-b12b-199031f33beb	2
+c9aa1f5d-0898-4a9f-896b-9718c2af80f7	455fcd4a-e8f2-4b03-b67a-71784b796683	d98b6c15-9c2b-4b7b-a6cb-f869f625f98a	1
+377d0452-46aa-44c4-883d-f159386271c9	d98b6c15-9c2b-4b7b-a6cb-f869f625f98a	583fb951-4f9f-48ef-b652-85c8d6fe7101	1
+6254c403-b820-4100-8c42-c040ad5f5c29	583fb951-4f9f-48ef-b652-85c8d6fe7101	379b8afc-b896-410f-bb13-c2e38bef13ad	1
+c41e0028-4b25-489f-a3c8-204bdeaf1cf4	583fb951-4f9f-48ef-b652-85c8d6fe7101	39319a8a-753e-4b85-8611-24d214b78327	2
+1d339393-b1aa-407c-84f6-80d5dcae8b97	379b8afc-b896-410f-bb13-c2e38bef13ad	ac540e55-906b-437f-a6af-2eccb619bbb5	1
+03795239-89ba-4f82-b221-15e359143cea	39319a8a-753e-4b85-8611-24d214b78327	da1ba865-b2d4-4677-85ad-15496aad4653	1
+c1ae4e3d-3fa0-4320-b53f-9ab4db9734d9	da1ba865-b2d4-4677-85ad-15496aad4653	d79e31dd-3e3f-43f9-bc55-29657d900c2f	1
+d0a185d4-7004-4fde-b18d-27dded426a45	d79e31dd-3e3f-43f9-bc55-29657d900c2f	de43bad7-f682-477d-85ab-a0627f596c6a	1
+04b2b928-a131-46d6-b105-990b66d94507	d79e31dd-3e3f-43f9-bc55-29657d900c2f	9479b0ab-7060-4663-8246-d2206d4bc5e5	2
+17e6f351-1c1a-4d71-8e7b-021e432a9656	de43bad7-f682-477d-85ab-a0627f596c6a	8e783a9b-44d4-4246-9ab1-4bf9a9190d3b	1
+c2923555-8fb0-47cb-9da3-25df8dfd371b	9479b0ab-7060-4663-8246-d2206d4bc5e5	29baba0e-818b-41db-a911-96f799a5b584	1
+5511259a-0c86-44f2-a854-ec31bede5549	ac540e55-906b-437f-a6af-2eccb619bbb5	8b2fa240-abcb-47e8-9e3c-9b0a15cb9958	1
+e1fb81f7-2959-43ac-b173-4bc037e6ece9	ac540e55-906b-437f-a6af-2eccb619bbb5	879486a4-d0bf-42f2-a772-dcb944ddbb93	2
+85365365-f132-4d0f-833b-088a184b5995	8e783a9b-44d4-4246-9ab1-4bf9a9190d3b	8b2fa240-abcb-47e8-9e3c-9b0a15cb9958	1
+021e76c8-aeb2-4b15-8958-d6b354f62c0f	8e783a9b-44d4-4246-9ab1-4bf9a9190d3b	879486a4-d0bf-42f2-a772-dcb944ddbb93	2
+87ccff51-f99b-447b-a21b-644f6bd9c7af	29baba0e-818b-41db-a911-96f799a5b584	8b2fa240-abcb-47e8-9e3c-9b0a15cb9958	1
+f9d2dce5-181f-4c69-822d-ab5038c1e402	29baba0e-818b-41db-a911-96f799a5b584	879486a4-d0bf-42f2-a772-dcb944ddbb93	2
+87ff4a86-6c52-4900-903f-6b4a900871ce	8b2fa240-abcb-47e8-9e3c-9b0a15cb9958	3b5b88f1-65e0-4a2d-934b-fb5a965b6df6	1
+3218e055-323b-4ca7-b5eb-7061dc4b5fe7	879486a4-d0bf-42f2-a772-dcb944ddbb93	e2dcd8e5-7a19-4dc6-a11c-94bc504ba8a4	1
+50957160-9860-4313-b829-5b000d97517e	b52de82a-7ee3-4efd-b12b-199031f33beb	0b167ff7-f286-4da4-8a3a-0ae20545c7b4	1
+51a363d2-fa3d-4c1f-8dd3-d9221eb21eaf	0b167ff7-f286-4da4-8a3a-0ae20545c7b4	84342fec-0e0c-4bb5-a676-49c8df14fcc3	1
+845e061f-a7cf-4265-91cf-702bb5567d3d	84342fec-0e0c-4bb5-a676-49c8df14fcc3	e2dcd8e5-7a19-4dc6-a11c-94bc504ba8a4	1
+be4b90a2-c18f-4e86-bc7f-52f24da2d6cb	166ba4ee-6c47-441b-8ad6-17d2fc69073e	251b8883-c8d8-4e89-b918-09a70b97bdb8	1
+7cb197b5-8ad4-4423-afd0-0bdefdf9ad5c	166ba4ee-6c47-441b-8ad6-17d2fc69073e	52d61845-6472-4822-b946-cdc48444e479	2
+b6e90d2a-fdca-4441-9580-7b30706d15f9	251b8883-c8d8-4e89-b918-09a70b97bdb8	9687ecd1-fc18-40e2-affd-f28fd287fad2	1
+5ef71fc1-445f-4c2e-b113-f44e3927f424	52d61845-6472-4822-b946-cdc48444e479	bc430b73-8c5f-4d47-a3a7-9f6eef544edc	1
+5026ca45-6bc9-4df8-a734-bf71dfbf41c3	bc430b73-8c5f-4d47-a3a7-9f6eef544edc	5f9327f7-08f3-433b-b6cf-4f8d989ed0d1	1
+92dc1833-0a75-41fd-b057-fe3fa88ab6c4	5f9327f7-08f3-433b-b6cf-4f8d989ed0d1	fb9b6b61-9c8b-40d0-bd35-d1f6f7639a4a	1
+958a44cc-d07b-418d-8e2a-6d492d0231bf	5f9327f7-08f3-433b-b6cf-4f8d989ed0d1	d8769fb4-d8e4-42f5-ad62-eb0df756145c	2
+25487806-dc8c-49a8-9ec6-5da515c7d024	5f9327f7-08f3-433b-b6cf-4f8d989ed0d1	85899c37-f375-4798-95be-5ea4d3bcce47	3
+0814aa52-8cac-4296-ba9a-49f13b60fc4a	5f9327f7-08f3-433b-b6cf-4f8d989ed0d1	38207a6c-91d3-425d-a512-79014c6b1b23	4
+1f657e87-7a03-45dd-975e-7ade45897a00	5f9327f7-08f3-433b-b6cf-4f8d989ed0d1	e0e3257a-6ea7-4eba-8ec2-6e34688c6331	5
+0b43ecac-2179-4edb-a6cf-da3a250d7932	5f9327f7-08f3-433b-b6cf-4f8d989ed0d1	247dbdb6-5338-4a9c-8138-10b7578bc149	6
+428e6acc-dcd4-4238-823e-f758691fce03	5f9327f7-08f3-433b-b6cf-4f8d989ed0d1	2302e8ed-f322-40b0-872a-c9d8b863d984	7
+9f00263e-8a5a-43c0-80d1-7f5d5b3bf1ad	5f9327f7-08f3-433b-b6cf-4f8d989ed0d1	a2fdc976-e5d7-4cc8-a4ec-83a1098ffd36	8
+b63e808c-6341-4516-9bd0-8f540f94a5f6	5f9327f7-08f3-433b-b6cf-4f8d989ed0d1	961295af-8239-437a-8106-a6fb9da5d24c	9
+ea212dbb-a16b-4ef9-9fd8-8b2819d1fdc7	fb9b6b61-9c8b-40d0-bd35-d1f6f7639a4a	b15c9c78-c837-4451-af49-19c97d368b36	1
+49078b31-0fab-4d1b-9fc7-48cf0a5d907f	b15c9c78-c837-4451-af49-19c97d368b36	4ecdbf64-7473-438a-ab27-9de45aa83eb2	1
+d71a1ccf-95e8-41b4-b9a5-27b092276c5f	d8769fb4-d8e4-42f5-ad62-eb0df756145c	61f81d80-845e-452c-b80f-02a0bae3e88d	1
+c2b1509d-a3d1-4ef6-833e-94f458e9eac0	61f81d80-845e-452c-b80f-02a0bae3e88d	4ecdbf64-7473-438a-ab27-9de45aa83eb2	1
+54979b4c-880b-48b1-9906-cea354d29dcd	85899c37-f375-4798-95be-5ea4d3bcce47	5f03a0ba-fc0d-4ac1-9e06-f40641921048	1
+00617851-dde0-4aa9-a7ee-a46cc340cb70	5f03a0ba-fc0d-4ac1-9e06-f40641921048	4ecdbf64-7473-438a-ab27-9de45aa83eb2	1
+a4ecca27-fab0-475d-afb7-1e2d092cb8da	38207a6c-91d3-425d-a512-79014c6b1b23	2ae327a8-8199-4851-b979-000fadf9edb1	1
+ce6d2c2e-7dc8-490d-a51c-c931a5865a7a	2ae327a8-8199-4851-b979-000fadf9edb1	4ecdbf64-7473-438a-ab27-9de45aa83eb2	1
+1e7a271d-f69d-4197-9108-91958b67cb40	e0e3257a-6ea7-4eba-8ec2-6e34688c6331	f57f80db-de51-40ad-a751-626056ee90ec	1
+bf32d3c0-b148-453a-83db-8a52387bf926	f57f80db-de51-40ad-a751-626056ee90ec	1e51a517-fe6e-456d-ac5d-c6e58deb5454	1
+d0f1f6ad-b6d5-4f35-a871-c9f92eebe479	247dbdb6-5338-4a9c-8138-10b7578bc149	4ce0d75e-7416-4381-b4eb-18e83f1df2c1	1
+57e60c63-253d-4a73-a989-2e9cc2a5f219	4ce0d75e-7416-4381-b4eb-18e83f1df2c1	f7121ea4-d4ab-45aa-9995-9b8c9416656f	1
+0b31264d-2c4f-43ee-aad9-b4a8e87518b7	2302e8ed-f322-40b0-872a-c9d8b863d984	02e181de-de5e-42fd-af3a-b71095aadab0	1
+15a6e5d3-cee6-4f7e-9f2b-d2fbc88b1472	a2fdc976-e5d7-4cc8-a4ec-83a1098ffd36	c684b8bb-1b9e-4742-8c55-d17ebd14ce36	1
+bd1079ee-fd78-4366-8a55-8a12e84ed768	c684b8bb-1b9e-4742-8c55-d17ebd14ce36	291548d1-0a58-4d93-88ae-e488665970c3	1
+0a1bef3f-d516-4ce1-9835-17af563a176f	961295af-8239-437a-8106-a6fb9da5d24c	9687ecd1-fc18-40e2-affd-f28fd287fad2	1
+8130c9b9-08ae-4c62-9930-166b0cf69c0b	63aeac94-609f-4799-baaf-6aff6229e8c3	e281b92f-39f7-404a-b2b3-8134c7df2865	1
+b545486b-09e3-4319-9284-dd5be1f546ed	e281b92f-39f7-404a-b2b3-8134c7df2865	cdcd1de6-9367-43ea-ac81-7ecf282c62a9	1
+b898ef78-001b-461d-b268-90b5d3af4fed	e281b92f-39f7-404a-b2b3-8134c7df2865	e951a670-b220-4ef0-8034-24f1928808a1	2
+8c6aff7b-b625-4fff-97a9-2e305d65005b	cdcd1de6-9367-43ea-ac81-7ecf282c62a9	8dee04a9-d059-4004-bc44-2bdf62d04469	1
+c328a523-91f8-4193-bcf6-3a55b58ea11b	8dee04a9-d059-4004-bc44-2bdf62d04469	537e515a-56ae-4e09-a235-20420f20806b	1
+17cb147e-0dcc-4b9d-bc7d-10e1ccadae71	8dee04a9-d059-4004-bc44-2bdf62d04469	29abe152-42d2-48ea-9780-a0062e2010fc	2
+7ae66ffe-8132-4f96-8aea-0a8b2904cb88	e951a670-b220-4ef0-8034-24f1928808a1	537e515a-56ae-4e09-a235-20420f20806b	1
+ffb5fdae-ae48-47b4-8cdb-f5e0da4cfe2b	e951a670-b220-4ef0-8034-24f1928808a1	29abe152-42d2-48ea-9780-a0062e2010fc	2
+5264dce7-0104-4bf5-8dea-ee9fe312d623	dbf3fc69-278c-4e51-9487-242f9de4a9cc	31ecadcc-6279-4b3f-9a9b-2f2d38931c49	1
+afae3b41-3100-4b18-b9a6-d2153f5cbcb3	dbf3fc69-278c-4e51-9487-242f9de4a9cc	dc85f5d5-6dac-417f-8dba-e7e49a5abde5	2
 \.
 
 COPY public.node_source_references ("id", "node_id", "source_title", "section_path", "locator", "locator_detail", "printed_page_numbers", "pdf_page_numbers", "reference_note", "reference_order") FROM stdin;
@@ -560,6 +1169,7 @@ a6d9f914-4c89-8ac3-a8fe-faceb041d983	6d02a060-240f-e7b8-2db5-9ade7f4f2708	Khuy�
 d4b77049-6ec4-d9a0-dfac-4fb1d6d17f8c	de0def41-cd3e-8156-7917-89ee6d7aac51	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Điều trị tăng huyết áp", "number": "III"}, {"title": "Chiến lược điều trị tăng huyết áp", "number": "3.2"}]	Hình 3. Sơ đồ điều trị tăng huyết áp thiết yếu VSH/VNHA 2022	Persistent failure after escalated regimen leads to difficult-to-control hypertension and specialist/resistant-hypertension pathway.	{17}	{19}	\N	1
 3a3363b3-05a5-2c75-289f-7ef006f2bd3a	ee91fd5f-c382-4b05-428d-082fb3dd2a4c	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Điều trị tăng huyết áp", "number": "III"}, {"title": "Chiến lược điều trị tăng huyết áp", "number": "3.2"}]	Hình 3. Sơ đồ điều trị tăng huyết áp thiết yếu VSH/VNHA 2022	High-normal BP with high risk or comorbidity, or hypertension >=140/90, enters the two-drug strategy.	{17}	{19}	\N	1
 e28b8597-d016-cf8d-1682-f3f8cfee0939	c2ecd9d5-6085-75cd-7e11-2eb129f1b06e	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Điều trị tăng huyết áp", "number": "III"}, {"title": "Chiến lược điều trị tăng huyết áp", "number": "3.2"}]	Hình 3. Sơ đồ điều trị tăng huyết áp thiết yếu VSH/VNHA 2022	Two available medicines, from low dose to usual dose.	{17}	{19}	\N	1
+8a24a4ef-d019-4867-8624-8ecfcccb9e3c	8e783a9b-44d4-4246-9ab1-4bf9a9190d3b	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
 388f61c8-3b07-7d1f-a5b0-f1235456e601	619dadfb-5f0d-d2e4-bc1f-ea5f22452602	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Điều trị tăng huyết áp", "number": "III"}, {"title": "Chiến lược điều trị tăng huyết áp", "number": "3.2"}]	Hình 3. Sơ đồ điều trị tăng huyết áp thiết yếu VSH/VNHA 2022	Monotherapy may be considered after lifestyle management when BP remains uncontrolled, or for age >=80 / frailty.	{17}	{19}	\N	1
 4de34061-2713-0ac2-f20a-f22851b0ec67	83e7a716-298f-e77b-8869-9f273f1fb5b2	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Điều trị tăng huyết áp", "number": "III"}, {"title": "Chiến lược điều trị tăng huyết áp", "number": "3.2"}]	Hình 3. Sơ đồ điều trị tăng huyết áp thiết yếu VSH/VNHA 2022	A, B, C, or D; beta-blocker only when indicated; thiazide-like diuretic preferred.	{17}	{19}	\N	1
 9ad64ebe-8d98-2678-09e0-9a397359fc06	74f3cdc3-0390-aa3d-5f21-9d8128a6f3d7	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Điều trị tăng huyết áp", "number": "III"}, {"title": "Chiến lược điều trị tăng huyết áp", "number": "3.2"}]	Hình 4. Sơ đồ điều trị tăng huyết áp tối ưu VSH/VNHA 2022	Tree 5 uses the current accumulated BP target, including modifier-tree overrides.	{18}	{20}	Implementation note for target propagation across Tree 3 and modifier trees.	1
@@ -572,4768 +1182,266 @@ deab63a5-49ad-5f4d-3bc7-0c723570c90d	c3ba5d02-6f67-3af6-016c-6d9649bed79b	Khuy�
 1a8d6914-7ebe-a572-5569-97a1e795101e	aa012536-8918-710b-0209-3b1da478cd70	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Điều trị tăng huyết áp", "number": "III"}, {"title": "Chiến lược điều trị tăng huyết áp", "number": "3.2"}]	Hình 4. Sơ đồ điều trị tăng huyết áp tối ưu VSH/VNHA 2022	High-normal BP with low/intermediate risk follows the monotherapy-consideration branch.	{18}	{20}	\N	1
 c43d9257-2df1-facf-3454-ea4fa9c2db0d	94a026fb-28af-8d31-f0d7-f05073711e3c	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Điều trị tăng huyết áp", "number": "III"}, {"title": "Chiến lược điều trị tăng huyết áp", "number": "3.2"}]	Hình 4. Sơ đồ điều trị tăng huyết áp tối ưu VSH/VNHA 2022	Monotherapy may be considered after lifestyle management when BP remains uncontrolled, or for age >=80 / frailty.	{18}	{20}	\N	1
 99178c76-adb6-5f07-a0de-58e2c908440c	88a2ff70-ecc2-23e0-97e7-ebc3213188cd	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Điều trị tăng huyết áp", "number": "III"}, {"title": "Chiến lược điều trị tăng huyết áp", "number": "3.2"}]	Hình 4. Sơ đồ điều trị tăng huyết áp tối ưu VSH/VNHA 2022	One-pill monotherapy options: A, B, C, or D. Beta-blocker requires an appropriate indication.	{18}	{20}	\N	1
+973168e6-c680-4f40-b7b1-94f7bb82ba66	9479b0ab-7060-4663-8246-d2206d4bc5e5	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+96e0979e-efe1-4b1f-9b19-eadfd7f94e2c	f0c3396e-aaf3-48e9-9198-aa9b1a701e98	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Điều trị Tăng huyết áp bằng thuốc", "number": "3.4"}]	Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc	Dual RAS-inhibitor blockade is not recommended (Class III, Level A).	{20}	{22}	Việc phối hợp hai nhóm thuốc ức chế hệ renin-angiotensin không được khuyến cáo.	1
+d0a8b00b-4e4c-42d5-b9f0-f258c5c81154	26bbd0c2-0892-4a12-bf29-f7d6ce9c7fcc	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Chiến lược điều trị phối hợp thuốc", "number": "3.5"}]	Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc	Beta-blocker recommended in combination with any other main drug class for specific clinical situations (Class I).	{20}	{22}	Chẹn Beta được khuyến cáo phối hợp khi có tình huống lâm sàng đặc hiệu: đau thắt ngực, sau NMCT, suy tim hoặc kiểm soát nhịp tim.	1
+90edf759-75bb-4cfd-9ed1-03d55f67f493	6967695d-669f-4cb2-baec-e8ff9d9b50fa	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Chiến lược điều trị phối hợp thuốc", "number": "3.5"}]	Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc	The specific-clinical-situation/beta-blocker check must gate every regimen tier (1, 2, or 3 drugs), not only the 2-drug tier, before the final regimen is given to the patient.	{20}	{22}	Chẹn Beta được khuyến cáo phối hợp khi có tình huống lâm sàng đặc hiệu, áp dụng cho mọi bậc điều trị (1, 2, hoặc 3 thuốc).	1
+b7a6c22f-b58d-4e14-a2a0-1d48f3be141e	8f28660a-6643-482f-b2fa-b801fa6f8e02	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Chiến lược điều trị phối hợp thuốc", "number": "3.5"}]	Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc	The specific-clinical-situation/beta-blocker check must gate every regimen tier (1, 2, or 3 drugs), not only the 2-drug tier, before the final regimen is given to the patient.	{20}	{22}	Chẹn Beta được khuyến cáo phối hợp khi có tình huống lâm sàng đặc hiệu, áp dụng cho mọi bậc điều trị (1, 2, hoặc 3 thuốc).	1
+a0260d96-5c02-44c9-a15d-88a3af5f268b	b671f1b7-c554-49f0-b066-a7adc4deabda	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Chiến lược điều trị phối hợp thuốc", "number": "3.5"}]	Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc	Monotherapy eligibility, matching T4_C_MONOTHERAPY_ELIGIBILITY/T5_C_MONOTHERAPY_ELIGIBILITY's established condition exactly so Tree 6 never contradicts the tier Trees 4/5 already decided.	{20}	{22}	Đơn trị có thể xem xét khi HABTC không đạt mục tiêu sau thay đổi lối sống, hoặc tuổi >= 80, hoặc hội chứng lão hóa.	1
+e056d1f2-8af3-4105-a4a5-a3b492da54cc	32c801c0-624b-40dd-b2b0-b9c8d7389aaa	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Chiến lược điều trị phối hợp thuốc", "number": "3.5"}]	Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc	Dynamic BP-target comparison, mirrors T3/T4/T5's established mechanism.	{20}	{22}	Nếu không đạt HA mục tiêu trong vòng 1 tháng, tăng liều hoặc chuyển phối hợp 3 thuốc.	1
+a13ea051-3c42-4ed9-9dd3-881b5e90dabf	52d3b005-e25a-4240-a3b9-6cf05642eaa5	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Chiến lược điều trị phối hợp thuốc", "number": "3.5"}]	Bảng 11. Chống chỉ định của các nhóm thuốc điều trị tăng huyết áp chính (1)	Full absolute/relative contraindication table by drug class, including direct renin inhibitor/vasodilator.	{23}	{25}	Bảng chống chỉ định đầy đủ theo nhóm thuốc.	1
+ffc2dadf-0752-460f-971d-19c2851e57c7	dbf3fc69-278c-4e51-9487-242f9de4a9cc	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Chiến lược điều trị phối hợp thuốc", "number": "3.5"}]	Bảng 11. Chống chỉ định của các nhóm thuốc điều trị tăng huyết áp chính (1)	Carries forward the pre-computed contraindicated-drug-class map; full table on the GLOBAL reference node.	{23}	{25}	Chống chỉ định bắt buộc/tương đối theo nhóm thuốc.	1
+0b2dc039-8e8a-44cf-bab8-527fe5904b98	1f681bf7-e18d-4a04-927e-5d0a1cf08174	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Chiến lược điều trị phối hợp thuốc", "number": "3.5"}]	Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc	If BP is not controlled with 2 low-dose drugs, increase to full dose or add a third drug (early fixed-dose triple combination A+C+D).	{20}	{22}	Nếu HA không kiểm soát có thể tăng liều hoặc phối hợp 3 thuốc cố định liều sớm A+C+D.	1
+8e504be3-b0da-4be4-b9bc-4391550477ca	b50e184c-1830-4d00-93d4-f95a5bf02330	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Chiến lược điều trị phối hợp thuốc", "number": "3.5"}]	Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc	Monotherapy initiation for special populations; class menu (A/B/C/D, B requires indication) matches T4_ACTION_CONSIDER_MONOTHERAPY/T5_ACTION_CONSIDER_MONOTHERAPY_ONE_PILL exactly.	{20}	{22}	Điều trị thuốc khởi đầu bằng 1 thuốc (A, B, C, hoặc D; B cần có chỉ định).	1
+6a5bc9d3-3984-4df4-89d5-bad10f6243ed	5543a801-eb27-49fd-ac53-d66968aa5d85	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Chiến lược điều trị phối hợp thuốc", "number": "3.5"}]	Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc	Optimal initial therapy: 2 drugs preferring A+C or A+D, fixed-dose combination at low dose (half the usual dose).	{20}	{22}	Khuyến cáo điều trị ban đầu tối ưu với 2 thuốc ưu tiên A+C hoặc D, liều thấp (1/2 liều thông thường).	1
+e9e03eda-d8dd-4c6d-875d-c13f369e6d45	e2b4390c-7ec9-454c-b177-020388b33592	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp kháng trị", "number": "3.6.1"}]	Mục 3.6.1. Tăng huyết áp kháng trị	Resistant hypertension: BP not controlled despite optimal 3-drug combination including a diuretic.	{24}	{26}	THA kháng trị: không kiểm soát được HA dù đã tối ưu phối hợp 3 thuốc bao gồm lợi tiểu.	1
+39b30073-e941-481c-861d-89f935346c4f	e3b9491f-a5db-4d53-942e-0834fa0f25a0	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Điều trị Tăng huyết áp bằng thuốc", "number": "3.4"}]	Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc	Entry point of the drug-combination tree.	{20}	{22}	Điểm vào của quy trình phối hợp thuốc.	1
+d146a686-27ef-4153-8736-664d2e32fd45	3fdce53a-e7ae-49cf-846e-81c2b57bc203	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Đái tháo đường týp 2", "number": "3.7.1"}]	Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)	Clinic BP threshold for hypertension with type 2 diabetes is >=130/85 mmHg; at/above-target branch.	{32}	{34}	Ngưỡng HA phòng khám ở bệnh nhân THA kèm đái tháo đường týp 2 khi >= 130/85 mmHg.	1
+a32f4939-c493-4894-9770-f8e4cda03611	68d798f3-7959-472a-b269-77b25ce17f15	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Đái tháo đường týp 2", "number": "3.7.1"}]	Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)	Clinic BP threshold for hypertension with type 2 diabetes is >=130/85 mmHg; below-target branch.	{32}	{34}	Ngưỡng HA phòng khám ở bệnh nhân THA kèm đái tháo đường týp 2 khi >= 130/85 mmHg.	1
+b18dd09c-b30e-483f-b0f1-17e0cb7dc213	01ffe021-3e41-4b3c-a235-0449afedf1a8	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Đái tháo đường týp 2", "number": "3.7.1"}]	Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)	SGLT2i/GLP-1RA is prioritized when atherosclerotic cardiovascular disease and/or high risk is present.	{32}	{34}	Điều trị hạ glucose máu với SGLT2-i hoặc GLP-1 RA được ưu tiên khi có bệnh tim mạch do xơ vữa và/hoặc nguy cơ cao.	1
+e7b29464-3284-4d26-942a-80e731226b77	b52652c1-3b14-4859-af3f-07d26ff3dbce	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Đái tháo đường týp 2", "number": "3.7.1"}]	Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)	Complement of the SGLT2i/GLP-1RA trigger: no atherosclerotic cardiovascular disease and not high risk.	{32}	{34}	Phần bù của điều kiện kích hoạt SGLT2-i/GLP-1 RA: không có bệnh tim mạch do xơ vữa và không thuộc nhóm nguy cơ cao.	1
+4a3d2dd9-ac0d-4491-aa6c-df8463dbd152	eff9029d-c3bb-4106-8fc6-7cfda5d04df6	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Đái tháo đường týp 2", "number": "3.7.1"}]	Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2), chú thích	Footnote abbreviation glossary for the drug classes named in Bảng 18.	{32}	{34}	Chú thích Bảng 18: RAS: Hệ renin-angiotensin-aldosterone; GLP-1 RA: thuốc đồng vận thụ thể GLP-1; SGLT2i: Thuốc ức chế SGLT2.	1
+5fcc3575-2e01-422a-903a-f3fc0e647db9	5020708d-fda3-4d55-aa4f-b30692011a7f	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Đái tháo đường týp 2", "number": "3.7.1"}]	Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)	Glucose-lowering therapy with SGLT2i or GLP-1RA is prioritized for its demonstrated cardiovascular benefit.	{32}	{34}	Điều trị hạ glucose máu với SGLT2-i hoặc GLP-1 RA được ưu tiên với những lợi ích bệnh tim mạch đã được chứng minh.	1
+a1853bc8-3f6e-45a3-8ff5-afe1160b0e93	e726ffd6-3e0f-483b-aa91-846208d522c1	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Đái tháo đường týp 2", "number": "3.7.1"}]	Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)	No indication to add SGLT2i/GLP-1RA: continue the current RAS-inhibitor + CCB/diuretic regimen.	{32}	{34}	Không có chỉ định bổ sung SGLT2-i/GLP-1 RA: tiếp tục phác đồ ức chế RAS + CKCa/lợi tiểu hiện tại.	1
+790cb934-116f-46ad-a10d-a4fca6ecf5e4	00182e46-02d8-44f3-90aa-aeed4b86eb4e	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Đái tháo đường týp 2", "number": "3.7.1"}]	Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)	Combination strategy should include one RAS-inhibitor class (A: ACEI or ARB) and one calcium-channel-blocker or thiazide-like-diuretic class (C or D). Matching Trees 4/5's own pattern, the specific agent within each class (e.g. ACEI vs ARB) is resolved downstream against contraindications in Tree 6 (drug-combination), not decided here.	{32}	{34}	Chiến lược điều trị nên bao gồm một nhóm thuốc ức chế RAS và một nhóm thuốc chẹn kênh canxi hoặc lợi tiểu thiazide-like.	1
+0e907118-c64f-44f2-b345-334c7ee8d410	ec234a72-148a-4e64-ade2-27d5d8ee5657	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Đái tháo đường týp 2", "number": "3.7.1"}]	Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)	Exit point of the "at target" branch: continue the essential treatment strategy (limited-resource facility).	{32}	{34}	Điểm thoát của nhánh "đạt đích": tiếp tục chiến lược điều trị thiết yếu.	1
+c15c200a-b23f-4d22-84c0-587942531c68	c118920d-cb09-4538-9c63-60bb03669b67	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Đái tháo đường týp 2", "number": "3.7.1"}]	Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)	Exit point of the "at target" branch: continue the optimal treatment strategy (full-resource facility).	{32}	{34}	Điểm thoát của nhánh "đạt đích": tiếp tục chiến lược điều trị tối ưu.	1
+0b62f617-7cca-4b86-aedd-fe82a6fc8622	6a12facf-1a70-4baf-ba74-c9eed313d3dd	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Đái tháo đường týp 2", "number": "3.7.1"}]	Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)	Exit point of the "not at target" branch: continue the essential treatment strategy (limited-resource facility).	{32}	{34}	Điểm thoát của nhánh "chưa đạt đích": tiếp tục chiến lược điều trị thiết yếu.	1
+13c7c96e-e889-442c-9a22-e0701d23e901	31bd32b3-6acc-4654-9f8e-fc68e7f395d9	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Đái tháo đường týp 2", "number": "3.7.1"}]	Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)	Exit point of the "not at target" branch: continue the optimal treatment strategy (full-resource facility).	{32}	{34}	Điểm thoát của nhánh "chưa đạt đích": tiếp tục chiến lược điều trị tối ưu.	1
+7aea5a7f-9a02-4e20-ba3f-fe8b621eb2f8	edc2fa79-a2e7-46fe-b08b-72d652082cec	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp", "number": "1.5"}]	Bảng 2. Phân tầng nguy cơ trong tăng huyết áp (2)	Background risk-stratification context carried over from Tree 3, before branching into the diabetes-specific Bảng 18 strategy.	{11}	{11}	Tiếp nối bối cảnh phân tầng nguy cơ từ Cây 3.	1
+d0fe9b61-ab25-420d-b7d0-d00afa6bd5cf	edc2fa79-a2e7-46fe-b08b-72d652082cec	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Ngưỡng huyết áp ban đầu cần điều trị và ranh giới đích điều trị tăng huyết áp", "number": "3.1"}]	Bảng 6. Ngưỡng huyết áp phòng khám cho điều trị tăng huyết áp theo nhóm tuổi	General clinic-BP treatment threshold by age, inherited from Tree 3 before this diabetes-specific branch.	{15}	{17}	Ngưỡng điều trị chung theo nhóm tuổi, kế thừa từ Cây 3.	2
+d95d722c-555c-4faf-a684-0b96335fa126	edc2fa79-a2e7-46fe-b08b-72d652082cec	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Ngưỡng huyết áp ban đầu cần điều trị và ranh giới đích điều trị tăng huyết áp", "number": "3.1"}]	Bảng 7. Mục tiêu huyết áp phòng khám trong điều trị tăng huyết áp theo nhóm tuổi	General clinic-BP treatment target by age, inherited from Tree 3 before this diabetes-specific branch.	{16}	{18}	Đích điều trị chung theo nhóm tuổi, kế thừa từ Cây 3.	3
+2536a09d-9952-5323-9999-66e45b9d0b4f	d4a79b1e-2fd3-5526-ba61-0afcc5e4549e	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
+d579f79d-50da-55c2-b0ef-e2121a6b3dba	8b75cbfa-8d26-519f-a80b-d346aa4c37fb	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
+511c3ec6-61e4-509a-9964-98c956e3f734	103a7134-7357-55fd-922e-a4bfb6d3fe11	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
+a2cc2994-d716-55d4-99e5-d3d11c8f83f2	0eca67b2-9c2e-5614-993f-951e970b34ef	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
+1e708b9f-4976-5ea4-b07d-fdfe9a57ad16	d4050ff3-58a2-53b2-ba4a-876f8d3fc3e7	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
+1aadc806-a790-5269-aa6d-cfd8e8ef79c7	f551f2cf-18f7-5261-a322-a02e58f1bf30	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
+e4c9819a-ad53-564f-80e8-5c2dffffd38c	d26f0496-b35f-5909-8975-c2329b388ea9	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
+8c2a4899-b814-556e-acf8-762b5adc4903	6de65559-da01-52b5-94e5-a2a916e248e8	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
+1319318a-c0bf-59d8-a373-172544ef2a38	e178b23e-f8e8-5d9f-8207-34404155166b	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
+d81384bc-bd29-5307-9042-38417d2619f8	6299ea87-2ba4-52b4-9752-bbd2a796e0ff	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
+cecab4a3-57e2-5199-8826-1f5549f0cbc6	b2f92cb6-82fc-52ba-a4ca-54257fc2f0b7	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
+31882bf4-1488-5904-8267-046f668f0128	ef39acd8-3c32-5eda-bca8-a6c79adfcaf2	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
+507db48f-5edf-5e1e-b65f-8c0336b33ec5	bc668dbe-04db-5f5d-a80d-fd1a51f5037b	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
+7d316700-9551-5c6a-8557-cb92f6f7a023	de89d76b-1556-5e3c-b13d-902195434de3	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
+e1989e2b-d545-5022-9e71-e7b02ca1a852	c92773f1-5078-502d-b5eb-a9a8c72f9b52	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.2. Tu0103ng huyu1ebft u00e1p vu00e0 Bu1ec7nh mu1ea1ch vu00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
+fbc35f92-b99c-533f-90c5-d39db270946c	0878afaa-2a79-5188-94f6-c27d064f9402	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+e6878866-fd77-5967-bf57-7986acbf53e8	9bc0e11b-2f69-5420-a680-6165ec1e61fd	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+b18ac834-249a-5861-807f-b6b39768e9ab	0d880900-1578-512f-993d-012bf287ed9c	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+f5306c91-17fd-58d6-876a-bb3792d1230a	31a12b62-51e6-595b-bb87-5e214f2f8f97	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+6af72ade-a0d0-5c68-903a-4645d43d246a	4e8ed9cf-1693-5ca9-9c3e-6c1abbfc8143	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+79033623-bf6c-5298-9fa8-f8861a4de5ba	3bef0da4-1b69-573b-b077-07a8d46a1584	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+ff922ddd-e0c1-5a80-addd-78c96e2aed80	4227dbf8-f310-59cc-9f5f-75bdf08459c8	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+5b5f9261-df08-5c62-a64a-72b1ce42f424	49dfc288-d480-5262-a05e-9edad085b25a	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+239eac03-1367-5ec7-97e1-3c087c91a94b	877ac137-c482-5091-9494-bd882b0cf7cd	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+525d3af8-ad8d-50b6-bbff-2f5fc8202858	465565d5-433a-563c-8b06-78b98785b814	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+0fab1d4c-0b67-59e0-91a6-a4dec32fd463	339634e2-d9f3-5366-b8b0-60cba53abba6	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+ceb115eb-da2f-570b-a6bd-34c27d627b2f	30cee5c4-7eba-556e-8b51-dea56475179e	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+67f9d70a-2dc8-5e8e-a1c1-300eb1bdc412	debdecef-88df-5601-8cfc-b5eb91b8b08f	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+3c6445b6-2d18-5dd8-baa9-416545a5a798	5880accb-c184-5bfe-a6c0-78845c4ba7be	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+03ddff06-0e41-5a53-b2d8-b30ef5132d84	3f8ae7a2-1a20-5a7a-8f80-0abb5eed489e	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+f331fd7c-edbc-5a60-87b0-3f75d56aa3b8	93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+d8909b97-057e-5ab4-863e-5d37c8caecfb	d8271d2d-79ff-50e5-be69-ee29cc68f432	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+0df45abf-3279-5bf5-9057-fe4ade2cfb42	ca0c7576-4117-510d-b28b-6eff717791f7	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+782d3dfd-a68d-527e-b589-acf23529c583	1208d7cb-f28c-5131-afad-9249828c164c	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. Tu0103ng huyu1ebft u00e1p vu00e0 mu1ed9t su1ed1 bu1ec7nh u0111u1ed3ng mu1eafc", "3.7.3. Tu0103ng huyu1ebft u00e1p vu00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+924e2e5d-4169-4009-9776-28cc4831fdbd	8943a52d-445d-4c5f-a33d-e7f71edcda20	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Bệnh thận mạn", "number": "3.7.4"}]	Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)	If serum creatinine rises more than 30% within 4 weeks of starting/increasing a RAS-inhibitor, consider reducing the dose or stopping it (Class I).	{35}	{37}	Nếu creatinin huyết thanh tăng hơn 30% trong vòng 4 tuần, xem xét giảm liều hoặc ngừng thuốc ức chế RAS.	1
+93be01b4-6b71-43ed-b93d-f80ea21ed84d	ffc06448-0a7d-43a4-8295-ed6d52ad6978	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)	Terminal classification: pre-existing (chronic) hypertension.	{29}	{31}	Phân loại kết thúc "THA từ trước" của Bảng 15.	1
+ac6fdadc-b172-458c-845a-64b76787e49d	c3e81015-fa4a-462e-ba74-369fb405da78	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Bệnh thận mạn", "number": "3.7.4"}]	Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)	Monitor BP, creatinine, and potassium every 2-4 weeks after starting or increasing a RAS-inhibitor (Class I, Level A).	{35}	{37}	Theo dõi HA, nồng độ creatinin và kali máu mỗi 2-4 tuần sau khi bắt đầu hoặc tăng liều thuốc ức chế RAS.	1
+6d732a12-3d04-470b-acc6-690bd0197f63	c82a074a-7873-40a8-9874-29f2f9a627a4	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Bệnh thận mạn", "number": "3.7.4"}]	Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)	Monitor BP, creatinine, and potassium every 2-4 weeks after starting or increasing a RAS-inhibitor (Class I, Level A).	{35}	{37}	Theo dõi HA, nồng độ creatinin và kali máu mỗi 2-4 tuần sau khi bắt đầu hoặc tăng liều thuốc ức chế RAS.	1
+e0bde7ba-1572-4011-8fb0-849f5fe0be6d	29a1413a-e96e-45ec-b43c-db26c11789bb	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Bệnh thận mạn", "number": "3.7.4"}]	Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)	If serum creatinine rises more than 30% within 4 weeks of starting/increasing a RAS-inhibitor, consider reducing the dose or stopping it (Class I).	{35}	{37}	Nếu creatinin huyết thanh tăng hơn 30% trong vòng 4 tuần, xem xét giảm liều hoặc ngừng thuốc ức chế RAS.	1
+dc7b89bd-cbbc-42ba-b1fa-78ed9fb6468b	5a4f65a4-1bfd-495f-9b54-9b2413b925ce	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Bệnh thận mạn", "number": "3.7.4"}]	Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5), chú thích	Footnote abbreviation glossary for the drug classes named in Bảng 22.	{35}	{37}	Chú thích Bảng 22: RAS, CKCa, CTTA, MLCT.	1
+b9bc90bb-1c6e-48b2-9a9d-17fd40f5f6bc	ab407d81-938c-4f6a-9937-0259bdf2a4b8	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Bệnh thận mạn", "number": "3.7.4"}]	Bảng 21. Ngưỡng điều trị và mục tiêu huyết áp ở bệnh nhân tăng huyết áp có bệnh thận mạn (4, 5)	After kidney transplant, BP target should be <130/80 mmHg; dihydropyridine CCB or ARB is first-line (Bảng 21 Class I; Bảng 22 Class I, Level B).	{35}	{37}	Sau ghép thận, mục tiêu HA nên <130/80mmHg; CKCa Dihydropyridine hoặc CTTA là thuốc được chọn đầu tay.	1
+eab64d8a-6722-4c55-a5c2-06074f24d4ec	8a867ec1-5ea6-4ce3-8e0c-840f333a5aa4	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Bệnh thận mạn", "number": "3.7.4"}]	Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)	Initial therapy should combine a RAS-inhibitor with a CCB or a diuretic (Class I, Level A).	{35}	{37}	Liệu pháp ban đầu nên kết hợp thuốc ức chế RAS với CKCa hoặc thuốc lợi tiểu.	1
+09edda0d-47eb-45ff-9f1b-6e0e146171c8	b091a990-61f9-47c6-bb4b-a0a34ac6e375	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Bệnh thận mạn", "number": "3.7.4"}]	Bảng 21. Ngưỡng điều trị và mục tiêu huyết áp ở bệnh nhân tăng huyết áp có bệnh thận mạn (4, 5)	Entry point of the CKD tree; BP should be lowered to <130/80 mmHg in CKD per SPRINT evidence.	{34}	{36}	Điểm vào của Cây 11; HA cần được hạ xuống <130/80mmHg ở bệnh nhân bệnh thận mạn.	1
+8c30fcea-ce09-435f-97a3-161b82662a00	dc98e224-0743-49ec-9111-3c6f66e6fec5	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Mục 3.6.6. Tăng huyết áp trong thai kỳ	Entry point of the pregnancy-hypertension sequence.	{29}	{31}	Điểm vào của trình tự THA trong thai kỳ, theo Mục 3.6.6.	1
+d71359dd-dc38-4ced-9525-63ef37fa82b8	90b23d3e-8b13-43f3-9c2d-8f8858c6c643	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)	Classifies into the 5 categories of Bảng 15: pre-existing, gestational, preeclampsia, eclampsia, HELLP syndrome.	{29}	{31}	Phân loại theo 5 nhóm của Bảng 15: THA từ trước, THA thai kỳ, Tiền sản giật, Sản giật, Hội chứng HELLP.	1
+487dce43-8a7a-4ee2-92e9-2b5fab179d9f	defd8834-a6f4-4f01-b748-9c06a1ef9963	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	BP below the 140/90 mmHg (clinic) / 135/85 mmHg (home) treatment threshold does not require drug therapy; continue monitoring.	{30}	{32}	HA dưới ngưỡng 140/90 mmHg (phòng khám) / 135/85 mmHg (tại nhà) không cần điều trị thuốc; tiếp tục theo dõi.	1
+cfe55a9e-1ceb-4ea6-9d61-bd2ef1e93c21	c3bd2db9-7aba-4717-9374-4d782a694759	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)	Pre-existing hypertension: present before pregnancy or before week 20, persisting >6 weeks postpartum with proteinuria.	{29}	{31}	THA có trước khi mang thai hoặc trước tuần lễ thứ 20 của thai kỳ và tồn tại > 6 tuần sau sinh với protein niệu.	1
+3a8c0f64-05b4-429f-93dd-5f03b0179853	de43bad7-f682-477d-85ab-a0627f596c6a	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+f4fbbb14-e315-49ce-a6fc-3f7ce2914c5f	5f02e857-990d-4ebe-a0a9-68884e31d737	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)	Gestational hypertension: onset after week 20, resolving within 6 weeks postpartum.	{29}	{31}	THA khởi phát sau tuần thứ 20 của thai kỳ, và kéo dài < 6 tuần sau sinh.	1
+91dcebc3-3d52-4a5b-8564-095b1b19d052	5c2989f1-d68f-48af-9c9b-7a3a72f1ba35	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)	Classification label: gestational hypertension.	{29}	{31}	Nhãn phân loại "THA trong thai kỳ" (gestational hypertension) của Bảng 15.	1
+2e57a10b-39d0-4d95-bfe6-54a6d7ca97c1	f331fd19-bb3e-4b33-89c8-93a42f9c33c5	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)	Preeclampsia: gestational hypertension with proteinuria >300mg/24h or ACR >=30 mg/mmol [265 mg/g].	{29}	{31}	THA thai kỳ và có protein niệu (>300 mg/24h hoặc tỷ albumin/creatinine niệu (ACR) >30 mg/mmol [265 mg/g]).	1
+25e0ad57-6959-40c9-be59-1dc0f4433cef	836153af-e9e1-4dc0-b287-de2eafea3910	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)	Preeclampsia risk factors: prior hypertension, prior gestational hypertension, diabetes, kidney disease, nulliparity/multiparity, autoimmune disease (SLE).	{29}	{31}	Các yếu tố nguy cơ: THA từ trước, THA trong lần thai kỳ trước, đái tháo đường, bệnh thận, thai lần đầu hay nhiều lần, và bệnh tự miễn (SLE).	1
+8fa6820f-7135-45e3-b031-f64c802d302f	3bf12557-a06e-44ac-adfb-da0004db5e47	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)	Classification label: preeclampsia.	{29}	{31}	Nhãn phân loại "Tiền sản giật" (preeclampsia) của Bảng 15.	1
+ed6ae95e-3748-4aa9-9ba5-96d1d3a0cf50	dd42c4e2-e3c5-4120-9af0-638bd8d6860c	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)	Eclampsia: seizure, severe headache, visual disturbance, epigastric pain. HELLP: hemolysis, elevated liver enzymes, low platelets.	{29}	{31}	Sản giật: co giật, đau đầu dữ dội, rối loạn thị giác, đau bụng, buồn nôn/nôn, thiểu niệu. HELLP: tán huyết, tăng men gan, giảm tiểu cầu.	1
+5cd81e97-cc31-4767-8676-c93176f58578	1f19d5a8-96a5-4292-8a65-e2e14ca3aefc	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)	Classification label: eclampsia.	{29}	{31}	Nhãn phân loại "Sản giật" (eclampsia) của Bảng 15.	1
+509ab4e3-24d7-42ab-b43e-388ca1b7338d	30b3b86e-8ce8-4ae1-8e0f-bf899c225544	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)	Classification label: HELLP syndrome (Hemolysis, Elevated Liver enzymes, Low Platelets).	{29}	{31}	Nhãn phân loại "Hội chứng HELLP" của Bảng 15.	1
+91451039-e24c-4839-9967-ed3a0a1ae8b7	dbe30126-44ec-4c56-829c-708a70377dc5	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Mục 3.6.6. Tăng huyết áp trong thai kỳ	Mild-to-moderate severity: SBP >=140 (but <160) mmHg and/or DBP >=90 (but <110) mmHg, from the paragraph immediately preceding Bảng 15.	{29}	{31}	THA nhẹ đến trung bình: đo HA ít nhất 2 lần cách nhau >=4 giờ, HATT >=140 (nhưng <160) mmHg và/hoặc HATTr >=90 (nhưng <110) mmHg.	1
+8dc99a55-86aa-442f-83e7-b1f4f7e6035b	e751565d-5998-4447-b42c-eefe0875ccb7	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Mục 3.6.6. Tăng huyết áp trong thai kỳ	Severe hypertension: SBP >=160 mmHg and/or DBP >=110 mmHg; SBP >=170 mmHg is a medical emergency.	{29}	{31}	THA nặng: HATT >=160 mmHg và/hoặc HATTr >=110 mmHg. HATT >=170 mmHg là cấp cứu nội khoa.	1
+2297e678-5c2a-4bc5-8ab2-8935433037d8	af8bcf05-a21b-4088-8a63-46fa63185b7a	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Mục 3.6.6. Tăng huyết áp trong thai kỳ	Severity label: mild-to-moderate.	{29}	{31}	Phân độ "nhẹ đến trung bình".	1
+9bf4742c-f5ad-42e5-aefe-ba114e8da8ac	04b4e1d5-11ab-4d25-9f07-13d058f2fe9d	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Mục 3.6.6. Tăng huyết áp trong thai kỳ	Severity label: severe.	{29}	{31}	Phân độ "nặng".	1
+3b744102-7aa2-47b2-baca-fa6b3f76090f	a671d656-ad9f-4285-aa95-e1fc83c18f34	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Home BP >=135/85 mmHg should be treated.	{30}	{32}	HA ổn định >=135/85 mmHg đo tại nhà nên được điều trị.	1
+0470b245-b115-4771-871f-504037f7e5bc	cb4e7627-8be2-46d7-ba61-75027fcadd61	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Clinic BP >=140/90 mmHg should be treated.	{30}	{32}	HA ổn định >=140/90 mmHg đo tại phòng khám nên được điều trị.	1
+4851a19b-38aa-4cbc-833d-5955ace21114	e9806f6f-d538-4d91-81cc-0d90a1c9609c	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Complement of the clinic-BP treatment threshold: below threshold.	{30}	{32}	HA dưới ngưỡng điều trị đo tại phòng khám.	1
+6bc2889d-3e89-4cf8-96ab-9d1d984cbb3d	36028c0b-d677-4efd-9d89-6868f677300f	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Mild hypertension, first-choice option: methyldopa.	{30}	{32}	THA nhẹ, lựa chọn đầu tiên: methyldopa.	1
+618dbcad-05a7-49e0-9531-db6c92c9f6e6	df96c137-3378-4753-b2a8-dccd72a244f8	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Mild hypertension, first-choice option: beta-blocker (labetalol).	{30}	{32}	THA nhẹ, lựa chọn đầu tiên: chẹn beta (Labetalol).	1
+6d9ba12c-3a29-4fc5-9b6e-9a08a7caf33b	82d04526-8de0-42f0-85ac-3d4e1b603ab6	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Mild hypertension, first-choice option: dihydropyridine CCB (nifedipine [not capsule form], nicardipine).	{30}	{32}	THA nhẹ, lựa chọn đầu tiên: chẹn kênh canxi dihydropyridine (Nifedipine [trừ dạng viên nang], Nicardipine).	1
+bca42b47-d93c-4daf-bc7d-b64ab9fde2c4	e8197786-f1f5-4718-b574-ddca2e736978	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	RAS-inhibitor drugs (ACEI, ARB, direct renin inhibitors, MRA) are contraindicated in pregnancy.	{30}	{32}	THA trong thai kỳ: chống chỉ định dùng các thuốc ức chế RAS (ƯCMC, CTTA, ức chế renin trực tiếp, lợi tiểu kháng thụ thể Mineralocorticoid).	1
+acd98a12-d86c-4ee9-ae3a-604d0fd50cb9	35f6bea4-1c2c-46b8-a0a3-d0f08fecebcd	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Severe hypertension: IV labetalol (or IV nicardipine, esmolol, hydralazine, urapidil), oral methyldopa, or dihydropyridine CCB.	{30}	{32}	THA nặng: Labetalol TM (hoặc Nicardipine TM, Esmolol, Hydralazine, Urapidil), Methyldopa uống, hoặc CKCa dihydropyridine.	1
+e25179b3-34d1-48bb-97c5-d9fdb41896af	963bbde1-3b32-4072-96ba-66d230aca8bf	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	During a hypertensive crisis: add magnesium to prevent eclampsia.	{30}	{32}	Trong cơn THA: bổ sung magiê để ngăn ngừa sản giật.	1
+66d21146-7054-4e64-bb2d-f0a8190e3459	3a9fa478-e803-489f-a13e-0f616615f529	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	In pulmonary edema: IV nitroglycerin infusion; avoid sodium nitroprusside (fetal cyanide toxicity risk).	{30}	{32}	Trong phù phổi: truyền TM Nitroglycerin; tránh Natri nitroprusside do nguy cơ nhiễm độc xyanua thai nhi.	1
+d9e23d55-4676-425a-9836-c6b13cf53f91	54dafeb4-5f46-4ed4-b7fb-fec57a3c0029	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Pulmonary edema management: IV nitroglycerin infusion.	{30}	{32}	Trong phù phổi: Truyền TM Nitroglycerin.	1
+dedaeec3-d9f2-4a0b-9f84-e64ab38a377e	a604674f-7384-4fb2-a663-bc3944337246	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Hypertensive crisis management: add magnesium sulfate to prevent eclampsia.	{30}	{32}	Bổ sung magiê trong cơn THA để ngăn ngừa sản giật.	1
+e2f710ee-5d4d-4be4-9677-f1a7ab0d9b83	d5af70df-5c22-4524-96e9-a6fd37acfaff	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)	Eclampsia/severe preeclampsia/HELLP: treat immediately (SBP<160, DBP<105 mmHg), labetalol or nicardipine plus magnesium sulfate.	{29}	{31}	Sản giật/Tiền sản giật nặng/HELLP: ngay lập tức hạ HA, Labetalol hoặc Nicardipine và Magnesium sulfate.	1
+51fb69d8-52b6-41cb-ae31-cd8afbf8223f	1290beb3-4be1-42be-8e86-80361913f907	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)	Eclampsia/severe preeclampsia/HELLP: treat immediately (SBP<160, DBP<105 mmHg), labetalol or nicardipine plus magnesium sulfate.	{29}	{31}	Sản giật/Tiền sản giật nặng/HELLP: ngay lập tức hạ HA, Labetalol hoặc Nicardipine và Magnesium sulfate.	1
+c7b98a90-ba93-4758-98c2-b7645d8a05c8	dbe4c15b-a6ef-452d-a318-b050d1bf9d5d	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)	Immediate treatment target: SBP<160 mmHg and DBP<105 mmHg.	{29}	{31}	Đích điều trị ngay lập tức: HATT <160 mmHg và HATTr <105 mmHg.	1
+ea695aef-37e4-42f7-b29f-dfc1a1106d82	ef92df48-2219-45a1-a5e8-818b052a6b60	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Emergency delivery indicated when visual disturbance or coagulopathy is present.	{30}	{32}	Lấy thai cấp cứu khi có rối loạn thị giác, rối loạn đông cầm máu.	1
+c81e1c0c-f4d4-411d-b0fc-bc3a2eb8d773	6a3f79b6-dee1-4f2a-962c-9b3fa96a3d48	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Delivery for gestational hypertension or preeclampsia is recommended at week 37 if asymptomatic; emergency delivery for visual disturbance/coagulopathy.	{30}	{32}	Chấm dứt thai kỳ trong THA thai kỳ hoặc Tiền sản giật: khuyến cáo ở tuần 37 nếu không triệu chứng; lấy thai cấp cứu khi có rối loạn thị giác/đông cầm máu.	1
+ce1b2775-e402-4911-9299-938fe609584e	a3aafcec-6a7b-4dec-903e-c3fea2be4dad	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Ongoing management of hypertension in pregnancy: monitor pregnancy status and postpartum course.	{30}	{32}	Quản lý THA trong thai kỳ theo dõi tình trạng mang thai và hậu sản.	1
+0f08dc4d-7fc8-493c-83c6-f23f50d2516b	10eb7a06-764c-4ae7-9391-01a868025771	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Branch: still pregnant.	{30}	{32}	Nhánh còn đang mang thai.	1
+1b224d48-0bdc-4133-a833-152b48b82625	cd911f23-23ea-4a2e-9fee-05d41c2ededc	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Branch: postpartum.	{30}	{32}	Nhánh sau sinh.	1
+557594d4-3c43-4df3-a3dc-43a4ef54d7ab	be39376c-bcc1-458e-9c14-666190a3b2cb	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Preeclampsia prophylaxis: 75-162 mg aspirin from week 12-36.	{30}	{32}	Phòng ngừa tiền sản giật: 75-162 mg Aspirin vào tuần 12-36.	1
+2b2e2e15-af49-4f19-bb61-60521dc5587e	4348e7a3-9c1a-440f-8a9f-48569e6cb142	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Preeclampsia prophylaxis: 75-162 mg aspirin from week 12-36; oral calcium 1.5-2 g/day recommended for low-calcium diets (<600 mg/day).	{30}	{32}	Phòng ngừa tiền sản giật: 75-162 mg Aspirin vào tuần 12-36. Bổ sung canxi 1,5-2 g/ngày được khuyến khích ở phụ nữ có chế độ ăn ít canxi (<600 mg/ngày).	1
+e746cc24-d7ca-4dab-8a4b-4399117b0beb	201508d7-82e4-485c-b683-755af31dd8ef	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Treatment target: clinic DBP 85 mmHg (and SBP 110-140 mmHg).	{30}	{32}	Mục tiêu điều trị: HATTr 85 mmHg tại phòng khám (và HATT từ 110-140 mmHg).	1
+a32e8ef6-c4db-406c-abc0-9c15b137611a	7a568755-5190-484b-a63b-e0508a7dbeeb	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Target achieved: maintain current regimen.	{30}	{32}	Đạt mục tiêu điều trị: duy trì phác đồ hiện tại.	1
+0f89b6e4-2e76-46de-8501-6d87adc0ee68	a2abca12-7f23-4c2c-a074-4550d807c223	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Complement of the treatment-target-achieved condition.	{30}	{32}	Không đạt mục tiêu điều trị.	1
+971c341e-266b-4c79-94fa-3d8d9f7216a6	5176834b-7f0f-464c-96b6-0aeb52b4121b	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Target not achieved: refer to OB specialist.	{30}	{32}	Không đạt mục tiêu điều trị: chuyển chuyên khoa Sản.	1
+7e542a54-42f3-4ade-8336-634e00c191f3	f5ccb0d9-96f5-444b-bfe9-202afa69e1bc	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Breastfeeding period: avoid atenolol, propranolol, nifedipine; prefer long-acting CCB.	{30}	{32}	Thời kỳ cho con bú: tránh Atenolol, Propranolol, Nifedipine; ưu tiên CKCa tác dụng kéo dài.	1
+5f4fd04b-eb68-4382-869d-1d0b1feb35b7	ebfc17f2-78bb-4f0f-a2d2-2960ab0a2cbf	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Postpartum BP: if still high, any recommended drug may be used except methyldopa (postpartum depression risk).	{30}	{32}	HA sau sinh: nếu HA cao vẫn tiếp diễn, dùng bất kỳ thuốc nào được khuyến cáo trừ Methyldopa (gây trầm cảm sau sinh).	1
+85d98a65-6001-45e7-8b9c-7b2d08bcbd8c	c4601693-22d1-4b02-b02e-385ced0783f4	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Postpartum BP no longer high: maintain regimen.	{30}	{32}	HA sau sinh không còn cao: duy trì phác đồ.	1
+3db22b45-2ff5-44bd-a906-524e4dca292c	ba46f4c2-f4e3-49fe-87ec-dc2091a2580d	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Contraindicated: nicardipine. Avoid: atenolol, propranolol, nifedipine. Prefer: methyldopa/long-acting CCB.	{30}	{32}	Chống chỉ định Nicardipine; tránh Atenolol, Propranolol, Nifedipine; ưu tiên Methyldopa/CKCa tác dụng kéo dài.	1
+1e804196-3778-49e9-81f9-75eaf35d1ff0	c172f668-f132-49f4-bacb-2fe7b18391d9	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	Postpartum: maintain regimen.	{30}	{32}	Duy trì phác đồ sau sinh.	1
+05e16176-b034-45d4-8eaf-1468a65634f4	e51643fe-2444-4f18-ab9b-32e4f4c06232	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52), chú thích	Footnote abbreviation glossary for the drug classes named in Bảng 16.	{30}	{32}	Chú giải viết tắt cho các nhóm thuốc nêu trong Bảng 16 (ƯCMC, CTTA, CKCa, LT, MRA, SGLT2i).	1
+c64ad3d7-772c-4fdd-b795-db439206a708	b6d2b7c0-1bb6-45e2-9bbd-72c98a861cf8	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)	RAS-inhibitor drugs are contraindicated in pregnancy; avoid sodium nitroprusside (fetal cyanide toxicity risk).	{30}	{32}	THA trong thai kỳ: chống chỉ định thuốc ức chế RAS; tránh Natri nitroprusside do nguy cơ nhiễm độc xyanua thai nhi.	1
+86c5c2a7-643c-4c8f-bbab-34d4850a6752	bb6dadda-b610-4172-8435-88e0111ee741	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+725ccd08-03a2-4dcd-8e86-bb7764e384a2	455fcd4a-e8f2-4b03-b67a-71784b796683	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+b142117e-2912-4fea-9813-45d068679eef	d98b6c15-9c2b-4b7b-a6cb-f869f625f98a	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+018cecc8-3b1e-4731-84c6-8add024330c5	583fb951-4f9f-48ef-b652-85c8d6fe7101	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+d3ad703f-1ea7-4963-8d7b-5f3f9656dbde	379b8afc-b896-410f-bb13-c2e38bef13ad	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+ef962ce0-b85c-4eec-82a6-d8da0bf0b28a	ac540e55-906b-437f-a6af-2eccb619bbb5	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+b45bb617-f0c7-4ffb-9cf4-eb26d5733ab9	39319a8a-753e-4b85-8611-24d214b78327	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+f936b545-1c13-4e4c-9c17-e33f3737c350	da1ba865-b2d4-4677-85ad-15496aad4653	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+d92f358f-8148-4208-8c67-a1a2f3d55b3e	d79e31dd-3e3f-43f9-bc55-29657d900c2f	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+0d2f7343-660f-4274-8886-609bbf7be1b7	29baba0e-818b-41db-a911-96f799a5b584	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+f944a5b1-aa37-48a3-aa38-002121321bd5	8b2fa240-abcb-47e8-9e3c-9b0a15cb9958	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+3cad015d-1bc3-49bd-8b08-6542c885d88d	3b5b88f1-65e0-4a2d-934b-fb5a965b6df6	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+6ada36e1-2931-40ed-b7a5-02d7256e543e	879486a4-d0bf-42f2-a772-dcb944ddbb93	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+dee53cf8-de3b-4d29-b440-ae8c80b19929	e2dcd8e5-7a19-4dc6-a11c-94bc504ba8a4	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+a4008906-1c08-4712-aa09-af2beeb5263a	b52de82a-7ee3-4efd-b12b-199031f33beb	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+5e035df0-0390-4e3e-88bd-1f68ace7488b	0b167ff7-f286-4da4-8a3a-0ae20545c7b4	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+872f274f-44fc-4645-8df5-47343d61a67d	84342fec-0e0c-4bb5-a676-49c8df14fcc3	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
+b73bcf97-1a9c-423e-a8d2-2903db1ef84b	166ba4ee-6c47-441b-8ad6-17d2fc69073e	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp cấp cứu", "number": "3.6.5"}]	Mục 3.6.5. Tăng huyết áp cấp cứu	Entry point of the hypertensive-emergency tree; emergency vs. urgent hypertension distinction.	{27}	{29}	Điểm vào của Cây 14; phân biệt THA cấp cứu và THA khẩn trương.	1
+71669926-1b33-4b48-ac41-b7ee5319fd00	251b8883-c8d8-4e89-b918-09a70b97bdb8	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp cấp cứu", "number": "3.6.5"}]	Mục 3.6.5. Tăng huyết áp cấp cứu	Without acute target-organ damage, this is urgent hypertension, usually treatable with oral therapy.	{27}	{29}	Bệnh nhân tăng HA đáng kể nhưng không có tổn thương cơ quan đích cấp tính được gọi là tăng huyết áp khẩn trương.	1
+8faf2076-5df4-4f1a-86fa-9c417554098f	52d61845-6472-4822-b946-cdc48444e479	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp cấp cứu", "number": "3.6.5"}]	Mục 3.6.5. Tăng huyết áp cấp cứu	Severe hypertension with acute target-organ damage is a hypertensive emergency requiring immediate, usually IV, therapy.	{27}	{29}	THA cấp cứu là THA nặng kết hợp tổn thương cơ quan đích cấp tính, cần can thiệp hạ HA ngay lập tức, thường bằng đường tĩnh mạch.	1
+6faf0a09-19c8-403c-a467-d5cb99bcda4e	4ce0d75e-7416-4381-b4eb-18e83f1df2c1	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Suy tim", "number": "3.7.3"}]	Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 20, Mục 3.7.3	Acute cardiogenic pulmonary edema: target SBP<140 mmHg immediately; see Bảng 20 for heart-failure strategy.	{28}	{30}	Trích Bảng 14; đối chiếu bổ sung Bảng 20, Mục 3.7.3.	1
+671766f4-fa37-4d21-a9c4-783862f35ea1	b15c9c78-c837-4451-af49-19c97d368b36	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp cấp cứu", "number": "3.6.5"}]	Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51)	Hypertensive encephalopathy: immediate MAP reduction 20-25%.	{28}	{30}	Trích Bảng 14, theo Van den Born và cộng sự (51).	1
+13ad3dd7-be05-42f5-9ace-1b62667e2e3a	61f81d80-845e-452c-b80f-02a0bae3e88d	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Đột quỵ", "number": "3.7.5"}]	Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 24, Mục 3.7.5	AIS with thrombolysis indication: MAP -15% within 1 hour if SBP>185 or DBP>110 mmHg; see Bảng 24 for more detailed AIS management including thrombolysis/thrombectomy.	{28}	{30}	Trích Bảng 14; đối chiếu bổ sung Bảng 24, Mục 3.7.5 về xử trí HA trong đột quỵ thiếu máu não cấp.	1
+1699d4fe-3c84-4fc4-a69f-f239dcb34ddf	5f03a0ba-fc0d-4ac1-9e06-f40641921048	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Đột quỵ", "number": "3.7.5"}]	Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 24, Mục 3.7.5	AIS: MAP -15% within 1 hour if SBP>220 or DBP>120 mmHg; see Bảng 24 for more detailed AIS management.	{28}	{30}	Trích Bảng 14; đối chiếu bổ sung Bảng 24, Mục 3.7.5.	1
+5b3730ac-a68d-4669-8687-34792a16dcef	2ae327a8-8199-4851-b979-000fadf9edb1	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Đột quỵ", "number": "3.7.5"}]	Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 23, Mục 3.7.5	Acute ICH: target 130<SBP<180 mmHg; see Bảng 23 for detailed ICH management (>220 consider IV infusion; 150-220 lowering to <140 within 6h shows no benefit and may be harmful; start within 2h, max reduction 90 mmHg from baseline).	{28}	{30}	Trích Bảng 14; đối chiếu bổ sung Bảng 23, Mục 3.7.5 về xử trí HA trong xuất huyết não cấp.	1
+71acc1c7-0102-4d88-a89a-8b8a10e60a03	f57f80db-de51-40ad-a751-626056ee90ec	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp và Bệnh mạch vành", "number": "3.7.2"}]	Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 19, Mục 3.7.2	ACS: target SBP<140 mmHg immediately; see Bảng 19 for hypertension-with-CAD strategy.	{28}	{30}	Trích Bảng 14; đối chiếu bổ sung Bảng 19, Mục 3.7.2.	1
+23154fc0-78d5-42a4-8072-754bccdd7690	02e181de-de5e-42fd-af3a-b71095aadab0	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp cấp cứu", "number": "3.6.5"}]	Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51)	Acute aortic syndrome: target SBP<120 mmHg and heart rate <60 bpm immediately. No onward tree link (see header note on the flagged Cây 10 discrepancy).	{28}	{30}	Trích Bảng 14, theo Van den Born và cộng sự (51).	1
+6e7e7271-a499-4258-8831-e54afcee3ec3	c684b8bb-1b9e-4742-8c55-d17ebd14ce36	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp trong thai kỳ", "number": "3.6.6"}]	Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 15, 16, Mục 3.6.6	Eclampsia/severe preeclampsia/HELLP: target SBP<160 and DBP<105 mmHg immediately; RAS-inhibitors contraindicated and sodium nitroprusside avoided in pregnancy (fetal cyanide toxicity risk).	{28}	{30}	Trích Bảng 14; đối chiếu bổ sung Bảng 15, 16, Mục 3.6.6.	1
+e8975db5-9250-4de5-a09f-c61254ddb78e	961295af-8239-437a-8106-a6fb9da5d24c	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp cấp cứu", "number": "3.6.5"}]	Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51)	General/malignant hypertensive emergency with or without TMA/AKI: MAP reduction 20-25% over several hours.	{28}	{30}	Trích Bảng 14, theo Van den Born và cộng sự (51).	1
+140a9ab8-081f-4b11-8616-2fc929bdf173	8e4b0979-c291-4f98-9032-4293a2bfc8fd	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Tăng huyết áp cấp cứu", "number": "3.6.5"}]	Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51), chú thích	Footnote abbreviation glossary (MAP, TMA, HELLP) and source citation/permission note.	{28}	{30}	Chú thích Bảng 14: MAP, TMA, HELLP; trích dẫn theo Van den Born và cộng sự, với sự cho phép của European Heart Journal - Cardiovascular Pharmacotherapy, Oxford University Press.	1
+8d59975d-04ae-4a70-841c-c7295dc546d0	63aeac94-609f-4799-baaf-6aff6229e8c3	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Các trường hợp tăng huyết áp đặc biệt", "3.6.3. Tăng huyết áp ở người cao tuổi"]	3.6.3. Tăng huyết áp ở người cao tuổi	\N	{31}	{33}	\N	1
+50e9d818-78ad-407f-9226-d8eced2400b5	e281b92f-39f7-404a-b2b3-8134c7df2865	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Các trường hợp tăng huyết áp đặc biệt", "3.6.3. Tăng huyết áp ở người cao tuổi"]	3.6.3. Tăng huyết áp ở người cao tuổi	\N	{31}	{33}	\N	1
+46984a95-b8ea-4e6c-b9e3-495f20931de4	cdcd1de6-9367-43ea-ac81-7ecf282c62a9	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Các trường hợp tăng huyết áp đặc biệt", "3.6.3. Tăng huyết áp ở người cao tuổi"]	3.6.3. Tăng huyết áp ở người cao tuổi	\N	{31}	{33}	\N	1
+04d3fe24-dc7c-41da-be52-80fd22b01540	e951a670-b220-4ef0-8034-24f1928808a1	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Các trường hợp tăng huyết áp đặc biệt", "3.6.3. Tăng huyết áp ở người cao tuổi"]	3.6.3. Tăng huyết áp ở người cao tuổi	\N	{31}	{33}	\N	1
+dfff6f50-6ed1-48d3-b069-24c760162a92	8dee04a9-d059-4004-bc44-2bdf62d04469	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Các trường hợp tăng huyết áp đặc biệt", "3.6.3. Tăng huyết áp ở người cao tuổi"]	3.6.3. Tăng huyết áp ở người cao tuổi	\N	{31}	{33}	\N	1
+1feb5cb7-19f4-42c4-b99f-331e6033d6d1	537e515a-56ae-4e09-a235-20420f20806b	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Các trường hợp tăng huyết áp đặc biệt", "3.6.3. Tăng huyết áp ở người cao tuổi"]	3.6.3. Tăng huyết áp ở người cao tuổi	\N	{31}	{33}	\N	1
+1d2c58ff-da6a-4689-abf1-8b57f7e5987b	29abe152-42d2-48ea-9780-a0062e2010fc	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Các trường hợp tăng huyết áp đặc biệt", "3.6.3. Tăng huyết áp ở người cao tuổi"]	3.6.3. Tăng huyết áp ở người cao tuổi	\N	{31}	{33}	\N	1
+3a08445b-2130-4aea-b619-ec6b5c4ef1b3	a19f31da-7fc5-439a-bffc-34aaddbba2dd	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. Các trường hợp tăng huyết áp đặc biệt", "3.6.3. Tăng huyết áp ở người cao tuổi"]	3.6.3. Tăng huyết áp ở người cao tuổi	\N	{31}	{33}	\N	1
+44c2e430-20a1-4ad7-b29d-8f1b98965cd5	dbf3fc69-278c-4e51-9487-242f9de4a9cc	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)	[{"title": "Điều trị Tăng huyết áp bằng thuốc", "number": "3.4"}]	Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc	Dual RAS-inhibitor blockade is not recommended (Class III, Level A).	{20}	{22}	Việc phối hợp hai nhóm thuốc ức chế hệ renin-angiotensin không được khuyến cáo.	2
 \.
 
--- ================================================================
--- Medicines: drug lookup table (source: medicines.sql)
--- ================================================================
---
--- Source of truth for drug names, dosing, source citation, and prescribing
--- availability. Transcribed from backups/medicine.csv (DRUG0001-DRUG0065),
--- with drug_class assigned per the A/B/C/D class-letter convention used by
--- combination_options above (A = ACEI/ARB, B = beta-blocker, C =
--- calcium-channel blocker, D = diuretic). Drugs outside that scheme (SGLT2i,
--- alpha-blockers, vasodilators, central agonists, direct renin inhibitor,
--- aspirin) have drug_class = NULL.
-
-INSERT INTO public.medicines
-    (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available)
-VALUES
-    ('DRUG0001', 'Diltiazem', 'C', 'CKCa Non-DHP', 'Thuốc Uống', '120 mg', '180 - 240 mg', '240 mg', 'Bảng 10', NULL, true),
-    ('DRUG0002', 'Verapamil', 'C', 'CKCa Non-DHP', 'Thuốc Uống', '120 mg', '240 - 360 mg', '360 mg', 'Bảng 10', NULL, true),
-    ('DRUG0003', 'Amlodipine', 'C', 'CKCa DHP', 'Thuốc Uống', '2.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, true),
-    ('DRUG0004', 'Felodipine', 'C', 'CKCa DHP', 'Thuốc Uống', '2.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, true),
-    ('DRUG0005', 'Isradipine', 'C', 'CKCa DHP', 'Thuốc Uống', '2.5 mg BID', '5 - 10 mg BID', '20 mg/ngày', 'Bảng 10', NULL, true),
-    ('DRUG0006', 'Nifedipine', 'C', 'CKCa DHP', 'Thuốc Uống', '30 mg', '30 - 90 mg', '90 mg', 'Bảng 10', NULL, true),
-    ('DRUG0007', 'Nitrendipine', 'C', 'CKCa DHP', 'Thuốc Uống', '10 mg', '20 mg', '20 mg', 'Bảng 10', NULL, true),
-    ('DRUG0008', 'Lercanidipine', 'C', 'CKCa DHP', 'Thuốc Uống', '10 mg', '20 mg', '20 mg', 'Bảng 10', NULL, true),
-    ('DRUG0009', 'Benazepril', 'A', 'ƯCMC', 'Thuốc Uống', '5 mg', '10 - 40 mg', '40 mg', 'Bảng 10', NULL, true),
-    ('DRUG0010', 'Captopril', 'A', 'ƯCMC', 'Thuốc Uống', '12.5 mg BID', '50 - 100 mg BID', '200 mg/ngày', 'Bảng 10', NULL, true),
-    ('DRUG0011', 'Enalapril', 'A', 'ƯCMC', 'Thuốc Uống', '5 mg', '10 - 40 mg', '40 mg', 'Bảng 10', NULL, true),
-    ('DRUG0012', 'Fosinopril', 'A', 'ƯCMC', 'Thuốc Uống', '10 mg', '10 - 40 mg', '40 mg', 'Bảng 10', NULL, true),
-    ('DRUG0013', 'Lisinopril', 'A', 'ƯCMC', 'Thuốc Uống', '5 mg', '10 - 40 mg', '40 mg', 'Bảng 10', NULL, true),
-    ('DRUG0014', 'Perindopril', 'A', 'ƯCMC', 'Thuốc Uống', '3.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, true),
-    ('DRUG0015', 'Quinapril', 'A', 'ƯCMC', 'Thuốc Uống', '5 mg', '10 - 40 mg', '40 mg', 'Bảng 10', NULL, true),
-    ('DRUG0016', 'Ramipril', 'A', 'ƯCMC', 'Thuốc Uống', '2.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, true),
-    ('DRUG0017', 'Trandolapril', 'A', 'ƯCMC', 'Thuốc Uống', '1 - 2 mg', '2 - 8 mg', '8 mg', 'Bảng 10', NULL, true),
-    ('DRUG0018', 'Imidapril', 'A', 'ƯCMC', 'Thuốc Uống', '2.5 - 5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, true),
-    ('DRUG0019', 'Azilsartan', 'A', 'CTTA', 'Thuốc Uống', '40 mg', '80 mg', '80 mg', 'Bảng 10', NULL, true),
-    ('DRUG0020', 'Candesartan', 'A', 'CTTA', 'Thuốc Uống', '4 mg', '8 - 32 mg', '32 mg', 'Bảng 10', NULL, true),
-    ('DRUG0021', 'Eprosartan', 'A', 'CTTA', 'Thuốc Uống', '400 mg', '600 - 800 mg', '800 mg', 'Bảng 10', NULL, true),
-    ('DRUG0022', 'Irbesartan', 'A', 'CTTA', 'Thuốc Uống', '150 mg', '150 - 300 mg', '300 mg', 'Bảng 10', NULL, true),
-    ('DRUG0023', 'Losartan', 'A', 'CTTA', 'Thuốc Uống', '50 mg', '50 - 100 mg', '100 mg', 'Bảng 10', NULL, true),
-    ('DRUG0024', 'Olmesartan', 'A', 'CTTA', 'Thuốc Uống', '10 mg', '20 - 40 mg', '40 mg', 'Bảng 10', NULL, true),
-    ('DRUG0025', 'Telmisartan', 'A', 'CTTA', 'Thuốc Uống', '40 mg', '40 - 80 mg', '80 mg', 'Bảng 10', NULL, true),
-    ('DRUG0026', 'Valsartan', 'A', 'CTTA', 'Thuốc Uống', '80 mg', '80 - 320 mg', '320 mg', 'Bảng 10', NULL, true),
-    ('DRUG0027', 'Bendroflumethiazide', 'D', 'LT Thiazide', 'Thuốc Uống', '5 mg', '10 mg', '10 mg', 'Bảng 10', NULL, true),
-    ('DRUG0028', 'Chlorthalidone', 'D', 'LT Thiazide-like', 'Thuốc Uống', '12.5 mg', '12.5 - 25 mg', '25 mg', 'Bảng 10', NULL, true),
-    ('DRUG0029', 'Hydrochlorothiazide', 'D', 'LT Thiazide', 'Thuốc Uống', '12.5 mg', '12.5 - 50 mg', '50 mg', 'Bảng 10', NULL, true),
-    ('DRUG0030', 'Indapamide', 'D', 'LT Thiazide-like', 'Thuốc Uống', '1.25 mg', '2.5 mg', '2.5 mg', 'Bảng 10', NULL, true),
-    ('DRUG0031', 'Bumetanide', 'D', 'LT quai', 'Thuốc Uống', '0.5 mg', '1 mg', '1 mg', 'Bảng 10', NULL, true),
-    ('DRUG0032', 'Furosemide', 'D', 'LT quai', 'Thuốc Uống/Thuốc Truyền Tĩnh Mạch', '20 mg BID', '40 mg BID', 'Variable', 'Bảng 10', NULL, true),
-    ('DRUG0033', 'Torsemide', 'D', 'LT quai', 'Thuốc Uống', '5 mg', '10 mg', '10 mg', 'Bảng 10', NULL, true),
-    ('DRUG0034', 'Amiloride', 'D', 'LT giữ Kali', 'Thuốc Uống', '5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, true),
-    ('DRUG0035', 'Eplerenone', 'D', 'LT giữ Kali (MRA)', 'Thuốc Uống', '25 mg', '50 - 100 mg', '100 mg', 'Bảng 10', NULL, true),
-    ('DRUG0036', 'Spironolactone', 'D', 'LT giữ Kali (MRA)', 'Thuốc Uống', '12.5 mg', '25 - 50 mg', '50 mg', 'Bảng 10', NULL, true),
-    ('DRUG0037', 'Triamterene', 'D', 'LT giữ Kali', 'Thuốc Uống', '100 mg', '100 mg', '100 mg', 'Bảng 10', NULL, true),
-    ('DRUG0038', 'Acebutolol', 'B', 'CB', 'Thuốc Uống', '200 mg', '200 - 400 mg', '400 mg', 'Bảng 10', NULL, true),
-    ('DRUG0039', 'Atenolol', 'B', 'CB', 'Thuốc Uống', '25 mg', '100 mg', '100 mg', 'Bảng 10', NULL, true),
-    ('DRUG0040', 'Bisoprolol', 'B', 'CB', 'Thuốc Uống', '5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, true),
-    ('DRUG0041', 'Carvedilol', 'B', 'CB', 'Thuốc Uống', '3.125 mg BID', '6.25 - 25 mg BID', '50 mg/ngày', 'Bảng 10', NULL, true),
-    ('DRUG0042', 'Labetalol', 'B', 'CB', 'Thuốc Uống/Thuốc Truyền Tĩnh Mạch', '100 mg BID', '100 - 300 mg BID', '600 mg/ngày', 'Bảng 10', NULL, true),
-    ('DRUG0043', 'Metoprolol Succinate', 'B', 'CB', 'Thuốc Uống', '25 mg', '50 - 100 mg', '100 mg', 'Bảng 10', NULL, true),
-    ('DRUG0044', 'Metoprolol Tartrate', 'B', 'CB', 'Thuốc Uống', '25 mg BID', '50 - 100 mg BID', '200 mg/ngày', 'Bảng 10', NULL, true),
-    ('DRUG0045', 'Nadolol', 'B', 'CB', 'Thuốc Uống', '20 mg', '40 - 80 mg', '80 mg', 'Bảng 10', NULL, true),
-    ('DRUG0046', 'Nebivolol', 'B', 'CB', 'Thuốc Uống', '2.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, true),
-    ('DRUG0047', 'Propranolol', 'B', 'CB', 'Thuốc Uống', '40 mg BID', '40 - 160 mg BID', '320 mg/ngày', 'Bảng 10', NULL, true),
-    ('DRUG0048', 'Aliskiren', NULL, 'Ức chế Renin trực tiếp', 'Thuốc Uống', '75 mg', '150 - 300 mg', '300 mg', 'Bảng 10', NULL, true),
-    ('DRUG0049', 'Doxazosin', NULL, 'Ức chế thụ thể Alpha giao cảm', 'Thuốc Uống', '1 mg', '1 - 2 mg', '2 mg', 'Bảng 10', NULL, true),
-    ('DRUG0050', 'Prazosin', NULL, 'Ức chế thụ thể Alpha giao cảm', 'Thuốc Uống', '1 mg BID', '1 - 5 mg BID', '10 mg/ngày', 'Bảng 10', NULL, true),
-    ('DRUG0051', 'Terazosin', NULL, 'Ức chế thụ thể Alpha giao cảm', 'Thuốc Uống', '1 mg', '1 - 2 mg', '2 mg', 'Bảng 10', NULL, true),
-    ('DRUG0052', 'Hydralazine', NULL, 'Giãn mạch', 'Thuốc Uống/Thuốc Truyền Tĩnh Mạch', '10 mg BID', '25 - 100 mg BID', '200 mg/ngày', 'Bảng 10', NULL, true),
-    ('DRUG0053', 'Minoxidil', NULL, 'Giãn mạch', 'Thuốc Uống', '2.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, true),
-    ('DRUG0054', 'Clonidine', NULL, 'Chủ vận chọn lọc alpha-2 giao cảm', 'Thuốc Uống', '0.1 mg BID', '0.1 - 0.2 mg BID', '0.4 mg/ngày', 'Bảng 10', NULL, true),
-    ('DRUG0055', 'Methyldopa', NULL, 'Chủ vận chọn lọc alpha-2 giao cảm', 'Thuốc Uống', '125 mg BID', '250 - 500 mg BID', '1000 mg/ngày', 'Bảng 10', NULL, true),
-    ('DRUG0056', 'Reserpine', NULL, 'Giảm Adrenergic', 'Thuốc Uống', '0.1 mg', '0.1 - 0.25 mg', '0.25 mg', 'Bảng 10', NULL, true),
-    ('DRUG0057', 'Nicardipine', 'C', 'CKCa DHP', 'Thuốc Truyền Tĩnh Mạch', '3 mg/giờ', '5 mg/giờ', '15 mg/giờ', 'Mục 3.7.5', 'https://drugs.com/dosage/nicardipine.html', true),
-    ('DRUG0058', 'Clevidipine', 'C', 'CKCa DHP', 'Thuốc Truyền Tĩnh Mạch', '1 - 2 mg/giờ', '4 - 6 mg/giờ', '16-32 mg/giờ', 'Mục 3.7.5', 'https://drugs.com/dosage/clevidipine.html', true),
-    ('DRUG0059', 'Esmolol', 'B', 'CB', 'Thuốc Truyền Tĩnh Mạch', '50 mcg/kg/phút', '50-250 mcg/kg/phút', '300 mcg/kg/phút', 'Mục 3.7.5', 'https://drugs.com/dosage/esmolol.html', true),
-    ('DRUG0060', 'Nitroprusside', NULL, 'Giãn mạch', 'Thuốc Truyền Tĩnh Mạch', '0.3 mcg/kg/phút', '0.3-10 mcg/kg/phút', '10 mcg/kg/phút', 'Mục 3.7.5', 'https://drugs.com/dosage/nitroprusside.html', true),
-    ('DRUG0061', 'Nitroglycerin', NULL, 'Giãn mạch', 'Thuốc Truyền Tĩnh Mạch', '5 mcg/phút', '10 mcg/phút', '20 mcg/phút', 'Mục 3.7.5', 'https://drugs.com/dosage/nitroglycerin.html', true),
-    ('DRUG0062', 'Dapagliflozin', 'SGLT2i', 'SGLT2i', 'Thuốc Uống', '5-10 mg', '10 mg', '10 mg', 'Mục 3.7.1', NULL, true),
-    ('DRUG0063', 'Empagliflozin', 'SGLT2i', 'SGLT2i', 'Thuốc Uống', '10 mg', '10 mg', '25 mg', 'Mục 3.7.1', NULL, true),
-    ('DRUG0064', 'Urapidil', NULL, 'Ức chế thụ thể Alpha giao cảm', 'Thuốc Uống/Thuốc Truyền Tĩnh Mạch', NULL, NULL, NULL, NULL, NULL, true),
-    ('DRUG0065', 'Aspirin', NULL, NULL, NULL, '75 - 81 mg/ngày', NULL, '150 - 162 mg/ngày', NULL, 'https://www.drugs.com/pregnancy/aspirin.html ; https://www.drugs.com/dosage/aspirin.html', true);
-
-
--- ================================================================
--- Tree 6: drug-combination (source: tree6.sql)
--- ================================================================
---
--- CDSS decision-tree insert script (sixth pass — specific-clinical-situation
--- beta-blocker check now gates every regimen tier; fifth pass cross-checked
--- against Tree 4/Tree 5 and drug-list removed; fourth pass rebuilt to match
--- the author's own 5-image board description, verbatim)
---
--- SIXTH PASS: the specific-clinical-situation check (angina, post-MI, heart
--- failure, AFib, tachycardia, pregnancy) previously only gated the 2-drug
--- initiation tier. Per the author: having a specific clinical situation
--- means beta-blocker must be used regardless of whether the patient ends up
--- on 1, 2, or 3 drugs. The engine's single-path-per-node semantics mean this
--- check can't be shared across tiers as one branch (the "next step" after a
--- shared condition must be identical for every entry path, but each tier
--- needs a different outcome), so it is now duplicated per tier: monotherapy
--- gets its own T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY ->
--- T6_C_HAS/NO_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY -> mandates
--- combination_options:[["B"]] when present (matching T4/T5's own
--- "beta_blocker_requires_indication" note, now properly enforced rather than
--- just annotated); the 3-drug escalation tier gets the same pattern via
--- T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION -> adds B to
--- additional_drug_classes when present. The existing 2-drug tier's check was
--- already correct and is unchanged.
---
--- FIFTH PASS: T6_C_SPECIAL_POPULATION/NOT_SPECIAL_POPULATION previously used
--- a condition invented from this tree's own reading of Bảng 9's prose
--- ((age>=80 AND frailty) OR (HIGH_NORMAL_BP AND low/medium risk)), which
--- does not match the already-seeded T4_C_MONOTHERAPY_ELIGIBILITY /
--- T5_C_MONOTHERAPY_ELIGIBILITY condition (is_lifestyle_follow_up OR age>=80
--- OR frailty, independently OR'd). Since Trees 4/5 already decide and
--- communicate the monotherapy-vs-combination tier via their own action
--- before an unconditional LINK into this tree's START, Tree 6 must reuse
--- the exact same condition or it can silently contradict what the patient
--- was already told. Fixed to match verbatim. Also added class B
--- (beta-blocker, requires_indication) to the monotherapy combination_options
--- menu, matching T4_ACTION_CONSIDER_MONOTHERAPY/
--- T5_ACTION_CONSIDER_MONOTHERAPY_ONE_PILL's drug_options exactly (previously
--- only offered A/C/D). Also removed T6_GLOBAL_DRUG_CLASS_GLOSSARY (the
--- Bảng-10-sourced list of specific drug names per class) — a separate drug
--- table is planned, so specific drug names no longer live in tree seed data.
--- Tree: "Cây 6: Phối Hợp Thuốc - Minh"
--- Source: Bảng 9, Bảng 10, Bảng 11, Hình 5, Mục 3.6.1
--- (Khuyến cáo THA VNHA 2022.pdf):
---   Bảng 9  -> printed p.20 / PDF page 22
---   Bảng 10 -> printed p.21-22 / PDF pages 23-24
---   Bảng 11 -> printed p.23 / PDF page 25
---   Hình 5 & Mục 3.6.1 -> printed p.24 / PDF page 26
---
--- 'drug-combination' already exists in the target database from earlier
--- passes; Section 0 deletes it first (FK-safe order), so this script is
--- safe to re-run.
---
--- WHAT CHANGED THIS PASS, after the author supplied the authoritative
--- 4-step description of their own board (previously only inferred from a
--- raw SVG export):
---
--- 1. RESTORED Step 1's prescription-review sub-flow (first visit / follow-up
---    -> has prior prescription? -> compare with current prescription ->
---    dosage-adjustment requested?). The previous pass deleted this on the
---    wrong assumption that has_prior_prescription/has_dosage_adjustment_request
---    were fabricated with no grounding. They are real (from the author's own
---    diagram) — the correct fix was to make them runtime-safe, not delete
---    them. Both now go through the established safe-default pattern: an
---    INFERENCE/ACTION node merges a static default, then COPY_PATH
---    (required:false) overlays the caller-supplied value if present.
--- 2. RESTORED the two-level duplicate-drug-class check (general "duplicate
---    same class -> keep 1" plus the specific "dual RAS-inhibitor blockade ->
---    keep 1 or remove both" sub-case), which the previous pass had
---    collapsed into a single RAS-only check.
--- 3. Per the author: the duplicate-drug-class check (Step 3) runs
---    unconditionally for every patient, not just follow-up visits — for a
---    fresh patient the safely-defaulted facts simply resolve to
---    "no duplicate found" and the tree proceeds.
--- 4. Per the author: Step 1 and Step 3's "Duy trì phác đồ" / resolution
---    nodes are NOT terminal — they are ACTION nodes with outgoing edges
---    that continue on into Step 4's combination-therapy logic, matching the
---    board's literal "tất cả hội tụ về Phối hợp thuốc" convergence.
--- 5. REMOVED the mandatory-indication chain (coronary artery disease / HFrEF
---    / stroke / CKD / high-risk T2DM -> specific mandatory combos) that the
---    previous pass added. That content does not appear anywhere in the
---    author's 4-step board description; it was pulled in from general
---    ESC/VNHA guideline knowledge, not from this tree's actual source
---    material, so it does not belong in Cây 6.
--- 6. RESTORED the full 5-example "specific clinical situation" list for the
---    beta-blocker add-on (angina, post-MI, atrial fibrillation, tachycardia,
---    pregnancy), matching the author's board — the previous pass had
---    trimmed this to just the PDF citation's terser phrasing (angina,
---    post-MI, heart failure, rate control). Each newly-added flag still
---    uses the safe-default pattern so it never raises MissingRuntimePath.
--- 7. ADDED a `was_on_monotherapy` safely-defaulted fact to distinguish, on a
---    follow-up visit still at the "INITIAL_REGIMEN" stage, whether the prior
---    regimen was monotherapy (-> escalate to the 2-drug low-dose path) or
---    already 2-drug (-> escalate to full-dose/3-drug). The established
---    medication_follow_up_stage enum only has two values
---    (INITIAL_REGIMEN/ESCALATED_REGIMEN) and can't represent this 3-way
---    distinction on its own.
--- 8. FIXED two Bảng 11 contraindication-table gaps found on this pass:
---    MRA's absolute contraindications were missing pregnancy, and the
---    "Direct renin inhibitor / Vasodilator" drug-class row (absolute:
---    pregnancy) was missing entirely.
---
--- ARCHITECTURE NOTE, unchanged: the 8-drug-class contraindication table
--- (Bảng 11) is not modeled as branching condition/inference nodes because
--- the engine follows exactly one path per node (first matching candidate
--- among siblings) and cannot evaluate independent facts in parallel. It is
--- carried into context as one pre-computed COPY_PATH (matching
--- T3_INF_RESTORE_ACTIVE_BP_TARGET's precedent), with the full table
--- preserved as documented metadata on
--- T6_GLOBAL_CONTRAINDICATION_REFERENCE_TABLE.
---
--- RUNTIME-SAFETY NOTE, unchanged: every fact not in this system's closed,
--- frozen input contract (docs/cdss/context-contract.md,
--- docs/cdss/traversal-engine-contract.md, frontend's MockPatientSidebar.tsx)
--- is written through a node whose context_patch merges a static default,
--- then COPY_PATH(required:false) overlays the caller-supplied value if
--- present. Downstream CONDITIONs read the always-present context.* copy,
--- never the possibly-absent input.* original.
---
--- IMPORTANT — still worth a final visual check against the original board:
---   1. Exact wording/labels are approximated in English/Vietnamese from the
---      author's prose description, not read pixel-by-pixel from the image.
---   2. "Cây 5" was explicitly declined as an escalation LINK target (author
---      chose to keep 3-drug escalation inline in Tree 6 instead).
---   3. "Cây 14: THA Kháng Trị" is modeled as a LINK to tree_key
---      'resistant-hypertension' (unseeded, per docs/cdss/tree-json-dialect.md
---      §10's list of expected-but-unseeded targets).
---
--- Use: cmd /c "docker compose exec -T postgres psql -U cdss -d cdss < backups\tree6.sql"
---
-
--- ============================================================
--- 0. Remove the existing drug-combination tree, if present
--- ============================================================
-DELETE FROM public.node_source_references
-WHERE node_id IN (
-        SELECT n.id
-        FROM public.decision_nodes n
-            JOIN public.decision_trees t ON t.id = n.tree_id
-        WHERE t.tree_key = 'drug-combination'
-    );
-DELETE FROM public.decision_edges
-WHERE from_node_id IN (
-        SELECT n.id
-        FROM public.decision_nodes n
-            JOIN public.decision_trees t ON t.id = n.tree_id
-        WHERE t.tree_key = 'drug-combination'
-    );
-DELETE FROM public.decision_nodes
-WHERE tree_id IN (
-        SELECT id FROM public.decision_trees WHERE tree_key = 'drug-combination'
-    );
-DELETE FROM public.decision_trees WHERE tree_key = 'drug-combination';
--- ============================================================
--- 1. Tree
--- ============================================================
-INSERT INTO public.decision_trees (
-        "id", "tree_key", "name_en", "name_vi", "created_at", "updated_at"
-    )
-VALUES (
-        gen_random_uuid(), 'drug-combination', 'Drug Combination', 'Phối hợp thuốc', now(), now()
-    );
--- ============================================================
--- 2. Nodes
--- ============================================================
-WITH tree_ctx AS (
-    SELECT id AS tree_id FROM public.decision_trees WHERE tree_key = 'drug-combination'
-),
-node_seed (
-    node_key, node_type, text_en, text_vi,
-    condition_definition, context_patch, action_payload, global_config,
-    link_target_tree_key, link_target_node_key, display_order
-) AS (
-    VALUES
-    -- --- Step 1: visit type + existing-prescription review (Ảnh 1) ---
-    (
-        'T6_START_PATIENT_INFO_AND_PRESCRIPTIONS', 'START',
-        'Patient information + prescribed medications',
-        'Thông tin bệnh nhân + Các đơn thuốc chỉ định',
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 0
-    ),
-    (
-        'T6_C_FIRST_VISIT', 'CONDITION', 'First visit', 'Khám lần đầu',
-        '{"path":"input.is_medication_follow_up","op":"eq","value":false}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 1
-    ),
-    (
-        'T6_C_FOLLOW_UP_VISIT', 'CONDITION', 'Follow-up visit', 'Tái khám',
-        '{"path":"input.is_medication_follow_up","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 2
-    ),
-    (
-        'T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS', 'INFERENCE',
-        'Determine whether a prior prescription exists',
-        'Xác định có đơn thuốc trước đó hay không',
-        NULL::jsonb,
-        '{"treatment":{"has_prior_prescription":true},"operations":[{"op":"COPY_PATH","from_path":"input.has_prior_prescription","to_path":"context.treatment.has_prior_prescription","required":false}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 3
-    ),
-    (
-        'T6_C_HAS_PRIOR_PRESCRIPTION', 'CONDITION', 'Has prior prescription', 'Có đơn thuốc trước đó',
-        '{"path":"context.treatment.has_prior_prescription","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 4
-    ),
-    (
-        'T6_C_NO_PRIOR_PRESCRIPTION', 'CONDITION', 'No prior prescription', 'Không có đơn thuốc trước đó',
-        '{"path":"context.treatment.has_prior_prescription","op":"eq","value":false}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 5
-    ),
-    (
-        'T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION', 'ACTION',
-        'Compare with current prescription', 'So sánh với đơn thuốc hiện tại',
-        NULL::jsonb,
-        '{"treatment":{"has_dosage_adjustment_request":false},"operations":[{"op":"COPY_PATH","from_path":"input.has_dosage_adjustment_request","to_path":"context.treatment.has_dosage_adjustment_request","required":false}]}'::jsonb,
-        '{"action_type":"COMPARE_WITH_CURRENT_PRESCRIPTION","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 6
-    ),
-    (
-        'T6_C_DOSAGE_ADJUSTMENT_REQUESTED', 'CONDITION',
-        'Dosage adjustment requested in current prescription',
-        'Có yêu cầu điều chỉnh liều lượng trong đơn thuốc hiện tại',
-        '{"path":"context.treatment.has_dosage_adjustment_request","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 7
-    ),
-    (
-        'T6_C_NO_DOSAGE_ADJUSTMENT_REQUESTED', 'CONDITION',
-        'No dosage adjustment requested in current prescription',
-        'Không có yêu cầu điều chỉnh liều lượng trong đơn thuốc hiện tại',
-        '{"path":"context.treatment.has_dosage_adjustment_request","op":"eq","value":false}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 8
-    ),
-    (
-        'T6_ACTION_ADJUST_REGIMEN', 'ACTION', 'Adjust regimen', 'Điều chỉnh phác đồ',
-        NULL::jsonb, '{"treatment":{"status":"ADJUST_REGIMEN"}}'::jsonb,
-        '{"action_type":"ADJUST_REGIMEN","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 9
-    ),
-    (
-        'T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT', 'ACTION', 'Maintain regimen', 'Duy trì phác đồ',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"MAINTAIN_CURRENT_REGIMEN","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 10
-    ),
-    -- --- Step 2: contraindication determination (reference lookup, see architecture note) ---
-    (
-        'T6_INF_DETERMINE_CONTRAINDICATIONS', 'INFERENCE',
-        'Determine contraindicated drug classes based on patient information and current regimen',
-        'Xác định thuốc chống chỉ định dựa trên thông tin bệnh nhân và phác đồ hiện tại',
-        NULL::jsonb,
-        '{"operations":[{"op":"COPY_PATH","from_path":"input.contraindicated_drug_classes","to_path":"context.treatment.contraindicated_drug_classes","required":false}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 11
-    ),
-    (
-        'T6_GLOBAL_CONTRAINDICATION_REFERENCE_TABLE', 'GLOBAL',
-        'Drug-class contraindication reference table (Bảng 11)',
-        'Bảng chống chỉ định theo nhóm thuốc (Bảng 11)',
-        NULL::jsonb, NULL::jsonb, NULL::jsonb,
-        '{"kind":"REFERENCE_LIST","purpose":"Chống chỉ định bắt buộc/tương đối theo nhóm thuốc, dùng để tính input.contraindicated_drug_classes trước khi vào Cây 6.","input_path":"input.contraindicated_drug_classes","table":{"THIAZIDE_LIKE_DIURETIC":{"absolute":["gout"],"relative":["metabolic_syndrome","glucose_intolerance","pregnancy","hypercalcemia","hypokalemia"]},"BETA_BLOCKER":{"absolute":["asthma","sinoatrial_or_high_grade_av_block","bradycardia_lt_60"],"relative":["metabolic_syndrome","glucose_intolerance","athlete"]},"DIHYDROPYRIDINE_CCB":{"relative":["tachyarrhythmia","heart_failure_reduced_ef_nyha_3_or_4","severe_leg_edema_history"]},"NON_DIHYDROPYRIDINE_CCB":{"absolute":["sinoatrial_or_high_grade_av_block","severe_lv_dysfunction_lvef_lt_40","bradycardia_lt_60"],"relative":["constipation"]},"ACE_INHIBITOR":{"absolute":["pregnancy","angioedema_history","hyperkalemia_gt_5_5","bilateral_renal_artery_stenosis"],"relative":["woman_of_childbearing_age_without_contraception"]},"ARB":{"absolute":["pregnancy","hyperkalemia_gt_5_5","bilateral_renal_artery_stenosis"],"relative":["woman_of_childbearing_age_without_contraception"]},"MRA":{"absolute":["pregnancy","hyperkalemia","severe_acute_renal_failure_egfr_lt_30"]},"DIRECT_RENIN_INHIBITOR_OR_VASODILATOR":{"absolute":["pregnancy"]}}}'::jsonb,
-        NULL::text, NULL::text, 12
-    ),
-    -- --- Step 3: duplicate drug-class check (runs unconditionally, per author) ---
-    (
-        'T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS', 'ACTION',
-        'Check duplicate drug class', 'Kiểm tra trùng nhóm thuốc',
-        NULL::jsonb,
-        '{"treatment":{"has_duplicate_drug_class":false,"has_duplicate_ras_inhibitor":false},"operations":[{"op":"COPY_PATH","from_path":"input.has_duplicate_drug_class","to_path":"context.treatment.has_duplicate_drug_class","required":false},{"op":"COPY_PATH","from_path":"input.has_duplicate_ras_inhibitor","to_path":"context.treatment.has_duplicate_ras_inhibitor","required":false}]}'::jsonb,
-        '{"action_type":"CHECK_DUPLICATE_DRUG_CLASS","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 13
-    ),
-    (
-        'T6_C_HAS_DUPLICATE_DRUG_CLASS', 'CONDITION',
-        'Has duplicate drug class (e.g. 2 drugs of the same class)',
-        'Có nhiều thuốc trùng nhóm (VD 2 thuốc cùng nhóm ƯCMC)',
-        '{"path":"context.treatment.has_duplicate_drug_class","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 14
-    ),
-    (
-        'T6_C_NO_DUPLICATE_DRUG_CLASS', 'CONDITION', 'No duplicate drug class',
-        'Không có thuốc trùng nhóm',
-        '{"path":"context.treatment.has_duplicate_drug_class","op":"eq","value":false}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 15
-    ),
-    (
-        'T6_C_DUPLICATE_IS_RAS_INHIBITOR', 'CONDITION',
-        'Regimen uses more than 2 RAS-inhibitor classes in parallel',
-        'Phác đồ dùng >2 loại ức chế RAS song song',
-        '{"path":"context.treatment.has_duplicate_ras_inhibitor","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 16
-    ),
-    (
-        'T6_C_DUPLICATE_NOT_RAS_INHIBITOR', 'CONDITION',
-        'Duplicate is within a single non-RAS drug class',
-        'Trùng nhóm không thuộc nhóm ức chế RAS',
-        '{"path":"context.treatment.has_duplicate_ras_inhibitor","op":"eq","value":false}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 17
-    ),
-    (
-        'T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH', 'ACTION',
-        'Keep only 1 drug or remove both; prefer keeping the one already in use, only remove both for a special requirement',
-        'Chỉ giữ lại 1 thuốc hoặc loại bỏ cả hai. Ưu tiên giữ lại thuốc đã hoặc đang dùng trước đó, chỉ loại bỏ cả hai khi có yêu cầu đặc biệt',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"KEEP_ONE_OR_REMOVE_BOTH_DUPLICATE_RAS_INHIBITORS","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 18
-    ),
-    (
-        'T6_ACTION_KEEP_ONE_DRUG', 'ACTION', 'Keep only 1 drug', 'Chỉ giữ lại 1 thuốc',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"KEEP_ONE_DRUG_DUPLICATE_CLASS","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 19
-    ),
-    (
-        'T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE', 'ACTION', 'Maintain regimen', 'Duy trì phác đồ',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"MAINTAIN_CURRENT_REGIMEN","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 20
-    ),
-    -- --- Encounter-type convergence (reused established field a 2nd time) ---
-    (
-        'T6_C_IS_FIRST_VISIT_FOR_REGIMEN', 'CONDITION',
-        'Encounter is a fresh-therapy visit', 'Đây là lần khám điều trị lần đầu',
-        '{"path":"input.is_medication_follow_up","op":"eq","value":false}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 21
-    ),
-    (
-        'T6_C_IS_FOLLOW_UP_FOR_REGIMEN', 'CONDITION',
-        'Encounter is a medication follow-up visit', 'Đây là lần tái khám điều trị thuốc',
-        '{"path":"input.is_medication_follow_up","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 22
-    ),
-    -- --- Step 4: fresh-therapy initiation (Nhánh A / Nhánh B, Bảng 9) ---
-    (
-        'T6_C_SPECIAL_POPULATION', 'CONDITION',
-        'Persistent high-normal BP after lifestyle management, age 80 or older, or frailty syndrome',
-        'HABTC không đạt mục tiêu sau thay đổi lối sống hoặc tuổi >= 80 hoặc hội chứng lão hóa',
-        '{"any":[{"path":"input.is_lifestyle_follow_up","op":"eq","value":true},{"path":"input.age","op":"gte","value":80},{"path":"input.has_frailty_syndrome","op":"eq","value":true}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 23
-    ),
-    (
-        'T6_C_NOT_SPECIAL_POPULATION', 'CONDITION', 'Not a special population',
-        'BỆNH NHÂN KHÔNG THUỘC NHÓM ĐẶC BIỆT',
-        '{"not":{"any":[{"path":"input.is_lifestyle_follow_up","op":"eq","value":true},{"path":"input.age","op":"gte","value":80},{"path":"input.has_frailty_syndrome","op":"eq","value":true}]}}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 24
-    ),
-    (
-        'T6_INF_INITIATE_MONOTHERAPY', 'INFERENCE',
-        'Drug therapy: start with 1 drug (A, C, or D)',
-        'Điều trị thuốc KHỞI ĐẦU BẰNG 1 THUỐC (A, C, hoặc D)',
-        NULL::jsonb,
-        '{"treatment_preferences":{"combination_options":[["A"],["C"],["D"]],"dose_strategy":"LOW_TO_USUAL_DOSE"}}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 25
-    ),
-    (
-        'T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY', 'INFERENCE',
-        'Determine specific clinical situations relevant to beta-blocker add-on (monotherapy tier)',
-        'Xác định tình huống lâm sàng đặc hiệu liên quan đến việc thêm chẹn Beta (bậc đơn trị)',
-        NULL::jsonb,
-        '{"treatment":{"has_angina":false,"has_prior_mi":false,"has_atrial_fibrillation":false,"has_tachycardia":false,"is_pregnant":false},"operations":[{"op":"COPY_PATH","from_path":"input.has_angina","to_path":"context.treatment.has_angina","required":false},{"op":"COPY_PATH","from_path":"input.has_prior_mi","to_path":"context.treatment.has_prior_mi","required":false},{"op":"COPY_PATH","from_path":"input.has_atrial_fibrillation","to_path":"context.treatment.has_atrial_fibrillation","required":false},{"op":"COPY_PATH","from_path":"input.has_tachycardia","to_path":"context.treatment.has_tachycardia","required":false},{"op":"COPY_PATH","from_path":"input.is_pregnant","to_path":"context.treatment.is_pregnant","required":false}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 250
-    ),
-    (
-        'T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY', 'CONDITION',
-        'Has specific clinical situation (monotherapy tier)',
-        'CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc đơn trị)',
-        '{"any":[{"path":"input.has_heart_failure","op":"eq","value":true},{"path":"context.treatment.has_angina","op":"eq","value":true},{"path":"context.treatment.has_prior_mi","op":"eq","value":true},{"path":"context.treatment.has_atrial_fibrillation","op":"eq","value":true},{"path":"context.treatment.has_tachycardia","op":"eq","value":true},{"path":"context.treatment.is_pregnant","op":"eq","value":true}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 251
-    ),
-    (
-        'T6_C_NO_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY', 'CONDITION',
-        'No specific clinical situation (monotherapy tier)',
-        'KHÔNG CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc đơn trị)',
-        '{"not":{"any":[{"path":"input.has_heart_failure","op":"eq","value":true},{"path":"context.treatment.has_angina","op":"eq","value":true},{"path":"context.treatment.has_prior_mi","op":"eq","value":true},{"path":"context.treatment.has_atrial_fibrillation","op":"eq","value":true},{"path":"context.treatment.has_tachycardia","op":"eq","value":true},{"path":"context.treatment.is_pregnant","op":"eq","value":true}]}}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 252
-    ),
-    (
-        'T6_INF_MONOTHERAPY_ADD_BETA_BLOCKER', 'INFERENCE',
-        'Mandate beta-blocker monotherapy', 'Bắt buộc đơn trị bằng chẹn Beta',
-        NULL::jsonb,
-        '{"treatment_preferences":{"combination_options":[["B"]]}}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 253
-    ),
-    (
-        'T6_END_INITIAL_MONOTHERAPY_WITH_BETA_BLOCKER', 'END',
-        'Start beta-blocker monotherapy; reassess at next encounter',
-        'Bắt đầu đơn trị bằng chẹn Beta; đánh giá lại ở lần tái khám kế tiếp',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"CONSIDER_MONOTHERAPY","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":true,"next_medication_follow_up_stage":"INITIAL_REGIMEN"}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 254
-    ),
-    (
-        'T6_END_INITIAL_MONOTHERAPY', 'END', 'Start monotherapy; reassess at next encounter',
-        'Bắt đầu đơn trị; đánh giá lại ở lần tái khám kế tiếp',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"CONSIDER_MONOTHERAPY","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":true,"next_medication_follow_up_stage":"INITIAL_REGIMEN"}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 26
-    ),
-    (
-        'T6_INF_INITIATE_TWO_DRUG_LOW_DOSE', 'INFERENCE',
-        'Drug therapy: start with 2 low-dose drugs (A combined with C or D)',
-        'Điều trị thuốc KHỞI ĐẦU BẰNG 2 THUỐC LIỀU THẤP (kết hợp A cùng C hoặc D)',
-        NULL::jsonb,
-        '{"treatment_preferences":{"combination_options":[["A","C"],["A","D"]],"dose_strategy":"LOW_DOSE"}}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 27
-    ),
-    (
-        'T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS', 'INFERENCE',
-        'Determine specific clinical situations relevant to beta-blocker add-on',
-        'Xác định tình huống lâm sàng đặc hiệu liên quan đến việc thêm chẹn Beta',
-        NULL::jsonb,
-        '{"treatment":{"has_angina":false,"has_prior_mi":false,"has_atrial_fibrillation":false,"has_tachycardia":false,"is_pregnant":false},"operations":[{"op":"COPY_PATH","from_path":"input.has_angina","to_path":"context.treatment.has_angina","required":false},{"op":"COPY_PATH","from_path":"input.has_prior_mi","to_path":"context.treatment.has_prior_mi","required":false},{"op":"COPY_PATH","from_path":"input.has_atrial_fibrillation","to_path":"context.treatment.has_atrial_fibrillation","required":false},{"op":"COPY_PATH","from_path":"input.has_tachycardia","to_path":"context.treatment.has_tachycardia","required":false},{"op":"COPY_PATH","from_path":"input.is_pregnant","to_path":"context.treatment.is_pregnant","required":false}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 28
-    ),
-    (
-        'T6_C_HAS_SPECIFIC_CLINICAL_SITUATION', 'CONDITION',
-        'Has specific clinical situation (heart failure, angina, post-MI, atrial fibrillation, tachycardia, or pregnancy)',
-        'CÓ CÁC TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU: SUY TIM, ĐAU THẮT NGỰC, SAU NMCT, RUNG NHĨ, NHỊP TIM NHANH, THAI KỲ',
-        '{"any":[{"path":"input.has_heart_failure","op":"eq","value":true},{"path":"context.treatment.has_angina","op":"eq","value":true},{"path":"context.treatment.has_prior_mi","op":"eq","value":true},{"path":"context.treatment.has_atrial_fibrillation","op":"eq","value":true},{"path":"context.treatment.has_tachycardia","op":"eq","value":true},{"path":"context.treatment.is_pregnant","op":"eq","value":true}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 29
-    ),
-    (
-        'T6_C_NO_SPECIFIC_CLINICAL_SITUATION', 'CONDITION', 'No specific clinical situation',
-        'KHÔNG CÓ CÁC TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU',
-        '{"not":{"any":[{"path":"input.has_heart_failure","op":"eq","value":true},{"path":"context.treatment.has_angina","op":"eq","value":true},{"path":"context.treatment.has_prior_mi","op":"eq","value":true},{"path":"context.treatment.has_atrial_fibrillation","op":"eq","value":true},{"path":"context.treatment.has_tachycardia","op":"eq","value":true},{"path":"context.treatment.is_pregnant","op":"eq","value":true}]}}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 30
-    ),
-    (
-        'T6_INF_ADD_BETA_BLOCKER', 'INFERENCE', 'Add beta-blocker', 'Thêm thuốc chẹn Beta',
-        NULL::jsonb, '{"treatment_preferences":{"additional_drug_classes":["B"]}}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 31
-    ),
-    (
-        'T6_END_INITIAL_TWO_DRUG_WITH_BETA_BLOCKER', 'END',
-        'Start 2-drug low-dose combination plus beta-blocker; reassess at next encounter',
-        'Bắt đầu phối hợp 2 thuốc liều thấp kèm chẹn Beta; đánh giá lại ở lần tái khám kế tiếp',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"INITIAL_TWO_DRUG_COMBINATION","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":true,"next_medication_follow_up_stage":"INITIAL_REGIMEN"}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 32
-    ),
-    (
-        'T6_END_INITIAL_TWO_DRUG', 'END',
-        'Start 2-drug low-dose combination; reassess at next encounter',
-        'Bắt đầu phối hợp 2 thuốc liều thấp; đánh giá lại ở lần tái khám kế tiếp',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"INITIAL_TWO_DRUG_COMBINATION","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":true,"next_medication_follow_up_stage":"INITIAL_REGIMEN"}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 33
-    ),
-    -- --- Step 4 continued: follow-up target check and escalation ---
-    (
-        'T6_C_TARGET_ACHIEVED', 'CONDITION',
-        'BP target achieved on current regimen',
-        'Đạt đích điều trị với phác đồ hiện tại',
-        '{"all":[{"path":"input.current_clinic_sbp","op":"lt","value_from_path":"context.treatment.bp_target.sbp.upper_exclusive_mmhg"},{"path":"input.current_clinic_dbp","op":"lt","value_from_path":"context.treatment.bp_target.dbp.upper_exclusive_mmhg"}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 34
-    ),
-    (
-        'T6_C_TARGET_NOT_ACHIEVED', 'CONDITION',
-        'BP target not achieved on current regimen',
-        'Không đạt đích điều trị với phác đồ hiện tại',
-        '{"any":[{"path":"input.current_clinic_sbp","op":"gte","value_from_path":"context.treatment.bp_target.sbp.upper_exclusive_mmhg"},{"path":"input.current_clinic_dbp","op":"gte","value_from_path":"context.treatment.bp_target.dbp.upper_exclusive_mmhg"}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 35
-    ),
-    (
-        'T6_END_MAINTAIN_AND_MONITOR', 'END', 'Maintain current regimen and monitor',
-        'Duy trì phác đồ hiện tại và theo dõi',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"MAINTAIN_CURRENT_REGIMEN","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":true}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 36
-    ),
-    (
-        'T6_C_FOLLOWUP_INITIAL_STAGE', 'CONDITION',
-        'Follow-up on the initial regimen, target not achieved',
-        'Tái khám ở giai đoạn phác đồ ban đầu, chưa đạt đích',
-        '{"path":"input.medication_follow_up_stage","op":"eq","value":"INITIAL_REGIMEN"}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 37
-    ),
-    (
-        'T6_C_FOLLOWUP_ESCALATED_STAGE', 'CONDITION',
-        'Follow-up already on an escalated 3-drug regimen, still not achieved',
-        'Tái khám đã ở phác đồ 3 thuốc, vẫn chưa đạt đích',
-        '{"path":"input.medication_follow_up_stage","op":"eq","value":"ESCALATED_REGIMEN"}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 38
-    ),
-    (
-        'T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY', 'INFERENCE',
-        'Determine whether the prior regimen was monotherapy or a 2-drug combination',
-        'Xác định phác đồ trước đó là đơn trị hay phối hợp 2 thuốc',
-        NULL::jsonb,
-        '{"treatment":{"was_on_monotherapy":false},"operations":[{"op":"COPY_PATH","from_path":"input.was_on_monotherapy","to_path":"context.treatment.was_on_monotherapy","required":false}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 39
-    ),
-    (
-        'T6_C_WAS_ON_MONOTHERAPY', 'CONDITION', 'Prior regimen was monotherapy',
-        'Phác đồ trước đó là đơn trị',
-        '{"path":"context.treatment.was_on_monotherapy","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 40
-    ),
-    (
-        'T6_C_WAS_NOT_ON_MONOTHERAPY', 'CONDITION', 'Prior regimen was already a 2-drug combination',
-        'Phác đồ trước đó đã là phối hợp 2 thuốc',
-        '{"path":"context.treatment.was_on_monotherapy","op":"eq","value":false}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 41
-    ),
-    (
-        'T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG', 'INFERENCE',
-        'Increase dose of 2-drug combination, or move to 3-drug combination (A+C+D)',
-        'Tăng liều phối hợp 2 thuốc, hoặc chuyển phối hợp 3 thuốc (A+C+D)',
-        NULL::jsonb,
-        '{"treatment_preferences":{"escalation_options":[{"strategy":"INCREASE_DOSE_TWO_DRUG"},{"strategy":"THREE_DRUG_COMBINATION","classes":["A","C","D"]}]}}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 42
-    ),
-    (
-        'T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION', 'INFERENCE',
-        'Determine specific clinical situations relevant to beta-blocker add-on (escalation tier)',
-        'Xác định tình huống lâm sàng đặc hiệu liên quan đến việc thêm chẹn Beta (bậc leo thang)',
-        NULL::jsonb,
-        '{"treatment":{"has_angina":false,"has_prior_mi":false,"has_atrial_fibrillation":false,"has_tachycardia":false,"is_pregnant":false},"operations":[{"op":"COPY_PATH","from_path":"input.has_angina","to_path":"context.treatment.has_angina","required":false},{"op":"COPY_PATH","from_path":"input.has_prior_mi","to_path":"context.treatment.has_prior_mi","required":false},{"op":"COPY_PATH","from_path":"input.has_atrial_fibrillation","to_path":"context.treatment.has_atrial_fibrillation","required":false},{"op":"COPY_PATH","from_path":"input.has_tachycardia","to_path":"context.treatment.has_tachycardia","required":false},{"op":"COPY_PATH","from_path":"input.is_pregnant","to_path":"context.treatment.is_pregnant","required":false}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 260
-    ),
-    (
-        'T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION', 'CONDITION',
-        'Has specific clinical situation (escalation tier)',
-        'CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc leo thang)',
-        '{"any":[{"path":"input.has_heart_failure","op":"eq","value":true},{"path":"context.treatment.has_angina","op":"eq","value":true},{"path":"context.treatment.has_prior_mi","op":"eq","value":true},{"path":"context.treatment.has_atrial_fibrillation","op":"eq","value":true},{"path":"context.treatment.has_tachycardia","op":"eq","value":true},{"path":"context.treatment.is_pregnant","op":"eq","value":true}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 261
-    ),
-    (
-        'T6_C_NO_SPECIFIC_CLINICAL_SITUATION_ESCALATION', 'CONDITION',
-        'No specific clinical situation (escalation tier)',
-        'KHÔNG CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc leo thang)',
-        '{"not":{"any":[{"path":"input.has_heart_failure","op":"eq","value":true},{"path":"context.treatment.has_angina","op":"eq","value":true},{"path":"context.treatment.has_prior_mi","op":"eq","value":true},{"path":"context.treatment.has_atrial_fibrillation","op":"eq","value":true},{"path":"context.treatment.has_tachycardia","op":"eq","value":true},{"path":"context.treatment.is_pregnant","op":"eq","value":true}]}}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 262
-    ),
-    (
-        'T6_INF_ESCALATE_ADD_BETA_BLOCKER', 'INFERENCE',
-        'Add beta-blocker to escalated regimen', 'Thêm chẹn Beta vào phác đồ leo thang',
-        NULL::jsonb,
-        '{"treatment_preferences":{"additional_drug_classes":["B"]}}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 263
-    ),
-    (
-        'T6_END_ESCALATE_REGIMEN_WITH_BETA_BLOCKER', 'END',
-        'Increase dose or move to 3-drug combination plus beta-blocker; reassess at next encounter',
-        'Tăng liều hoặc chuyển phối hợp 3 thuốc kèm chẹn Beta; đánh giá lại ở lần tái khám kế tiếp',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"INCREASE_DOSE_OR_THREE_DRUG_COMBINATION","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":true,"next_medication_follow_up_stage":"ESCALATED_REGIMEN"}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 264
-    ),
-    (
-        'T6_END_ESCALATE_REGIMEN', 'END',
-        'Increase dose or move to 3-drug combination; reassess at next encounter',
-        'Tăng liều hoặc chuyển phối hợp 3 thuốc; đánh giá lại ở lần tái khám kế tiếp',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"INCREASE_DOSE_OR_THREE_DRUG_COMBINATION","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":true,"next_medication_follow_up_stage":"ESCALATED_REGIMEN"}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 43
-    ),
-    (
-        'T6_LINK_RESISTANT_HYPERTENSION', 'LINK', 'Tree 14: Resistant Hypertension',
-        'Cây 14: THA Kháng Trị',
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::jsonb,
-        'resistant-hypertension', NULL::text, 44
-    )
-)
-INSERT INTO public.decision_nodes (
-        "id", "tree_id", "node_key", "node_type", "text_en", "text_vi",
-        "condition_definition", "context_patch", "action_payload", "global_config",
-        "link_target_tree_key", "link_target_node_key", "display_order",
-        "created_at", "updated_at"
-    )
-SELECT gen_random_uuid(),
-    tree_ctx.tree_id,
-    node_seed.node_key,
-    node_seed.node_type::node_type,
-    node_seed.text_en,
-    node_seed.text_vi,
-    node_seed.condition_definition,
-    node_seed.context_patch,
-    node_seed.action_payload,
-    node_seed.global_config,
-    node_seed.link_target_tree_key,
-    node_seed.link_target_node_key,
-    node_seed.display_order,
-    now(),
-    now()
-FROM node_seed
-    CROSS JOIN tree_ctx;
--- ============================================================
--- 3. Edges
--- ============================================================
-WITH tree_ctx AS (
-    SELECT id AS tree_id FROM public.decision_trees WHERE tree_key = 'drug-combination'
-),
-edge_seed (from_node_key, to_node_key, traversal_order) AS (
-    VALUES
-    -- Step 1
-    ('T6_START_PATIENT_INFO_AND_PRESCRIPTIONS', 'T6_C_FIRST_VISIT', 1),
-    ('T6_START_PATIENT_INFO_AND_PRESCRIPTIONS', 'T6_C_FOLLOW_UP_VISIT', 2),
-    ('T6_C_FIRST_VISIT', 'T6_INF_DETERMINE_CONTRAINDICATIONS', 1),
-    ('T6_C_FOLLOW_UP_VISIT', 'T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS', 1),
-    ('T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS', 'T6_C_HAS_PRIOR_PRESCRIPTION', 1),
-    ('T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS', 'T6_C_NO_PRIOR_PRESCRIPTION', 2),
-    ('T6_C_NO_PRIOR_PRESCRIPTION', 'T6_INF_DETERMINE_CONTRAINDICATIONS', 1),
-    ('T6_C_HAS_PRIOR_PRESCRIPTION', 'T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION', 1),
-    ('T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION', 'T6_C_DOSAGE_ADJUSTMENT_REQUESTED', 1),
-    ('T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION', 'T6_C_NO_DOSAGE_ADJUSTMENT_REQUESTED', 2),
-    ('T6_C_DOSAGE_ADJUSTMENT_REQUESTED', 'T6_ACTION_ADJUST_REGIMEN', 1),
-    ('T6_C_NO_DOSAGE_ADJUSTMENT_REQUESTED', 'T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT', 1),
-    ('T6_ACTION_ADJUST_REGIMEN', 'T6_INF_DETERMINE_CONTRAINDICATIONS', 1),
-    ('T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT', 'T6_INF_DETERMINE_CONTRAINDICATIONS', 1),
-    -- Step 2 -> Step 3 (unconditional, runs for every patient)
-    ('T6_INF_DETERMINE_CONTRAINDICATIONS', 'T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS', 1),
-    -- Step 3
-    ('T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS', 'T6_C_HAS_DUPLICATE_DRUG_CLASS', 1),
-    ('T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS', 'T6_C_NO_DUPLICATE_DRUG_CLASS', 2),
-    ('T6_C_HAS_DUPLICATE_DRUG_CLASS', 'T6_C_DUPLICATE_IS_RAS_INHIBITOR', 1),
-    ('T6_C_HAS_DUPLICATE_DRUG_CLASS', 'T6_C_DUPLICATE_NOT_RAS_INHIBITOR', 2),
-    ('T6_C_NO_DUPLICATE_DRUG_CLASS', 'T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE', 1),
-    ('T6_C_DUPLICATE_IS_RAS_INHIBITOR', 'T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH', 1),
-    ('T6_C_DUPLICATE_NOT_RAS_INHIBITOR', 'T6_ACTION_KEEP_ONE_DRUG', 1),
-    -- Step 3 -> Step 4 (3 entry points converge; each offers both encounter-type siblings)
-    ('T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH', 'T6_C_IS_FIRST_VISIT_FOR_REGIMEN', 1),
-    ('T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH', 'T6_C_IS_FOLLOW_UP_FOR_REGIMEN', 2),
-    ('T6_ACTION_KEEP_ONE_DRUG', 'T6_C_IS_FIRST_VISIT_FOR_REGIMEN', 1),
-    ('T6_ACTION_KEEP_ONE_DRUG', 'T6_C_IS_FOLLOW_UP_FOR_REGIMEN', 2),
-    ('T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE', 'T6_C_IS_FIRST_VISIT_FOR_REGIMEN', 1),
-    ('T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE', 'T6_C_IS_FOLLOW_UP_FOR_REGIMEN', 2),
-    -- Step 4: fresh-therapy initiation (Nhánh A / Nhánh B)
-    ('T6_C_IS_FIRST_VISIT_FOR_REGIMEN', 'T6_C_SPECIAL_POPULATION', 1),
-    ('T6_C_IS_FIRST_VISIT_FOR_REGIMEN', 'T6_C_NOT_SPECIAL_POPULATION', 2),
-    ('T6_C_SPECIAL_POPULATION', 'T6_INF_INITIATE_MONOTHERAPY', 1),
-    ('T6_INF_INITIATE_MONOTHERAPY', 'T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY', 1),
-    ('T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY', 'T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY', 1),
-    ('T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY', 'T6_C_NO_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY', 2),
-    ('T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY', 'T6_INF_MONOTHERAPY_ADD_BETA_BLOCKER', 1),
-    ('T6_INF_MONOTHERAPY_ADD_BETA_BLOCKER', 'T6_END_INITIAL_MONOTHERAPY_WITH_BETA_BLOCKER', 1),
-    ('T6_C_NO_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY', 'T6_END_INITIAL_MONOTHERAPY', 1),
-    ('T6_C_NOT_SPECIAL_POPULATION', 'T6_INF_INITIATE_TWO_DRUG_LOW_DOSE', 1),
-    ('T6_INF_INITIATE_TWO_DRUG_LOW_DOSE', 'T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS', 1),
-    ('T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS', 'T6_C_HAS_SPECIFIC_CLINICAL_SITUATION', 1),
-    ('T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS', 'T6_C_NO_SPECIFIC_CLINICAL_SITUATION', 2),
-    ('T6_C_HAS_SPECIFIC_CLINICAL_SITUATION', 'T6_INF_ADD_BETA_BLOCKER', 1),
-    ('T6_INF_ADD_BETA_BLOCKER', 'T6_END_INITIAL_TWO_DRUG_WITH_BETA_BLOCKER', 1),
-    ('T6_C_NO_SPECIFIC_CLINICAL_SITUATION', 'T6_END_INITIAL_TWO_DRUG', 1),
-    -- Step 4: follow-up target check and escalation
-    ('T6_C_IS_FOLLOW_UP_FOR_REGIMEN', 'T6_C_TARGET_ACHIEVED', 1),
-    ('T6_C_IS_FOLLOW_UP_FOR_REGIMEN', 'T6_C_TARGET_NOT_ACHIEVED', 2),
-    ('T6_C_TARGET_ACHIEVED', 'T6_END_MAINTAIN_AND_MONITOR', 1),
-    ('T6_C_TARGET_NOT_ACHIEVED', 'T6_C_FOLLOWUP_INITIAL_STAGE', 1),
-    ('T6_C_TARGET_NOT_ACHIEVED', 'T6_C_FOLLOWUP_ESCALATED_STAGE', 2),
-    ('T6_C_FOLLOWUP_INITIAL_STAGE', 'T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY', 1),
-    ('T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY', 'T6_C_WAS_ON_MONOTHERAPY', 1),
-    ('T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY', 'T6_C_WAS_NOT_ON_MONOTHERAPY', 2),
-    ('T6_C_WAS_ON_MONOTHERAPY', 'T6_INF_INITIATE_TWO_DRUG_LOW_DOSE', 1),
-    ('T6_C_WAS_NOT_ON_MONOTHERAPY', 'T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG', 1),
-    ('T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG', 'T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION', 1),
-    ('T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION', 'T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION', 1),
-    ('T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION', 'T6_C_NO_SPECIFIC_CLINICAL_SITUATION_ESCALATION', 2),
-    ('T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION', 'T6_INF_ESCALATE_ADD_BETA_BLOCKER', 1),
-    ('T6_INF_ESCALATE_ADD_BETA_BLOCKER', 'T6_END_ESCALATE_REGIMEN_WITH_BETA_BLOCKER', 1),
-    ('T6_C_NO_SPECIFIC_CLINICAL_SITUATION_ESCALATION', 'T6_END_ESCALATE_REGIMEN', 1),
-    ('T6_C_FOLLOWUP_ESCALATED_STAGE', 'T6_LINK_RESISTANT_HYPERTENSION', 1)
-)
-INSERT INTO public.decision_edges ("id", "from_node_id", "to_node_id", "traversal_order")
-SELECT gen_random_uuid(), from_node.id, to_node.id, edge_seed.traversal_order
-FROM edge_seed
-    CROSS JOIN tree_ctx
-    JOIN public.decision_nodes from_node ON from_node.tree_id = tree_ctx.tree_id
-        AND from_node.node_key = edge_seed.from_node_key
-    JOIN public.decision_nodes to_node ON to_node.tree_id = tree_ctx.tree_id
-        AND to_node.node_key = edge_seed.to_node_key;
--- ============================================================
--- 4. Source references
--- ============================================================
-WITH tree_ctx AS (
-    SELECT id AS tree_id FROM public.decision_trees WHERE tree_key = 'drug-combination'
-),
-reference_seed (
-    node_key, source_title, section_path, locator, locator_detail,
-    printed_page_numbers, pdf_page_numbers, reference_note, reference_order
-) AS (
-    VALUES
-    ('T6_START_PATIENT_INFO_AND_PRESCRIPTIONS',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.4", "title": "Điều trị Tăng huyết áp bằng thuốc"}]'::jsonb,
-     'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc',
-     'Entry point of the drug-combination tree.',
-     ARRAY[20]::smallint[], ARRAY[22]::smallint[],
-     'Điểm vào của quy trình phối hợp thuốc.', 1),
-    ('T6_INF_DETERMINE_CONTRAINDICATIONS',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.5", "title": "Chiến lược điều trị phối hợp thuốc"}]'::jsonb,
-     'Bảng 11. Chống chỉ định của các nhóm thuốc điều trị tăng huyết áp chính (1)',
-     'Carries forward the pre-computed contraindicated-drug-class map; full table on the GLOBAL reference node.',
-     ARRAY[23]::smallint[], ARRAY[25]::smallint[],
-     'Chống chỉ định bắt buộc/tương đối theo nhóm thuốc.', 1),
-    ('T6_GLOBAL_CONTRAINDICATION_REFERENCE_TABLE',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.5", "title": "Chiến lược điều trị phối hợp thuốc"}]'::jsonb,
-     'Bảng 11. Chống chỉ định của các nhóm thuốc điều trị tăng huyết áp chính (1)',
-     'Full absolute/relative contraindication table by drug class, including direct renin inhibitor/vasodilator.',
-     ARRAY[23]::smallint[], ARRAY[25]::smallint[],
-     'Bảng chống chỉ định đầy đủ theo nhóm thuốc.', 1),
-    ('T6_ACTION_CHECK_DUPLICATE_DRUG_CLASS',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.4", "title": "Điều trị Tăng huyết áp bằng thuốc"}]'::jsonb,
-     'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc',
-     'Dual RAS-inhibitor blockade is not recommended (Class III, Level A).',
-     ARRAY[20]::smallint[], ARRAY[22]::smallint[],
-     'Việc phối hợp hai nhóm thuốc ức chế hệ renin-angiotensin không được khuyến cáo.', 1),
-    ('T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.4", "title": "Điều trị Tăng huyết áp bằng thuốc"}]'::jsonb,
-     'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc',
-     'Dual RAS-inhibitor blockade is not recommended (Class III, Level A).',
-     ARRAY[20]::smallint[], ARRAY[22]::smallint[],
-     'Việc phối hợp hai nhóm thuốc ức chế hệ renin-angiotensin không được khuyến cáo.', 1),
-    ('T6_C_SPECIAL_POPULATION',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.5", "title": "Chiến lược điều trị phối hợp thuốc"}]'::jsonb,
-     'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc',
-     'Monotherapy eligibility, matching T4_C_MONOTHERAPY_ELIGIBILITY/T5_C_MONOTHERAPY_ELIGIBILITY''s established condition exactly so Tree 6 never contradicts the tier Trees 4/5 already decided.',
-     ARRAY[20]::smallint[], ARRAY[22]::smallint[],
-     'Đơn trị có thể xem xét khi HABTC không đạt mục tiêu sau thay đổi lối sống, hoặc tuổi >= 80, hoặc hội chứng lão hóa.', 1),
-    ('T6_INF_INITIATE_MONOTHERAPY',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.5", "title": "Chiến lược điều trị phối hợp thuốc"}]'::jsonb,
-     'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc',
-     'Monotherapy initiation for special populations; class menu (A/B/C/D, B requires indication) matches T4_ACTION_CONSIDER_MONOTHERAPY/T5_ACTION_CONSIDER_MONOTHERAPY_ONE_PILL exactly.',
-     ARRAY[20]::smallint[], ARRAY[22]::smallint[],
-     'Điều trị thuốc khởi đầu bằng 1 thuốc (A, B, C, hoặc D; B cần có chỉ định).', 1),
-    ('T6_INF_INITIATE_TWO_DRUG_LOW_DOSE',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.5", "title": "Chiến lược điều trị phối hợp thuốc"}]'::jsonb,
-     'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc',
-     'Optimal initial therapy: 2 drugs preferring A+C or A+D, fixed-dose combination at low dose (half the usual dose).',
-     ARRAY[20]::smallint[], ARRAY[22]::smallint[],
-     'Khuyến cáo điều trị ban đầu tối ưu với 2 thuốc ưu tiên A+C hoặc D, liều thấp (1/2 liều thông thường).', 1),
-    ('T6_C_HAS_SPECIFIC_CLINICAL_SITUATION',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.5", "title": "Chiến lược điều trị phối hợp thuốc"}]'::jsonb,
-     'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc',
-     'Beta-blocker recommended in combination with any other main drug class for specific clinical situations (Class I).',
-     ARRAY[20]::smallint[], ARRAY[22]::smallint[],
-     'Chẹn Beta được khuyến cáo phối hợp khi có tình huống lâm sàng đặc hiệu: đau thắt ngực, sau NMCT, suy tim hoặc kiểm soát nhịp tim.', 1),
-    ('T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.5", "title": "Chiến lược điều trị phối hợp thuốc"}]'::jsonb,
-     'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc',
-     'The specific-clinical-situation/beta-blocker check must gate every regimen tier (1, 2, or 3 drugs), not only the 2-drug tier, before the final regimen is given to the patient.',
-     ARRAY[20]::smallint[], ARRAY[22]::smallint[],
-     'Chẹn Beta được khuyến cáo phối hợp khi có tình huống lâm sàng đặc hiệu, áp dụng cho mọi bậc điều trị (1, 2, hoặc 3 thuốc).', 1),
-    ('T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.5", "title": "Chiến lược điều trị phối hợp thuốc"}]'::jsonb,
-     'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc',
-     'The specific-clinical-situation/beta-blocker check must gate every regimen tier (1, 2, or 3 drugs), not only the 2-drug tier, before the final regimen is given to the patient.',
-     ARRAY[20]::smallint[], ARRAY[22]::smallint[],
-     'Chẹn Beta được khuyến cáo phối hợp khi có tình huống lâm sàng đặc hiệu, áp dụng cho mọi bậc điều trị (1, 2, hoặc 3 thuốc).', 1),
-    ('T6_C_TARGET_ACHIEVED',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.5", "title": "Chiến lược điều trị phối hợp thuốc"}]'::jsonb,
-     'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc',
-     'Dynamic BP-target comparison, mirrors T3/T4/T5''s established mechanism.',
-     ARRAY[20]::smallint[], ARRAY[22]::smallint[],
-     'Nếu không đạt HA mục tiêu trong vòng 1 tháng, tăng liều hoặc chuyển phối hợp 3 thuốc.', 1),
-    ('T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.5", "title": "Chiến lược điều trị phối hợp thuốc"}]'::jsonb,
-     'Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc',
-     'If BP is not controlled with 2 low-dose drugs, increase to full dose or add a third drug (early fixed-dose triple combination A+C+D).',
-     ARRAY[20]::smallint[], ARRAY[22]::smallint[],
-     'Nếu HA không kiểm soát có thể tăng liều hoặc phối hợp 3 thuốc cố định liều sớm A+C+D.', 1),
-    ('T6_LINK_RESISTANT_HYPERTENSION',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.6.1", "title": "Tăng huyết áp kháng trị"}]'::jsonb,
-     'Mục 3.6.1. Tăng huyết áp kháng trị',
-     'Resistant hypertension: BP not controlled despite optimal 3-drug combination including a diuretic.',
-     ARRAY[24]::smallint[], ARRAY[26]::smallint[],
-     'THA kháng trị: không kiểm soát được HA dù đã tối ưu phối hợp 3 thuốc bao gồm lợi tiểu.', 1)
-)
-INSERT INTO public.node_source_references (
-        "id", "node_id", "source_title", "section_path", "locator", "locator_detail",
-        "printed_page_numbers", "pdf_page_numbers", "reference_note", "reference_order"
-    )
-SELECT gen_random_uuid(),
-    node.id,
-    reference_seed.source_title,
-    reference_seed.section_path,
-    reference_seed.locator,
-    reference_seed.locator_detail,
-    reference_seed.printed_page_numbers,
-    reference_seed.pdf_page_numbers,
-    reference_seed.reference_note,
-    reference_seed.reference_order
-FROM reference_seed
-    CROSS JOIN tree_ctx
-    JOIN public.decision_nodes node ON node.tree_id = tree_ctx.tree_id
-        AND node.node_key = reference_seed.node_key;
-
--- ================================================================
--- Tree 8: hypertension-type-2-diabetes (source: tree8.sql)
--- ================================================================
---
--- CDSS decision-tree insert script
--- Tree: "Cây 8: THA + Đái tháo đường týp 2 - Minh"
--- Source: Bảng 18, Bảng 2, Bảng 6, Bảng 7 (Khuyến cáo THA VNHA 2022.pdf)
---
--- This script inserts one decision tree and all its nodes/edges/references
--- into the existing cdss schema. See backups/shared_conventions.txt for the
--- full naming/shape audit this file was brought into line with (extracted
--- from the 5 real seeded trees).
---
--- IDs are generated by gen_random_uuid() (core since PG13). Timestamps are
--- generated by now() at insert time — nothing is hardcoded. Each statement
--- re-resolves the parent id it needs (tree_id by tree_key, node ids by
--- node_key) via a join back to the row inserted by the previous statement.
---
--- Regimen-selection redesign (this pass):
---   The four separate ACEI+CCB / ARB+CCB / ACEI+D / ARB+D INFERENCE nodes
---   had no distinguishing condition, so the engine always took the first
---   in traversal order — there was no real way to choose between them, and
---   picking one arbitrarily would ignore contraindications. Trees 4 and 5
---   (essential-treatment-strategy / optimal-treatment-strategy), which this
---   tree links into, already solve this exact problem: they never resolve
---   ACEI-vs-ARB or a specific drug themselves. They state the class-level
---   option (letter "A" covers both ACEI and ARB) via
---   treatment_preferences.combination_options (see
---   T5_ACTION_FIXED_DOSE_TWO_DRUG_COMBINATION's
---   "combination_options": [["A","C"],["A","D"]]) and hand off to
---   link_target_tree_key = "drug-combination" (Tree 6) for the actual
---   contraindication-based agent pick. Collapsed the four nodes into one
---   T8_INF_REGIMEN_OPTIONS emitting the same combination_options shape,
---   removing the arbitrary always-picks-first behavior and the duplicate
---   fan-out into T8_C_HAS_CV_RISK / T8_C_NO_CV_RISK. Tree 6 itself is not
---   yet seeded (0 rows) — this only makes Tree 8 consistent with Tree 4/5's
---   already-established design, it does not build Tree 6.
---
--- Other fixes applied in an earlier pass (cross-checked against
--- backups/Khuyến cáo THA VNHA 2022.pdf, section 3.7.1, p.34):
---   * The SGLT2i/GLP-1RA trigger condition previously listed six risk
---     factors including invented fields has_atherosclerotic_ckd and
---     has_high_cardiovascular_risk. The actual source text only says
---     "khi có bệnh tim mạch do xơ vữa và/hoặc nguy cơ cao" (atherosclerotic
---     CVD and/or high risk) — no CKD or target-organ-damage mention here.
---     Rebuilt using the established fields has_cardiovascular_disease,
---     has_coronary_artery_disease, has_stroke (ASCVD's components per
---     Bảng 2's own definition) and context.risk.level == "HIGH".
---   * T8_INF_MAINTAIN_REGIMEN uses treatment.status, matching T4's
---     status-flag pattern.
---   * GLOBAL node restructured to the kind/purpose metadata shape used by
---     every real GLOBAL node (was a flat glossary object).
---   * node_source_references: locator/locator_detail were swapped to match
---     convention (locator = full printed caption; locator_detail = terse
---     English usage note). Bảng 2/6/7 given their own reference rows
---     (established convention is one row per distinct source).
---
--- Node type mapping (per legend colors in the source flowchart):
---   green  (Start Node)          -> START
---   yellow (Condition Check)     -> CONDITION
---   blue   (Trigger/Input Node)  -> INFERENCE (applies a context_patch)
---   pink   (Link Node)           -> LINK
---   gray   (glossary/legend box) -> GLOBAL (global_config)
---
--- Safe to run against an empty/staging database. Wrap in a transaction.
--- Use: cmd /c "docker compose exec -T postgres psql -U cdss -d cdss < backups\tree8.sql"
---
-
--- ============================================================
--- 1. Tree
--- ============================================================
-INSERT INTO public.decision_trees (
-        "id",
-        "tree_key",
-        "name_en",
-        "name_vi",
-        "created_at",
-        "updated_at"
-    )
-VALUES (
-        gen_random_uuid(),
-        'hypertension-type-2-diabetes',
-        'Hypertension With Type 2 Diabetes',
-        'THA + Đái Tháo Đường Týp 2',
-        now(),
-        now()
-    );
--- ============================================================
--- 2. Nodes
--- ============================================================
-WITH tree_ctx AS (
-    SELECT id AS tree_id
-    FROM public.decision_trees
-    WHERE tree_key = 'hypertension-type-2-diabetes'
-),
-node_seed (
-    node_key,
-    node_type,
-    text_en,
-    text_vi,
-    condition_definition,
-    context_patch,
-    action_payload,
-    global_config,
-    link_target_tree_key,
-    link_target_node_key,
-    display_order
-) AS (
-    VALUES (
-            'T8_START_BP_TARGET_STATUS',
-            'START',
-            'Tree 3: Blood pressure threshold and treatment target',
-            'Cây 3: Ngưỡng huyết áp và đích điều trị',
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            0
-        ),
-        (
-            'T8_C_BELOW_TARGET',
-            'CONDITION',
-            'SBP < 130 mmHg and DBP < 85 mmHg',
-            'HATT < 130 mmHg và HATTr < 85 mmHg',
-            '{"all":[{"path":"input.current_clinic_sbp","op":"lt","value":130},{"path":"input.current_clinic_dbp","op":"lt","value":85}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            1
-        ),
-        (
-            'T8_C_ABOVE_TARGET',
-            'CONDITION',
-            'SBP >= 130 mmHg or DBP >= 85 mmHg',
-            'HATT >= 130 mmHg hoặc HATTr >= 85 mmHg',
-            '{"any":[{"path":"input.current_clinic_sbp","op":"gte","value":130},{"path":"input.current_clinic_dbp","op":"gte","value":85}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            2
-        ),
-        (
-            'T8_INF_REGIMEN_OPTIONS',
-            'INFERENCE',
-            'A + C, or A + D (ACE inhibitor/ARB + calcium-channel blocker, or ACE inhibitor/ARB + thiazide-like diuretic)',
-            'A + C, hoặc A + D (ƯCMC/CTTA + CKCa, hoặc ƯCMC/CTTA + LT Thiazide-like)',
-            NULL::jsonb,
-            '{"treatment_preferences":{"combination_options":[["A","C"],["A","D"]]}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            3
-        ),
-        (
-            'T8_C_HAS_CV_RISK',
-            'CONDITION',
-            'Has atherosclerotic cardiovascular disease (coronary artery disease, stroke, or cardiovascular disease) or high cardiovascular risk',
-            'Có bệnh tim mạch do xơ vữa (bệnh mạch vành, đột quỵ, bệnh tim mạch) hoặc nguy cơ tim mạch cao',
-            '{"any":[{"path":"input.has_coronary_artery_disease","op":"eq","value":true},{"path":"input.has_stroke","op":"eq","value":true},{"path":"input.has_cardiovascular_disease","op":"eq","value":true},{"path":"context.risk.level","op":"eq","value":"HIGH"}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            4
-        ),
-        (
-            'T8_C_NO_CV_RISK',
-            'CONDITION',
-            'No atherosclerotic cardiovascular disease and not high cardiovascular risk',
-            'Không có bệnh tim mạch do xơ vữa và không thuộc nhóm nguy cơ tim mạch cao',
-            '{"not":{"any":[{"path":"input.has_coronary_artery_disease","op":"eq","value":true},{"path":"input.has_stroke","op":"eq","value":true},{"path":"input.has_cardiovascular_disease","op":"eq","value":true},{"path":"context.risk.level","op":"eq","value":"HIGH"}]}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            5
-        ),
-        (
-            'T8_INF_ADD_SGLT2I_GLP1RA',
-            'INFERENCE',
-            'Add SGLT2i or GLP-1RA',
-            'Bổ sung SGLT2i hoặc GLP-1RA',
-            NULL::jsonb,
-            '{"treatment_preferences":{"additional_drug_classes":["SGLT2_INHIBITOR","GLP1_RECEPTOR_AGONIST"]}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            6
-        ),
-        (
-            'T8_INF_MAINTAIN_REGIMEN',
-            'INFERENCE',
-            'Maintain current regimen',
-            'Duy trì phác đồ',
-            NULL::jsonb,
-            '{"treatment":{"status":"MAINTAIN_CURRENT_REGIMEN"}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            7
-        ),
-        (
-            'T8_LINK_A_ESSENTIAL_TREATMENT_STRATEGY',
-            'LINK',
-            'Tree 4: Essential treatment strategy',
-            'Cây 4: Chiến lược điều trị thiết yếu',
-            '{"path":"input.facility_capability","op":"eq","value":"LIMITED_RESOURCES"}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            'essential-treatment-strategy',
-            NULL::text,
-            8
-        ),
-        (
-            'T8_LINK_A_OPTIMAL_TREATMENT_STRATEGY',
-            'LINK',
-            'Tree 5: Optimal treatment strategy',
-            'Cây 5: Chiến lược điều trị tối ưu',
-            '{"path":"input.facility_capability","op":"eq","value":"FULL_RESOURCES"}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            'optimal-treatment-strategy',
-            NULL::text,
-            9
-        ),
-        (
-            'T8_LINK_B_ESSENTIAL_TREATMENT_STRATEGY',
-            'LINK',
-            'Tree 4: Essential treatment strategy',
-            'Cây 4: Chiến lược điều trị thiết yếu',
-            '{"path":"input.facility_capability","op":"eq","value":"LIMITED_RESOURCES"}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            'essential-treatment-strategy',
-            NULL::text,
-            10
-        ),
-        (
-            'T8_LINK_B_OPTIMAL_TREATMENT_STRATEGY',
-            'LINK',
-            'Tree 5: Optimal treatment strategy',
-            'Cây 5: Chiến lược điều trị tối ưu',
-            '{"path":"input.facility_capability","op":"eq","value":"FULL_RESOURCES"}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            'optimal-treatment-strategy',
-            NULL::text,
-            11
-        ),
-        (
-            'T8_GLOBAL_ABBREVIATION_GLOSSARY',
-            'GLOBAL',
-            'Abbreviation glossary',
-            'Chú giải viết tắt',
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            '{"kind":"ABBREVIATION_GLOSSARY","purpose":"Chú giải các chữ viết tắt nhóm thuốc dùng trong Cây 8 (hệ thống A/B/C/D), theo chú thích Bảng 18.","entries":{"1_A_uc_che_he_RAS":{"label":"A: ức chế hệ RAS","UCMC":"ức chế men chuyển","CTTA":"chẹn thụ thể angiotensin II","ARNI":"chẹn thụ thể Angiotensine-neprisyline"},"4_B_chen_Beta":{"label":"B: chẹn Beta","CB":"chẹn Beta"},"3_C_chen_kenh_Canxi":{"label":"C: chẹn kênh Canxi","CKCa":"chẹn kênh Canxi"},"2_D_loi_tieu":{"label":"D: lợi tiểu","LT":"lợi tiểu"},"6_MRA":{"label":"MRA: thuốc đối kháng thụ thể mineralocorticoid"},"5_SGLT2i":{"label":"SGLT2i: thuốc ức chế đồng vận chuyển Natri-glucose 2"}}}'::jsonb,
-            NULL::text,
-            NULL::text,
-            99
-        )
-)
-INSERT INTO public.decision_nodes (
-        "id",
-        "tree_id",
-        "node_key",
-        "node_type",
-        "text_en",
-        "text_vi",
-        "condition_definition",
-        "context_patch",
-        "action_payload",
-        "global_config",
-        "link_target_tree_key",
-        "link_target_node_key",
-        "display_order",
-        "created_at",
-        "updated_at"
-    )
-SELECT gen_random_uuid(),
-    tree_ctx.tree_id,
-    node_seed.node_key,
-    node_seed.node_type::node_type,
-    node_seed.text_en,
-    node_seed.text_vi,
-    node_seed.condition_definition,
-    node_seed.context_patch,
-    node_seed.action_payload,
-    node_seed.global_config,
-    node_seed.link_target_tree_key,
-    node_seed.link_target_node_key,
-    node_seed.display_order,
-    now(),
-    now()
-FROM node_seed
-    CROSS JOIN tree_ctx;
--- ============================================================
--- 3. Edges
--- ============================================================
-WITH tree_ctx AS (
-    SELECT id AS tree_id
-    FROM public.decision_trees
-    WHERE tree_key = 'hypertension-type-2-diabetes'
-),
-edge_seed (
-    from_node_key,
-    to_node_key,
-    traversal_order
-) AS (
-    VALUES (
-            'T8_START_BP_TARGET_STATUS',
-            'T8_C_BELOW_TARGET',
-            1
-        ),
-        (
-            'T8_START_BP_TARGET_STATUS',
-            'T8_C_ABOVE_TARGET',
-            2
-        ),
-        (
-            'T8_C_BELOW_TARGET',
-            'T8_LINK_A_ESSENTIAL_TREATMENT_STRATEGY',
-            1
-        ),
-        (
-            'T8_C_BELOW_TARGET',
-            'T8_LINK_A_OPTIMAL_TREATMENT_STRATEGY',
-            2
-        ),
-        (
-            'T8_C_ABOVE_TARGET',
-            'T8_INF_REGIMEN_OPTIONS',
-            1
-        ),
-        (
-            'T8_INF_REGIMEN_OPTIONS',
-            'T8_C_HAS_CV_RISK',
-            1
-        ),
-        (
-            'T8_INF_REGIMEN_OPTIONS',
-            'T8_C_NO_CV_RISK',
-            2
-        ),
-        (
-            'T8_C_HAS_CV_RISK',
-            'T8_INF_ADD_SGLT2I_GLP1RA',
-            1
-        ),
-        ('T8_C_NO_CV_RISK', 'T8_INF_MAINTAIN_REGIMEN', 1),
-        (
-            'T8_INF_ADD_SGLT2I_GLP1RA',
-            'T8_LINK_B_ESSENTIAL_TREATMENT_STRATEGY',
-            1
-        ),
-        (
-            'T8_INF_ADD_SGLT2I_GLP1RA',
-            'T8_LINK_B_OPTIMAL_TREATMENT_STRATEGY',
-            2
-        ),
-        (
-            'T8_INF_MAINTAIN_REGIMEN',
-            'T8_LINK_B_ESSENTIAL_TREATMENT_STRATEGY',
-            1
-        ),
-        (
-            'T8_INF_MAINTAIN_REGIMEN',
-            'T8_LINK_B_OPTIMAL_TREATMENT_STRATEGY',
-            2
-        )
-)
-INSERT INTO public.decision_edges (
-        "id",
-        "from_node_id",
-        "to_node_id",
-        "traversal_order"
-    )
-SELECT gen_random_uuid(),
-    from_node.id,
-    to_node.id,
-    edge_seed.traversal_order
-FROM edge_seed
-    CROSS JOIN tree_ctx
-    JOIN public.decision_nodes from_node ON from_node.tree_id = tree_ctx.tree_id
-    AND from_node.node_key = edge_seed.from_node_key
-    JOIN public.decision_nodes to_node ON to_node.tree_id = tree_ctx.tree_id
-    AND to_node.node_key = edge_seed.to_node_key;
--- ============================================================
--- 4. Source references
--- ============================================================
-WITH tree_ctx AS (
-    SELECT id AS tree_id
-    FROM public.decision_trees
-    WHERE tree_key = 'hypertension-type-2-diabetes'
-),
-reference_seed (
-    node_key,
-    source_title,
-    section_path,
-    locator,
-    locator_detail,
-    printed_page_numbers,
-    pdf_page_numbers,
-    reference_note,
-    reference_order
-) AS (
-    VALUES (
-            'T8_START_BP_TARGET_STATUS',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "1.5", "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp"}]'::jsonb,
-            'Bảng 2. Phân tầng nguy cơ trong tăng huyết áp (2)',
-            'Background risk-stratification context carried over from Tree 3, before branching into the diabetes-specific Bảng 18 strategy.',
-            ARRAY [11]::smallint [],
-            ARRAY [11]::smallint [],
-            'Tiếp nối bối cảnh phân tầng nguy cơ từ Cây 3.',
-            1
-        ),
-        (
-            'T8_START_BP_TARGET_STATUS',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.1", "title": "Ngưỡng huyết áp ban đầu cần điều trị và ranh giới đích điều trị tăng huyết áp"}]'::jsonb,
-            'Bảng 6. Ngưỡng huyết áp phòng khám cho điều trị tăng huyết áp theo nhóm tuổi',
-            'General clinic-BP treatment threshold by age, inherited from Tree 3 before this diabetes-specific branch.',
-            ARRAY [15]::smallint [],
-            ARRAY [17]::smallint [],
-            'Ngưỡng điều trị chung theo nhóm tuổi, kế thừa từ Cây 3.',
-            2
-        ),
-        (
-            'T8_START_BP_TARGET_STATUS',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.1", "title": "Ngưỡng huyết áp ban đầu cần điều trị và ranh giới đích điều trị tăng huyết áp"}]'::jsonb,
-            'Bảng 7. Mục tiêu huyết áp phòng khám trong điều trị tăng huyết áp theo nhóm tuổi',
-            'General clinic-BP treatment target by age, inherited from Tree 3 before this diabetes-specific branch.',
-            ARRAY [16]::smallint [],
-            ARRAY [18]::smallint [],
-            'Đích điều trị chung theo nhóm tuổi, kế thừa từ Cây 3.',
-            3
-        ),
-        (
-            'T8_C_BELOW_TARGET',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.7.1", "title": "Tăng huyết áp và Đái tháo đường týp 2"}]'::jsonb,
-            'Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)',
-            'Clinic BP threshold for hypertension with type 2 diabetes is >=130/85 mmHg; below-target branch.',
-            ARRAY [32]::smallint [],
-            ARRAY [34]::smallint [],
-            'Ngưỡng HA phòng khám ở bệnh nhân THA kèm đái tháo đường týp 2 khi >= 130/85 mmHg.',
-            1
-        ),
-        (
-            'T8_C_ABOVE_TARGET',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.7.1", "title": "Tăng huyết áp và Đái tháo đường týp 2"}]'::jsonb,
-            'Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)',
-            'Clinic BP threshold for hypertension with type 2 diabetes is >=130/85 mmHg; at/above-target branch.',
-            ARRAY [32]::smallint [],
-            ARRAY [34]::smallint [],
-            'Ngưỡng HA phòng khám ở bệnh nhân THA kèm đái tháo đường týp 2 khi >= 130/85 mmHg.',
-            1
-        ),
-        (
-            'T8_INF_REGIMEN_OPTIONS',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.7.1", "title": "Tăng huyết áp và Đái tháo đường týp 2"}]'::jsonb,
-            'Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)',
-            'Combination strategy should include one RAS-inhibitor class (A: ACEI or ARB) and one calcium-channel-blocker or thiazide-like-diuretic class (C or D). Matching Trees 4/5''s own pattern, the specific agent within each class (e.g. ACEI vs ARB) is resolved downstream against contraindications in Tree 6 (drug-combination), not decided here.',
-            ARRAY [32]::smallint [],
-            ARRAY [34]::smallint [],
-            'Chiến lược điều trị nên bao gồm một nhóm thuốc ức chế RAS và một nhóm thuốc chẹn kênh canxi hoặc lợi tiểu thiazide-like.',
-            1
-        ),
-        (
-            'T8_C_HAS_CV_RISK',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.7.1", "title": "Tăng huyết áp và Đái tháo đường týp 2"}]'::jsonb,
-            'Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)',
-            'SGLT2i/GLP-1RA is prioritized when atherosclerotic cardiovascular disease and/or high risk is present.',
-            ARRAY [32]::smallint [],
-            ARRAY [34]::smallint [],
-            'Điều trị hạ glucose máu với SGLT2-i hoặc GLP-1 RA được ưu tiên khi có bệnh tim mạch do xơ vữa và/hoặc nguy cơ cao.',
-            1
-        ),
-        (
-            'T8_C_NO_CV_RISK',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.7.1", "title": "Tăng huyết áp và Đái tháo đường týp 2"}]'::jsonb,
-            'Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)',
-            'Complement of the SGLT2i/GLP-1RA trigger: no atherosclerotic cardiovascular disease and not high risk.',
-            ARRAY [32]::smallint [],
-            ARRAY [34]::smallint [],
-            'Phần bù của điều kiện kích hoạt SGLT2-i/GLP-1 RA: không có bệnh tim mạch do xơ vữa và không thuộc nhóm nguy cơ cao.',
-            1
-        ),
-        (
-            'T8_INF_ADD_SGLT2I_GLP1RA',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.7.1", "title": "Tăng huyết áp và Đái tháo đường týp 2"}]'::jsonb,
-            'Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)',
-            'Glucose-lowering therapy with SGLT2i or GLP-1RA is prioritized for its demonstrated cardiovascular benefit.',
-            ARRAY [32]::smallint [],
-            ARRAY [34]::smallint [],
-            'Điều trị hạ glucose máu với SGLT2-i hoặc GLP-1 RA được ưu tiên với những lợi ích bệnh tim mạch đã được chứng minh.',
-            1
-        ),
-        (
-            'T8_INF_MAINTAIN_REGIMEN',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.7.1", "title": "Tăng huyết áp và Đái tháo đường týp 2"}]'::jsonb,
-            'Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)',
-            'No indication to add SGLT2i/GLP-1RA: continue the current RAS-inhibitor + CCB/diuretic regimen.',
-            ARRAY [32]::smallint [],
-            ARRAY [34]::smallint [],
-            'Không có chỉ định bổ sung SGLT2-i/GLP-1 RA: tiếp tục phác đồ ức chế RAS + CKCa/lợi tiểu hiện tại.',
-            1
-        ),
-        (
-            'T8_LINK_A_ESSENTIAL_TREATMENT_STRATEGY',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.7.1", "title": "Tăng huyết áp và Đái tháo đường týp 2"}]'::jsonb,
-            'Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)',
-            'Exit point of the "at target" branch: continue the essential treatment strategy (limited-resource facility).',
-            ARRAY [32]::smallint [],
-            ARRAY [34]::smallint [],
-            'Điểm thoát của nhánh "đạt đích": tiếp tục chiến lược điều trị thiết yếu.',
-            1
-        ),
-        (
-            'T8_LINK_A_OPTIMAL_TREATMENT_STRATEGY',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.7.1", "title": "Tăng huyết áp và Đái tháo đường týp 2"}]'::jsonb,
-            'Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)',
-            'Exit point of the "at target" branch: continue the optimal treatment strategy (full-resource facility).',
-            ARRAY [32]::smallint [],
-            ARRAY [34]::smallint [],
-            'Điểm thoát của nhánh "đạt đích": tiếp tục chiến lược điều trị tối ưu.',
-            1
-        ),
-        (
-            'T8_LINK_B_ESSENTIAL_TREATMENT_STRATEGY',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.7.1", "title": "Tăng huyết áp và Đái tháo đường týp 2"}]'::jsonb,
-            'Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)',
-            'Exit point of the "not at target" branch: continue the essential treatment strategy (limited-resource facility).',
-            ARRAY [32]::smallint [],
-            ARRAY [34]::smallint [],
-            'Điểm thoát của nhánh "chưa đạt đích": tiếp tục chiến lược điều trị thiết yếu.',
-            1
-        ),
-        (
-            'T8_LINK_B_OPTIMAL_TREATMENT_STRATEGY',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.7.1", "title": "Tăng huyết áp và Đái tháo đường týp 2"}]'::jsonb,
-            'Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)',
-            'Exit point of the "not at target" branch: continue the optimal treatment strategy (full-resource facility).',
-            ARRAY [32]::smallint [],
-            ARRAY [34]::smallint [],
-            'Điểm thoát của nhánh "chưa đạt đích": tiếp tục chiến lược điều trị tối ưu.',
-            1
-        ),
-        (
-            'T8_GLOBAL_ABBREVIATION_GLOSSARY',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.7.1", "title": "Tăng huyết áp và Đái tháo đường týp 2"}]'::jsonb,
-            'Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2), chú thích',
-            'Footnote abbreviation glossary for the drug classes named in Bảng 18.',
-            ARRAY [32]::smallint [],
-            ARRAY [34]::smallint [],
-            'Chú thích Bảng 18: RAS: Hệ renin-angiotensin-aldosterone; GLP-1 RA: thuốc đồng vận thụ thể GLP-1; SGLT2i: Thuốc ức chế SGLT2.',
-            1
-        )
-)
-INSERT INTO public.node_source_references (
-        "id",
-        "node_id",
-        "source_title",
-        "section_path",
-        "locator",
-        "locator_detail",
-        "printed_page_numbers",
-        "pdf_page_numbers",
-        "reference_note",
-        "reference_order"
-    )
-SELECT gen_random_uuid(),
-    node.id,
-    reference_seed.source_title,
-    reference_seed.section_path,
-    reference_seed.locator,
-    reference_seed.locator_detail,
-    reference_seed.printed_page_numbers,
-    reference_seed.pdf_page_numbers,
-    reference_seed.reference_note,
-    reference_seed.reference_order
-FROM reference_seed
-    CROSS JOIN tree_ctx
-    JOIN public.decision_nodes node ON node.tree_id = tree_ctx.tree_id
-    AND node.node_key = reference_seed.node_key;
-
--- ================================================================
--- Tree 9: hypertension-coronary-artery-disease (source: seed_hypertension_coronary_artery_disease.sql)
--- ================================================================
-COPY public.decision_trees ("id", "tree_key", "name_en", "name_vi", "created_at", "updated_at") FROM stdin;
-c185afaa-623f-5f0d-b8b2-792899dee988	hypertension-coronary-artery-disease	Hypertension + Coronary Artery Disease	Cây 9: THA + bệnh mạch vành	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
+COPY public.tree_layouts ("id", "tree_id", "arrow_kind", "node_positions", "created_at", "updated_at") FROM stdin;
+711caa2d-227b-40e1-bc73-c037e341e42b	8a07bf19-f7e7-bcf8-f0f8-80500bfce38d	elbow	{"T2_INF_GRADE_2_HIGH_RISK": {"x": 1572.0, "y": 540.0}, "T2_C_CONTEXT_HIGH_NORMAL_BP": {"x": 755.0, "y": 276.0}, "T2_INF_HIGH_NORMAL_LOW_RISK": {"x": 532.0, "y": 540.0}, "T2_C_NO_HIGH_RISK_COMORBIDITY": {"x": 810.0, "y": 144.0}, "T2_INF_HIGH_NORMAL_MEDIUM_RISK": {"x": 792.0, "y": 540.0}, "T2_C_GRADE_2_RISK_FACTOR_COUNT_0": {"x": 1832.0, "y": 408.0}, "T2_C_CONTEXT_GRADE_2_HYPERTENSION": {"x": 1702.477088948787, "y": 274.16711590296495}, "T2_C_RISK_FACTOR_COUNT_AT_LEAST_3": {"x": 272.0, "y": 144.0}, "T2_INF_GRADE_1_OR_MASKED_LOW_RISK": {"x": 1052.0, "y": 540.0}, "T2_C_HIGH_RISK_COMORBIDITY_PRESENT": {"x": 12.0, "y": 144.0}, "T2_LINK_GRADE_2_HIGH_RISK_TO_TREE_3": {"x": 1572.0, "y": 672.0}, "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_2": {"x": 792.0, "y": 408.0}, "T2_INF_GRADE_1_OR_MASKED_MEDIUM_RISK": {"x": 1312.0, "y": 540.0}, "T2_INF_HIGH_RISK_COMORBIDITY_PRESENT": {"x": 12.0, "y": 276.0}, "T2_LINK_HIGH_NORMAL_LOW_RISK_TO_TREE_3": {"x": 532.0, "y": 672.0}, "T2_LINK_HIGH_RISK_COMORBIDITY_TO_TREE_3": {"x": 12.0, "y": 408.0}, "T2_INF_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3": {"x": 272.0, "y": 276.0}, "T2_C_GRADE_2_RISK_FACTOR_COUNT_AT_LEAST_1": {"x": 1572.0, "y": 408.0}, "T2_INF_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK": {"x": 1832.0, "y": 540.0}, "T2_LINK_HIGH_NORMAL_MEDIUM_RISK_TO_TREE_3": {"x": 792.0, "y": 672.0}, "T2_START_RISK_AND_COMORBIDITY_INFORMATION": {"x": 272.0, "y": 12.0}, "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_0": {"x": 1052.0, "y": 408.0}, "T2_C_CONTEXT_GRADE_1_OR_MASKED_HYPERTENSION": {"x": 1089.0, "y": 276.0}, "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_AT_MOST_1": {"x": 532.0, "y": 408.0}, "T2_LINK_GRADE_1_OR_MASKED_LOW_RISK_TO_TREE_3": {"x": 1052.0, "y": 672.0}, "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_1_OR_2": {"x": 1312.0, "y": 408.0}, "T2_LINK_GRADE_1_OR_MASKED_MEDIUM_RISK_TO_TREE_3": {"x": 1312.0, "y": 672.0}, "T2_LINK_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3_TO_TREE_3": {"x": 272.0, "y": 408.0}, "T2_LINK_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK_TO_TREE_3": {"x": 1832.0, "y": 672.0}}	2026-07-26 02:20:48.266074+00	2026-07-26 02:20:48.266078+00
+284d57f9-b557-4b33-9ddb-71e62941bc95	8dffe102-09fa-4e81-b2d1-6035da07ad0b	elbow	{"T13_START": {"x": 356.0, "y": 12.0}, "T13_C_FULL": {"x": 133.0, "y": 276.0}, "T13_A_ADD_D": {"x": 356.0, "y": 672.0}, "T13_A_ADD_MRA": {"x": 653.0, "y": 1068.0}, "T13_C_LIMITED": {"x": 568.1054637865311, "y": 156.38119440914863}, "T13_END_REFER": {"x": -244.61118170266832, "y": 1425.74332909784}, "T13_A_CHECK_MRA": {"x": 782.1232528589583, "y": 346.0940279542567}, "T13_END_MAINTAIN": {"x": 430.0, "y": 1332.0}, "T13_A_ALTERNATIVES": {"x": 133.0, "y": 1068.0}, "T13_C_MRA_TOLERATED": {"x": 653.0, "y": 540.0}, "T13_A_CONSIDER_DEVICE": {"x": 12.0, "y": 672.0}, "T13_A_OPTIMAL_TREATMENT": {"x": 12.0, "y": 408.0}, "T13_C_BP_TARGET_REACHED": {"x": 430.0, "y": 1200.0}, "T13_C_MRA_NOT_TOLERATED": {"x": 356.0, "y": 540.0}, "T13_A_ADD_SPIRONOLACTONE": {"x": 393.0, "y": 1068.0}, "T13_A_ESSENTIAL_TREATMENT": {"x": 881.1728081321476, "y": 118.58195679796694}, "T13_A_CHECK_SPIRONOLACTONE": {"x": 356.0, "y": 804.0}, "T13_C_BP_TARGET_NOT_REACHED": {"x": 170.0, "y": 1200.0}, "T13_C_SPIRONOLACTONE_TOLERATED": {"x": 393.0, "y": 936.0}, "T13_C_SPIRONOLACTONE_NOT_TOLERATED": {"x": 133.0, "y": 936.0}}	2026-07-26 08:13:07.281244+00	2026-07-26 08:13:31.633768+00
+ee76fa04-6401-4646-b3cf-6fa6b0dd8643	3897f50b-1c59-f954-5bef-89650cc45e5a	elbow	{"T1_C_IS_PREGNANT": {"x": 12.0, "y": 144.0}, "T1_C_CLINIC_1_CRISIS": {"x": 272.0, "y": 276.0}, "T1_C_IS_NOT_PREGNANT": {"x": 309.0, "y": 144.0}, "T1_C_ESSENTIAL_GRADE_1": {"x": 829.0, "y": 672.0}, "T1_C_ESSENTIAL_GRADE_2": {"x": 569.0, "y": 672.0}, "T1_C_CLINIC_1_NON_CRISIS": {"x": 1034.0, "y": 276.0}, "T1_C_ESSENTIAL_NORMAL_BP": {"x": 532.0, "y": 408.0}, "T1_INF_ESSENTIAL_GRADE_1": {"x": 829.0, "y": 804.0}, "T1_INF_ESSENTIAL_GRADE_2": {"x": 569.0, "y": 804.0}, "T1_END_ESSENTIAL_NORMAL_BP": {"x": 532.0, "y": 540.0}, "T1_C_ESSENTIAL_HYPERTENSION": {"x": 792.0, "y": 408.0}, "T1_START_PATIENT_INFORMATION": {"x": 138.08088223759546, "y": 17.786764693066175}, "T1_C_ESSENTIAL_HIGH_NORMAL_BP": {"x": 1089.0, "y": 408.0}, "T1_INF_ESSENTIAL_HYPERTENSION": {"x": 792.0, "y": 540.0}, "T1_INF_HYPERTENSIVE_EMERGENCY": {"x": 272.0, "y": 408.0}, "T1_LINK_HYPERTENSIVE_EMERGENCY": {"x": 272.0, "y": 540.0}, "T1_INF_ESSENTIAL_HIGH_NORMAL_BP": {"x": 1089.0, "y": 540.0}, "T1_LINK_ESSENTIAL_GRADE_1_TO_RISK": {"x": 829.0, "y": 936.0}, "T1_LINK_ESSENTIAL_GRADE_2_TO_RISK": {"x": 569.0, "y": 936.0}, "T1_LINK_HYPERTENSION_IN_PREGNANCY": {"x": 12.0, "y": 276.0}, "T1_LINK_ESSENTIAL_HIGH_NORMAL_BP_TO_RISK": {"x": 1089.0, "y": 672.0}}	2026-07-26 08:42:56.587898+00	2026-07-26 08:42:56.587901+00
 \.
 
-COPY public.decision_nodes ("id", "tree_id", "node_key", "node_type", "text_en", "text_vi", "condition_definition", "context_patch", "action_payload", "global_config", "link_target_tree_key", "link_target_node_key", "display_order", "created_at", "updated_at") FROM stdin;
-d4a79b1e-2fd3-5526-ba61-0afcc5e4549e	c185afaa-623f-5f0d-b8b2-792899dee988	T9_START	START	Tree 3: Blood Pressure Thresholds and Targets	Cây 3 Ngưỡng huyết áp và đích điều trị	\N	\N	\N	\N	\N	\N	1	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-8b75cbfa-8d26-519f-a80b-d346aa4c37fb	c185afaa-623f-5f0d-b8b2-792899dee988	T9_C_BP1	CONDITION	18-69 years and SBP >= 130 or DBP >= 85	18-69 tuổi và HATT >= 130 mmHg HATTr >= 85 mmHg	{"all": [{"all": [{"op": "gte", "path": "input.age", "value": 18}, {"op": "lte", "path": "input.age", "value": 69}]}, {"any": [{"op": "gte", "path": "input.current_clinic_sbp", "value": 130}, {"op": "gte", "path": "input.current_clinic_dbp", "value": 85}]}]}	\N	\N	\N	\N	\N	2	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-103a7134-7357-55fd-922e-a4bfb6d3fe11	c185afaa-623f-5f0d-b8b2-792899dee988	T9_C_BP2	CONDITION	>70 years and SBP >= 140 or DBP >= 90	>70 tuổi và HATT >= 140 mmHg HATTr >= 90 mmHg	{"all": [{"op": "gt", "path": "input.age", "value": 70}, {"any": [{"op": "gte", "path": "input.current_clinic_sbp", "value": 140}, {"op": "gte", "path": "input.current_clinic_dbp", "value": 90}]}]}	\N	\N	\N	\N	\N	3	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-0eca67b2-9c2e-5614-993f-951e970b34ef	c185afaa-623f-5f0d-b8b2-792899dee988	T9_C_BP3	CONDITION	18-69 years and SBP < 130 and DBP < 85	18-69 tuổi và HATT < 130 mmHg HATTr < 85 mmHg	{"all": [{"op": "gte", "path": "input.age", "value": 18}, {"op": "lte", "path": "input.age", "value": 69}, {"op": "lt", "path": "input.current_clinic_sbp", "value": 130}, {"op": "lt", "path": "input.current_clinic_dbp", "value": 85}]}	\N	\N	\N	\N	\N	4	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-d4050ff3-58a2-53b2-ba4a-876f8d3fc3e7	c185afaa-623f-5f0d-b8b2-792899dee988	T9_C_BP4	CONDITION	>70 years and SBP < 140 and DBP < 90	>70 tuổi và HATT < 140 mmHg HATTr < 90 mmHg	{"all": [{"op": "gt", "path": "input.age", "value": 70}, {"op": "lt", "path": "input.current_clinic_sbp", "value": 140}, {"op": "lt", "path": "input.current_clinic_dbp", "value": 90}]}	\N	\N	\N	\N	\N	5	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-f551f2cf-18f7-5261-a322-a02e58f1bf30	c185afaa-623f-5f0d-b8b2-792899dee988	T9_C_AMI	CONDITION	Myocardial Infarction or Acute Coronary Syndrome	Nhồi máu cơ tim hoặc hội chứng vành cấp	{"op": "eq", "path": "input.has_mi_acs", "value": true}	\N	\N	\N	\N	\N	6	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-d26f0496-b35f-5909-8975-c2329b388ea9	c185afaa-623f-5f0d-b8b2-792899dee988	T9_C_CCS_ANGINA	CONDITION	Chronic Coronary Syndrome with Angina	Hội chứng vành mạn có cơn đau thắt ngực	{"op": "eq", "path": "input.has_ccs_angina", "value": true}	\N	\N	\N	\N	\N	7	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-6de65559-da01-52b5-94e5-a2a916e248e8	c185afaa-623f-5f0d-b8b2-792899dee988	T9_C_CCS_REVASC	CONDITION	Chronic Coronary Syndrome after Revascularization	Hội chứng vành mạn sau tái thông	{"op": "eq", "path": "input.has_ccs_revasc", "value": true}	\N	\N	\N	\N	\N	8	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-e178b23e-f8e8-5d9f-8207-34404155166b	c185afaa-623f-5f0d-b8b2-792899dee988	T9_C_CABG	CONDITION	Post CABG	Sau phẫu thuật bắc cầu vành CABG	{"op": "eq", "path": "input.has_cabg", "value": true}	\N	\N	\N	\N	\N	9	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-6299ea87-2ba4-52b4-9752-bbd2a796e0ff	c185afaa-623f-5f0d-b8b2-792899dee988	T9_A_B_3Y	INFERENCE	Combine Beta-blocker for 3 years	Phối hợp thuốc B trong 3 năm	\N	{"regimen_modifier": "add_beta_blocker_3_years"}	{"action_type": "BETA_BLOCKER_3_YEARS"}	\N	\N	\N	10	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-b2f92cb6-82fc-52ba-a4ca-54257fc2f0b7	c185afaa-623f-5f0d-b8b2-792899dee988	T9_A_B_OR_C	INFERENCE	Combine Beta-blocker or CCB	Phối hợp thuốc B hoặc C	\N	{"regimen_modifier": "add_beta_blocker_or_ccb"}	{"action_type": "BETA_BLOCKER_OR_CCB"}	\N	\N	\N	11	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-ef39acd8-3c32-5eda-bca8-a6c79adfcaf2	c185afaa-623f-5f0d-b8b2-792899dee988	T9_A_NO_B	INFERENCE	No routine indication for Beta-blocker	Không có chỉ định thuốc B thường quy	\N	{"regimen_modifier": "no_routine_beta_blocker"}	{"action_type": "NO_ROUTINE_BETA_BLOCKER"}	\N	\N	\N	12	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-bc668dbe-04db-5f5d-a80d-fd1a51f5037b	c185afaa-623f-5f0d-b8b2-792899dee988	T9_A_B_EARLY	INFERENCE	Start Beta-blocker as early as possible	Bắt đầu thuốc B sớm nhất có thể	\N	{"regimen_modifier": "early_beta_blocker"}	{"action_type": "EARLY_BETA_BLOCKER"}	\N	\N	\N	13	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-de89d76b-1556-5e3c-b13d-902195434de3	c185afaa-623f-5f0d-b8b2-792899dee988	T9_LINK_4_5	LINK	Tree 4: Essential Strategy or Tree 5: Optimal Strategy	Cây 4: Chiến lược điều trị thiết yếu hoặc Cây 5: Chiến lược điều trị tối ưu	\N	\N	\N	\N	essential-optimal-strategy	\N	14	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-c92773f1-5078-502d-b5eb-a9a8c72f9b52	c185afaa-623f-5f0d-b8b2-792899dee988	T9_G_DRUGS	GLOBAL	First-line drugs: A + B. Add C, D or MRA when necessary	Thuốc chỉ định hàng đầu: A + B thêm thuốc C, D hoặc MRA khi cần	\N	\N	\N	{"first_line_drugs": ["A", "B"], "add_on_drugs": ["C", "D", "MRA"]}	\N	\N	15	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
+COPY public.medicines ("drug_id", "name", "drug_class", "subgroup", "route", "dose_low", "dose_usual", "dose_max", "source", "link", "available", "atc_code") FROM stdin;
+DRUG0001	Diltiazem	C	CKCa Non-DHP	Thuốc Uống	120 mg	180 - 240 mg	240 mg	Bảng 10	\N	t	\N
+DRUG0002	Verapamil	C	CKCa Non-DHP	Thuốc Uống	120 mg	240 - 360 mg	360 mg	Bảng 10	\N	t	\N
+DRUG0003	Amlodipine	C	CKCa DHP	Thuốc Uống	2.5 mg	5 - 10 mg	10 mg	Bảng 10	\N	t	\N
+DRUG0004	Felodipine	C	CKCa DHP	Thuốc Uống	2.5 mg	5 - 10 mg	10 mg	Bảng 10	\N	t	\N
+DRUG0005	Isradipine	C	CKCa DHP	Thuốc Uống	2.5 mg BID	5 - 10 mg BID	20 mg/ngày	Bảng 10	\N	t	\N
+DRUG0006	Nifedipine	C	CKCa DHP	Thuốc Uống	30 mg	30 - 90 mg	90 mg	Bảng 10	\N	t	\N
+DRUG0007	Nitrendipine	C	CKCa DHP	Thuốc Uống	10 mg	20 mg	20 mg	Bảng 10	\N	t	\N
+DRUG0008	Lercanidipine	C	CKCa DHP	Thuốc Uống	10 mg	20 mg	20 mg	Bảng 10	\N	t	\N
+DRUG0009	Benazepril	A	ƯCMC	Thuốc Uống	5 mg	10 - 40 mg	40 mg	Bảng 10	\N	t	\N
+DRUG0010	Captopril	A	ƯCMC	Thuốc Uống	12.5 mg BID	50 - 100 mg BID	200 mg/ngày	Bảng 10	\N	t	\N
+DRUG0011	Enalapril	A	ƯCMC	Thuốc Uống	5 mg	10 - 40 mg	40 mg	Bảng 10	\N	t	\N
+DRUG0012	Fosinopril	A	ƯCMC	Thuốc Uống	10 mg	10 - 40 mg	40 mg	Bảng 10	\N	t	\N
+DRUG0013	Lisinopril	A	ƯCMC	Thuốc Uống	5 mg	10 - 40 mg	40 mg	Bảng 10	\N	t	\N
+DRUG0014	Perindopril	A	ƯCMC	Thuốc Uống	3.5 mg	5 - 10 mg	10 mg	Bảng 10	\N	t	\N
+DRUG0015	Quinapril	A	ƯCMC	Thuốc Uống	5 mg	10 - 40 mg	40 mg	Bảng 10	\N	t	\N
+DRUG0016	Ramipril	A	ƯCMC	Thuốc Uống	2.5 mg	5 - 10 mg	10 mg	Bảng 10	\N	t	\N
+DRUG0017	Trandolapril	A	ƯCMC	Thuốc Uống	1 - 2 mg	2 - 8 mg	8 mg	Bảng 10	\N	t	\N
+DRUG0018	Imidapril	A	ƯCMC	Thuốc Uống	2.5 - 5 mg	5 - 10 mg	10 mg	Bảng 10	\N	t	\N
+DRUG0019	Azilsartan	A	CTTA	Thuốc Uống	40 mg	80 mg	80 mg	Bảng 10	\N	t	\N
+DRUG0020	Candesartan	A	CTTA	Thuốc Uống	4 mg	8 - 32 mg	32 mg	Bảng 10	\N	t	\N
+DRUG0021	Eprosartan	A	CTTA	Thuốc Uống	400 mg	600 - 800 mg	800 mg	Bảng 10	\N	t	\N
+DRUG0022	Irbesartan	A	CTTA	Thuốc Uống	150 mg	150 - 300 mg	300 mg	Bảng 10	\N	t	\N
+DRUG0023	Losartan	A	CTTA	Thuốc Uống	50 mg	50 - 100 mg	100 mg	Bảng 10	\N	t	\N
+DRUG0024	Olmesartan	A	CTTA	Thuốc Uống	10 mg	20 - 40 mg	40 mg	Bảng 10	\N	t	\N
+DRUG0025	Telmisartan	A	CTTA	Thuốc Uống	40 mg	40 - 80 mg	80 mg	Bảng 10	\N	t	\N
+DRUG0026	Valsartan	A	CTTA	Thuốc Uống	80 mg	80 - 320 mg	320 mg	Bảng 10	\N	t	\N
+DRUG0027	Bendroflumethiazide	D	LT Thiazide	Thuốc Uống	5 mg	10 mg	10 mg	Bảng 10	\N	t	\N
+DRUG0028	Chlorthalidone	D	LT Thiazide-like	Thuốc Uống	12.5 mg	12.5 - 25 mg	25 mg	Bảng 10	\N	t	\N
+DRUG0029	Hydrochlorothiazide	D	LT Thiazide	Thuốc Uống	12.5 mg	12.5 - 50 mg	50 mg	Bảng 10	\N	t	\N
+DRUG0030	Indapamide	D	LT Thiazide-like	Thuốc Uống	1.25 mg	2.5 mg	2.5 mg	Bảng 10	\N	t	\N
+DRUG0031	Bumetanide	D	LT quai	Thuốc Uống	0.5 mg	1 mg	1 mg	Bảng 10	\N	t	\N
+DRUG0032	Furosemide	D	LT quai	Thuốc Uống/Thuốc Truyền Tĩnh Mạch	20 mg BID	40 mg BID	Variable	Bảng 10	\N	t	\N
+DRUG0033	Torsemide	D	LT quai	Thuốc Uống	5 mg	10 mg	10 mg	Bảng 10	\N	t	\N
+DRUG0034	Amiloride	D	LT giữ Kali	Thuốc Uống	5 mg	5 - 10 mg	10 mg	Bảng 10	\N	t	\N
+DRUG0035	Eplerenone	D	LT giữ Kali (MRA)	Thuốc Uống	25 mg	50 - 100 mg	100 mg	Bảng 10	\N	t	\N
+DRUG0036	Spironolactone	D	LT giữ Kali (MRA)	Thuốc Uống	12.5 mg	25 - 50 mg	50 mg	Bảng 10	\N	t	\N
+DRUG0037	Triamterene	D	LT giữ Kali	Thuốc Uống	100 mg	100 mg	100 mg	Bảng 10	\N	t	\N
+DRUG0038	Acebutolol	B	CB	Thuốc Uống	200 mg	200 - 400 mg	400 mg	Bảng 10	\N	t	\N
+DRUG0039	Atenolol	B	CB	Thuốc Uống	25 mg	100 mg	100 mg	Bảng 10	\N	t	\N
+DRUG0040	Bisoprolol	B	CB	Thuốc Uống	5 mg	5 - 10 mg	10 mg	Bảng 10	\N	t	\N
+DRUG0041	Carvedilol	B	CB	Thuốc Uống	3.125 mg BID	6.25 - 25 mg BID	50 mg/ngày	Bảng 10	\N	t	\N
+DRUG0042	Labetalol	B	CB	Thuốc Uống/Thuốc Truyền Tĩnh Mạch	100 mg BID	100 - 300 mg BID	600 mg/ngày	Bảng 10	\N	t	\N
+DRUG0043	Metoprolol Succinate	B	CB	Thuốc Uống	25 mg	50 - 100 mg	100 mg	Bảng 10	\N	t	\N
+DRUG0044	Metoprolol Tartrate	B	CB	Thuốc Uống	25 mg BID	50 - 100 mg BID	200 mg/ngày	Bảng 10	\N	t	\N
+DRUG0045	Nadolol	B	CB	Thuốc Uống	20 mg	40 - 80 mg	80 mg	Bảng 10	\N	t	\N
+DRUG0046	Nebivolol	B	CB	Thuốc Uống	2.5 mg	5 - 10 mg	10 mg	Bảng 10	\N	t	\N
+DRUG0047	Propranolol	B	CB	Thuốc Uống	40 mg BID	40 - 160 mg BID	320 mg/ngày	Bảng 10	\N	t	\N
+DRUG0048	Aliskiren	\N	Ức chế Renin trực tiếp	Thuốc Uống	75 mg	150 - 300 mg	300 mg	Bảng 10	\N	t	\N
+DRUG0049	Doxazosin	\N	Ức chế thụ thể Alpha giao cảm	Thuốc Uống	1 mg	1 - 2 mg	2 mg	Bảng 10	\N	t	\N
+DRUG0050	Prazosin	\N	Ức chế thụ thể Alpha giao cảm	Thuốc Uống	1 mg BID	1 - 5 mg BID	10 mg/ngày	Bảng 10	\N	t	\N
+DRUG0051	Terazosin	\N	Ức chế thụ thể Alpha giao cảm	Thuốc Uống	1 mg	1 - 2 mg	2 mg	Bảng 10	\N	t	\N
+DRUG0052	Hydralazine	\N	Giãn mạch	Thuốc Uống/Thuốc Truyền Tĩnh Mạch	10 mg BID	25 - 100 mg BID	200 mg/ngày	Bảng 10	\N	t	\N
+DRUG0053	Minoxidil	\N	Giãn mạch	Thuốc Uống	2.5 mg	5 - 10 mg	10 mg	Bảng 10	\N	t	\N
+DRUG0054	Clonidine	\N	Chủ vận chọn lọc alpha-2 giao cảm	Thuốc Uống	0.1 mg BID	0.1 - 0.2 mg BID	0.4 mg/ngày	Bảng 10	\N	t	\N
+DRUG0055	Methyldopa	\N	Chủ vận chọn lọc alpha-2 giao cảm	Thuốc Uống	125 mg BID	250 - 500 mg BID	1000 mg/ngày	Bảng 10	\N	t	\N
+DRUG0056	Reserpine	\N	Giảm Adrenergic	Thuốc Uống	0.1 mg	0.1 - 0.25 mg	0.25 mg	Bảng 10	\N	t	\N
+DRUG0057	Nicardipine	C	CKCa DHP	Thuốc Truyền Tĩnh Mạch	3 mg/giờ	5 mg/giờ	15 mg/giờ	Mục 3.7.5	https://drugs.com/dosage/nicardipine.html	t	\N
+DRUG0058	Clevidipine	C	CKCa DHP	Thuốc Truyền Tĩnh Mạch	1 - 2 mg/giờ	4 - 6 mg/giờ	16-32 mg/giờ	Mục 3.7.5	https://drugs.com/dosage/clevidipine.html	t	\N
+DRUG0059	Esmolol	B	CB	Thuốc Truyền Tĩnh Mạch	50 mcg/kg/phút	50-250 mcg/kg/phút	300 mcg/kg/phút	Mục 3.7.5	https://drugs.com/dosage/esmolol.html	t	\N
+DRUG0060	Nitroprusside	\N	Giãn mạch	Thuốc Truyền Tĩnh Mạch	0.3 mcg/kg/phút	0.3-10 mcg/kg/phút	10 mcg/kg/phút	Mục 3.7.5	https://drugs.com/dosage/nitroprusside.html	t	\N
+DRUG0061	Nitroglycerin	\N	Giãn mạch	Thuốc Truyền Tĩnh Mạch	5 mcg/phút	10 mcg/phút	20 mcg/phút	Mục 3.7.5	https://drugs.com/dosage/nitroglycerin.html	t	\N
+DRUG0062	Dapagliflozin	SGLT2i	SGLT2i	Thuốc Uống	5-10 mg	10 mg	10 mg	Mục 3.7.1	\N	t	\N
+DRUG0063	Empagliflozin	SGLT2i	SGLT2i	Thuốc Uống	10 mg	10 mg	25 mg	Mục 3.7.1	\N	t	\N
+DRUG0064	Urapidil	\N	Ức chế thụ thể Alpha giao cảm	Thuốc Uống/Thuốc Truyền Tĩnh Mạch	\N	\N	\N	\N	\N	t	\N
+DRUG0065	Aspirin	\N	\N	\N	75 - 81 mg/ngày	\N	150 - 162 mg/ngày	\N	https://www.drugs.com/pregnancy/aspirin.html ; https://www.drugs.com/dosage/aspirin.html	t	\N
 \.
 
-COPY public.decision_edges ("id", "from_node_id", "to_node_id", "traversal_order") FROM stdin;
-d1dde666-6bc9-558f-b5f3-32de9f51c365	d4a79b1e-2fd3-5526-ba61-0afcc5e4549e	8b75cbfa-8d26-519f-a80b-d346aa4c37fb	1
-34aac5e5-71d5-5f2e-a9b0-aa85b828c887	d4a79b1e-2fd3-5526-ba61-0afcc5e4549e	103a7134-7357-55fd-922e-a4bfb6d3fe11	2
-3196bcf2-a70e-57a4-b3f1-ea1b2c1e31cf	d4a79b1e-2fd3-5526-ba61-0afcc5e4549e	0eca67b2-9c2e-5614-993f-951e970b34ef	3
-e0d6cefe-8a23-5104-b12e-c48071b4633a	d4a79b1e-2fd3-5526-ba61-0afcc5e4549e	d4050ff3-58a2-53b2-ba4a-876f8d3fc3e7	4
-486a05a6-3946-569d-bb93-39059f287955	8b75cbfa-8d26-519f-a80b-d346aa4c37fb	f551f2cf-18f7-5261-a322-a02e58f1bf30	1
-a7a360e8-8941-591b-9429-1e2754e9aeca	8b75cbfa-8d26-519f-a80b-d346aa4c37fb	d26f0496-b35f-5909-8975-c2329b388ea9	2
-0c8f0fb6-9c0f-50dc-975e-5038bd665202	8b75cbfa-8d26-519f-a80b-d346aa4c37fb	6de65559-da01-52b5-94e5-a2a916e248e8	3
-26a29ff7-6426-552e-8bee-ace4f234ca1e	8b75cbfa-8d26-519f-a80b-d346aa4c37fb	e178b23e-f8e8-5d9f-8207-34404155166b	4
-beee2c29-de53-5a58-a91d-8dba76522a72	103a7134-7357-55fd-922e-a4bfb6d3fe11	f551f2cf-18f7-5261-a322-a02e58f1bf30	1
-25b975f1-3232-5263-8f5e-26e81e7c3fda	103a7134-7357-55fd-922e-a4bfb6d3fe11	d26f0496-b35f-5909-8975-c2329b388ea9	2
-0e3ca9b1-e038-5377-9f4d-0de3d703b3ef	103a7134-7357-55fd-922e-a4bfb6d3fe11	6de65559-da01-52b5-94e5-a2a916e248e8	3
-8a0de5cc-fce5-55b1-b98b-5c170a49ecd6	103a7134-7357-55fd-922e-a4bfb6d3fe11	e178b23e-f8e8-5d9f-8207-34404155166b	4
-f02c666c-2fa8-56a7-a8ec-16c4fa0e1279	0eca67b2-9c2e-5614-993f-951e970b34ef	de89d76b-1556-5e3c-b13d-902195434de3	1
-28765cdf-5c26-5be5-baec-da1903ff58e7	d4050ff3-58a2-53b2-ba4a-876f8d3fc3e7	de89d76b-1556-5e3c-b13d-902195434de3	1
-4fa5272a-e55b-575c-97dc-41c1fffdd7a8	f551f2cf-18f7-5261-a322-a02e58f1bf30	6299ea87-2ba4-52b4-9752-bbd2a796e0ff	1
-fc87d331-7753-507f-b254-cf8f0e048988	d26f0496-b35f-5909-8975-c2329b388ea9	b2f92cb6-82fc-52ba-a4ca-54257fc2f0b7	1
-7ade7690-1566-57d2-ad0f-e0bbae54c049	6de65559-da01-52b5-94e5-a2a916e248e8	ef39acd8-3c32-5eda-bca8-a6c79adfcaf2	1
-d13e07b4-3771-539d-a3c4-f7224cfd25a9	e178b23e-f8e8-5d9f-8207-34404155166b	bc668dbe-04db-5f5d-a80d-fd1a51f5037b	1
-1a1582ce-e757-5d37-8e27-65ac488187cd	6299ea87-2ba4-52b4-9752-bbd2a796e0ff	de89d76b-1556-5e3c-b13d-902195434de3	1
-efe639d5-0fdb-5d06-826c-e3b960beeb7d	b2f92cb6-82fc-52ba-a4ca-54257fc2f0b7	de89d76b-1556-5e3c-b13d-902195434de3	1
-f40d14d7-364c-5418-b791-bceda4a77b1f	ef39acd8-3c32-5eda-bca8-a6c79adfcaf2	de89d76b-1556-5e3c-b13d-902195434de3	1
-d2b8bd11-6a7f-5c6e-b8ba-4c6de0a40f73	bc668dbe-04db-5f5d-a80d-fd1a51f5037b	de89d76b-1556-5e3c-b13d-902195434de3	1
+COPY public.patients ("id", "fhir_id", "gender", "birth_date", "risk_factor_count", "created_at", "department") FROM stdin;
 \.
 
-COPY public.node_source_references ("id", "node_id", "source_title", "section_path", "locator", "locator_detail", "printed_page_numbers", "pdf_page_numbers", "reference_note", "reference_order") FROM stdin;
-2536a09d-9952-5323-9999-66e45b9d0b4f	d4a79b1e-2fd3-5526-ba61-0afcc5e4549e	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.2. T\u0103ng huy\u1ebft \u00e1p v\u00e0 B\u1ec7nh m\u1ea1ch v\u00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
-d579f79d-50da-55c2-b0ef-e2121a6b3dba	8b75cbfa-8d26-519f-a80b-d346aa4c37fb	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.2. T\u0103ng huy\u1ebft \u00e1p v\u00e0 B\u1ec7nh m\u1ea1ch v\u00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
-511c3ec6-61e4-509a-9964-98c956e3f734	103a7134-7357-55fd-922e-a4bfb6d3fe11	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.2. T\u0103ng huy\u1ebft \u00e1p v\u00e0 B\u1ec7nh m\u1ea1ch v\u00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
-a2cc2994-d716-55d4-99e5-d3d11c8f83f2	0eca67b2-9c2e-5614-993f-951e970b34ef	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.2. T\u0103ng huy\u1ebft \u00e1p v\u00e0 B\u1ec7nh m\u1ea1ch v\u00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
-1e708b9f-4976-5ea4-b07d-fdfe9a57ad16	d4050ff3-58a2-53b2-ba4a-876f8d3fc3e7	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.2. T\u0103ng huy\u1ebft \u00e1p v\u00e0 B\u1ec7nh m\u1ea1ch v\u00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
-1aadc806-a790-5269-aa6d-cfd8e8ef79c7	f551f2cf-18f7-5261-a322-a02e58f1bf30	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.2. T\u0103ng huy\u1ebft \u00e1p v\u00e0 B\u1ec7nh m\u1ea1ch v\u00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
-e4c9819a-ad53-564f-80e8-5c2dffffd38c	d26f0496-b35f-5909-8975-c2329b388ea9	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.2. T\u0103ng huy\u1ebft \u00e1p v\u00e0 B\u1ec7nh m\u1ea1ch v\u00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
-8c2a4899-b814-556e-acf8-762b5adc4903	6de65559-da01-52b5-94e5-a2a916e248e8	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.2. T\u0103ng huy\u1ebft \u00e1p v\u00e0 B\u1ec7nh m\u1ea1ch v\u00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
-1319318a-c0bf-59d8-a373-172544ef2a38	e178b23e-f8e8-5d9f-8207-34404155166b	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.2. T\u0103ng huy\u1ebft \u00e1p v\u00e0 B\u1ec7nh m\u1ea1ch v\u00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
-d81384bc-bd29-5307-9042-38417d2619f8	6299ea87-2ba4-52b4-9752-bbd2a796e0ff	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.2. T\u0103ng huy\u1ebft \u00e1p v\u00e0 B\u1ec7nh m\u1ea1ch v\u00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
-cecab4a3-57e2-5199-8826-1f5549f0cbc6	b2f92cb6-82fc-52ba-a4ca-54257fc2f0b7	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.2. T\u0103ng huy\u1ebft \u00e1p v\u00e0 B\u1ec7nh m\u1ea1ch v\u00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
-31882bf4-1488-5904-8267-046f668f0128	ef39acd8-3c32-5eda-bca8-a6c79adfcaf2	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.2. T\u0103ng huy\u1ebft \u00e1p v\u00e0 B\u1ec7nh m\u1ea1ch v\u00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
-507db48f-5edf-5e1e-b65f-8c0336b33ec5	bc668dbe-04db-5f5d-a80d-fd1a51f5037b	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.2. T\u0103ng huy\u1ebft \u00e1p v\u00e0 B\u1ec7nh m\u1ea1ch v\u00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
-7d316700-9551-5c6a-8557-cb92f6f7a023	de89d76b-1556-5e3c-b13d-902195434de3	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.2. T\u0103ng huy\u1ebft \u00e1p v\u00e0 B\u1ec7nh m\u1ea1ch v\u00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
-e1989e2b-d545-5022-9e71-e7b02ca1a852	c92773f1-5078-502d-b5eb-a9a8c72f9b52	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.2. T\u0103ng huy\u1ebft \u00e1p v\u00e0 B\u1ec7nh m\u1ea1ch v\u00e0nh"]	Bảng 19. Điều trị tăng huyết áp có bệnh mạch vành	\N	{33}	{35}	\N	1
+COPY public.patient_conditions ("id", "patient_id", "fhir_condition_id", "icd10_code", "snomed_code", "condition_text", "created_at") FROM stdin;
 \.
 
-
--- ================================================================
--- Tree 10: hypertension-heart-failure (source: seed_hypertension_heart_failure.sql)
--- ================================================================
-COPY public.decision_trees ("id", "tree_key", "name_en", "name_vi", "created_at", "updated_at") FROM stdin;
-1c456604-8db8-59b5-8811-6e638ca7ab6e	hypertension-heart-failure	Hypertension + Heart Failure	Cây 10: THA + suy tim	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
+COPY public.visits ("id", "patient_id", "fhir_encounter_id", "visit_number", "visit_date", "facility_capability", "is_early_revisit", "early_revisit_reason", "scheduled_next_visit_date", "clinic_sbp", "clinic_dbp", "bp_target_sbp", "bp_target_dbp", "bp_controlled", "hypertension_class", "risk_level", "cdss_recommended_action", "adherent_to_cdss", "created_at") FROM stdin;
 \.
 
-COPY public.decision_nodes ("id", "tree_id", "node_key", "node_type", "text_en", "text_vi", "condition_definition", "context_patch", "action_payload", "global_config", "link_target_tree_key", "link_target_node_key", "display_order", "created_at", "updated_at") FROM stdin;
-0878afaa-2a79-5188-94f6-c27d064f9402	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_START	START	Tree 3: Blood Pressure Thresholds and Targets	Cây 3 Ngưỡng huyết áp và đích điều trị	\N	\N	\N	\N	\N	\N	1	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-9bc0e11b-2f69-5420-a680-6165ec1e61fd	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_C_BP1	CONDITION	SBP < 130 and DBP < 85	HATT < 130 mmHg và HATTr < 85 mmHg	{"all": [{"op": "lt", "path": "input.current_clinic_sbp", "value": 130}, {"op": "lt", "path": "input.current_clinic_dbp", "value": 85}]}	\N	\N	\N	\N	\N	2	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-0d880900-1578-512f-993d-012bf287ed9c	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_C_BP2	CONDITION	SBP >= 130 or DBP >= 85	HATT >= 130 mmHg Hoặc HATTr >= 85 mmHg	{"any": [{"op": "gte", "path": "input.current_clinic_sbp", "value": 130}, {"op": "gte", "path": "input.current_clinic_dbp", "value": 85}]}	\N	\N	\N	\N	\N	3	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-31a12b62-51e6-595b-bb87-5e214f2f8f97	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_A_EVAL_EF	INFERENCE	Evaluate ejection fraction (EF) and heart structure	Đánh giá phân suất tống máu(EF) và cấu trúc tim	\N	\N	{"action_type": "EVALUATE_EF_AND_STRUCTURE"}	\N	\N	\N	4	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-4e8ed9cf-1693-5ca9-9c3e-6c1abbfc8143	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_C_HFREF	CONDITION	Heart Failure with reduced EF (HFrEF)	Suy tim EF giảm (HFrEF)	{"op": "eq", "path": "input.has_hfref", "value": true}	\N	\N	\N	\N	\N	5	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-3bef0da4-1b69-573b-b077-07a8d46a1584	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_C_HFMREF	CONDITION	Heart Failure with mildly reduced EF (HFmrEF)	Suy tim EF giảm nhẹ (HFmrEF)	{"op": "eq", "path": "input.has_hfmref", "value": true}	\N	\N	\N	\N	\N	6	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-4227dbf8-f310-59cc-9f5f-75bdf08459c8	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_C_HFPEF	CONDITION	Heart Failure with preserved EF (HFpEF)	Suy tim EF bảo tồn (HFpEF)	{"op": "eq", "path": "input.has_hfpef", "value": true}	\N	\N	\N	\N	\N	7	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-49dfc288-d480-5262-a05e-9edad085b25a	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_C_LVH	CONDITION	Left ventricular hypertrophy (LVH)	Phì đại thất trái (LVH)	{"op": "eq", "path": "input.has_lvh", "value": true}	\N	\N	\N	\N	\N	8	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-877ac137-c482-5091-9494-bd882b0cf7cd	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_HFREF	INFERENCE	Combine A + B + D and/or Aldosterone antagonist + SGLT2i. B: (bisoprolol, carvedilol, metoprolol, nebivolol)	Phối hợp A + B + D và/hoặc kháng aldosterone + SGLT2i. B: (bisoprolol, carvedilol, metoprolol, nebivolol)	\N	\N	{"action_type": "COMBINE_ABD_ALDO_SGLT2I"}	\N	\N	\N	9	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-465565d5-433a-563c-8b06-78b98785b814	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_HFMREF_1	INFERENCE	Combine D and SGLT2i and Aldosterone antagonist	Phối hợp D và SGLT2i và kháng Aldosterone	\N	\N	{"action_type": "COMBINE_D_SGLT2I_ALDO"}	\N	\N	\N	10	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-339634e2-d9f3-5366-b8b0-60cba53abba6	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_HFMREF_2	INFERENCE	Add A (ARNI or CTTA or UCMC)	Phối hợp thêm A (ARNI hoặc CTTA hoặc UCMC)	\N	\N	{"action_type": "ADD_A_ARNI_CTTA_UCMC"}	\N	\N	\N	11	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-30cee5c4-7eba-556e-8b51-dea56475179e	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_HFPEF_1	INFERENCE	Combine D and SGLT2i and Aldosterone antagonist	Phối hợp D và SGLT2i và kháng Aldosterone	\N	\N	{"action_type": "COMBINE_D_SGLT2I_ALDO"}	\N	\N	\N	12	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-debdecef-88df-5601-8cfc-b5eb91b8b08f	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_HFPEF_2	INFERENCE	Add A (ARNI and CTTA)	Phối hợp thêm A (ARNI và CTTA)	\N	\N	{"action_type": "ADD_A_ARNI_CTTA"}	\N	\N	\N	13	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-5880accb-c184-5bfe-a6c0-78845c4ba7be	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_LVH	INFERENCE	Combine A + C or A + D	Phối hợp A + C hoặc A + D	\N	\N	{"action_type": "COMBINE_AC_OR_AD"}	\N	\N	\N	14	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_C_TARGET_NOT_REACHED	CONDITION	BP target not reached	HA không đạt đích điều trị	{"op": "eq", "path": "input.bp_target_reached", "value": false}	\N	\N	\N	\N	\N	15	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-d8271d2d-79ff-50e5-be69-ee29cc68f432	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_C_TARGET_REACHED	CONDITION	BP target reached	HA đã đạt đích điều trị	{"op": "eq", "path": "input.bp_target_reached", "value": true}	\N	\N	\N	\N	\N	16	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-3f8ae7a2-1a20-5a7a-8f80-0abb5eed489e	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_ADD_CCB	INFERENCE	Add Dihydropyridine CCB	Thêm CKCa nhóm Dihydropyridine	\N	\N	{"action_type": "ADD_DIHYDROPYRIDINE_CCB"}	\N	\N	\N	17	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-ca0c7576-4117-510d-b28b-6eff717791f7	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_ADJUST	INFERENCE	Adjust drug dosage and monitor	Điều chỉnh liều lượng thuốc và theo dõi	\N	\N	{"action_type": "ADJUST_DOSAGE_AND_MONITOR"}	\N	\N	\N	18	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-1208d7cb-f28c-5131-afad-9249828c164c	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_I_MAINTAIN	INFERENCE	Maintain regimen	Duy trì phác đồ	\N	\N	{"action_type": "MAINTAIN_REGIMEN"}	\N	\N	\N	19	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-a1b2c3d4-e5f6-5a7b-8c9d-0e1f2a3b4c5d	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_LINK_ESSENTIAL	LINK	Tree 4: Essential Treatment Strategy	Cây 4: Chiến lược điều trị thiết yếu	\N	\N	\N	\N	essential-treatment-strategy	\N	20	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
-b2c3d4e5-f6a7-5b8c-9d0e-1f2a3b4c5d6e	1c456604-8db8-59b5-8811-6e638ca7ab6e	T10_LINK_OPTIMAL	LINK	Tree 5: Optimal Treatment Strategy	Cây 5: Chiến lược điều trị tối ưu	\N	\N	\N	\N	optimal-treatment-strategy	\N	21	2026-07-05 00:00:00.000000+00	2026-07-05 00:00:00.000000+00
+COPY public.visit_observations ("id", "visit_id", "loinc_code", "display_name", "value", "unit", "created_at") FROM stdin;
 \.
 
-COPY public.decision_edges ("id", "from_node_id", "to_node_id", "traversal_order") FROM stdin;
-17ec4ab3-c516-5bbc-8d3f-7939b2750532	0878afaa-2a79-5188-94f6-c27d064f9402	9bc0e11b-2f69-5420-a680-6165ec1e61fd	1
-4da9327a-b69b-56ca-a9e1-30e035facb51	0878afaa-2a79-5188-94f6-c27d064f9402	0d880900-1578-512f-993d-012bf287ed9c	2
-1ec8426a-e5ac-5944-bc14-f2db7559fd2f	0d880900-1578-512f-993d-012bf287ed9c	31a12b62-51e6-595b-bb87-5e214f2f8f97	1
-d3a01d27-5f8a-5c7b-9125-073e76eb67a4	31a12b62-51e6-595b-bb87-5e214f2f8f97	4e8ed9cf-1693-5ca9-9c3e-6c1abbfc8143	1
-3838d992-8e37-51f2-8daa-5897392c54a8	31a12b62-51e6-595b-bb87-5e214f2f8f97	3bef0da4-1b69-573b-b077-07a8d46a1584	2
-be94686c-fc70-5479-a28b-3c5209e9cff7	31a12b62-51e6-595b-bb87-5e214f2f8f97	4227dbf8-f310-59cc-9f5f-75bdf08459c8	3
-e8580ea2-2802-5ac6-ace9-f14cfb1b4d42	31a12b62-51e6-595b-bb87-5e214f2f8f97	49dfc288-d480-5262-a05e-9edad085b25a	4
-0c873821-a364-52f2-be42-f66535f910ed	4e8ed9cf-1693-5ca9-9c3e-6c1abbfc8143	877ac137-c482-5091-9494-bd882b0cf7cd	1
-34d494d9-586f-5727-8e6b-eefde78de6d0	877ac137-c482-5091-9494-bd882b0cf7cd	93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	1
-9f1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c	877ac137-c482-5091-9494-bd882b0cf7cd	d8271d2d-79ff-50e5-be69-ee29cc68f432	2
-dfee59ac-2d23-559e-80ba-b60dd8ba33a7	49dfc288-d480-5262-a05e-9edad085b25a	5880accb-c184-5bfe-a6c0-78845c4ba7be	1
-c71a44d1-0412-568b-a36b-1bb7bd699b77	5880accb-c184-5bfe-a6c0-78845c4ba7be	93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	1
-a2b3c4d5-e6f7-8a9b-0c1d-2e3f4a5b6c7d	5880accb-c184-5bfe-a6c0-78845c4ba7be	d8271d2d-79ff-50e5-be69-ee29cc68f432	2
-adf69fd5-7e4b-5b38-aa2d-57308eaa3de9	3bef0da4-1b69-573b-b077-07a8d46a1584	465565d5-433a-563c-8b06-78b98785b814	1
-4fbfb060-bf0b-58c9-8d2c-17982208f3ba	465565d5-433a-563c-8b06-78b98785b814	339634e2-d9f3-5366-b8b0-60cba53abba6	1
-a69f9f2c-096d-5fb9-972e-f2695b740a25	339634e2-d9f3-5366-b8b0-60cba53abba6	93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	1
-383f2b44-bb73-5080-b05a-95cd2e96db8b	339634e2-d9f3-5366-b8b0-60cba53abba6	d8271d2d-79ff-50e5-be69-ee29cc68f432	2
-a7637926-2376-53d3-9cad-9de5387ee27e	4227dbf8-f310-59cc-9f5f-75bdf08459c8	30cee5c4-7eba-556e-8b51-dea56475179e	1
-6181d575-f571-53a0-a64a-a57cbde419dc	30cee5c4-7eba-556e-8b51-dea56475179e	debdecef-88df-5601-8cfc-b5eb91b8b08f	1
-88179ad8-1767-5b18-97d4-f38fd9b34b8a	debdecef-88df-5601-8cfc-b5eb91b8b08f	93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	1
-e14458f3-a3d0-5aa2-8d38-1f7a5d9735a4	debdecef-88df-5601-8cfc-b5eb91b8b08f	d8271d2d-79ff-50e5-be69-ee29cc68f432	2
-b1f6e489-a934-5a25-a8de-4b4d8ce64eea	93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	3f8ae7a2-1a20-5a7a-8f80-0abb5eed489e	1
-fe0dae5c-3849-5dc1-ae5b-0c6c8e84ac63	93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	ca0c7576-4117-510d-b28b-6eff717791f7	2
-cf52cec7-bdb7-5907-b4bd-3cde3b124370	d8271d2d-79ff-50e5-be69-ee29cc68f432	1208d7cb-f28c-5131-afad-9249828c164c	1
-712a167a-71d8-49ee-b18e-1cabfb1d9c13	9bc0e11b-2f69-5420-a680-6165ec1e61fd	a1b2c3d4-e5f6-5a7b-8c9d-0e1f2a3b4c5d	1
-c6d98ae7-1ad1-46e0-addb-f5d3445262ac	9bc0e11b-2f69-5420-a680-6165ec1e61fd	b2c3d4e5-f6a7-5b8c-9d0e-1f2a3b4c5d6e	2
-58ae285c-a1de-42c1-9f96-d71f8e00b424	3f8ae7a2-1a20-5a7a-8f80-0abb5eed489e	a1b2c3d4-e5f6-5a7b-8c9d-0e1f2a3b4c5d	1
-fb4d0f5d-fa87-4a9d-850d-50b5674c7046	3f8ae7a2-1a20-5a7a-8f80-0abb5eed489e	b2c3d4e5-f6a7-5b8c-9d0e-1f2a3b4c5d6e	2
-47890d90-00f5-4639-b3d2-339470b7fa26	1208d7cb-f28c-5131-afad-9249828c164c	a1b2c3d4-e5f6-5a7b-8c9d-0e1f2a3b4c5d	1
-89193e6d-857f-40fd-b3c2-9a4783e4efa2	1208d7cb-f28c-5131-afad-9249828c164c	b2c3d4e5-f6a7-5b8c-9d0e-1f2a3b4c5d6e	2
-cc1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c	ca0c7576-4117-510d-b28b-6eff717791f7	a1b2c3d4-e5f6-5a7b-8c9d-0e1f2a3b4c5d	1
-dd2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d	ca0c7576-4117-510d-b28b-6eff717791f7	b2c3d4e5-f6a7-5b8c-9d0e-1f2a3b4c5d6e	2
+COPY public.visit_medications ("id", "visit_id", "drug_id", "drug_name", "drug_class_note", "dose_value", "dose_unit", "created_at") FROM stdin;
 \.
 
-COPY public.node_source_references ("id", "node_id", "source_title", "section_path", "locator", "locator_detail", "printed_page_numbers", "pdf_page_numbers", "reference_note", "reference_order") FROM stdin;
-fbc35f92-b99c-533f-90c5-d39db270946c	0878afaa-2a79-5188-94f6-c27d064f9402	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-e6878866-fd77-5967-bf57-7986acbf53e8	9bc0e11b-2f69-5420-a680-6165ec1e61fd	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-b18ac834-249a-5861-807f-b6b39768e9ab	0d880900-1578-512f-993d-012bf287ed9c	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-f5306c91-17fd-58d6-876a-bb3792d1230a	31a12b62-51e6-595b-bb87-5e214f2f8f97	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-6af72ade-a0d0-5c68-903a-4645d43d246a	4e8ed9cf-1693-5ca9-9c3e-6c1abbfc8143	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-79033623-bf6c-5298-9fa8-f8861a4de5ba	3bef0da4-1b69-573b-b077-07a8d46a1584	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-ff922ddd-e0c1-5a80-addd-78c96e2aed80	4227dbf8-f310-59cc-9f5f-75bdf08459c8	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-5b5f9261-df08-5c62-a64a-72b1ce42f424	49dfc288-d480-5262-a05e-9edad085b25a	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-239eac03-1367-5ec7-97e1-3c087c91a94b	877ac137-c482-5091-9494-bd882b0cf7cd	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-525d3af8-ad8d-50b6-bbff-2f5fc8202858	465565d5-433a-563c-8b06-78b98785b814	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-0fab1d4c-0b67-59e0-91a6-a4dec32fd463	339634e2-d9f3-5366-b8b0-60cba53abba6	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-ceb115eb-da2f-570b-a6bd-34c27d627b2f	30cee5c4-7eba-556e-8b51-dea56475179e	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-67f9d70a-2dc8-5e8e-a1c1-300eb1bdc412	debdecef-88df-5601-8cfc-b5eb91b8b08f	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-3c6445b6-2d18-5dd8-baa9-416545a5a798	5880accb-c184-5bfe-a6c0-78845c4ba7be	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-03ddff06-0e41-5a53-b2d8-b30ef5132d84	3f8ae7a2-1a20-5a7a-8f80-0abb5eed489e	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-f331fd7c-edbc-5a60-87b0-3f75d56aa3b8	93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-d8909b97-057e-5ab4-863e-5d37c8caecfb	d8271d2d-79ff-50e5-be69-ee29cc68f432	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-0df45abf-3279-5bf5-9057-fe4ade2cfb42	ca0c7576-4117-510d-b28b-6eff717791f7	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
-782d3dfd-a68d-527e-b589-acf23529c583	1208d7cb-f28c-5131-afad-9249828c164c	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.7. T\u0103ng huy\u1ebft \u00e1p v\u00e0 m\u1ed9t s\u1ed1 b\u1ec7nh \u0111\u1ed3ng m\u1eafc", "3.7.3. T\u0103ng huy\u1ebft \u00e1p v\u00e0 Suy tim"]	Bảng 20. Khuyến cáo điều trị tăng huyết áp và Suy tim	\N	{33,34}	{35,36}	\N	1
+COPY public.fhir_import_batches ("id", "source_label", "patient_count", "visit_count", "error_count", "errors", "imported_at") FROM stdin;
 \.
-
-
-
--- ================================================================
--- Tree 11: hypertension-chronic-kidney-disease (source: tree11.sql)
--- ================================================================
---
--- CDSS decision-tree insert script
--- Tree: "Cây 11: THA + Bệnh thận mạn - Minh"
--- Source: Bảng 21, Bảng 22, Mục 3.7.4 (Khuyến cáo THA VNHA 2022.pdf):
---   Mục 3.7.4 intro -> printed p.34 / PDF page 36
---   Bảng 21 & Bảng 22 tables -> printed p.35 / PDF page 37
---
--- This is the tree_key = 'hypertension-chronic-kidney-disease' target that
--- Tree 3's T3_LINK_18_69_CHRONIC_KIDNEY_DISEASE_MODIFIER and
--- T3_LINK_AGE_70_OR_HIGHER_CHRONIC_KIDNEY_DISEASE_MODIFIER already link out
--- to (both with a null link_target_node_key, resuming at this tree's START)
--- — it did not exist yet (0 rows) before this file.
---
--- Built following the same conventions and lessons as tree6.sql/tree8.sql/
--- tree12.sql (see backups/shared_conventions.txt):
---   * gen_random_uuid()/now() for all ids/timestamps.
---   * Any fact not in the system's closed input contract
---     (docs/cdss/context-contract.md, docs/cdss/traversal-engine-contract.md,
---     frontend's MockPatientSidebar.tsx) is written through a node whose
---     context_patch merges a static default, then COPY_PATH(required:false)
---     overlays the caller-supplied value if present — never a hard `eq` on a
---     possibly-absent input.* path. Applies here to has_kidney_transplant,
---     has_prior_creatinine_test, still_using_ras_inhibitor, and
---     creatinine_increased_over_30_percent, none of which are established.
---   * combination_options uses the A/B/C/D class-letter shape, matching
---     Tree 4/5/6/8 exactly (A = ACEI/ARB/ARNI, B = beta-blocker,
---     C = calcium-channel blocker, D = thiazide-like diuretic).
---   * No specific drug names anywhere (a separate drug table is planned per
---     the author) — the GLOBAL glossary below is class-letter abbreviations
---     only, same as Tree 8's, not a drug-name list.
---   * Every entry point into a boolean-check CONDITION pair offers BOTH
---     sibling candidates (the has-X/no-X lesson from tree6.sql), and the
---     shared T11_LINK_ESSENTIAL_TREATMENT_STRATEGY /
---     T11_LINK_OPTIMAL_TREATMENT_STRATEGY pair is reused from every
---     "maintain/adjust regimen" exit point, matching Tree 8's own
---     multi-entry-point-into-one-LINK-pair pattern.
---
--- DELIBERATE OMISSION: Bảng 22 (Loại III) also states "Không khuyến cáo kết
--- hợp hai nhóm thuốc ức chế RAS" (dual RAS-inhibitor blockade not
--- recommended) — the exact same rule Tree 6 already enforces
--- (T6_C_HAS_DUPLICATE_DRUG_CLASS / T6_C_DUPLICATE_IS_RAS_INHIBITOR). Since
--- every path here ends at Tree 4/5 -> Tree 6 for final agent-level
--- resolution, this tree does not duplicate that check itself, matching how
--- Tree 8 also does not duplicate it.
---
--- Node type mapping (matching the established legend from tree6/8/12):
---   green      Start Node          -> START
---   yellow     Condition Check     -> CONDITION
---   blue       Trigger/Input Node  -> INFERENCE (context_patch)
---   orange     Action/Output Node  -> ACTION
---   pink/red   Link Node           -> LINK
---   gray       Global Node         -> GLOBAL
---
--- IMPORTANT — per the author: this flowchart (visit type -> initial
--- combination -> creatinine-monitoring branch -> maintain/adjust -> link to
--- Tree 4/5) is a self-assembled diagram cross-checked against Bảng 21/22 and
--- Mục 3.7.4 for clinical accuracy, not a single original figure in the PDF.
---
--- Use: cmd /c "docker compose exec -T postgres psql -U cdss -d cdss < backups\tree11.sql"
---
-
--- ============================================================
--- 0. Remove the existing chronic-kidney-disease tree, if present
--- ============================================================
-DELETE FROM public.node_source_references
-WHERE node_id IN (
-        SELECT n.id
-        FROM public.decision_nodes n
-            JOIN public.decision_trees t ON t.id = n.tree_id
-        WHERE t.tree_key = 'hypertension-chronic-kidney-disease'
-    );
-DELETE FROM public.decision_edges
-WHERE from_node_id IN (
-        SELECT n.id
-        FROM public.decision_nodes n
-            JOIN public.decision_trees t ON t.id = n.tree_id
-        WHERE t.tree_key = 'hypertension-chronic-kidney-disease'
-    );
-DELETE FROM public.decision_nodes
-WHERE tree_id IN (
-        SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-chronic-kidney-disease'
-    );
-DELETE FROM public.decision_trees WHERE tree_key = 'hypertension-chronic-kidney-disease';
--- ============================================================
--- 1. Tree
--- ============================================================
-INSERT INTO public.decision_trees (
-        "id", "tree_key", "name_en", "name_vi", "created_at", "updated_at"
-    )
-VALUES (
-        gen_random_uuid(), 'hypertension-chronic-kidney-disease',
-        'Hypertension With Chronic Kidney Disease', 'THA + Bệnh Thận Mạn', now(), now()
-    );
--- ============================================================
--- 2. Nodes
--- ============================================================
-WITH tree_ctx AS (
-    SELECT id AS tree_id FROM public.decision_trees WHERE tree_key = 'hypertension-chronic-kidney-disease'
-),
-node_seed (
-    node_key, node_type, text_en, text_vi,
-    condition_definition, context_patch, action_payload, global_config,
-    link_target_tree_key, link_target_node_key, display_order
-) AS (
-    VALUES
-    -- --- Entry: transplant-status branch ---
-    (
-        'T11_START_BP_TARGET_STATUS', 'START',
-        'Tree 3: Blood pressure threshold and treatment target',
-        'Cây 3: Ngưỡng huyết áp và đích điều trị',
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 0
-    ),
-    (
-        'T11_INF_DETERMINE_TRANSPLANT_STATUS', 'INFERENCE',
-        'Determine kidney transplant status', 'Xác định tình trạng ghép thận',
-        NULL::jsonb,
-        '{"treatment":{"has_kidney_transplant":false},"operations":[{"op":"COPY_PATH","from_path":"input.has_kidney_transplant","to_path":"context.treatment.has_kidney_transplant","required":false}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 1
-    ),
-    (
-        'T11_C_NOT_TRANSPLANTED', 'CONDITION', 'Not kidney-transplanted',
-        'BỆNH NHÂN KHÔNG GHÉP THẬN',
-        '{"path":"context.treatment.has_kidney_transplant","op":"eq","value":false}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 2
-    ),
-    (
-        'T11_C_TRANSPLANTED', 'CONDITION', 'Kidney-transplanted',
-        'BỆNH NHÂN ĐÃ GHÉP THẬN',
-        '{"path":"context.treatment.has_kidney_transplant","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 3
-    ),
-    -- --- Nhánh A: not transplanted ---
-    (
-        'T11_INF_REGIMEN_OPTIONS', 'INFERENCE',
-        'A + C, or A + D (ACE inhibitor/ARB + calcium-channel blocker, or ACE inhibitor/ARB + thiazide-like diuretic)',
-        'A + C, hoặc A + D (ƯCMC/CTTA + CKCa, hoặc ƯCMC/CTTA + LT Thiazide-like)',
-        NULL::jsonb,
-        '{"treatment_preferences":{"combination_options":[["A","C"],["A","D"]]}}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 4
-    ),
-    (
-        'T11_INF_DETERMINE_CREATININE_TEST_STATUS', 'INFERENCE',
-        'Determine whether baseline creatinine was tested before',
-        'Xác định đã xét nghiệm chỉ số creatinine nền trước đó hay chưa',
-        NULL::jsonb,
-        '{"treatment":{"has_prior_creatinine_test":false},"operations":[{"op":"COPY_PATH","from_path":"input.has_prior_creatinine_test","to_path":"context.treatment.has_prior_creatinine_test","required":false}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 5
-    ),
-    (
-        'T11_C_NO_PRIOR_CREATININE_TEST', 'CONDITION', 'No prior creatinine test',
-        'Chưa xét nghiệm chỉ số creatinine trước đó',
-        '{"path":"context.treatment.has_prior_creatinine_test","op":"eq","value":false}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 6
-    ),
-    (
-        'T11_C_HAS_PRIOR_CREATININE_TEST', 'CONDITION',
-        'Creatinine tested 2-4 weeks prior',
-        'Từng xét nghiệm chỉ số creatinine trước đó 2-4 tuần',
-        '{"path":"context.treatment.has_prior_creatinine_test","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 7
-    ),
-    (
-        'T11_ACTION_TEST_CREATININE_AND_MONITOR', 'ACTION',
-        'Test creatinine and monitor after 2-4 weeks',
-        'Xét nghiệm chỉ số creatinine và theo dõi sau 2-4 tuần',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"TEST_CREATININE_AND_MONITOR","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":true}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 8
-    ),
-    (
-        'T11_INF_DETERMINE_RAS_INHIBITOR_USE_STATUS', 'INFERENCE',
-        'Determine whether the patient is still using the RAS-inhibitor (class A)',
-        'Xác định còn dùng thuốc nhóm A (ức chế RAS) hay không',
-        NULL::jsonb,
-        '{"treatment":{"still_using_ras_inhibitor":true},"operations":[{"op":"COPY_PATH","from_path":"input.still_using_ras_inhibitor","to_path":"context.treatment.still_using_ras_inhibitor","required":false}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 9
-    ),
-    (
-        'T11_C_STILL_USING_RAS_INHIBITOR', 'CONDITION',
-        'Still using the RAS-inhibitor (class A)', 'Có còn dùng thuốc nhóm A (ức chế RAS)',
-        '{"path":"context.treatment.still_using_ras_inhibitor","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 10
-    ),
-    (
-        'T11_C_NOT_USING_RAS_INHIBITOR', 'CONDITION',
-        'Has stopped or is not using the RAS-inhibitor (class A)',
-        'Đã ngừng A hoặc không dùng A',
-        '{"path":"context.treatment.still_using_ras_inhibitor","op":"eq","value":false}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 11
-    ),
-    (
-        'T11_ACTION_TEST_CREATININE_COMPARE_PRIOR', 'ACTION',
-        'Test creatinine and compare with the prior measurement',
-        'Xét nghiệm chỉ số creatinine và đối chiếu với lần đo trước',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"TEST_CREATININE_COMPARE_PRIOR","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 12
-    ),
-    (
-        'T11_INF_DETERMINE_CREATININE_INCREASE_STATUS', 'INFERENCE',
-        'Determine whether creatinine increased by more than 30%',
-        'Xác định creatinine có tăng >30% hay không',
-        NULL::jsonb,
-        '{"treatment":{"creatinine_increased_over_30_percent":false},"operations":[{"op":"COPY_PATH","from_path":"input.creatinine_increased_over_30_percent","to_path":"context.treatment.creatinine_increased_over_30_percent","required":false}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 13
-    ),
-    (
-        'T11_C_CREATININE_NOT_INCREASED', 'CONDITION',
-        'Creatinine has not increased by more than 30%', 'Creatinine không tăng >30%',
-        '{"path":"context.treatment.creatinine_increased_over_30_percent","op":"eq","value":false}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 14
-    ),
-    (
-        'T11_C_CREATININE_INCREASED_OVER_30_PERCENT', 'CONDITION',
-        'Creatinine increased by more than 30%', 'Creatinine tăng >30%',
-        '{"path":"context.treatment.creatinine_increased_over_30_percent","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 15
-    ),
-    (
-        'T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE', 'ACTION', 'Maintain regimen',
-        'Duy trì phác đồ',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"MAINTAIN_CURRENT_REGIMEN","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 16
-    ),
-    (
-        'T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR', 'ACTION',
-        'Reduce dose or stop the RAS-inhibitor (class A) combination',
-        'Giảm liều hoặc ngừng phối hợp A',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"REDUCE_DOSE_OR_STOP_RAS_INHIBITOR","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false,"requires_clinician_review":true}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 17
-    ),
-    (
-        'T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR', 'ACTION', 'Maintain regimen',
-        'Duy trì phác đồ',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"MAINTAIN_CURRENT_REGIMEN","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 18
-    ),
-    -- --- Nhánh B: kidney-transplanted ---
-    (
-        'T11_INF_POST_TRANSPLANT_REGIMEN_OPTIONS', 'INFERENCE',
-        'First-line choice after kidney transplant: C (dihydropyridine CCB) or A (ARB); BP target <130/80 mmHg',
-        'Lựa chọn đầu tay sau ghép thận: C (CKCa nhóm Dihydropyridine) hoặc A (CTTA); Mục tiêu HA <130/80 mmHg',
-        NULL::jsonb,
-        '{"treatment_preferences":{"combination_options":[["C"],["A"]]},"treatment":{"bp_target":{"sbp":{"upper_exclusive_mmhg":130},"dbp":{"upper_exclusive_mmhg":80},"source":"TREE_11_POST_TRANSPLANT"}}}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 19
-    ),
-    (
-        'T11_ACTION_MAINTAIN_REGIMEN_POST_TRANSPLANT', 'ACTION', 'Maintain regimen',
-        'Duy trì phác đồ',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"MAINTAIN_CURRENT_REGIMEN","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 20
-    ),
-    -- --- Shared exit: Tree 4/Tree 5 by facility capability ---
-    (
-        'T11_LINK_ESSENTIAL_TREATMENT_STRATEGY', 'LINK', 'Tree 4: Essential treatment strategy',
-        'Cây 4: Chiến lược điều trị thiết yếu',
-        '{"path":"input.facility_capability","op":"eq","value":"LIMITED_RESOURCES"}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb,
-        'essential-treatment-strategy', NULL::text, 21
-    ),
-    (
-        'T11_LINK_OPTIMAL_TREATMENT_STRATEGY', 'LINK', 'Tree 5: Optimal treatment strategy',
-        'Cây 5: Chiến lược điều trị tối ưu',
-        '{"path":"input.facility_capability","op":"eq","value":"FULL_RESOURCES"}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb,
-        'optimal-treatment-strategy', NULL::text, 22
-    ),
-    (
-        'T11_GLOBAL_ABBREVIATION_GLOSSARY', 'GLOBAL', 'Abbreviation glossary',
-        'Chú giải viết tắt',
-        NULL::jsonb, NULL::jsonb, NULL::jsonb,
-        '{"kind":"ABBREVIATION_GLOSSARY","purpose":"Chú giải các chữ viết tắt nhóm thuốc dùng trong Cây 11 (hệ thống A/B/C/D), theo chú thích Bảng 22.","entries":{"1_A_uc_che_he_RAS":{"label":"A: ức chế hệ RAS","UCMC":"ức chế men chuyển","CTTA":"chẹn thụ thể angiotensin II","ARNI":"chẹn thụ thể Angiotensine-neprisyline"},"4_B_chen_Beta":{"label":"B: chẹn Beta","CB":"chẹn Beta"},"3_C_chen_kenh_Canxi":{"label":"C: chẹn kênh Canxi","CKCa":"chẹn kênh Canxi"},"2_D_loi_tieu":{"label":"D: lợi tiểu","LT":"lợi tiểu"},"6_MRA":{"label":"MRA: thuốc đối kháng thụ thể mineralocorticoid"},"5_SGLT2i":{"label":"SGLT2i: thuốc ức chế đồng vận chuyển Natri-glucose 2"}}}'::jsonb,
-        NULL::text, NULL::text, 99
-    )
-)
-INSERT INTO public.decision_nodes (
-        "id", "tree_id", "node_key", "node_type", "text_en", "text_vi",
-        "condition_definition", "context_patch", "action_payload", "global_config",
-        "link_target_tree_key", "link_target_node_key", "display_order",
-        "created_at", "updated_at"
-    )
-SELECT gen_random_uuid(),
-    tree_ctx.tree_id,
-    node_seed.node_key,
-    node_seed.node_type::node_type,
-    node_seed.text_en,
-    node_seed.text_vi,
-    node_seed.condition_definition,
-    node_seed.context_patch,
-    node_seed.action_payload,
-    node_seed.global_config,
-    node_seed.link_target_tree_key,
-    node_seed.link_target_node_key,
-    node_seed.display_order,
-    now(),
-    now()
-FROM node_seed
-    CROSS JOIN tree_ctx;
--- ============================================================
--- 3. Edges
--- ============================================================
-WITH tree_ctx AS (
-    SELECT id AS tree_id FROM public.decision_trees WHERE tree_key = 'hypertension-chronic-kidney-disease'
-),
-edge_seed (from_node_key, to_node_key, traversal_order) AS (
-    VALUES
-    ('T11_START_BP_TARGET_STATUS', 'T11_INF_DETERMINE_TRANSPLANT_STATUS', 1),
-    ('T11_INF_DETERMINE_TRANSPLANT_STATUS', 'T11_C_NOT_TRANSPLANTED', 1),
-    ('T11_INF_DETERMINE_TRANSPLANT_STATUS', 'T11_C_TRANSPLANTED', 2),
-    -- Nhánh A
-    ('T11_C_NOT_TRANSPLANTED', 'T11_INF_REGIMEN_OPTIONS', 1),
-    ('T11_INF_REGIMEN_OPTIONS', 'T11_INF_DETERMINE_CREATININE_TEST_STATUS', 1),
-    ('T11_INF_DETERMINE_CREATININE_TEST_STATUS', 'T11_C_NO_PRIOR_CREATININE_TEST', 1),
-    ('T11_INF_DETERMINE_CREATININE_TEST_STATUS', 'T11_C_HAS_PRIOR_CREATININE_TEST', 2),
-    ('T11_C_NO_PRIOR_CREATININE_TEST', 'T11_ACTION_TEST_CREATININE_AND_MONITOR', 1),
-    ('T11_ACTION_TEST_CREATININE_AND_MONITOR', 'T11_LINK_ESSENTIAL_TREATMENT_STRATEGY', 1),
-    ('T11_ACTION_TEST_CREATININE_AND_MONITOR', 'T11_LINK_OPTIMAL_TREATMENT_STRATEGY', 2),
-    ('T11_C_HAS_PRIOR_CREATININE_TEST', 'T11_INF_DETERMINE_RAS_INHIBITOR_USE_STATUS', 1),
-    ('T11_INF_DETERMINE_RAS_INHIBITOR_USE_STATUS', 'T11_C_STILL_USING_RAS_INHIBITOR', 1),
-    ('T11_INF_DETERMINE_RAS_INHIBITOR_USE_STATUS', 'T11_C_NOT_USING_RAS_INHIBITOR', 2),
-    ('T11_C_STILL_USING_RAS_INHIBITOR', 'T11_ACTION_TEST_CREATININE_COMPARE_PRIOR', 1),
-    ('T11_ACTION_TEST_CREATININE_COMPARE_PRIOR', 'T11_INF_DETERMINE_CREATININE_INCREASE_STATUS', 1),
-    ('T11_INF_DETERMINE_CREATININE_INCREASE_STATUS', 'T11_C_CREATININE_NOT_INCREASED', 1),
-    ('T11_INF_DETERMINE_CREATININE_INCREASE_STATUS', 'T11_C_CREATININE_INCREASED_OVER_30_PERCENT', 2),
-    ('T11_C_CREATININE_NOT_INCREASED', 'T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE', 1),
-    ('T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE', 'T11_LINK_ESSENTIAL_TREATMENT_STRATEGY', 1),
-    ('T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE', 'T11_LINK_OPTIMAL_TREATMENT_STRATEGY', 2),
-    ('T11_C_CREATININE_INCREASED_OVER_30_PERCENT', 'T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR', 1),
-    ('T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR', 'T11_LINK_ESSENTIAL_TREATMENT_STRATEGY', 1),
-    ('T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR', 'T11_LINK_OPTIMAL_TREATMENT_STRATEGY', 2),
-    ('T11_C_NOT_USING_RAS_INHIBITOR', 'T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR', 1),
-    ('T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR', 'T11_LINK_ESSENTIAL_TREATMENT_STRATEGY', 1),
-    ('T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR', 'T11_LINK_OPTIMAL_TREATMENT_STRATEGY', 2),
-    -- Nhánh B
-    ('T11_C_TRANSPLANTED', 'T11_INF_POST_TRANSPLANT_REGIMEN_OPTIONS', 1),
-    ('T11_INF_POST_TRANSPLANT_REGIMEN_OPTIONS', 'T11_ACTION_MAINTAIN_REGIMEN_POST_TRANSPLANT', 1),
-    ('T11_ACTION_MAINTAIN_REGIMEN_POST_TRANSPLANT', 'T11_LINK_ESSENTIAL_TREATMENT_STRATEGY', 1),
-    ('T11_ACTION_MAINTAIN_REGIMEN_POST_TRANSPLANT', 'T11_LINK_OPTIMAL_TREATMENT_STRATEGY', 2)
-)
-INSERT INTO public.decision_edges ("id", "from_node_id", "to_node_id", "traversal_order")
-SELECT gen_random_uuid(), from_node.id, to_node.id, edge_seed.traversal_order
-FROM edge_seed
-    CROSS JOIN tree_ctx
-    JOIN public.decision_nodes from_node ON from_node.tree_id = tree_ctx.tree_id
-        AND from_node.node_key = edge_seed.from_node_key
-    JOIN public.decision_nodes to_node ON to_node.tree_id = tree_ctx.tree_id
-        AND to_node.node_key = edge_seed.to_node_key;
--- ============================================================
--- 4. Source references
--- ============================================================
-WITH tree_ctx AS (
-    SELECT id AS tree_id FROM public.decision_trees WHERE tree_key = 'hypertension-chronic-kidney-disease'
-),
-reference_seed (
-    node_key, source_title, section_path, locator, locator_detail,
-    printed_page_numbers, pdf_page_numbers, reference_note, reference_order
-) AS (
-    VALUES
-    ('T11_START_BP_TARGET_STATUS',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.7.4", "title": "Tăng huyết áp và Bệnh thận mạn"}]'::jsonb,
-     'Bảng 21. Ngưỡng điều trị và mục tiêu huyết áp ở bệnh nhân tăng huyết áp có bệnh thận mạn (4, 5)',
-     'Entry point of the CKD tree; BP should be lowered to <130/80 mmHg in CKD per SPRINT evidence.',
-     ARRAY[34]::smallint[], ARRAY[36]::smallint[],
-     'Điểm vào của Cây 11; HA cần được hạ xuống <130/80mmHg ở bệnh nhân bệnh thận mạn.', 1),
-    ('T11_INF_REGIMEN_OPTIONS',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.7.4", "title": "Tăng huyết áp và Bệnh thận mạn"}]'::jsonb,
-     'Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)',
-     'Initial therapy should combine a RAS-inhibitor with a CCB or a diuretic (Class I, Level A).',
-     ARRAY[35]::smallint[], ARRAY[37]::smallint[],
-     'Liệu pháp ban đầu nên kết hợp thuốc ức chế RAS với CKCa hoặc thuốc lợi tiểu.', 1),
-    ('T11_ACTION_TEST_CREATININE_AND_MONITOR',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.7.4", "title": "Tăng huyết áp và Bệnh thận mạn"}]'::jsonb,
-     'Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)',
-     'Monitor BP, creatinine, and potassium every 2-4 weeks after starting or increasing a RAS-inhibitor (Class I, Level A).',
-     ARRAY[35]::smallint[], ARRAY[37]::smallint[],
-     'Theo dõi HA, nồng độ creatinin và kali máu mỗi 2-4 tuần sau khi bắt đầu hoặc tăng liều thuốc ức chế RAS.', 1),
-    ('T11_ACTION_TEST_CREATININE_COMPARE_PRIOR',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.7.4", "title": "Tăng huyết áp và Bệnh thận mạn"}]'::jsonb,
-     'Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)',
-     'Monitor BP, creatinine, and potassium every 2-4 weeks after starting or increasing a RAS-inhibitor (Class I, Level A).',
-     ARRAY[35]::smallint[], ARRAY[37]::smallint[],
-     'Theo dõi HA, nồng độ creatinin và kali máu mỗi 2-4 tuần sau khi bắt đầu hoặc tăng liều thuốc ức chế RAS.', 1),
-    ('T11_C_CREATININE_INCREASED_OVER_30_PERCENT',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.7.4", "title": "Tăng huyết áp và Bệnh thận mạn"}]'::jsonb,
-     'Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)',
-     'If serum creatinine rises more than 30% within 4 weeks of starting/increasing a RAS-inhibitor, consider reducing the dose or stopping it (Class I).',
-     ARRAY[35]::smallint[], ARRAY[37]::smallint[],
-     'Nếu creatinin huyết thanh tăng hơn 30% trong vòng 4 tuần, xem xét giảm liều hoặc ngừng thuốc ức chế RAS.', 1),
-    ('T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.7.4", "title": "Tăng huyết áp và Bệnh thận mạn"}]'::jsonb,
-     'Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)',
-     'If serum creatinine rises more than 30% within 4 weeks of starting/increasing a RAS-inhibitor, consider reducing the dose or stopping it (Class I).',
-     ARRAY[35]::smallint[], ARRAY[37]::smallint[],
-     'Nếu creatinin huyết thanh tăng hơn 30% trong vòng 4 tuần, xem xét giảm liều hoặc ngừng thuốc ức chế RAS.', 1),
-    ('T11_INF_POST_TRANSPLANT_REGIMEN_OPTIONS',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.7.4", "title": "Tăng huyết áp và Bệnh thận mạn"}]'::jsonb,
-     'Bảng 21. Ngưỡng điều trị và mục tiêu huyết áp ở bệnh nhân tăng huyết áp có bệnh thận mạn (4, 5)',
-     'After kidney transplant, BP target should be <130/80 mmHg; dihydropyridine CCB or ARB is first-line (Bảng 21 Class I; Bảng 22 Class I, Level B).',
-     ARRAY[35]::smallint[], ARRAY[37]::smallint[],
-     'Sau ghép thận, mục tiêu HA nên <130/80mmHg; CKCa Dihydropyridine hoặc CTTA là thuốc được chọn đầu tay.', 1),
-    ('T11_GLOBAL_ABBREVIATION_GLOSSARY',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.7.4", "title": "Tăng huyết áp và Bệnh thận mạn"}]'::jsonb,
-     'Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5), chú thích',
-     'Footnote abbreviation glossary for the drug classes named in Bảng 22.',
-     ARRAY[35]::smallint[], ARRAY[37]::smallint[],
-     'Chú thích Bảng 22: RAS, CKCa, CTTA, MLCT.', 1)
-)
-INSERT INTO public.node_source_references (
-        "id", "node_id", "source_title", "section_path", "locator", "locator_detail",
-        "printed_page_numbers", "pdf_page_numbers", "reference_note", "reference_order"
-    )
-SELECT gen_random_uuid(),
-    node.id,
-    reference_seed.source_title,
-    reference_seed.section_path,
-    reference_seed.locator,
-    reference_seed.locator_detail,
-    reference_seed.printed_page_numbers,
-    reference_seed.pdf_page_numbers,
-    reference_seed.reference_note,
-    reference_seed.reference_order
-FROM reference_seed
-    CROSS JOIN tree_ctx
-    JOIN public.decision_nodes node ON node.tree_id = tree_ctx.tree_id
-        AND node.node_key = reference_seed.node_key;
-
--- ================================================================
--- Tree 12: hypertension-in-pregnancy (source: tree12.sql)
--- ================================================================
---
--- CDSS decision-tree insert script
--- Tree: "THA trong thai kỳ - Minh"
--- Source: Bảng 15, Bảng 16 (Khuyến cáo THA VNHA 2022.pdf, Mục 3.6.6, pp.31-32)
---
--- IDs are generated by gen_random_uuid() (core since PG13). Timestamps are
--- generated by now() at insert time — nothing is hardcoded. Each statement
--- re-resolves the parent id it needs (tree_id by tree_key, node ids by
--- node_key) via a join back to the row inserted by the previous statement.
---
--- See backups/shared_conventions.txt for the full naming/shape audit this
--- file was brought into line with (extracted from the 5 real seeded trees).
---
--- LATEST PASS: removed the structured drug-name fields (preferred_drug,
--- drug_options, add_on_drug, contraindicated_drugs, drugs_to_avoid,
--- preferred_drugs) from context_patch/action_payload/global_config — a
--- separate drug table is planned, so specific drug names no longer live in
--- tree seed data. Drug-CLASS fields (e.g. "drug_class": "BETA_BLOCKER") are
--- kept, matching the A/B/C/D class system used elsewhere. Node text_en/
--- text_vi labels and node_keys are unchanged (they are this tree's actual
--- node identity, not a "list"). A few INFERENCE nodes now have a NULL
--- context_patch (T12_INF_SEVERE_DRUG_OPTIONS, T12_INF_MAGNESIUM_SUPPLEMENT,
--- T12_INF_LABETALOL_MGSO4, T12_INF_NICARDIPINE_MGSO4) since drug names were
--- their only patch content — this is intentional and not compensated for;
--- the planned drug table will supply this data going forward.
---
--- Fixes applied in an earlier pass:
---   * T12_START_PREGNANCY_HTN_SEQUENCE.text_en was showing "Hypertensive
---     Emergency" (a leftover from an unrelated edit) — restored to the
---     tree's actual entry description.
---   * Every ACTION/END node now carries action_type + follow_up_mode +
---     follow_up_required, matching the universal pattern in the 5 real
---     trees' 15 action_payloads (previously the END nodes had none at all).
---   * GLOBAL nodes restructured to the kind/purpose metadata shape used by
---     every real GLOBAL node (was a flat glossary object).
---   * node_source_references: locator/locator_detail were backwards
---     (locator held a short label, locator_detail held the full caption).
---     Fixed to match convention: locator = full printed figure/table
---     caption verbatim; locator_detail = terse English usage note.
---   * Drug names (Methyldopa, Labetalol, Nifedipine, Nicardipine, Esmolol,
---     Hydralazine, Urapidil, Magnesium Sulfate, Nitroglycerin) and disease
---     terms (chronic/gestational hypertension, preeclampsia, eclampsia,
---     HELLP) were verified directly against Bảng 15/16 (PDF pp.31-32) —
---     all confirmed accurate, no changes needed there.
---
--- All previously-applied dialect fixes (path/op/value comparisons,
--- supported operators only, one logical form per condition object,
--- section_path as {"number","title"} objects, smallint[] casts, and the
--- T12_INF_IV_NITROGLYCERIN/T12_INF_MAGNESIUM_SUPPLEMENT ->
--- T12_C_IMMEDIATE_TARGET edges) are preserved. All clinical-content
--- ambiguities already flagged with '-- VERIFY:' are preserved unchanged;
--- none of the naming/shape work above resolves them.
---
--- IMPORTANT — please verify before running in production:
--- The source flowchart image (Miro export) has several spots that were
--- genuinely hard to read at the available resolution. These are flagged
--- inline with '-- VERIFY:' comments and also noted in text_en for the
--- affected nodes. In particular:
---   1. T12_C_PREECLAMPSIA_RISK_FACTOR: exact risk-factor list text
---   2. T12_C_SEVERE_SIGNS -> T12_INF_ECLAMPSIA_CLASSIFICATION /
---      T12_INF_HELLP_SYNDROME_CLASSIFICATION split: the source column
---      boundary between the eclampsia/HELLP criteria box(es) was
---      ambiguous; verify against the original board
---   3. T12_C_TARGET_NOT_MET: exact time threshold text
---   4. T12_C_BP_TARGET_ACHIEVED / T12_C_BP_TARGET_NOT_ACHIEVED: the DBP
---      figure looked identical (85 mmHg) in both boxes in the source
---      image, which is likely an image-quality artifact, not the real
---      clinical criteria — please confirm the actual numbers
---
--- Node type mapping used (confirmed by sampling the legend swatch colors
--- directly, not just by eye):
---   green   Start Node          -> START
---   yellow  Condition Check      -> CONDITION
---   blue    Trigger/Input Node   -> INFERENCE (context_patch)
---   lavender End Node            -> END
---   pink    Link Node            -> LINK (not used in this tree)
---   orange  Action/Output Node   -> ACTION
---   gray    Global Node         -> GLOBAL
---
--- Use: cmd /c "docker compose exec -T postgres psql -U cdss -d cdss < backups\tree12.sql"
---
-
--- ============================================================
--- 1. Tree
--- ============================================================
-INSERT INTO public.decision_trees (
-        "id",
-        "tree_key",
-        "name_en",
-        "name_vi",
-        "created_at",
-        "updated_at"
-    )
-VALUES (
-        gen_random_uuid(),
-        'hypertension-in-pregnancy',
-        'Hypertension in Pregnancy',
-        'THA trong thai kỳ',
-        now(),
-        now()
-    );
--- ============================================================
--- 2. Nodes
--- ============================================================
-WITH tree_ctx AS (
-    SELECT id AS tree_id
-    FROM public.decision_trees
-    WHERE tree_key = 'hypertension-in-pregnancy'
-),
-node_seed (
-    node_key,
-    node_type,
-    text_en,
-    text_vi,
-    condition_definition,
-    context_patch,
-    action_payload,
-    global_config,
-    link_target_tree_key,
-    link_target_node_key,
-    display_order
-) AS (
-    VALUES (
-            'T12_START_PREGNANCY_HTN_SEQUENCE',
-            'START',
-            'Tree 13: Pregnancy sequence / Tree 17: Tree 8 sequence',
-            'Cây 13: Trình tự thai kỳ
-Cây 17: Trình tự Cây 8',
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            0
-        ),
-        (
-            'T12_C_HOME_BP_HIGH',
-            'CONDITION',
-            'HATN: SBP>=135 mmHg and DBP>=85 mmHg',
-            'HATN
-HATT >= 135 mmHg
-và
-HATTr >= 85 mmHg',
-            '{"all": [{"path": "input.home_sbp", "op": "gte", "value": 135}, {"path": "input.home_dbp", "op": "gte", "value": 85}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            1
-        ),
-        (
-            'T12_C_CLINIC_BP_HIGH',
-            'CONDITION',
-            'HAPK: SBP>=140 mmHg and DBP>=90 mmHg',
-            'HAPK
-HATT >= 140 mmHg
-và
-HATTr >= 90 mmHg',
-            '{"all": [{"path": "input.current_clinic_sbp", "op": "gte", "value": 140}, {"path": "input.current_clinic_dbp", "op": "gte", "value": 90}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            2
-        ),
-        (
-            'T12_C_CLINIC_BP_NORMAL',
-            'CONDITION',
-            'HAPK: SBP<140 mmHg and DBP<90 mmHg',
-            'HAPK
-HATT < 140 mmHg
-và
-HATTr < 90 mmHg',
-            '{"all": [{"path": "input.current_clinic_sbp", "op": "lt", "value": 140}, {"path": "input.current_clinic_dbp", "op": "lt", "value": 90}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            3
-        ),
-        (
-            'T12_END_FOLLOW_UP_MONITOR',
-            'END',
-            'Follow-up / monitor',
-            'Theo dõi',
-            NULL::jsonb,
-            NULL::jsonb,
-            '{"action_type": "CONTINUE_MONITORING", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}'::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            4
-        ),
-        (
-            'T12_ACTION_CLASSIFY_HTN_TYPE',
-            'ACTION',
-            'Determine type of hypertensive disorder of pregnancy',
-            'Xác định kiểu THA trong thai kỳ',
-            NULL::jsonb,
-            NULL::jsonb,
-            '{"action_type": "CLASSIFY_PREGNANCY_HYPERTENSION_TYPE", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}'::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            5
-        ),
-        (
-            'T12_C_CHRONIC_HTN',
-            'CONDITION',
-            'Chronic HTN before pregnancy/before week 20, persisting >6 weeks postpartum with proteinuria',
-            'THA trước khi mang thai hoặc trước tuần 20, tồn tại > 6 tuần sau sinh với protein niệu.',
-            '{"all": [{"any": [{"path": "input.has_pre_pregnancy_hypertension", "op": "eq", "value": true}, {"path": "input.has_hypertension_before_week_20", "op": "eq", "value": true}]}, {"all": [{"path": "input.weeks_persisting_postpartum", "op": "gt", "value": 6}, {"path": "input.has_proteinuria", "op": "eq", "value": true}]}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            6
-        ),
-        (
-            'T12_END_PRE_EXISTING_HTN',
-            'END',
-            'Pre-existing (chronic) hypertension',
-            'THA từ trước',
-            NULL::jsonb,
-            NULL::jsonb,
-            '{"action_type": "PRE_EXISTING_HYPERTENSION_DIAGNOSIS", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}'::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            7
-        ),
-        (
-            'T12_C_GESTATIONAL_HTN',
-            'CONDITION',
-            'Gestational HTN after week 20, resolving <6 weeks postpartum',
-            'THA sau tuần 20, kéo dài < 6 tuần sau sinh',
-            '{"all": [{"path": "input.has_hypertension_after_week_20", "op": "eq", "value": true}, {"path": "input.weeks_resolved_postpartum", "op": "lt", "value": 6}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            8
-        ),
-        (
-            'T12_INF_GESTATIONAL_HTN_CLASSIFICATION',
-            'INFERENCE',
-            'Gestational hypertension',
-            'Thai kỳ',
-            NULL::jsonb,
-            '{"diagnosis": {"pregnancy_hypertension_type": "GESTATIONAL_HYPERTENSION"}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            9
-        ),
-        (
-            'T12_C_PREECLAMPSIA_PROTEINURIA',
-            'CONDITION',
-            'or gestational HTN with proteinuria >300mg/24h or ACR>=30mg/mmol',
-            'hoặc THA thai kỳ có Protein niệu >300mg/24h
-hoặc ACR >= 30 mg/mmol',
-            '{"any": [{"path": "input.proteinuria_24h_mg", "op": "gt", "value": 300}, {"path": "input.acr_mg_mmol", "op": "gte", "value": 30}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            10
-        ),
-        -- VERIFY: T12_C_PREECLAMPSIA_RISK_FACTOR exact risk-factor list text (source image partly illegible)
-        (
-            'T12_C_PREECLAMPSIA_RISK_FACTOR',
-            'CONDITION',
-            'or has >=1 risk factor (prior gestational HTN, diabetes, chronic kidney disease, autoimmune disease, etc.) [text partly illegible in source image]',
-            'hoặc có 1 trong các Yếu Tố Nguy Cơ:
-THA trong lần thai trước đó / đái tháo đường / bệnh thận mạn / thai lần đầu hoặc nhiều lần / bệnh tự miễn',
-            '{"any": [{"path": "input.has_prior_gestational_hypertension", "op": "eq", "value": true}, {"path": "input.has_diabetes", "op": "eq", "value": true}, {"path": "input.has_ckd", "op": "eq", "value": true}, {"path": "input.has_autoimmune_disease", "op": "eq", "value": true}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            11
-        ),
-        (
-            'T12_INF_PREECLAMPSIA_CLASSIFICATION',
-            'INFERENCE',
-            'Preeclampsia',
-            'Tiền sản giật',
-            NULL::jsonb,
-            '{"diagnosis": {"pregnancy_hypertension_type": "PREECLAMPSIA"}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            12
-        ),
-        -- VERIFY: T12_C_SEVERE_SIGNS / T12_INF_ECLAMPSIA_CLASSIFICATION / T12_INF_HELLP_SYNDROME_CLASSIFICATION column boundary uncertain in source image
-        (
-            'T12_C_SEVERE_SIGNS',
-            'CONDITION',
-            'Severe features: seizure, severe headache, visual disturbance, epigastric pain, hemolysis, elevated liver enzymes, low platelets [column boundary in source image uncertain — see note]',
-            'Tán huyết, tăng men gan, giảm tiểu cầu (Hemolysis, elevated liver enzymes, low platelets); có thể kèm co giật, đau đầu dữ dội, rối loạn thị giác, đau thượng vị',
-            '{"any": [{"path": "input.has_seizure", "op": "eq", "value": true}, {"path": "input.has_severe_headache", "op": "eq", "value": true}, {"path": "input.has_visual_disturbance", "op": "eq", "value": true}, {"path": "input.has_epigastric_pain", "op": "eq", "value": true}, {"path": "input.has_hemolysis", "op": "eq", "value": true}, {"path": "input.has_elevated_liver_enzymes", "op": "eq", "value": true}, {"path": "input.has_low_platelets", "op": "eq", "value": true}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            13
-        ),
-        (
-            'T12_INF_ECLAMPSIA_CLASSIFICATION',
-            'INFERENCE',
-            'Eclampsia',
-            'Sản giật',
-            NULL::jsonb,
-            '{"diagnosis": {"pregnancy_hypertension_type": "ECLAMPSIA"}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            14
-        ),
-        (
-            'T12_INF_HELLP_SYNDROME_CLASSIFICATION',
-            'INFERENCE',
-            'HELLP syndrome',
-            'Hội chứng HELLP',
-            NULL::jsonb,
-            '{"diagnosis": {"pregnancy_hypertension_type": "HELLP_SYNDROME"}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            15
-        ),
-        (
-            'T12_C_BP_MILD_MODERATE',
-            'CONDITION',
-            'SBP 140-159 mmHg OR DBP 90-109 mmHg',
-            'HATT 140-159 mmHg
-HOẶC
-HATTr 90-109 mmHg',
-            '{"any": [{"all": [{"path": "input.current_clinic_sbp", "op": "gte", "value": 140}, {"path": "input.current_clinic_sbp", "op": "lte", "value": 159}]}, {"all": [{"path": "input.current_clinic_dbp", "op": "gte", "value": 90}, {"path": "input.current_clinic_dbp", "op": "lte", "value": 109}]}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            16
-        ),
-        (
-            'T12_C_BP_SEVERE',
-            'CONDITION',
-            'SBP>=160 mmHg OR DBP>=110 mmHg',
-            'HATT >= 160 mmHg
-HOẶC
-HATTr >= 110 mmHg',
-            '{"any": [{"path": "input.current_clinic_sbp", "op": "gte", "value": 160}, {"path": "input.current_clinic_dbp", "op": "gte", "value": 110}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            17
-        ),
-        (
-            'T12_INF_MILD_MODERATE_SEVERITY',
-            'INFERENCE',
-            'Mild-moderate',
-            'Tính nhẹ - trung bình',
-            NULL::jsonb,
-            '{"treatment": {"severity": "MILD_MODERATE"}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            18
-        ),
-        (
-            'T12_INF_SEVERE_SEVERITY',
-            'INFERENCE',
-            'Severe hypertension',
-            'THA nặng',
-            NULL::jsonb,
-            '{"treatment": {"severity": "SEVERE"}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            19
-        ),
-        (
-            'T12_INF_METHYLDOPA',
-            'INFERENCE',
-            '(Central alpha-2 agonist) Methyldopa',
-            '(Chủ vận chọn lọc alpha-2 giao cảm)
-Methyldopa',
-            NULL::jsonb,
-            '{"treatment_preferences": {"drug_class": "CENTRAL_ALPHA2_AGONIST"}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            20
-        ),
-        (
-            'T12_INF_LABETALOL_ORAL',
-            'INFERENCE',
-            '(Beta blocker) Labetalol',
-            '(Chẹn Beta)
-Labetalol',
-            NULL::jsonb,
-            '{"treatment_preferences": {"drug_class": "BETA_BLOCKER"}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            21
-        ),
-        (
-            'T12_INF_NIFEDIPINE_OR_NICARDIPINE',
-            'INFERENCE',
-            '(Dihydropyridine CCB) Nifedipine (avoid capsule form) or Nicardipine',
-            '(CKCa - Dihydropyridine)
-Nifedipine [trừ viên dạng nang]
-hoặc
-Nicardipine',
-            NULL::jsonb,
-            '{"treatment_preferences": {"drug_class": "DIHYDROPYRIDINE_CCB"}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            22
-        ),
-        (
-            'T12_INF_ABSOLUTE_CONTRAINDICATIONS',
-            'INFERENCE',
-            'Absolute contraindication: A (ACEI, ARB), ARNI',
-            'Chống chỉ định tuyệt đối:
-A (ƯCMC, CTTA)
-ARNI',
-            NULL::jsonb,
-            '{"treatment": {"absolute_contraindications": ["ƯCMC (ức chế men chuyển)", "CTTA (chẹn thụ thể angiotensin II)", "ARNI"]}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            23
-        ),
-        (
-            'T12_INF_SEVERE_DRUG_OPTIONS',
-            'INFERENCE',
-            'Methyldopa oral, or Nifedipine/Nicardipine, or IV Labetalol/Nicardipine, or Esmolol, Hydralazine, Urapidil',
-            'Methyldopa uống
-hoặc (CKCa-Dihydropyridine) Nifedipine [trừ viên dạng nang] hoặc Nicardipine
-hoặc Labetalol tĩnh mạch
-hoặc Nicardipine tĩnh mạch
-hoặc Esmolol (Chẹn Beta)
-hoặc Hydralazine (Giãn mạch)
-hoặc Urapidil',
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            24
-        ),
-        (
-            'T12_C_HYPERTENSIVE_CRISIS',
-            'CONDITION',
-            'Hypertensive crisis',
-            'Liên cơn THA',
-            '{"path": "input.has_hypertensive_crisis", "op": "eq", "value": true}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            25
-        ),
-        (
-            'T12_C_PULMONARY_EDEMA',
-            'CONDITION',
-            'Pulmonary edema',
-            'Phù phổi',
-            '{"path": "input.has_pulmonary_edema", "op": "eq", "value": true}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            26
-        ),
-        (
-            'T12_INF_IV_NITROGLYCERIN',
-            'INFERENCE',
-            'IV nitroglycerin infusion',
-            'Truyền Nitroglycerin tĩnh mạch',
-            NULL::jsonb,
-            '{"treatment_preferences": {"route": "IV_INFUSION"}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            27
-        ),
-        (
-            'T12_INF_MAGNESIUM_SUPPLEMENT',
-            'INFERENCE',
-            'Add magnesium',
-            'Bổ sung magie',
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            28
-        ),
-        (
-            'T12_INF_LABETALOL_MGSO4',
-            'INFERENCE',
-            'Labetalol + Magnesium Sulfate',
-            'Labetalol (Chẹn Beta) +
-Magnesium Sulfate',
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            29
-        ),
-        (
-            'T12_INF_NICARDIPINE_MGSO4',
-            'INFERENCE',
-            'Nicardipine + Magnesium Sulfate',
-            'Nicardipine (CKCa) +
-Magnesium Sulfate',
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            30
-        ),
-        (
-            'T12_C_IMMEDIATE_TARGET',
-            'CONDITION',
-            'Immediate treatment target: SBP<160 mmHg and DBP<105 mmHg',
-            'Đích điều trị
-Ngay lập tức hạ HA
-HATT < 160 mmHg
-và
-HATTr < 105 mmHg',
-            '{"all": [{"path": "input.current_clinic_sbp", "op": "lt", "value": 160}, {"path": "input.current_clinic_dbp", "op": "lt", "value": 105}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            31
-        ),
-        -- VERIFY: T12_C_TARGET_NOT_MET exact time threshold text illegible in source image
-        (
-            'T12_C_TARGET_NOT_MET',
-            'CONDITION',
-            'If target not reached, or visual disturbance / coagulopathy present [exact timing text illegible in source image]',
-            'Nếu không đạt được đích điều trị,
-hoặc có rối loạn thị giác, rối loạn đông cầm máu',
-            '{"any": [{"path": "input.is_treatment_target_not_achieved", "op": "eq", "value": true}, {"path": "input.has_visual_disturbance", "op": "eq", "value": true}, {"path": "input.has_coagulopathy", "op": "eq", "value": true}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            32
-        ),
-        (
-            'T12_END_EMERGENCY_DELIVERY',
-            'END',
-            'Emergency delivery, terminate pregnancy',
-            'Lấy thai cấp cứu, chấm dứt thai kỳ',
-            NULL::jsonb,
-            NULL::jsonb,
-            '{"action_type": "EMERGENCY_DELIVERY", "follow_up_mode": "IMMEDIATE", "follow_up_required": false}'::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            33
-        ),
-        (
-            'T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM',
-            'ACTION',
-            'Monitor pregnancy status and postpartum',
-            'Theo dõi tình trạng thai kỳ và hậu sản',
-            NULL::jsonb,
-            NULL::jsonb,
-            '{"action_type": "MONITOR_PREGNANCY_AND_POSTPARTUM", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}'::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            34
-        ),
-        (
-            'T12_C_CURRENTLY_PREGNANT',
-            'CONDITION',
-            'Currently pregnant',
-            'Đang mang thai',
-            '{"path": "input.is_pregnant", "op": "eq", "value": true}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            35
-        ),
-        (
-            'T12_C_POSTPARTUM',
-            'CONDITION',
-            'Postpartum',
-            'Sau sinh',
-            '{"path": "input.is_postpartum", "op": "eq", "value": true}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            36
-        ),
-        (
-            'T12_C_HIGH_PREECLAMPSIA_RISK',
-            'CONDITION',
-            'High risk of preeclampsia',
-            'Nguy cơ tiền sản giật cao',
-            '{"path": "input.has_high_preeclampsia_risk", "op": "eq", "value": true}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            37
-        ),
-        (
-            'T12_END_ASPIRIN_PROPHYLAXIS',
-            'END',
-            'Aspirin 75-162mg from week 12-36',
-            'Aspirin 75-162 mg từ tuần 12-36',
-            NULL::jsonb,
-            NULL::jsonb,
-            '{"action_type": "ASPIRIN_PROPHYLAXIS", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}'::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            38
-        ),
-        -- VERIFY: T12_C_BP_TARGET_ACHIEVED exact DBP figure uncertain in source image (looked identical to the not-achieved box)
-        (
-            'T12_C_BP_TARGET_ACHIEVED',
-            'CONDITION',
-            'BP target achieved: SBP 110-140 mmHg and DBP ~85 mmHg [exact DBP figure uncertain in source image]',
-            'HA Đạt Đích Điều Trị
-HATT 110 - 140 mmHg
-và
-HATTr 85 mmHg',
-            '{"all": [{"path": "input.current_clinic_sbp", "op": "gte", "value": 110}, {"path": "input.current_clinic_sbp", "op": "lte", "value": 140}, {"path": "input.current_clinic_dbp", "op": "eq", "value": 85}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            39
-        ),
-        (
-            'T12_END_MAINTAIN_REGIMEN_PREGNANT',
-            'END',
-            'Maintain regimen',
-            'Duy trì phác đồ',
-            NULL::jsonb,
-            NULL::jsonb,
-            '{"action_type": "MAINTAIN_CURRENT_REGIMEN", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}'::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            40
-        ),
-        -- VERIFY: T12_C_BP_TARGET_NOT_ACHIEVED criteria text partly illegible in source image, appeared identical to
-        -- T12_C_BP_TARGET_ACHIEVED; defined here as that condition's exact negation pending confirmation against the
-        -- original board (a CONDITION node cannot carry a placeholder, non-boolean note as its condition_definition)
-        (
-            'T12_C_BP_TARGET_NOT_ACHIEVED',
-            'CONDITION',
-            'BP target not achieved [criteria text partly illegible in source image, appears identical range to the achieved box]',
-            'HA Không Đạt Đích Điều Trị
-HATT 110 - 140 mmHg
-và
-HATTr 85 mmHg',
-            '{"not": {"all": [{"path": "input.current_clinic_sbp", "op": "gte", "value": 110}, {"path": "input.current_clinic_sbp", "op": "lte", "value": 140}, {"path": "input.current_clinic_dbp", "op": "eq", "value": 85}]}}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            41
-        ),
-        (
-            'T12_END_REFER_OBGYN',
-            'END',
-            'Refer to OB specialist',
-            'Chuyển chuyên khoa Sản',
-            NULL::jsonb,
-            NULL::jsonb,
-            '{"action_type": "REFER_TO_OBGYN_SPECIALIST", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}'::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            42
-        ),
-        (
-            'T12_C_BREASTFEEDING',
-            'CONDITION',
-            'Currently breastfeeding',
-            'Đang cho con bú',
-            '{"path": "input.is_breastfeeding", "op": "eq", "value": true}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            43
-        ),
-        (
-            'T12_C_BP_STILL_HIGH',
-            'CONDITION',
-            'BP still high: SBP>=140mmHg or DBP>=90mmHg',
-            'HA còn cao
-HATT >= 140 mmHg
-hoặc
-HATTr >= 90 mmHg',
-            '{"any": [{"path": "input.current_clinic_sbp", "op": "gte", "value": 140}, {"path": "input.current_clinic_dbp", "op": "gte", "value": 90}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            44
-        ),
-        (
-            'T12_C_BP_NOT_HIGH',
-            'CONDITION',
-            'BP no longer high: SBP<140mmHg and DBP<90mmHg',
-            'HA không còn cao
-HATT < 140 mmHg
-và
-HATTr < 90 mmHg',
-            '{"all": [{"path": "input.current_clinic_sbp", "op": "lt", "value": 140}, {"path": "input.current_clinic_dbp", "op": "lt", "value": 90}]}'::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            45
-        ),
-        (
-            'T12_ACTION_POSTPARTUM_CONTRAINDICATIONS',
-            'ACTION',
-            'Mandatory contraindications while breastfeeding / BP still high',
-            'Chống chỉ định bắt buộc: Nicardipine
-Tránh Atenolol, Propranolol, Nifedipine
-Ưu tiên dùng Methyldopa / CKCa kéo dài',
-            NULL::jsonb,
-            NULL::jsonb,
-            '{"action_type": "POSTPARTUM_DRUG_CONTRAINDICATIONS", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}'::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            46
-        ),
-        (
-            'T12_END_MAINTAIN_REGIMEN_POSTPARTUM',
-            'END',
-            'Maintain regimen',
-            'Duy trì phác đồ',
-            NULL::jsonb,
-            NULL::jsonb,
-            '{"action_type": "MAINTAIN_CURRENT_REGIMEN", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}'::jsonb,
-            NULL::jsonb,
-            NULL::text,
-            NULL::text,
-            47
-        ),
-        (
-            'T12_GLOBAL_ABBREVIATION_GLOSSARY',
-            'GLOBAL',
-            'Abbreviation glossary',
-            'Chú giải viết tắt',
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            '{"kind": "ABBREVIATION_GLOSSARY", "purpose": "Chú giải các chữ viết tắt nhóm thuốc dùng trong Cây 12.", "entries": {"1_A_uc_che_he_RAS": {"label": "A: ức chế hệ RAS", "UCMC": "ức chế men chuyển", "CTTA": "chẹn thụ thể angiotensin II", "ARNI": "chẹn thụ thể Angiotensine-neprisyline"}, "4_B_chen_Beta": {"label": "B: chẹn Beta", "CB": "chẹn Beta"}, "3_C_chen_kenh_Canxi": {"label": "C: chẹn kênh Canxi", "CKCa": "chẹn kênh Canxi"}, "2_D_loi_tieu": {"label": "D: lợi tiểu", "LT": "lợi tiểu"}, "6_MRA": {"label": "MRA: thuốc đối kháng thụ thể mineralocorticoid"}, "5_SGLT2i": {"label": "SGLT2i: thuốc ức chế đồng vận chuyển Natri-glucose 2"}}}'::jsonb,
-            NULL::text,
-            NULL::text,
-            98
-        ),
-        (
-            'T12_GLOBAL_PREGNANCY_DRUG_CONTRAINDICATIONS',
-            'GLOBAL',
-            'Drug contraindications in pregnancy',
-            'Chống chỉ định thuốc trong thai kỳ',
-            NULL::jsonb,
-            NULL::jsonb,
-            NULL::jsonb,
-            '{"kind": "OVERRIDE_NOTE", "purpose": "Chống chỉ định thuốc bắt buộc trong thai kỳ, áp dụng cho mọi lựa chọn thuốc hạ áp trong Cây 12.", "details": {"chong_chi_dinh_uc_che_he_RAS": {"label": "Chống chỉ định các thuốc ức chế hệ RAS gồm", "items": ["Ức chế men chuyển (ƯCMC)", "Chẹn thụ thể Angiotensin II (CTTA)", "Ức chế renin trực tiếp", "thuốc kháng thụ thể Mineralocorticoid (MRA)"]}}}'::jsonb,
-            NULL::text,
-            NULL::text,
-            99
-        )
-)
-INSERT INTO public.decision_nodes (
-        "id",
-        "tree_id",
-        "node_key",
-        "node_type",
-        "text_en",
-        "text_vi",
-        "condition_definition",
-        "context_patch",
-        "action_payload",
-        "global_config",
-        "link_target_tree_key",
-        "link_target_node_key",
-        "display_order",
-        "created_at",
-        "updated_at"
-    )
-SELECT gen_random_uuid(),
-    tree_ctx.tree_id,
-    node_seed.node_key,
-    node_seed.node_type::node_type,
-    node_seed.text_en,
-    node_seed.text_vi,
-    node_seed.condition_definition,
-    node_seed.context_patch,
-    node_seed.action_payload,
-    node_seed.global_config,
-    node_seed.link_target_tree_key,
-    node_seed.link_target_node_key,
-    node_seed.display_order,
-    now(),
-    now()
-FROM node_seed
-    CROSS JOIN tree_ctx;
--- ============================================================
--- 3. Edges
--- ============================================================
-WITH tree_ctx AS (
-    SELECT id AS tree_id
-    FROM public.decision_trees
-    WHERE tree_key = 'hypertension-in-pregnancy'
-),
-edge_seed (
-    from_node_key,
-    to_node_key,
-    traversal_order
-) AS (
-    VALUES (
-            'T12_START_PREGNANCY_HTN_SEQUENCE',
-            'T12_C_HOME_BP_HIGH',
-            1
-        ),
-        (
-            'T12_START_PREGNANCY_HTN_SEQUENCE',
-            'T12_C_CLINIC_BP_HIGH',
-            2
-        ),
-        (
-            'T12_START_PREGNANCY_HTN_SEQUENCE',
-            'T12_C_CLINIC_BP_NORMAL',
-            3
-        ),
-        (
-            'T12_C_CLINIC_BP_NORMAL',
-            'T12_END_FOLLOW_UP_MONITOR',
-            1
-        ),
-        (
-            'T12_C_HOME_BP_HIGH',
-            'T12_ACTION_CLASSIFY_HTN_TYPE',
-            1
-        ),
-        (
-            'T12_C_CLINIC_BP_HIGH',
-            'T12_ACTION_CLASSIFY_HTN_TYPE',
-            1
-        ),
-        (
-            'T12_ACTION_CLASSIFY_HTN_TYPE',
-            'T12_C_CHRONIC_HTN',
-            1
-        ),
-        (
-            'T12_ACTION_CLASSIFY_HTN_TYPE',
-            'T12_C_GESTATIONAL_HTN',
-            2
-        ),
-        (
-            'T12_ACTION_CLASSIFY_HTN_TYPE',
-            'T12_C_PREECLAMPSIA_PROTEINURIA',
-            3
-        ),
-        (
-            'T12_ACTION_CLASSIFY_HTN_TYPE',
-            'T12_C_PREECLAMPSIA_RISK_FACTOR',
-            4
-        ),
-        (
-            'T12_ACTION_CLASSIFY_HTN_TYPE',
-            'T12_C_SEVERE_SIGNS',
-            5
-        ),
-        (
-            'T12_C_CHRONIC_HTN',
-            'T12_END_PRE_EXISTING_HTN',
-            1
-        ),
-        (
-            'T12_C_GESTATIONAL_HTN',
-            'T12_INF_GESTATIONAL_HTN_CLASSIFICATION',
-            1
-        ),
-        (
-            'T12_C_PREECLAMPSIA_PROTEINURIA',
-            'T12_INF_PREECLAMPSIA_CLASSIFICATION',
-            1
-        ),
-        (
-            'T12_C_PREECLAMPSIA_RISK_FACTOR',
-            'T12_INF_PREECLAMPSIA_CLASSIFICATION',
-            1
-        ),
-        (
-            'T12_C_SEVERE_SIGNS',
-            'T12_INF_ECLAMPSIA_CLASSIFICATION',
-            1
-        ),
-        (
-            'T12_C_SEVERE_SIGNS',
-            'T12_INF_HELLP_SYNDROME_CLASSIFICATION',
-            2
-        ),
-        (
-            'T12_INF_GESTATIONAL_HTN_CLASSIFICATION',
-            'T12_C_BP_MILD_MODERATE',
-            1
-        ),
-        (
-            'T12_INF_GESTATIONAL_HTN_CLASSIFICATION',
-            'T12_C_BP_SEVERE',
-            2
-        ),
-        (
-            'T12_INF_PREECLAMPSIA_CLASSIFICATION',
-            'T12_C_BP_MILD_MODERATE',
-            1
-        ),
-        (
-            'T12_INF_PREECLAMPSIA_CLASSIFICATION',
-            'T12_C_BP_SEVERE',
-            2
-        ),
-        (
-            'T12_C_BP_MILD_MODERATE',
-            'T12_INF_MILD_MODERATE_SEVERITY',
-            1
-        ),
-        ('T12_C_BP_SEVERE', 'T12_INF_SEVERE_SEVERITY', 1),
-        (
-            'T12_INF_MILD_MODERATE_SEVERITY',
-            'T12_INF_METHYLDOPA',
-            1
-        ),
-        (
-            'T12_INF_MILD_MODERATE_SEVERITY',
-            'T12_INF_LABETALOL_ORAL',
-            2
-        ),
-        (
-            'T12_INF_MILD_MODERATE_SEVERITY',
-            'T12_INF_NIFEDIPINE_OR_NICARDIPINE',
-            3
-        ),
-        (
-            'T12_INF_METHYLDOPA',
-            'T12_INF_ABSOLUTE_CONTRAINDICATIONS',
-            1
-        ),
-        (
-            'T12_INF_LABETALOL_ORAL',
-            'T12_INF_ABSOLUTE_CONTRAINDICATIONS',
-            1
-        ),
-        (
-            'T12_INF_NIFEDIPINE_OR_NICARDIPINE',
-            'T12_INF_ABSOLUTE_CONTRAINDICATIONS',
-            1
-        ),
-        (
-            'T12_INF_SEVERE_SEVERITY',
-            'T12_INF_SEVERE_DRUG_OPTIONS',
-            1
-        ),
-        (
-            'T12_INF_SEVERE_DRUG_OPTIONS',
-            'T12_C_HYPERTENSIVE_CRISIS',
-            1
-        ),
-        (
-            'T12_INF_SEVERE_DRUG_OPTIONS',
-            'T12_C_PULMONARY_EDEMA',
-            2
-        ),
-        (
-            'T12_C_HYPERTENSIVE_CRISIS',
-            'T12_INF_IV_NITROGLYCERIN',
-            1
-        ),
-        (
-            'T12_C_PULMONARY_EDEMA',
-            'T12_INF_MAGNESIUM_SUPPLEMENT',
-            1
-        ),
-        (
-            'T12_INF_ECLAMPSIA_CLASSIFICATION',
-            'T12_INF_LABETALOL_MGSO4',
-            1
-        ),
-        (
-            'T12_INF_ECLAMPSIA_CLASSIFICATION',
-            'T12_INF_NICARDIPINE_MGSO4',
-            2
-        ),
-        (
-            'T12_INF_HELLP_SYNDROME_CLASSIFICATION',
-            'T12_INF_LABETALOL_MGSO4',
-            1
-        ),
-        (
-            'T12_INF_HELLP_SYNDROME_CLASSIFICATION',
-            'T12_INF_NICARDIPINE_MGSO4',
-            2
-        ),
-        (
-            'T12_INF_LABETALOL_MGSO4',
-            'T12_C_IMMEDIATE_TARGET',
-            1
-        ),
-        (
-            'T12_INF_NICARDIPINE_MGSO4',
-            'T12_C_IMMEDIATE_TARGET',
-            1
-        ),
-        (
-            'T12_INF_IV_NITROGLYCERIN',
-            'T12_C_IMMEDIATE_TARGET',
-            1
-        ),
-        (
-            'T12_INF_MAGNESIUM_SUPPLEMENT',
-            'T12_C_IMMEDIATE_TARGET',
-            1
-        ),
-        (
-            'T12_C_IMMEDIATE_TARGET',
-            'T12_C_TARGET_NOT_MET',
-            1
-        ),
-        (
-            'T12_C_TARGET_NOT_MET',
-            'T12_END_EMERGENCY_DELIVERY',
-            1
-        ),
-        (
-            'T12_INF_ABSOLUTE_CONTRAINDICATIONS',
-            'T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM',
-            1
-        ),
-        (
-            'T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM',
-            'T12_C_CURRENTLY_PREGNANT',
-            1
-        ),
-        (
-            'T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM',
-            'T12_C_POSTPARTUM',
-            2
-        ),
-        (
-            'T12_C_CURRENTLY_PREGNANT',
-            'T12_C_HIGH_PREECLAMPSIA_RISK',
-            1
-        ),
-        (
-            'T12_C_CURRENTLY_PREGNANT',
-            'T12_C_BP_TARGET_ACHIEVED',
-            2
-        ),
-        (
-            'T12_C_CURRENTLY_PREGNANT',
-            'T12_C_BP_TARGET_NOT_ACHIEVED',
-            3
-        ),
-        (
-            'T12_C_HIGH_PREECLAMPSIA_RISK',
-            'T12_END_ASPIRIN_PROPHYLAXIS',
-            1
-        ),
-        (
-            'T12_C_BP_TARGET_ACHIEVED',
-            'T12_END_MAINTAIN_REGIMEN_PREGNANT',
-            1
-        ),
-        (
-            'T12_C_BP_TARGET_NOT_ACHIEVED',
-            'T12_END_REFER_OBGYN',
-            1
-        ),
-        ('T12_C_POSTPARTUM', 'T12_C_BREASTFEEDING', 1),
-        ('T12_C_POSTPARTUM', 'T12_C_BP_STILL_HIGH', 2),
-        ('T12_C_POSTPARTUM', 'T12_C_BP_NOT_HIGH', 3),
-        (
-            'T12_C_BREASTFEEDING',
-            'T12_ACTION_POSTPARTUM_CONTRAINDICATIONS',
-            1
-        ),
-        (
-            'T12_C_BP_STILL_HIGH',
-            'T12_ACTION_POSTPARTUM_CONTRAINDICATIONS',
-            1
-        ),
-        (
-            'T12_C_BP_NOT_HIGH',
-            'T12_END_MAINTAIN_REGIMEN_POSTPARTUM',
-            1
-        ),
-        (
-            'T12_ACTION_POSTPARTUM_CONTRAINDICATIONS',
-            'T12_END_MAINTAIN_REGIMEN_POSTPARTUM',
-            1
-        )
-)
-INSERT INTO public.decision_edges (
-        "id",
-        "from_node_id",
-        "to_node_id",
-        "traversal_order"
-    )
-SELECT gen_random_uuid(),
-    from_node.id,
-    to_node.id,
-    edge_seed.traversal_order
-FROM edge_seed
-    CROSS JOIN tree_ctx
-    JOIN public.decision_nodes from_node ON from_node.tree_id = tree_ctx.tree_id
-    AND from_node.node_key = edge_seed.from_node_key
-    JOIN public.decision_nodes to_node ON to_node.tree_id = tree_ctx.tree_id
-    AND to_node.node_key = edge_seed.to_node_key;
--- ============================================================
--- 4. Source references
--- ============================================================
-WITH tree_ctx AS (
-    SELECT id AS tree_id
-    FROM public.decision_trees
-    WHERE tree_key = 'hypertension-in-pregnancy'
-),
-reference_seed (
-    node_key,
-    source_title,
-    section_path,
-    locator,
-    locator_detail,
-    printed_page_numbers,
-    pdf_page_numbers,
-    reference_note,
-    reference_order
-) AS (
-    VALUES (
-            'T12_START_PREGNANCY_HTN_SEQUENCE',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Mục 3.6.6. Tăng huyết áp trong thai kỳ',
-            'Entry point of the pregnancy-hypertension sequence.',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'Điểm vào của trình tự THA trong thai kỳ, theo Mục 3.6.6.',
-            1
-        ),
-        (
-            'T12_ACTION_CLASSIFY_HTN_TYPE',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)',
-            'Classifies into the 5 categories of Bảng 15: pre-existing, gestational, preeclampsia, eclampsia, HELLP syndrome.',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'Phân loại theo 5 nhóm của Bảng 15: THA từ trước, THA thai kỳ, Tiền sản giật, Sản giật, Hội chứng HELLP.',
-            1
-        ),
-        (
-            'T12_END_FOLLOW_UP_MONITOR',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'BP below the 140/90 mmHg (clinic) / 135/85 mmHg (home) treatment threshold does not require drug therapy; continue monitoring.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'HA dưới ngưỡng 140/90 mmHg (phòng khám) / 135/85 mmHg (tại nhà) không cần điều trị thuốc; tiếp tục theo dõi.',
-            1
-        ),
-        (
-            'T12_C_CHRONIC_HTN',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)',
-            'Pre-existing hypertension: present before pregnancy or before week 20, persisting >6 weeks postpartum with proteinuria.',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'THA có trước khi mang thai hoặc trước tuần lễ thứ 20 của thai kỳ và tồn tại > 6 tuần sau sinh với protein niệu.',
-            1
-        ),
-        (
-            'T12_END_PRE_EXISTING_HTN',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)',
-            'Terminal classification: pre-existing (chronic) hypertension.',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'Phân loại kết thúc "THA từ trước" của Bảng 15.',
-            1
-        ),
-        (
-            'T12_C_GESTATIONAL_HTN',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)',
-            'Gestational hypertension: onset after week 20, resolving within 6 weeks postpartum.',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'THA khởi phát sau tuần thứ 20 của thai kỳ, và kéo dài < 6 tuần sau sinh.',
-            1
-        ),
-        (
-            'T12_INF_GESTATIONAL_HTN_CLASSIFICATION',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)',
-            'Classification label: gestational hypertension.',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'Nhãn phân loại "THA trong thai kỳ" (gestational hypertension) của Bảng 15.',
-            1
-        ),
-        (
-            'T12_C_PREECLAMPSIA_PROTEINURIA',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)',
-            'Preeclampsia: gestational hypertension with proteinuria >300mg/24h or ACR >=30 mg/mmol [265 mg/g].',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'THA thai kỳ và có protein niệu (>300 mg/24h hoặc tỷ albumin/creatinine niệu (ACR) >30 mg/mmol [265 mg/g]).',
-            1
-        ),
-        (
-            'T12_C_PREECLAMPSIA_RISK_FACTOR',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)',
-            'Preeclampsia risk factors: prior hypertension, prior gestational hypertension, diabetes, kidney disease, nulliparity/multiparity, autoimmune disease (SLE).',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'Các yếu tố nguy cơ: THA từ trước, THA trong lần thai kỳ trước, đái tháo đường, bệnh thận, thai lần đầu hay nhiều lần, và bệnh tự miễn (SLE).',
-            1
-        ),
-        (
-            'T12_INF_PREECLAMPSIA_CLASSIFICATION',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)',
-            'Classification label: preeclampsia.',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'Nhãn phân loại "Tiền sản giật" (preeclampsia) của Bảng 15.',
-            1
-        ),
-        (
-            'T12_C_SEVERE_SIGNS',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)',
-            'Eclampsia: seizure, severe headache, visual disturbance, epigastric pain. HELLP: hemolysis, elevated liver enzymes, low platelets.',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'Sản giật: co giật, đau đầu dữ dội, rối loạn thị giác, đau bụng, buồn nôn/nôn, thiểu niệu. HELLP: tán huyết, tăng men gan, giảm tiểu cầu.',
-            1
-        ),
-        (
-            'T12_INF_ECLAMPSIA_CLASSIFICATION',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)',
-            'Classification label: eclampsia.',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'Nhãn phân loại "Sản giật" (eclampsia) của Bảng 15.',
-            1
-        ),
-        (
-            'T12_INF_HELLP_SYNDROME_CLASSIFICATION',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)',
-            'Classification label: HELLP syndrome (Hemolysis, Elevated Liver enzymes, Low Platelets).',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'Nhãn phân loại "Hội chứng HELLP" của Bảng 15.',
-            1
-        ),
-        (
-            'T12_C_BP_MILD_MODERATE',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Mục 3.6.6. Tăng huyết áp trong thai kỳ',
-            'Mild-to-moderate severity: SBP >=140 (but <160) mmHg and/or DBP >=90 (but <110) mmHg, from the paragraph immediately preceding Bảng 15.',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'THA nhẹ đến trung bình: đo HA ít nhất 2 lần cách nhau >=4 giờ, HATT >=140 (nhưng <160) mmHg và/hoặc HATTr >=90 (nhưng <110) mmHg.',
-            1
-        ),
-        (
-            'T12_C_BP_SEVERE',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Mục 3.6.6. Tăng huyết áp trong thai kỳ',
-            'Severe hypertension: SBP >=160 mmHg and/or DBP >=110 mmHg; SBP >=170 mmHg is a medical emergency.',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'THA nặng: HATT >=160 mmHg và/hoặc HATTr >=110 mmHg. HATT >=170 mmHg là cấp cứu nội khoa.',
-            1
-        ),
-        (
-            'T12_INF_MILD_MODERATE_SEVERITY',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Mục 3.6.6. Tăng huyết áp trong thai kỳ',
-            'Severity label: mild-to-moderate.',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'Phân độ "nhẹ đến trung bình".',
-            1
-        ),
-        (
-            'T12_INF_SEVERE_SEVERITY',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Mục 3.6.6. Tăng huyết áp trong thai kỳ',
-            'Severity label: severe.',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'Phân độ "nặng".',
-            1
-        ),
-        (
-            'T12_C_HOME_BP_HIGH',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Home BP >=135/85 mmHg should be treated.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'HA ổn định >=135/85 mmHg đo tại nhà nên được điều trị.',
-            1
-        ),
-        (
-            'T12_C_CLINIC_BP_HIGH',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Clinic BP >=140/90 mmHg should be treated.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'HA ổn định >=140/90 mmHg đo tại phòng khám nên được điều trị.',
-            1
-        ),
-        (
-            'T12_C_CLINIC_BP_NORMAL',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Complement of the clinic-BP treatment threshold: below threshold.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'HA dưới ngưỡng điều trị đo tại phòng khám.',
-            1
-        ),
-        (
-            'T12_INF_METHYLDOPA',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Mild hypertension, first-choice option: methyldopa.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'THA nhẹ, lựa chọn đầu tiên: methyldopa.',
-            1
-        ),
-        (
-            'T12_INF_LABETALOL_ORAL',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Mild hypertension, first-choice option: beta-blocker (labetalol).',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'THA nhẹ, lựa chọn đầu tiên: chẹn beta (Labetalol).',
-            1
-        ),
-        (
-            'T12_INF_NIFEDIPINE_OR_NICARDIPINE',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Mild hypertension, first-choice option: dihydropyridine CCB (nifedipine [not capsule form], nicardipine).',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'THA nhẹ, lựa chọn đầu tiên: chẹn kênh canxi dihydropyridine (Nifedipine [trừ dạng viên nang], Nicardipine).',
-            1
-        ),
-        (
-            'T12_INF_ABSOLUTE_CONTRAINDICATIONS',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'RAS-inhibitor drugs (ACEI, ARB, direct renin inhibitors, MRA) are contraindicated in pregnancy.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'THA trong thai kỳ: chống chỉ định dùng các thuốc ức chế RAS (ƯCMC, CTTA, ức chế renin trực tiếp, lợi tiểu kháng thụ thể Mineralocorticoid).',
-            1
-        ),
-        (
-            'T12_INF_SEVERE_DRUG_OPTIONS',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Severe hypertension: IV labetalol (or IV nicardipine, esmolol, hydralazine, urapidil), oral methyldopa, or dihydropyridine CCB.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'THA nặng: Labetalol TM (hoặc Nicardipine TM, Esmolol, Hydralazine, Urapidil), Methyldopa uống, hoặc CKCa dihydropyridine.',
-            1
-        ),
-        (
-            'T12_C_HYPERTENSIVE_CRISIS',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'During a hypertensive crisis: add magnesium to prevent eclampsia.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Trong cơn THA: bổ sung magiê để ngăn ngừa sản giật.',
-            1
-        ),
-        (
-            'T12_C_PULMONARY_EDEMA',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'In pulmonary edema: IV nitroglycerin infusion; avoid sodium nitroprusside (fetal cyanide toxicity risk).',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Trong phù phổi: truyền TM Nitroglycerin; tránh Natri nitroprusside do nguy cơ nhiễm độc xyanua thai nhi.',
-            1
-        ),
-        (
-            'T12_INF_IV_NITROGLYCERIN',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Pulmonary edema management: IV nitroglycerin infusion.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Trong phù phổi: Truyền TM Nitroglycerin.',
-            1
-        ),
-        (
-            'T12_INF_MAGNESIUM_SUPPLEMENT',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Hypertensive crisis management: add magnesium sulfate to prevent eclampsia.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Bổ sung magiê trong cơn THA để ngăn ngừa sản giật.',
-            1
-        ),
-        (
-            'T12_INF_LABETALOL_MGSO4',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)',
-            'Eclampsia/severe preeclampsia/HELLP: treat immediately (SBP<160, DBP<105 mmHg), labetalol or nicardipine plus magnesium sulfate.',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'Sản giật/Tiền sản giật nặng/HELLP: ngay lập tức hạ HA, Labetalol hoặc Nicardipine và Magnesium sulfate.',
-            1
-        ),
-        (
-            'T12_INF_NICARDIPINE_MGSO4',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)',
-            'Eclampsia/severe preeclampsia/HELLP: treat immediately (SBP<160, DBP<105 mmHg), labetalol or nicardipine plus magnesium sulfate.',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'Sản giật/Tiền sản giật nặng/HELLP: ngay lập tức hạ HA, Labetalol hoặc Nicardipine và Magnesium sulfate.',
-            1
-        ),
-        (
-            'T12_C_IMMEDIATE_TARGET',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)',
-            'Immediate treatment target: SBP<160 mmHg and DBP<105 mmHg.',
-            ARRAY [29]::smallint [],
-            ARRAY [31]::smallint [],
-            'Đích điều trị ngay lập tức: HATT <160 mmHg và HATTr <105 mmHg.',
-            1
-        ),
-        (
-            'T12_C_TARGET_NOT_MET',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Emergency delivery indicated when visual disturbance or coagulopathy is present.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Lấy thai cấp cứu khi có rối loạn thị giác, rối loạn đông cầm máu.',
-            1
-        ),
-        (
-            'T12_END_EMERGENCY_DELIVERY',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Delivery for gestational hypertension or preeclampsia is recommended at week 37 if asymptomatic; emergency delivery for visual disturbance/coagulopathy.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Chấm dứt thai kỳ trong THA thai kỳ hoặc Tiền sản giật: khuyến cáo ở tuần 37 nếu không triệu chứng; lấy thai cấp cứu khi có rối loạn thị giác/đông cầm máu.',
-            1
-        ),
-        (
-            'T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Ongoing management of hypertension in pregnancy: monitor pregnancy status and postpartum course.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Quản lý THA trong thai kỳ theo dõi tình trạng mang thai và hậu sản.',
-            1
-        ),
-        (
-            'T12_C_CURRENTLY_PREGNANT',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Branch: still pregnant.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Nhánh còn đang mang thai.',
-            1
-        ),
-        (
-            'T12_C_POSTPARTUM',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Branch: postpartum.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Nhánh sau sinh.',
-            1
-        ),
-        (
-            'T12_C_HIGH_PREECLAMPSIA_RISK',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Preeclampsia prophylaxis: 75-162 mg aspirin from week 12-36.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Phòng ngừa tiền sản giật: 75-162 mg Aspirin vào tuần 12-36.',
-            1
-        ),
-        (
-            'T12_END_ASPIRIN_PROPHYLAXIS',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Preeclampsia prophylaxis: 75-162 mg aspirin from week 12-36; oral calcium 1.5-2 g/day recommended for low-calcium diets (<600 mg/day).',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Phòng ngừa tiền sản giật: 75-162 mg Aspirin vào tuần 12-36. Bổ sung canxi 1,5-2 g/ngày được khuyến khích ở phụ nữ có chế độ ăn ít canxi (<600 mg/ngày).',
-            1
-        ),
-        (
-            'T12_C_BP_TARGET_ACHIEVED',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Treatment target: clinic DBP 85 mmHg (and SBP 110-140 mmHg).',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Mục tiêu điều trị: HATTr 85 mmHg tại phòng khám (và HATT từ 110-140 mmHg).',
-            1
-        ),
-        (
-            'T12_END_MAINTAIN_REGIMEN_PREGNANT',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Target achieved: maintain current regimen.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Đạt mục tiêu điều trị: duy trì phác đồ hiện tại.',
-            1
-        ),
-        (
-            'T12_C_BP_TARGET_NOT_ACHIEVED',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Complement of the treatment-target-achieved condition.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Không đạt mục tiêu điều trị.',
-            1
-        ),
-        (
-            'T12_END_REFER_OBGYN',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Target not achieved: refer to OB specialist.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Không đạt mục tiêu điều trị: chuyển chuyên khoa Sản.',
-            1
-        ),
-        (
-            'T12_C_BREASTFEEDING',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Breastfeeding period: avoid atenolol, propranolol, nifedipine; prefer long-acting CCB.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Thời kỳ cho con bú: tránh Atenolol, Propranolol, Nifedipine; ưu tiên CKCa tác dụng kéo dài.',
-            1
-        ),
-        (
-            'T12_C_BP_STILL_HIGH',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Postpartum BP: if still high, any recommended drug may be used except methyldopa (postpartum depression risk).',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'HA sau sinh: nếu HA cao vẫn tiếp diễn, dùng bất kỳ thuốc nào được khuyến cáo trừ Methyldopa (gây trầm cảm sau sinh).',
-            1
-        ),
-        (
-            'T12_C_BP_NOT_HIGH',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Postpartum BP no longer high: maintain regimen.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'HA sau sinh không còn cao: duy trì phác đồ.',
-            1
-        ),
-        (
-            'T12_ACTION_POSTPARTUM_CONTRAINDICATIONS',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Contraindicated: nicardipine. Avoid: atenolol, propranolol, nifedipine. Prefer: methyldopa/long-acting CCB.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Chống chỉ định Nicardipine; tránh Atenolol, Propranolol, Nifedipine; ưu tiên Methyldopa/CKCa tác dụng kéo dài.',
-            1
-        ),
-        (
-            'T12_END_MAINTAIN_REGIMEN_POSTPARTUM',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'Postpartum: maintain regimen.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Duy trì phác đồ sau sinh.',
-            1
-        ),
-        (
-            'T12_GLOBAL_ABBREVIATION_GLOSSARY',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52), chú thích',
-            'Footnote abbreviation glossary for the drug classes named in Bảng 16.',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'Chú giải viết tắt cho các nhóm thuốc nêu trong Bảng 16 (ƯCMC, CTTA, CKCa, LT, MRA, SGLT2i).',
-            1
-        ),
-        (
-            'T12_GLOBAL_PREGNANCY_DRUG_CONTRAINDICATIONS',
-            'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-            '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-            'Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)',
-            'RAS-inhibitor drugs are contraindicated in pregnancy; avoid sodium nitroprusside (fetal cyanide toxicity risk).',
-            ARRAY [30]::smallint [],
-            ARRAY [32]::smallint [],
-            'THA trong thai kỳ: chống chỉ định thuốc ức chế RAS; tránh Natri nitroprusside do nguy cơ nhiễm độc xyanua thai nhi.',
-            1
-        )
-)
-INSERT INTO public.node_source_references (
-        "id",
-        "node_id",
-        "source_title",
-        "section_path",
-        "locator",
-        "locator_detail",
-        "printed_page_numbers",
-        "pdf_page_numbers",
-        "reference_note",
-        "reference_order"
-    )
-SELECT gen_random_uuid(),
-    node.id,
-    reference_seed.source_title,
-    reference_seed.section_path,
-    reference_seed.locator,
-    reference_seed.locator_detail,
-    reference_seed.printed_page_numbers,
-    reference_seed.pdf_page_numbers,
-    reference_seed.reference_note,
-    reference_seed.reference_order
-FROM reference_seed
-    CROSS JOIN tree_ctx
-    JOIN public.decision_nodes node ON node.tree_id = tree_ctx.tree_id
-    AND node.node_key = reference_seed.node_key;
-
--- ================================================================
--- Tree 13: resistant-hypertension (source: seed_resistant_hypertension.sql)
--- ================================================================
-COPY public.decision_trees ("id", "tree_key", "name_en", "name_vi", "created_at", "updated_at") FROM stdin;
-8dffe102-09fa-4e81-b2d1-6035da07ad0b	resistant-hypertension	Resistant Hypertension	THA Kháng trị	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-\.
-
-COPY public.decision_nodes ("id", "tree_id", "node_key", "node_type", "text_en", "text_vi", "condition_definition", "context_patch", "action_payload", "global_config", "link_target_tree_key", "link_target_node_key", "display_order", "created_at", "updated_at") FROM stdin;
-bb6dadda-b610-4172-8435-88e0111ee741	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_START	START	Essential Treatment Strategy Tree (Tree 4) or Optimal Treatment Strategy Tree (Tree 5)	Cây 4: cây chiến lược điều trị thiết yếu hoặc Cây 5: cây chiến lược điều trị tối ưu	\N	\N	\N	\N	\N	\N	1	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-455fcd4a-e8f2-4b03-b67a-71784b796683	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_C_LIMITED	CONDITION	Essential standard	Tiêu chuẩn thiết yếu	{"op": "eq", "path": "input.facility_capability", "value": "LIMITED_RESOURCES"}	\N	\N	\N	\N	\N	2	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-d98b6c15-9c2b-4b7b-a6cb-f869f625f98a	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_ESSENTIAL_TREATMENT	ACTION	Treat according to essential standard and enhance lifestyle changes	Điều trị theo tiêu chuẩn thiết yếu và Tăng cường biện pháp tđls, đặc biệt là hạn chế muối	\N	\N	{"action_type": "LIFESTYLE_CHANGES", "salt_restriction": true}	\N	\N	\N	3	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-583fb951-4f9f-48ef-b652-85c8d6fe7101	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_CHECK_MRA	ACTION	Check MRA tolerance	Kiểm tra khả năng dung nạp MRA	\N	\N	{"action_type": "CHECK_MRA"}	\N	\N	\N	4	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-379b8afc-b896-410f-bb13-c2e38bef13ad	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_C_MRA_TOLERATED	CONDITION	Tolerates MRA	Có khả năng dung nạp MRA	{"op": "eq", "path": "input.tolerates_mra", "value": true}	\N	\N	\N	\N	\N	5	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-ac540e55-906b-437f-a6af-2eccb619bbb5	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_ADD_MRA	ACTION	Combine A + C + D and MRA	Phối hợp 3 nhóm thuốc A + C + D và MRA	\N	\N	{"action_type": "COMBINE_ACD_MRA"}	\N	\N	\N	6	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-39319a8a-753e-4b85-8611-24d214b78327	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_C_MRA_NOT_TOLERATED	CONDITION	Does not tolerate MRA	Không có khả năng dung nạp MRA	{"op": "eq", "path": "input.tolerates_mra", "value": false}	\N	\N	\N	\N	\N	7	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-da1ba865-b2d4-4677-85ad-15496aad4653	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_ADD_D	ACTION	Add D	Thêm D	\N	\N	{"action_type": "ADD_D"}	\N	\N	\N	8	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-d79e31dd-3e3f-43f9-bc55-29657d900c2f	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_CHECK_SPIRONOLACTONE	ACTION	Check Spironolactone tolerance	Kiểm tra khả năng dung nạp Spironolactone (lợi tiểu giữ kali)	\N	\N	{"action_type": "CHECK_SPIRONOLACTONE"}	\N	\N	\N	9	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-de43bad7-f682-477d-85ab-a0627f596c6a	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_C_SPIRONOLACTONE_TOLERATED	CONDITION	Tolerates Spironolactone	Có khả năng dung nạp Spironolactone	{"op": "eq", "path": "input.tolerates_spironolactone", "value": true}	\N	\N	\N	\N	\N	10	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-8e783a9b-44d4-4246-9ab1-4bf9a9190d3b	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_ADD_SPIRONOLACTONE	ACTION	Add low-dose Spironolactone to current regimen	Thêm Spironolactone liều thấp kết hợp với liều thuốc điều trị hiện có	\N	\N	{"action_type": "ADD_SPIRONOLACTONE"}	\N	\N	\N	11	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-9479b0ab-7060-4663-8246-d2206d4bc5e5	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_C_SPIRONOLACTONE_NOT_TOLERATED	CONDITION	Does not tolerate Spironolactone	Không có khả năng dung nạp Spironolactone	{"op": "eq", "path": "input.tolerates_spironolactone", "value": false}	\N	\N	\N	\N	\N	12	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-29baba0e-818b-41db-a911-96f799a5b584	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_ALTERNATIVES	ACTION	Alternatives: Add K-sparing D, Increase D dose, or Add Bisoprolol/Doxazosin	Thêm nhóm D giữ kali, Tăng liều nhóm D, hoặc Thêm Bisoprolol/Doxazosin	\N	\N	{"action_type": "THERAPEUTIC_ALTERNATIVES"}	\N	\N	\N	13	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-8b2fa240-abcb-47e8-9e3c-9b0a15cb9958	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_C_BP_TARGET_REACHED	CONDITION	BP reaches target	HA đạt đích điều trị	{"op": "eq", "path": "input.bp_target_reached", "value": true}	\N	\N	\N	\N	\N	14	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-3b5b88f1-65e0-4a2d-934b-fb5a965b6df6	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_END_MAINTAIN	END	Maintain regimen	Duy trì phác đồ	\N	\N	{"action_type": "MAINTAIN_REGIMEN"}	\N	\N	\N	15	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-879486a4-d0bf-42f2-a772-dcb944ddbb93	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_C_BP_TARGET_NOT_REACHED	CONDITION	BP does not reach target	HA không đạt đích điều trị	{"op": "eq", "path": "input.bp_target_reached", "value": false}	\N	\N	\N	\N	\N	16	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-e2dcd8e5-7a19-4dc6-a11c-94bc504ba8a4	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_END_REFER	END	Refer to specialized center	Chuyển lên trung tâm chuyên khoa	\N	\N	{"action_type": "REFER_TO_SPECIALIZED_CENTER"}	\N	\N	\N	17	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-b52de82a-7ee3-4efd-b12b-199031f33beb	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_C_FULL	CONDITION	Optimal standard	Tiêu chuẩn tối ưu	{"op": "eq", "path": "input.facility_capability", "value": "FULL_RESOURCES"}	\N	\N	\N	\N	\N	18	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-0b167ff7-f286-4da4-8a3a-0ae20545c7b4	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_OPTIMAL_TREATMENT	ACTION	Treat according to optimal standard and enhance lifestyle changes	Điều trị theo tiêu chuẩn tối ưu và Tăng cường biện pháp tđls, đặc biệt là hạn chế muối	\N	\N	{"action_type": "LIFESTYLE_CHANGES", "salt_restriction": true}	\N	\N	\N	19	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-84342fec-0e0c-4bb5-a676-49c8df14fcc3	8dffe102-09fa-4e81-b2d1-6035da07ad0b	T13_A_CONSIDER_DEVICE	ACTION	Consider device intervention	Xem xét điều trị can thiệp dụng cụ	\N	\N	{"action_type": "CONSIDER_DEVICE_INTERVENTION"}	\N	\N	\N	20	2026-07-04 11:03:11.134834+00	2026-07-04 11:03:11.134834+00
-\.
-
-COPY public.decision_edges ("id", "from_node_id", "to_node_id", "traversal_order") FROM stdin;
-7153540d-f210-47eb-9bdf-67a5b40e77b4	bb6dadda-b610-4172-8435-88e0111ee741	455fcd4a-e8f2-4b03-b67a-71784b796683	1
-7f55db0f-7bde-4030-ad2f-85c335f5f718	bb6dadda-b610-4172-8435-88e0111ee741	b52de82a-7ee3-4efd-b12b-199031f33beb	2
-c9aa1f5d-0898-4a9f-896b-9718c2af80f7	455fcd4a-e8f2-4b03-b67a-71784b796683	d98b6c15-9c2b-4b7b-a6cb-f869f625f98a	1
-377d0452-46aa-44c4-883d-f159386271c9	d98b6c15-9c2b-4b7b-a6cb-f869f625f98a	583fb951-4f9f-48ef-b652-85c8d6fe7101	1
-6254c403-b820-4100-8c42-c040ad5f5c29	583fb951-4f9f-48ef-b652-85c8d6fe7101	379b8afc-b896-410f-bb13-c2e38bef13ad	1
-c41e0028-4b25-489f-a3c8-204bdeaf1cf4	583fb951-4f9f-48ef-b652-85c8d6fe7101	39319a8a-753e-4b85-8611-24d214b78327	2
-1d339393-b1aa-407c-84f6-80d5dcae8b97	379b8afc-b896-410f-bb13-c2e38bef13ad	ac540e55-906b-437f-a6af-2eccb619bbb5	1
-03795239-89ba-4f82-b221-15e359143cea	39319a8a-753e-4b85-8611-24d214b78327	da1ba865-b2d4-4677-85ad-15496aad4653	1
-c1ae4e3d-3fa0-4320-b53f-9ab4db9734d9	da1ba865-b2d4-4677-85ad-15496aad4653	d79e31dd-3e3f-43f9-bc55-29657d900c2f	1
-d0a185d4-7004-4fde-b18d-27dded426a45	d79e31dd-3e3f-43f9-bc55-29657d900c2f	de43bad7-f682-477d-85ab-a0627f596c6a	1
-04b2b928-a131-46d6-b105-990b66d94507	d79e31dd-3e3f-43f9-bc55-29657d900c2f	9479b0ab-7060-4663-8246-d2206d4bc5e5	2
-17e6f351-1c1a-4d71-8e7b-021e432a9656	de43bad7-f682-477d-85ab-a0627f596c6a	8e783a9b-44d4-4246-9ab1-4bf9a9190d3b	1
-c2923555-8fb0-47cb-9da3-25df8dfd371b	9479b0ab-7060-4663-8246-d2206d4bc5e5	29baba0e-818b-41db-a911-96f799a5b584	1
-5511259a-0c86-44f2-a854-ec31bede5549	ac540e55-906b-437f-a6af-2eccb619bbb5	8b2fa240-abcb-47e8-9e3c-9b0a15cb9958	1
-e1fb81f7-2959-43ac-b173-4bc037e6ece9	ac540e55-906b-437f-a6af-2eccb619bbb5	879486a4-d0bf-42f2-a772-dcb944ddbb93	2
-85365365-f132-4d0f-833b-088a184b5995	8e783a9b-44d4-4246-9ab1-4bf9a9190d3b	8b2fa240-abcb-47e8-9e3c-9b0a15cb9958	1
-021e76c8-aeb2-4b15-8958-d6b354f62c0f	8e783a9b-44d4-4246-9ab1-4bf9a9190d3b	879486a4-d0bf-42f2-a772-dcb944ddbb93	2
-87ccff51-f99b-447b-a21b-644f6bd9c7af	29baba0e-818b-41db-a911-96f799a5b584	8b2fa240-abcb-47e8-9e3c-9b0a15cb9958	1
-f9d2dce5-181f-4c69-822d-ab5038c1e402	29baba0e-818b-41db-a911-96f799a5b584	879486a4-d0bf-42f2-a772-dcb944ddbb93	2
-87ff4a86-6c52-4900-903f-6b4a900871ce	8b2fa240-abcb-47e8-9e3c-9b0a15cb9958	3b5b88f1-65e0-4a2d-934b-fb5a965b6df6	1
-3218e055-323b-4ca7-b5eb-7061dc4b5fe7	879486a4-d0bf-42f2-a772-dcb944ddbb93	e2dcd8e5-7a19-4dc6-a11c-94bc504ba8a4	1
-50957160-9860-4313-b829-5b000d97517e	b52de82a-7ee3-4efd-b12b-199031f33beb	0b167ff7-f286-4da4-8a3a-0ae20545c7b4	1
-51a363d2-fa3d-4c1f-8dd3-d9221eb21eaf	0b167ff7-f286-4da4-8a3a-0ae20545c7b4	84342fec-0e0c-4bb5-a676-49c8df14fcc3	1
-845e061f-a7cf-4265-91cf-702bb5567d3d	84342fec-0e0c-4bb5-a676-49c8df14fcc3	e2dcd8e5-7a19-4dc6-a11c-94bc504ba8a4	1
-\.
-
-COPY public.node_source_references ("id", "node_id", "source_title", "section_path", "locator", "locator_detail", "printed_page_numbers", "pdf_page_numbers", "reference_note", "reference_order") FROM stdin;
-86c5c2a7-643c-4c8f-bbab-34d4850a6752	bb6dadda-b610-4172-8435-88e0111ee741	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-725ccd08-03a2-4dcd-8e86-bb7764e384a2	455fcd4a-e8f2-4b03-b67a-71784b796683	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-b142117e-2912-4fea-9813-45d068679eef	d98b6c15-9c2b-4b7b-a6cb-f869f625f98a	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-018cecc8-3b1e-4731-84c6-8add024330c5	583fb951-4f9f-48ef-b652-85c8d6fe7101	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-d3ad703f-1ea7-4963-8d7b-5f3f9656dbde	379b8afc-b896-410f-bb13-c2e38bef13ad	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-ef962ce0-b85c-4eec-82a6-d8da0bf0b28a	ac540e55-906b-437f-a6af-2eccb619bbb5	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-b45bb617-f0c7-4ffb-9cf4-eb26d5733ab9	39319a8a-753e-4b85-8611-24d214b78327	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-f936b545-1c13-4e4c-9c17-e33f3737c350	da1ba865-b2d4-4677-85ad-15496aad4653	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-d92f358f-8148-4208-8c67-a1a2f3d55b3e	d79e31dd-3e3f-43f9-bc55-29657d900c2f	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-3a8c0f64-05b4-429f-93dd-5f03b0179853	de43bad7-f682-477d-85ab-a0627f596c6a	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-8a24a4ef-d019-4867-8624-8ecfcccb9e3c	8e783a9b-44d4-4246-9ab1-4bf9a9190d3b	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-973168e6-c680-4f40-b7b1-94f7bb82ba66	9479b0ab-7060-4663-8246-d2206d4bc5e5	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-0d2f7343-660f-4274-8886-609bbf7be1b7	29baba0e-818b-41db-a911-96f799a5b584	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-f944a5b1-aa37-48a3-aa38-002121321bd5	8b2fa240-abcb-47e8-9e3c-9b0a15cb9958	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-3cad015d-1bc3-49bd-8b08-6542c885d88d	3b5b88f1-65e0-4a2d-934b-fb5a965b6df6	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-6ada36e1-2931-40ed-b7a5-02d7256e543e	879486a4-d0bf-42f2-a772-dcb944ddbb93	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-dee53cf8-de3b-4d29-b440-ae8c80b19929	e2dcd8e5-7a19-4dc6-a11c-94bc504ba8a4	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-a4008906-1c08-4712-aa09-af2beeb5263a	b52de82a-7ee3-4efd-b12b-199031f33beb	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-5e035df0-0390-4e3e-88bd-1f68ace7488b	0b167ff7-f286-4da4-8a3a-0ae20545c7b4	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-872f274f-44fc-4645-8df5-47343d61a67d	84342fec-0e0c-4bb5-a676-49c8df14fcc3	Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)	["3.6. C\u00e1c tr\u01b0\u1eddng h\u1ee3p t\u0103ng huy\u1ebft \u00e1p \u0111\u1eb7c bi\u1ec7t", "3.6.1. T\u0103ng huy\u1ebft \u00e1p kh\u00e1ng tr\u1ecb"]	3.6.1. Tăng huyết áp kháng trị	\N	{24}	{26}	\N	1
-\.
-
-
--- ================================================================
--- Tree 14: hypertensive-emergency (source: tree14.sql)
--- ================================================================
---
--- CDSS decision-tree insert script
--- Tree: "Cây 14: THA Cấp Cứu - Minh"
--- Source: Mục 3.6.5, Bảng 14 (Khuyến cáo THA VNHA 2022.pdf):
---   Mục 3.6.5 intro -> printed p.27 / PDF page 29
---   Bảng 14 table   -> printed p.28 / PDF page 30
---
--- This is the tree_key = 'hypertensive-emergency' target that
--- T1_LINK_HYPERTENSIVE_EMERGENCY already links out to (null
--- link_target_node_key, resuming at this tree's START) — it did not exist
--- yet (0 rows) before this file.
---
--- Built following the same conventions and lessons as tree6.sql/tree8.sql/
--- tree11.sql/tree12.sql (see backups/shared_conventions.txt):
---   * gen_random_uuid()/now() for all ids/timestamps.
---   * Any fact not in the system's closed input contract is written through
---     a node whose context_patch merges a static default (false), then
---     COPY_PATH(required:false) overlays the caller-supplied value if
---     present. Applies to the 8 acute-presentation flags below.
---   * input.has_target_organ_damage and input.clinic_1_sbp/clinic_1_dbp are
---     already established fields (has_target_organ_damage is in the closed
---     input vocabulary; clinic_1_sbp/dbp is required by the intake form and
---     is the same field Tree 1's own crisis check
---     (T1_C_CLINIC_1_CRISIS: clinic_1_sbp>=180 OR clinic_1_dbp>=120) already
---     used before linking here) — no new unsafe fields needed for the entry
---     split or the BP-threshold sub-checks.
---   * No specific drug names in structured JSON fields (a separate drug
---     table is planned) — drug names appear only in text_en/text_vi, same
---     treatment as tree12.sql's IV drug nodes. action_payload carries
---     numeric/enum targets (MAP reduction %, BP thresholds, timing) instead.
---
--- SIMPLER PATTERN THAN TREE 6/8/11's has-X/no-X sibling pairs: the 9
--- clinical-scenario checks below have exactly ONE entry point
--- (T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS), so they are modeled as one
--- priority-ordered candidate list (first match wins, per
--- docs/cdss/traversal-engine-contract.md §11) ending in an unconditional
--- catch-all — not as paired has/no siblings, which was only necessary in
--- earlier trees because multiple different entry points needed to reach the
--- same check.
---
--- CROSS-CHECK FINDING (against the actual PDF, not just the supplied
--- description): the drug assignments for "Hội chứng vành cấp" (ACS) and
--- "Phù phổi cấp do tim" (acute cardiogenic pulmonary edema) were swapped in
--- the supplied table. The PDF's Bảng 14 actually reads:
---   ACS                        -> Nitroprusside hoặc Nitroglycerine (kèm lợi
---                                  tiểu quai) / Urapidil (kèm lợi tiểu quai)
---   Acute cardiogenic pulmonary
---   edema                      -> Labetalol hoặc Metoprolol (no alternative
---                                  listed)
--- This file uses the PDF's actual mapping, not the supplied table's.
---
--- DELIBERATE OMISSION / FLAGGED ANOMALY: the supplied description links
--- "Bệnh động mạch chủ cấp" (acute aortic syndrome) to tree_key
--- 'hypertension-heart-failure' (Cây 10), but also flags this itself as a
--- likely error in the self-assembled board (aortic dissection/aneurysm is
--- not a heart-failure presentation, and no aortic-specific tree exists in
--- this system's established tree-key list). Rather than encode a link that
--- both the author and clinical logic doubt, T14_END_ACUTE_AORTIC_SYNDROME is
--- a terminal END node (no LINK) documenting the acute target
--- (SBP<120 mmHg, HR<60 bpm) with requires_clinician_review:true. Revisit if
--- a dedicated aortic-syndrome tree or a confirmed correct target is added
--- later.
---
--- Node type mapping (matching the established legend from tree6/8/11/12):
---   green      Start Node          -> START
---   yellow     Condition Check     -> CONDITION
---   blue       Trigger/Input Node  -> INFERENCE (context_patch)
---   orange     Action/Output Node  -> ACTION
---   pink/red   Link Node           -> LINK
---   gray       Global Node         -> GLOBAL
---
--- Citation note: Bảng 14 is reproduced in the source document under
--- permission from Van den Born et al., European Heart Journal -
--- Cardiovascular Pharmacotherapy, Oxford University Press (per the source
--- document's own acknowledgements section) — preserved in the GLOBAL node's
--- config and per-scenario reference_note fields below.
---
--- IMPORTANT — per the author: this flowchart (severe-HTN entry -> target-
--- organ-damage split -> 9 clinical scenarios) is a self-assembled diagram
--- cross-checked against Bảng 14 and Mục 3.6.5 for clinical accuracy, not a
--- single original figure in the PDF.
---
--- Use: docker compose exec -T postgres psql -U cdss -d cdss -f /path/tree14.sql
---
-
--- ============================================================
--- 0. Remove the existing hypertensive-emergency tree, if present
--- ============================================================
-DELETE FROM public.node_source_references
-WHERE node_id IN (
-        SELECT n.id
-        FROM public.decision_nodes n
-            JOIN public.decision_trees t ON t.id = n.tree_id
-        WHERE t.tree_key = 'hypertensive-emergency'
-    );
-DELETE FROM public.decision_edges
-WHERE from_node_id IN (
-        SELECT n.id
-        FROM public.decision_nodes n
-            JOIN public.decision_trees t ON t.id = n.tree_id
-        WHERE t.tree_key = 'hypertensive-emergency'
-    );
-DELETE FROM public.decision_nodes
-WHERE tree_id IN (
-        SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency'
-    );
-DELETE FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency';
--- ============================================================
--- 1. Tree
--- ============================================================
-INSERT INTO public.decision_trees (
-        "id", "tree_key", "name_en", "name_vi", "created_at", "updated_at"
-    )
-VALUES (
-        gen_random_uuid(), 'hypertensive-emergency',
-        'Hypertensive Emergency', 'Tăng Huyết Áp Cấp Cứu', now(), now()
-    );
--- ============================================================
--- 2. Nodes
--- ============================================================
-WITH tree_ctx AS (
-    SELECT id AS tree_id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency'
-),
-node_seed (
-    node_key, node_type, text_en, text_vi,
-    condition_definition, context_patch, action_payload, global_config,
-    link_target_tree_key, link_target_node_key, display_order
-) AS (
-    VALUES
-    -- --- Entry: severe hypertension, target-organ-damage split ---
-    (
-        'T14_START_SEVERE_HYPERTENSION', 'START',
-        'Severe hypertension (SBP >=180 and/or DBP >=120 mmHg)',
-        'Bệnh nhân tăng huyết áp nặng (HATT >= 180 và/hoặc HATTr >= 120 mmHg)',
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 0
-    ),
-    (
-        'T14_C_NO_ACUTE_TARGET_ORGAN_DAMAGE', 'CONDITION',
-        'No acute target organ damage', 'Không tổn thương cơ quan đích cấp tính',
-        '{"path":"input.has_target_organ_damage","op":"eq","value":false}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 1
-    ),
-    (
-        'T14_C_HAS_ACUTE_TARGET_ORGAN_DAMAGE', 'CONDITION',
-        'Has acute target organ damage', 'Có tổn thương cơ quan đích cấp tính',
-        '{"path":"input.has_target_organ_damage","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 2
-    ),
-    -- --- Nhánh 1: urgent (no acute target organ damage) ---
-    (
-        'T14_END_URGENT_HYPERTENSION', 'END',
-        'Urgent hypertension: oral antihypertensive therapy; outpatient/inpatient monitoring; gradual BP lowering',
-        'Tăng huyết áp khẩn trương: Điều trị thuốc uống. Theo dõi ngoại trú/nội trú. Hạ huyết áp từ từ',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"ORAL_ANTIHYPERTENSIVE_THERAPY","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":true,"bp_lowering_strategy":"GRADUAL"}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 3
-    ),
-    -- --- Nhánh 2: emergency (has acute target organ damage) ---
-    (
-        'T14_ACTION_ADMIT_AND_DETERMINE_TARGET_ORGAN', 'ACTION',
-        'Emergency hypertension: admit to hospital, apply IV antihypertensive therapy, determine target organ',
-        'Tăng huyết áp cấp cứu: Nhập viện. Áp dụng thuốc hạ áp đường tĩnh mạch. Xác định cơ quan đích',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"ADMIT_AND_DETERMINE_TARGET_ORGAN","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false,"route":"IV_INFUSION"}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 4
-    ),
-    (
-        'T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS', 'INFERENCE',
-        'Determine which of the 9 specific hypertensive-emergency clinical scenarios applies (Bảng 14)',
-        'Xác định bệnh cảnh lâm sàng cấp cứu cụ thể (Bảng 14)',
-        NULL::jsonb,
-        '{"treatment":{"has_hypertensive_encephalopathy":false,"has_acute_ischemic_stroke":false,"is_thrombolysis_candidate":false,"has_acute_intracerebral_hemorrhage":false,"has_acute_coronary_syndrome":false,"has_acute_cardiogenic_pulmonary_edema":false,"has_acute_aortic_syndrome":false,"has_eclampsia_severe_preeclampsia_or_hellp":false},"operations":[{"op":"COPY_PATH","from_path":"input.has_hypertensive_encephalopathy","to_path":"context.treatment.has_hypertensive_encephalopathy","required":false},{"op":"COPY_PATH","from_path":"input.has_acute_ischemic_stroke","to_path":"context.treatment.has_acute_ischemic_stroke","required":false},{"op":"COPY_PATH","from_path":"input.is_thrombolysis_candidate","to_path":"context.treatment.is_thrombolysis_candidate","required":false},{"op":"COPY_PATH","from_path":"input.has_acute_intracerebral_hemorrhage","to_path":"context.treatment.has_acute_intracerebral_hemorrhage","required":false},{"op":"COPY_PATH","from_path":"input.has_acute_coronary_syndrome","to_path":"context.treatment.has_acute_coronary_syndrome","required":false},{"op":"COPY_PATH","from_path":"input.has_acute_cardiogenic_pulmonary_edema","to_path":"context.treatment.has_acute_cardiogenic_pulmonary_edema","required":false},{"op":"COPY_PATH","from_path":"input.has_acute_aortic_syndrome","to_path":"context.treatment.has_acute_aortic_syndrome","required":false},{"op":"COPY_PATH","from_path":"input.has_eclampsia_severe_preeclampsia_or_hellp","to_path":"context.treatment.has_eclampsia_severe_preeclampsia_or_hellp","required":false}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 5
-    ),
-    -- --- Scenario 1: hypertensive encephalopathy (priority 1) ---
-    (
-        'T14_C_HYPERTENSIVE_ENCEPHALOPATHY', 'CONDITION',
-        'Hypertensive encephalopathy (coma, seizures, cortical blindness)',
-        'Bệnh não do THA (hôn mê, co giật, mù vỏ não)',
-        '{"path":"context.treatment.has_hypertensive_encephalopathy","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 6
-    ),
-    (
-        'T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY', 'ACTION',
-        'Hypertensive encephalopathy: primary Labetalol/Nicardipine; alternative Nitroprusside; target MAP -20% to -25%, immediate',
-        'Bệnh não do THA: ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside; mục tiêu MAP giảm 20-25%, ngay lập tức',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"HYPERTENSIVE_ENCEPHALOPATHY_ACUTE_THERAPY","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false,"target_map_reduction_percent_min":20,"target_map_reduction_percent_max":25,"target_timing":"IMMEDIATE"}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 7
-    ),
-    -- --- Scenario 4: AIS + thrombolysis candidate (priority 2, stricter threshold checked first) ---
-    (
-        'T14_C_AIS_THROMBOLYSIS_CANDIDATE', 'CONDITION',
-        'Acute ischemic stroke, thrombolysis candidate, SBP >185 or DBP >110 mmHg',
-        'Nhồi máu não cấp có chỉ định tiêu sợi huyết, HATT >185 hoặc HATTr >110 mmHg',
-        '{"all":[{"path":"context.treatment.has_acute_ischemic_stroke","op":"eq","value":true},{"path":"context.treatment.is_thrombolysis_candidate","op":"eq","value":true},{"any":[{"path":"input.clinic_1_sbp","op":"gt","value":185},{"path":"input.clinic_1_dbp","op":"gt","value":110}]}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 8
-    ),
-    (
-        'T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE', 'ACTION',
-        'AIS, thrombolysis candidate: primary Labetalol/Nicardipine; alternative Urapidil; target MAP -15%, within 1 hour',
-        'Nhồi máu não cấp có chỉ định tiêu sợi huyết: ưu tiên Labetalol/Nicardipine; thay thế Urapidil; mục tiêu MAP giảm 15%, trong 1 giờ',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"ACUTE_ISCHEMIC_STROKE_THROMBOLYSIS_CANDIDATE_THERAPY","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false,"target_map_reduction_percent":15,"target_timing":"WITHIN_1_HOUR","bp_threshold_sbp_mmhg":185,"bp_threshold_dbp_mmhg":110}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 9
-    ),
-    -- --- Scenario 3: AIS, general (priority 3) ---
-    (
-        'T14_C_AIS_SEVERE', 'CONDITION',
-        'Acute ischemic stroke, SBP >220 or DBP >120 mmHg',
-        'Nhồi máu não cấp, HATT >220 hoặc HATTr >120 mmHg',
-        '{"all":[{"path":"context.treatment.has_acute_ischemic_stroke","op":"eq","value":true},{"any":[{"path":"input.clinic_1_sbp","op":"gt","value":220},{"path":"input.clinic_1_dbp","op":"gt","value":120}]}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 10
-    ),
-    (
-        'T14_ACTION_AIS_SEVERE', 'ACTION',
-        'AIS: primary Labetalol/Nicardipine; alternative Nitroprusside; target MAP -15%, within 1 hour',
-        'Nhồi máu não cấp: ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside; mục tiêu MAP giảm 15%, trong 1 giờ',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"ACUTE_ISCHEMIC_STROKE_THERAPY","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false,"target_map_reduction_percent":15,"target_timing":"WITHIN_1_HOUR","bp_threshold_sbp_mmhg":220,"bp_threshold_dbp_mmhg":120}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 11
-    ),
-    -- --- Scenario 7: acute ICH (priority 4) ---
-    (
-        'T14_C_ACUTE_ICH', 'CONDITION',
-        'Acute intracerebral hemorrhage, SBP >180 mmHg',
-        'Xuất huyết não cấp, HATT >180 mmHg',
-        '{"all":[{"path":"context.treatment.has_acute_intracerebral_hemorrhage","op":"eq","value":true},{"path":"input.clinic_1_sbp","op":"gt","value":180}]}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 12
-    ),
-    (
-        'T14_ACTION_ACUTE_ICH', 'ACTION',
-        'Acute ICH: primary Nitroglycerine/Labetalol; alternative Urapidil; target 130<SBP<180 mmHg',
-        'Xuất huyết não cấp: ưu tiên Nitroglycerine/Labetalol; thay thế Urapidil; mục tiêu 130<HATT<180 mmHg',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"ACUTE_INTRACEREBRAL_HEMORRHAGE_THERAPY","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false,"target_sbp_lower_mmhg":130,"target_sbp_upper_mmhg":180}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 13
-    ),
-    (
-        'T14_END_REFER_STROKE_MANAGEMENT', 'END', 'Refer to stroke management',
-        'Điều trị đột quỵ',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"REFER_STROKE_MANAGEMENT","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":true,"requires_clinician_review":true}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 14
-    ),
-    -- --- Scenario 5: acute coronary syndrome (priority 5) ---
-    (
-        'T14_C_ACS', 'CONDITION', 'Acute coronary syndrome', 'Hội chứng vành cấp',
-        '{"path":"context.treatment.has_acute_coronary_syndrome","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 15
-    ),
-    (
-        'T14_ACTION_ACS', 'ACTION',
-        'ACS: primary Nitroprusside or Nitroglycerine (with a loop diuretic); alternative Urapidil (with a loop diuretic); target SBP <140 mmHg, immediate',
-        'Hội chứng vành cấp: ưu tiên Nitroprusside hoặc Nitroglycerine (kèm lợi tiểu quai); thay thế Urapidil (kèm lợi tiểu quai); mục tiêu HATT <140 mmHg, ngay lập tức',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"ACUTE_CORONARY_SYNDROME_THERAPY","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false,"target_sbp_upper_mmhg":140,"target_timing":"IMMEDIATE"}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 16
-    ),
-    (
-        'T14_LINK_CORONARY_ARTERY_DISEASE', 'LINK', 'Tree 9: Hypertension With Coronary Artery Disease',
-        'Cây 9: THA + Bệnh Mạch Vành',
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::jsonb,
-        'hypertension-coronary-artery-disease', NULL::text, 17
-    ),
-    -- --- Scenario 6: acute cardiogenic pulmonary edema (priority 6) ---
-    (
-        'T14_C_ACUTE_CARDIOGENIC_PULMONARY_EDEMA', 'CONDITION',
-        'Acute cardiogenic pulmonary edema', 'Phù phổi cấp do tim',
-        '{"path":"context.treatment.has_acute_cardiogenic_pulmonary_edema","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 18
-    ),
-    (
-        'T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA', 'ACTION',
-        'Acute cardiogenic pulmonary edema: Labetalol or Metoprolol; target SBP <140 mmHg, immediate',
-        'Phù phổi cấp do tim: Labetalol hoặc Metoprolol; mục tiêu HATT <140 mmHg, ngay lập tức',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"ACUTE_CARDIOGENIC_PULMONARY_EDEMA_THERAPY","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false,"target_sbp_upper_mmhg":140,"target_timing":"IMMEDIATE"}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 19
-    ),
-    (
-        'T14_LINK_HEART_FAILURE', 'LINK', 'Tree 10: Hypertension With Heart Failure',
-        'Cây 10: THA + Suy Tim',
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::jsonb,
-        'hypertension-heart-failure', NULL::text, 20
-    ),
-    -- --- Scenario 8: acute aortic syndrome (priority 7; terminal, see header note) ---
-    (
-        'T14_C_ACUTE_AORTIC_SYNDROME', 'CONDITION',
-        'Acute aortic syndrome', 'Bệnh động mạch chủ cấp',
-        '{"path":"context.treatment.has_acute_aortic_syndrome","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 21
-    ),
-    (
-        'T14_END_ACUTE_AORTIC_SYNDROME', 'END',
-        'Acute aortic syndrome: Esmolol plus Nitroprusside, Nitroglycerine, or Nicardipine; target SBP <120 mmHg and heart rate <60 bpm, immediate',
-        'Bệnh động mạch chủ cấp: Esmolol phối hợp Nitroprusside, Nitroglycerine, hoặc Nicardipine; mục tiêu HATT <120 mmHg và nhịp tim <60 lần/phút, ngay lập tức',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"ACUTE_AORTIC_SYNDROME_THERAPY","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":true,"target_sbp_upper_mmhg":120,"target_heart_rate_upper_bpm":60,"target_timing":"IMMEDIATE","requires_clinician_review":true}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 22
-    ),
-    -- --- Scenario 9: eclampsia / severe preeclampsia / HELLP (priority 8) ---
-    (
-        'T14_C_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP', 'CONDITION',
-        'Eclampsia, severe preeclampsia, or HELLP syndrome',
-        'Sản giật, tiền sản giật nặng, hoặc hội chứng HELLP',
-        '{"path":"context.treatment.has_eclampsia_severe_preeclampsia_or_hellp","op":"eq","value":true}'::jsonb,
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::text, NULL::text, 23
-    ),
-    (
-        'T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP', 'ACTION',
-        'Eclampsia/severe preeclampsia/HELLP: Labetalol or Nicardipine plus magnesium sulfate; target SBP <160 mmHg and DBP <105 mmHg, immediate',
-        'Sản giật/tiền sản giật nặng/HELLP: Labetalol hoặc Nicardipine phối hợp Magnesium sulfate; mục tiêu HATT <160 mmHg và HATTr <105 mmHg, ngay lập tức',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP_THERAPY","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false,"target_sbp_upper_mmhg":160,"target_dbp_upper_mmhg":105,"target_timing":"IMMEDIATE"}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 24
-    ),
-    (
-        'T14_LINK_PREGNANCY', 'LINK', 'Tree 12: Hypertension in Pregnancy',
-        'Cây 13: THA Thai Kỳ',
-        NULL::jsonb, NULL::jsonb, NULL::jsonb, NULL::jsonb,
-        'hypertension-in-pregnancy', NULL::text, 25
-    ),
-    -- --- Scenario 2: catch-all (priority 9, unconditional) ---
-    (
-        'T14_ACTION_MALIGNANT_HTN_TMA_AKI', 'ACTION',
-        'Hypertensive emergency with or without TMA/acute kidney injury: primary Labetalol/Nicardipine; alternative Nitroprusside/Urapidil; target MAP -20% to -25%, within hours',
-        'THA cấp cứu có hoặc không có TMA/Suy thận cấp: ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside/Urapidil; mục tiêu MAP giảm 20-25%, trong vài giờ',
-        NULL::jsonb, NULL::jsonb,
-        '{"action_type":"MALIGNANT_HYPERTENSION_TMA_AKI_THERAPY","follow_up_mode":"NEW_ENCOUNTER","follow_up_required":false,"target_map_reduction_percent_min":20,"target_map_reduction_percent_max":25,"target_timing":"WITHIN_HOURS"}'::jsonb,
-        NULL::jsonb, NULL::text, NULL::text, 26
-    ),
-    (
-        'T14_GLOBAL_ABBREVIATION_GLOSSARY', 'GLOBAL', 'Abbreviation glossary', 'Chú giải viết tắt',
-        NULL::jsonb, NULL::jsonb, NULL::jsonb,
-        '{"kind":"ABBREVIATION_GLOSSARY","purpose":"Chú giải các chữ viết tắt dùng trong Cây 14, theo chú thích Bảng 14.","source_permission_note":"Bảng 14 được trích dẫn theo Van den Born và cộng sự, với sự cho phép của Tạp chí European Heart Journal - Cardiovascular Pharmacotherapy, Oxford University Press.","entries":{"MAP":{"label":"MAP: Mean arterial pressure - Huyết áp trung bình"},"TMA":{"label":"TMA: Thrombotic microangiopathy - Bệnh vi mạch huyết khối"},"HELLP":{"label":"HELLP: Hemolysis, Elevated Liver Enzymes and Low Platelets - Hội chứng liên quan tiền sản giật nặng"}}}'::jsonb,
-        NULL::text, NULL::text, 99
-    )
-)
-INSERT INTO public.decision_nodes (
-        "id", "tree_id", "node_key", "node_type", "text_en", "text_vi",
-        "condition_definition", "context_patch", "action_payload", "global_config",
-        "link_target_tree_key", "link_target_node_key", "display_order",
-        "created_at", "updated_at"
-    )
-SELECT gen_random_uuid(),
-    tree_ctx.tree_id,
-    node_seed.node_key,
-    node_seed.node_type::node_type,
-    node_seed.text_en,
-    node_seed.text_vi,
-    node_seed.condition_definition,
-    node_seed.context_patch,
-    node_seed.action_payload,
-    node_seed.global_config,
-    node_seed.link_target_tree_key,
-    node_seed.link_target_node_key,
-    node_seed.display_order,
-    now(),
-    now()
-FROM node_seed
-    CROSS JOIN tree_ctx;
--- ============================================================
--- 3. Edges
--- ============================================================
-WITH tree_ctx AS (
-    SELECT id AS tree_id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency'
-),
-edge_seed (from_node_key, to_node_key, traversal_order) AS (
-    VALUES
-    ('T14_START_SEVERE_HYPERTENSION', 'T14_C_NO_ACUTE_TARGET_ORGAN_DAMAGE', 1),
-    ('T14_START_SEVERE_HYPERTENSION', 'T14_C_HAS_ACUTE_TARGET_ORGAN_DAMAGE', 2),
-    ('T14_C_NO_ACUTE_TARGET_ORGAN_DAMAGE', 'T14_END_URGENT_HYPERTENSION', 1),
-    ('T14_C_HAS_ACUTE_TARGET_ORGAN_DAMAGE', 'T14_ACTION_ADMIT_AND_DETERMINE_TARGET_ORGAN', 1),
-    ('T14_ACTION_ADMIT_AND_DETERMINE_TARGET_ORGAN', 'T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS', 1),
-    -- priority-ordered candidates; first match wins; ends in an unconditional catch-all
-    ('T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS', 'T14_C_HYPERTENSIVE_ENCEPHALOPATHY', 1),
-    ('T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS', 'T14_C_AIS_THROMBOLYSIS_CANDIDATE', 2),
-    ('T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS', 'T14_C_AIS_SEVERE', 3),
-    ('T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS', 'T14_C_ACUTE_ICH', 4),
-    ('T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS', 'T14_C_ACS', 5),
-    ('T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS', 'T14_C_ACUTE_CARDIOGENIC_PULMONARY_EDEMA', 6),
-    ('T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS', 'T14_C_ACUTE_AORTIC_SYNDROME', 7),
-    ('T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS', 'T14_C_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP', 8),
-    ('T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS', 'T14_ACTION_MALIGNANT_HTN_TMA_AKI', 9),
-    ('T14_C_HYPERTENSIVE_ENCEPHALOPATHY', 'T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY', 1),
-    ('T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY', 'T14_END_REFER_STROKE_MANAGEMENT', 1),
-    ('T14_C_AIS_THROMBOLYSIS_CANDIDATE', 'T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE', 1),
-    ('T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE', 'T14_END_REFER_STROKE_MANAGEMENT', 1),
-    ('T14_C_AIS_SEVERE', 'T14_ACTION_AIS_SEVERE', 1),
-    ('T14_ACTION_AIS_SEVERE', 'T14_END_REFER_STROKE_MANAGEMENT', 1),
-    ('T14_C_ACUTE_ICH', 'T14_ACTION_ACUTE_ICH', 1),
-    ('T14_ACTION_ACUTE_ICH', 'T14_END_REFER_STROKE_MANAGEMENT', 1),
-    ('T14_C_ACS', 'T14_ACTION_ACS', 1),
-    ('T14_ACTION_ACS', 'T14_LINK_CORONARY_ARTERY_DISEASE', 1),
-    ('T14_C_ACUTE_CARDIOGENIC_PULMONARY_EDEMA', 'T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA', 1),
-    ('T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA', 'T14_LINK_HEART_FAILURE', 1),
-    ('T14_C_ACUTE_AORTIC_SYNDROME', 'T14_END_ACUTE_AORTIC_SYNDROME', 1),
-    ('T14_C_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP', 'T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP', 1),
-    ('T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP', 'T14_LINK_PREGNANCY', 1),
-    ('T14_ACTION_MALIGNANT_HTN_TMA_AKI', 'T14_END_URGENT_HYPERTENSION', 1)
-)
-INSERT INTO public.decision_edges ("id", "from_node_id", "to_node_id", "traversal_order")
-SELECT gen_random_uuid(), from_node.id, to_node.id, edge_seed.traversal_order
-FROM edge_seed
-    CROSS JOIN tree_ctx
-    JOIN public.decision_nodes from_node ON from_node.tree_id = tree_ctx.tree_id
-        AND from_node.node_key = edge_seed.from_node_key
-    JOIN public.decision_nodes to_node ON to_node.tree_id = tree_ctx.tree_id
-        AND to_node.node_key = edge_seed.to_node_key;
--- ============================================================
--- 4. Source references
--- ============================================================
-WITH tree_ctx AS (
-    SELECT id AS tree_id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency'
-),
-reference_seed (
-    node_key, source_title, section_path, locator, locator_detail,
-    printed_page_numbers, pdf_page_numbers, reference_note, reference_order
-) AS (
-    VALUES
-    ('T14_START_SEVERE_HYPERTENSION',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.6.5", "title": "Tăng huyết áp cấp cứu"}]'::jsonb,
-     'Mục 3.6.5. Tăng huyết áp cấp cứu',
-     'Entry point of the hypertensive-emergency tree; emergency vs. urgent hypertension distinction.',
-     ARRAY[27]::smallint[], ARRAY[29]::smallint[],
-     'Điểm vào của Cây 14; phân biệt THA cấp cứu và THA khẩn trương.', 1),
-    ('T14_C_NO_ACUTE_TARGET_ORGAN_DAMAGE',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.6.5", "title": "Tăng huyết áp cấp cứu"}]'::jsonb,
-     'Mục 3.6.5. Tăng huyết áp cấp cứu',
-     'Without acute target-organ damage, this is urgent hypertension, usually treatable with oral therapy.',
-     ARRAY[27]::smallint[], ARRAY[29]::smallint[],
-     'Bệnh nhân tăng HA đáng kể nhưng không có tổn thương cơ quan đích cấp tính được gọi là tăng huyết áp khẩn trương.', 1),
-    ('T14_C_HAS_ACUTE_TARGET_ORGAN_DAMAGE',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.6.5", "title": "Tăng huyết áp cấp cứu"}]'::jsonb,
-     'Mục 3.6.5. Tăng huyết áp cấp cứu',
-     'Severe hypertension with acute target-organ damage is a hypertensive emergency requiring immediate, usually IV, therapy.',
-     ARRAY[27]::smallint[], ARRAY[29]::smallint[],
-     'THA cấp cứu là THA nặng kết hợp tổn thương cơ quan đích cấp tính, cần can thiệp hạ HA ngay lập tức, thường bằng đường tĩnh mạch.', 1),
-    ('T14_ACTION_MALIGNANT_HTN_TMA_AKI',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.6.5", "title": "Tăng huyết áp cấp cứu"}]'::jsonb,
-     'Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51)',
-     'General/malignant hypertensive emergency with or without TMA/AKI: MAP reduction 20-25% over several hours.',
-     ARRAY[28]::smallint[], ARRAY[30]::smallint[],
-     'Trích Bảng 14, theo Van den Born và cộng sự (51).', 1),
-    ('T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.6.5", "title": "Tăng huyết áp cấp cứu"}]'::jsonb,
-     'Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51)',
-     'Hypertensive encephalopathy: immediate MAP reduction 20-25%.',
-     ARRAY[28]::smallint[], ARRAY[30]::smallint[],
-     'Trích Bảng 14, theo Van den Born và cộng sự (51).', 1),
-    ('T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.7.5", "title": "Tăng huyết áp và Đột quỵ"}]'::jsonb,
-     'Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 24, Mục 3.7.5',
-     'AIS with thrombolysis indication: MAP -15% within 1 hour if SBP>185 or DBP>110 mmHg; see Bảng 24 for more detailed AIS management including thrombolysis/thrombectomy.',
-     ARRAY[28]::smallint[], ARRAY[30]::smallint[],
-     'Trích Bảng 14; đối chiếu bổ sung Bảng 24, Mục 3.7.5 về xử trí HA trong đột quỵ thiếu máu não cấp.', 1),
-    ('T14_ACTION_AIS_SEVERE',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.7.5", "title": "Tăng huyết áp và Đột quỵ"}]'::jsonb,
-     'Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 24, Mục 3.7.5',
-     'AIS: MAP -15% within 1 hour if SBP>220 or DBP>120 mmHg; see Bảng 24 for more detailed AIS management.',
-     ARRAY[28]::smallint[], ARRAY[30]::smallint[],
-     'Trích Bảng 14; đối chiếu bổ sung Bảng 24, Mục 3.7.5.', 1),
-    ('T14_ACTION_ACUTE_ICH',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.7.5", "title": "Tăng huyết áp và Đột quỵ"}]'::jsonb,
-     'Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 23, Mục 3.7.5',
-     'Acute ICH: target 130<SBP<180 mmHg; see Bảng 23 for detailed ICH management (>220 consider IV infusion; 150-220 lowering to <140 within 6h shows no benefit and may be harmful; start within 2h, max reduction 90 mmHg from baseline).',
-     ARRAY[28]::smallint[], ARRAY[30]::smallint[],
-     'Trích Bảng 14; đối chiếu bổ sung Bảng 23, Mục 3.7.5 về xử trí HA trong xuất huyết não cấp.', 1),
-    ('T14_ACTION_ACS',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.7.2", "title": "Tăng huyết áp và Bệnh mạch vành"}]'::jsonb,
-     'Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 19, Mục 3.7.2',
-     'ACS: target SBP<140 mmHg immediately; see Bảng 19 for hypertension-with-CAD strategy.',
-     ARRAY[28]::smallint[], ARRAY[30]::smallint[],
-     'Trích Bảng 14; đối chiếu bổ sung Bảng 19, Mục 3.7.2.', 1),
-    ('T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.7.3", "title": "Tăng huyết áp và Suy tim"}]'::jsonb,
-     'Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 20, Mục 3.7.3',
-     'Acute cardiogenic pulmonary edema: target SBP<140 mmHg immediately; see Bảng 20 for heart-failure strategy.',
-     ARRAY[28]::smallint[], ARRAY[30]::smallint[],
-     'Trích Bảng 14; đối chiếu bổ sung Bảng 20, Mục 3.7.3.', 1),
-    ('T14_END_ACUTE_AORTIC_SYNDROME',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.6.5", "title": "Tăng huyết áp cấp cứu"}]'::jsonb,
-     'Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51)',
-     'Acute aortic syndrome: target SBP<120 mmHg and heart rate <60 bpm immediately. No onward tree link (see header note on the flagged Cây 10 discrepancy).',
-     ARRAY[28]::smallint[], ARRAY[30]::smallint[],
-     'Trích Bảng 14, theo Van den Born và cộng sự (51).', 1),
-    ('T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.6.6", "title": "Tăng huyết áp trong thai kỳ"}]'::jsonb,
-     'Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 15, 16, Mục 3.6.6',
-     'Eclampsia/severe preeclampsia/HELLP: target SBP<160 and DBP<105 mmHg immediately; RAS-inhibitors contraindicated and sodium nitroprusside avoided in pregnancy (fetal cyanide toxicity risk).',
-     ARRAY[28]::smallint[], ARRAY[30]::smallint[],
-     'Trích Bảng 14; đối chiếu bổ sung Bảng 15, 16, Mục 3.6.6.', 1),
-    ('T14_GLOBAL_ABBREVIATION_GLOSSARY',
-     'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)',
-     '[{"number": "3.6.5", "title": "Tăng huyết áp cấp cứu"}]'::jsonb,
-     'Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51), chú thích',
-     'Footnote abbreviation glossary (MAP, TMA, HELLP) and source citation/permission note.',
-     ARRAY[28]::smallint[], ARRAY[30]::smallint[],
-     'Chú thích Bảng 14: MAP, TMA, HELLP; trích dẫn theo Van den Born và cộng sự, với sự cho phép của European Heart Journal - Cardiovascular Pharmacotherapy, Oxford University Press.', 1)
-)
-INSERT INTO public.node_source_references (
-        "id", "node_id", "source_title", "section_path", "locator", "locator_detail",
-        "printed_page_numbers", "pdf_page_numbers", "reference_note", "reference_order"
-    )
-SELECT gen_random_uuid(),
-    node.id,
-    reference_seed.source_title,
-    reference_seed.section_path,
-    reference_seed.locator,
-    reference_seed.locator_detail,
-    reference_seed.printed_page_numbers,
-    reference_seed.pdf_page_numbers,
-    reference_seed.reference_note,
-    reference_seed.reference_order
-FROM reference_seed
-    CROSS JOIN tree_ctx
-    JOIN public.decision_nodes node ON node.tree_id = tree_ctx.tree_id
-        AND node.node_key = reference_seed.node_key;
-
-
--- ================================================================
--- Tree 7: hypertension-older-adults (source: tree7_hypertension_older_adults_v2.sql)
--- ================================================================
-
-
--- ── decision_trees ────────────────────────────────────────────────────────────
-INSERT INTO public.decision_trees (id, tree_key, name_en, name_vi, created_at, updated_at)
-VALUES (gen_random_uuid(), 'hypertension-older-adults', 'Hypertension in Older Adults', 'Cây 7: THA Người cao tuổi', NOW(), NOW())
-ON CONFLICT (tree_key) DO NOTHING;
-
--- ── decision_nodes ────────────────────────────────────────────────────────────
-
--- START
-INSERT INTO public.decision_nodes
-  (id, tree_id, node_key, node_type, text_en, text_vi,
-   condition_definition, context_patch, action_payload, global_config,
-   link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults'),
-  'T7_START', 'START'::node_type,
-  'Tree 3: Blood Pressure Thresholds and Targets',
-  'Cây 3 Ngưỡng huyết áp và đích điều trị',
-  NULL, NULL, NULL, NULL, NULL, NULL, 1, NOW(), NOW()
-WHERE NOT EXISTS (
-  SELECT 1 FROM public.decision_nodes
-  WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults')
-    AND node_key = 'T7_START');
-
--- INFERENCE: Classify
-INSERT INTO public.decision_nodes
-  (id, tree_id, node_key, node_type, text_en, text_vi,
-   condition_definition, context_patch, action_payload, global_config,
-   link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults'),
-  'T7_A_CLASSIFY', 'INFERENCE'::node_type,
-  'Classify hypertension in elderly and very elderly patients',
-  'Phân loại THA bệnh nhân cao tuổi và bệnh nhân rất già',
-  NULL, NULL, '{"action_type": "CLASSIFY_ELDERLY_PATIENT"}'::jsonb, NULL, NULL, NULL,
-  2, NOW(), NOW()
-WHERE NOT EXISTS (
-  SELECT 1 FROM public.decision_nodes
-  WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults')
-    AND node_key = 'T7_A_CLASSIFY');
-
--- CONDITION: Age 70-79
-INSERT INTO public.decision_nodes
-  (id, tree_id, node_key, node_type, text_en, text_vi,
-   condition_definition, context_patch, action_payload, global_config,
-   link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults'),
-  'T7_C_AGE_70_79', 'CONDITION'::node_type,
-  'Patient age is in range 70-79',
-  'Tuổi bệnh nhân thuộc khoảng 70-79',
-  '{"all": [{"op": "gte", "path": "input.age", "value": 70}, {"op": "lte", "path": "input.age", "value": 79}]}'::jsonb,
-  NULL, NULL, NULL, NULL, NULL, 3, NOW(), NOW()
-WHERE NOT EXISTS (
-  SELECT 1 FROM public.decision_nodes
-  WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults')
-    AND node_key = 'T7_C_AGE_70_79');
-
--- CONDITION: Age >= 80
-INSERT INTO public.decision_nodes
-  (id, tree_id, node_key, node_type, text_en, text_vi,
-   condition_definition, context_patch, action_payload, global_config,
-   link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults'),
-  'T7_C_AGE_80_PLUS', 'CONDITION'::node_type,
-  'Patient age >= 80 (very elderly)',
-  'Tuổi bệnh nhân >=80',
-  '{"op": "gte", "path": "input.age", "value": 80}'::jsonb,
-  NULL, NULL, NULL, NULL, NULL, 4, NOW(), NOW()
-WHERE NOT EXISTS (
-  SELECT 1 FROM public.decision_nodes
-  WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults')
-    AND node_key = 'T7_C_AGE_80_PLUS');
-
--- INFERENCE: Prescribe D+C for age 70-79
-INSERT INTO public.decision_nodes
-  (id, tree_id, node_key, node_type, text_en, text_vi,
-   condition_definition, context_patch, action_payload, global_config,
-   link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults'),
-  'T7_I_DC_70_79', 'INFERENCE'::node_type,
-  'Prescribe D + C combination, prioritize thiazide-like D',
-  'Chỉ định điều trị thuốc D + C, Ưu tiên D thiazide-like',
-  NULL, NULL,
-  '{"action_type": "PRESCRIBE_D_C_THIAZIDE_PRIORITY", "drugs": ["D_THIAZIDE_LIKE", "C"]}'::jsonb,
-  NULL, NULL, NULL, 5, NOW(), NOW()
-WHERE NOT EXISTS (
-  SELECT 1 FROM public.decision_nodes
-  WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults')
-    AND node_key = 'T7_I_DC_70_79');
-
--- LINK: Essential Treatment Strategy (Tree 4)
-INSERT INTO public.decision_nodes
-  (id, tree_id, node_key, node_type, text_en, text_vi,
-   condition_definition, context_patch, action_payload, global_config,
-   link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults'),
-  'T7_LINK_ESSENTIAL', 'LINK'::node_type,
-  'Tree 4: Essential Treatment Strategy',
-  'Cây 4: Chiến lược điều trị thiết yếu',
-  NULL, NULL, NULL, NULL, 'essential-treatment-strategy', NULL,
-  6, NOW(), NOW()
-WHERE NOT EXISTS (
-  SELECT 1 FROM public.decision_nodes
-  WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults')
-    AND node_key = 'T7_LINK_ESSENTIAL');
-
--- LINK: Optimal Treatment Strategy (Tree 5)
-INSERT INTO public.decision_nodes
-  (id, tree_id, node_key, node_type, text_en, text_vi,
-   condition_definition, context_patch, action_payload, global_config,
-   link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults'),
-  'T7_LINK_OPTIMAL', 'LINK'::node_type,
-  'Tree 5: Optimal Treatment Strategy',
-  'Cây 5: Chiến lược điều trị tối ưu',
-  NULL, NULL, NULL, NULL, 'optimal-treatment-strategy', NULL,
-  7, NOW(), NOW()
-WHERE NOT EXISTS (
-  SELECT 1 FROM public.decision_nodes
-  WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults')
-    AND node_key = 'T7_LINK_OPTIMAL');
-
--- GLOBAL: Drug classification legend
-INSERT INTO public.decision_nodes
-  (id, tree_id, node_key, node_type, text_en, text_vi,
-   condition_definition, context_patch, action_payload, global_config,
-   link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults'),
-  'T7_G_DRUGS', 'GLOBAL'::node_type,
-  'First-line drugs: D (thiazide-like) + C. Add A or MRA when necessary',
-  'Thuốc chỉ định hàng đầu: D (thiazide-like) + C. Thêm A hoặc MRA khi cần',
-  NULL, NULL, NULL,
-  '{"drug_classes": {"A": {"label": "Ức chế hệ RAS", "subtypes": ["UCMC: Ức chế men chuyển", "CTTA: chẹn thụ thể angiotensin II", "ARNI: chẹn thụ thể Angiotensine-neprisyline"]}, "B": {"label": "Chẹn Beta", "subtypes": ["CB"]}, "C": {"label": "Chẹn kênh Canxi", "subtypes": ["CKCa"]}, "D": {"label": "Lợi tiểu", "subtypes": ["LT"]}, "MRA": {"label": "Thuốc đối kháng thụ thể mineral coticoid"}, "SGLT2i": {"label": "dapagliflozin / empagliflozin"}}}'::jsonb,
-  NULL, NULL, 8, NOW(), NOW()
-WHERE NOT EXISTS (
-  SELECT 1 FROM public.decision_nodes
-  WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults')
-    AND node_key = 'T7_G_DRUGS');
-
--- ── decision_edges ────────────────────────────────────────────────────────────
-
--- START → CLASSIFY
-INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_START'),
-  (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_A_CLASSIFY'),
-  1
-WHERE NOT EXISTS (SELECT 1 FROM public.decision_edges
-  WHERE from_node_id = (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_START')
-    AND to_node_id   = (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_A_CLASSIFY')
-    AND traversal_order = 1);
-
--- CLASSIFY → C_AGE_70_79 (1)
-INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_A_CLASSIFY'),
-  (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_C_AGE_70_79'),
-  1
-WHERE NOT EXISTS (SELECT 1 FROM public.decision_edges
-  WHERE from_node_id = (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_A_CLASSIFY')
-    AND to_node_id   = (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_C_AGE_70_79')
-    AND traversal_order = 1);
-
--- CLASSIFY → C_AGE_80_PLUS (2)
-INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_A_CLASSIFY'),
-  (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_C_AGE_80_PLUS'),
-  2
-WHERE NOT EXISTS (SELECT 1 FROM public.decision_edges
-  WHERE from_node_id = (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_A_CLASSIFY')
-    AND to_node_id   = (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_C_AGE_80_PLUS')
-    AND traversal_order = 2);
-
--- C_AGE_70_79 → I_DC_70_79
-INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_C_AGE_70_79'),
-  (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_I_DC_70_79'),
-  1
-WHERE NOT EXISTS (SELECT 1 FROM public.decision_edges
-  WHERE from_node_id = (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_C_AGE_70_79')
-    AND to_node_id   = (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_I_DC_70_79')
-    AND traversal_order = 1);
-
--- I_DC_70_79 → LINK_ESSENTIAL (1)
-INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_I_DC_70_79'),
-  (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_LINK_ESSENTIAL'),
-  1
-WHERE NOT EXISTS (SELECT 1 FROM public.decision_edges
-  WHERE from_node_id = (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_I_DC_70_79')
-    AND to_node_id   = (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_LINK_ESSENTIAL')
-    AND traversal_order = 1);
-
--- I_DC_70_79 → LINK_OPTIMAL (2)
-INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_I_DC_70_79'),
-  (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_LINK_OPTIMAL'),
-  2
-WHERE NOT EXISTS (SELECT 1 FROM public.decision_edges
-  WHERE from_node_id = (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_I_DC_70_79')
-    AND to_node_id   = (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_LINK_OPTIMAL')
-    AND traversal_order = 2);
-
--- C_AGE_80_PLUS → LINK_ESSENTIAL (1)
-INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_C_AGE_80_PLUS'),
-  (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_LINK_ESSENTIAL'),
-  1
-WHERE NOT EXISTS (SELECT 1 FROM public.decision_edges
-  WHERE from_node_id = (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_C_AGE_80_PLUS')
-    AND to_node_id   = (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_LINK_ESSENTIAL')
-    AND traversal_order = 1);
-
--- C_AGE_80_PLUS → LINK_OPTIMAL (2)
-INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_C_AGE_80_PLUS'),
-  (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_LINK_OPTIMAL'),
-  2
-WHERE NOT EXISTS (SELECT 1 FROM public.decision_edges
-  WHERE from_node_id = (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_C_AGE_80_PLUS')
-    AND to_node_id   = (SELECT id FROM public.decision_nodes WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults') AND node_key = 'T7_LINK_OPTIMAL')
-    AND traversal_order = 2);
-
--- ── node_source_references ────────────────────────────────────────────────────
-INSERT INTO public.node_source_references
-  (id, node_id, source_title, section_path, locator, locator_detail,
-   printed_page_numbers, pdf_page_numbers, reference_note, reference_order)
-SELECT gen_random_uuid(),
-  (SELECT id FROM public.decision_nodes
-   WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults')
-     AND node_key = nk),
-  'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)',
-  '["3.6. Các trường hợp tăng huyết áp đặc biệt", "3.6.3. Tăng huyết áp ở người cao tuổi"]'::jsonb,
-  '3.6.3. Tăng huyết áp ở người cao tuổi',
-  NULL, '{31}'::integer[], '{33}'::integer[], NULL, 1
-FROM (VALUES
-  ('T7_START'), ('T7_A_CLASSIFY'), ('T7_C_AGE_70_79'), ('T7_C_AGE_80_PLUS'),
-  ('T7_I_DC_70_79'), ('T7_LINK_ESSENTIAL'), ('T7_LINK_OPTIMAL'), ('T7_G_DRUGS')
-) AS nodes(nk)
-WHERE NOT EXISTS (
-  SELECT 1 FROM public.node_source_references
-  WHERE node_id = (SELECT id FROM public.decision_nodes
-    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-older-adults')
-      AND node_key = nk)
-    AND reference_order = 1
-);
-
 
 COPY public.development_runtime_logs ("id", "request_id", "environment", "input_payload", "inference_context", "journey", "output_payload", "error_payload", "created_at") FROM stdin;
 \.
 
 COPY public.alembic_version ("version_num") FROM stdin;
-8cd7e7adc1fb
+4da35a974155
 \.
-
 
 COMMIT;
