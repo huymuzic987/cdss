@@ -146,6 +146,42 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
       if (!evaluation) return
       const { result, partial, traceLog } = evaluation
 
+      // If tree = resistant_hypertension and node = MRA tolerance -> show popup during full traverse
+      const mraIdx = traceLog.findIndex(
+        (entry) =>
+          entry.event === 'node_entered' &&
+          (entry.tree_key === 'resistant-hypertension') &&
+          DRUG_TOLERANCE_NODE_KEYS.has(entry.node_key),
+      )
+
+      if (mraIdx !== -1) {
+        manualStartTreeKeyRef.current = startTreeKey
+        manualInputRef.current = { ...input }
+
+        const pausedTrace = traceLog.slice(0, mraIdx + 1)
+        const enteredByTree: Record<string, Set<string>> = {}
+        for (const entry of pausedTrace) {
+          if (entry.event === 'node_entered') {
+            if (!enteredByTree[entry.tree_key]) enteredByTree[entry.tree_key] = new Set()
+            enteredByTree[entry.tree_key].add(entry.node_key)
+          }
+        }
+        const newHighlights: Record<string, ReadonlySet<string>> = {}
+        for (const [treeKey, nodeSet] of Object.entries(enteredByTree)) {
+          newHighlights[treeKey] = nodeSet
+        }
+        setHighlightedNodeKeys(newHighlights)
+
+        const mraEntry = traceLog[mraIdx]
+        setActiveTraversalTreeKey(mraEntry.tree_key)
+        setActiveTreeKey(mraEntry.tree_key)
+        setActiveNodeKey(mraEntry.node_key)
+        setFocusNodeKey(mraEntry.node_key)
+
+        setShowDrugTolerancePopup(true)
+        return
+      }
+
       // Group all entered nodes by tree key
       const enteredByTree: Record<string, Set<string>> = {}
       for (const entry of traceLog) {
@@ -245,8 +281,9 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
     const nextIndex = manualStepIndex + 1
     setManualStepIndex(nextIndex)
 
-    // If we just stepped onto the MRA check node, pause and show the popup
-    if (DRUG_TOLERANCE_NODE_KEYS.has(entry.node_key)) {
+    // If we just stepped onto the MRA check node in resistant_hypertension, pause and show the popup
+    const isResistantHypertension = entry.tree_key === 'resistant-hypertension' || entry.tree_key === 'resistant_hypertension'
+    if (isResistantHypertension && DRUG_TOLERANCE_NODE_KEYS.has(entry.node_key)) {
       setShowDrugTolerancePopup(true)
       return
     }
@@ -284,6 +321,41 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
       setActiveTreeKey(currentTreeKey)
     }
 
+    if (!manualMode) {
+      // Complete full traverse mode normally with the re-evaluated trace
+      const enteredByTree: Record<string, Set<string>> = {}
+      for (const entry of traceLog) {
+        if (entry.event === 'node_entered') {
+          if (!enteredByTree[entry.tree_key]) enteredByTree[entry.tree_key] = new Set()
+          enteredByTree[entry.tree_key].add(entry.node_key)
+        }
+      }
+      const newHighlights: Record<string, ReadonlySet<string>> = {}
+      for (const [treeKey, nodeSet] of Object.entries(enteredByTree)) {
+        newHighlights[treeKey] = nodeSet
+      }
+      setHighlightedNodeKeys(newHighlights)
+
+      let lastEntry: TraversalTraceEntry | undefined
+      for (let i = traceLog.length - 1; i >= 0; i--) {
+        if (traceLog[i].event === 'node_entered') {
+          lastEntry = traceLog[i]
+          break
+        }
+      }
+      if (lastEntry) {
+        setActiveTraversalTreeKey(lastEntry.tree_key)
+        setActiveTreeKey(lastEntry.tree_key)
+        setActiveNodeKey(lastEntry.node_key)
+        setFocusNodeKey(lastEntry.node_key)
+      } else {
+        setActiveNodeKey(null)
+      }
+
+      finish(result, partial)
+      return
+    }
+
     const newEnteredEntries = traceLog.filter((entry) => entry.event === 'node_entered')
 
     const alreadyShown = manualEntriesRef.current.slice(0, manualStepIndex)
@@ -301,7 +373,7 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
       setManualMode(false)
       finish(result, partial)
     }
-  }, [manualStepIndex, finish, runEvaluation, activeTraversalTreeKey, setActiveTreeKey])
+  }, [manualMode, manualStepIndex, finish, runEvaluation, activeTraversalTreeKey, setActiveTreeKey, setFocusNodeKey])
 
   const handleDrugToleranceCancel = useCallback(() => {
     setShowDrugTolerancePopup(false)
