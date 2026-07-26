@@ -34,6 +34,7 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
 
   const isSceneLoadedRef = useRef(false)
   const lastSavedPositionsRef = useRef<Record<string, { x: number; y: number }>>({})
+  const lastSavedArrowKindRef = useRef<'straight' | 'elbow'>('elbow')
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleMount = useCallback(
@@ -54,6 +55,7 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
         if (cancelled) return
 
         setArrowKind(savedLayout.arrow_kind)
+        lastSavedArrowKindRef.current = savedLayout.arrow_kind
 
         // Merge calculated ELK layout with saved positions
         const mergedPositions = new Map<string, NodePosition>()
@@ -98,7 +100,7 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
         }
         void saveTreeLayout(graph.tree.tree_key, {
           positions: lastSavedPositionsRef.current,
-          arrow_kind: arrowKindRef.current,
+          arrow_kind: lastSavedArrowKindRef.current,
         }).catch((error) => console.error('Failed to save layout', error))
       }
 
@@ -118,11 +120,11 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
             }
           }
 
-          // Node persistence logic
+          // Canvas persistence logic (nodes & edges/arrows)
           if (!isSceneLoadedRef.current) return
 
           const nodes = editor.getCurrentPageShapes().filter((s) => s.type === 'decisionNode')
-          let hasMoved = false
+          let hasNodeMoved = false
           const currentPositions: Record<string, { x: number; y: number }> = {}
 
           for (const shape of nodes) {
@@ -131,13 +133,27 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
               currentPositions[nodeKey] = { x: shape.x, y: shape.y }
               const lastPos = lastSavedPositionsRef.current[nodeKey]
               if (!lastPos || lastPos.x !== shape.x || lastPos.y !== shape.y) {
-                hasMoved = true
+                hasNodeMoved = true
               }
             }
           }
 
-          if (hasMoved) {
+          const arrowShapes = editor.getCurrentPageShapes().filter((s) => s.type === 'arrow')
+          let currentArrowKind: 'straight' | 'elbow' = arrowKindRef.current
+          if (arrowShapes.length > 0) {
+            const hasElbow = arrowShapes.some((s) => (s.props as any)?.kind === 'elbow')
+            currentArrowKind = hasElbow ? 'elbow' : 'straight'
+          }
+
+          const hasArrowChanged = currentArrowKind !== lastSavedArrowKindRef.current
+
+          if (currentArrowKind !== arrowKindRef.current) {
+            setArrowKind(currentArrowKind)
+          }
+
+          if (hasNodeMoved || hasArrowChanged) {
             lastSavedPositionsRef.current = currentPositions
+            lastSavedArrowKindRef.current = currentArrowKind
             if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
             saveTimeoutRef.current = setTimeout(flushSave, SAVE_DEBOUNCE_MS)
           }
@@ -159,5 +175,15 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
     [],
   )
 
-  return { editorRef, shapeIdsRef, lastSavedPositionsRef, isSceneLoaded, arrowKind, setArrowKind, handleMount }
+  return {
+    editorRef,
+    shapeIdsRef,
+    lastSavedPositionsRef,
+    lastSavedArrowKindRef,
+    isSceneLoaded,
+    arrowKind,
+    setArrowKind,
+    handleMount,
+  }
 }
+
