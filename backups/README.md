@@ -1,60 +1,23 @@
-# Database backups
+# Database Backups & Seed Data
 
-Self-contained SQL snapshots of the CDSS database (schema + data), for
-disaster recovery and point-in-time reference.
+Self-contained SQL snapshots and seed scripts for the CDSS database.
 
 ## Contents
 
-- `dump.py` — read-only backup generator. Reconstructs exact DDL (enum,
-  tables, constraints, indexes) from `pg_catalog` and emits native `COPY`
-  data blocks. Never writes credentials into the output.
-- `restore.py` — loads a snapshot into a **local** database, wiping it first.
-- `cdss_prod_<UTC-date>.sql` — a generated snapshot. Each file has a header
-  with the source database, server version, generation time, and row counts.
+- `backup.sql` — full self-contained snapshot (DDL schema + data) for 14 clinical decision trees and the 65-drug reference catalog.
+- `seed.sql` — pure data seed script (**INSERT statements only**, no schema DDL). Designed to populate an empty database initialized by `uv run alembic upgrade head`.
+- `dump.py` — read-only backup generator script.
+- `restore.py` — restores a snapshot into a local PostgreSQL database.
 
-The dump captures the five decision-tree tables plus `alembic_version`. It
-contains clinical decision-tree definitions only — no patient/PHI data.
+## Usage Workflows
 
-`cdss_merged.sql` additionally includes the `medicines` table and its
-65-row seed data (see the file's own header comment for full merge
-provenance), so restoring it alone yields a complete, ready-to-use database.
-
-## Create a new backup
-
-Reads `DATABASE_URL` from the environment (falling back to `.env`), the same
-way the app loads it:
-
+### Workflow A: Pure Alembic + Seed Data (Recommended for Development)
 ```bash
-uv run python backups/dump.py                      # -> backups/cdss_prod_<UTC-date>.sql
-uv run python backups/dump.py path/to/backup.sql   # explicit output path
+uv run alembic upgrade head
+psql -d cdss -f backups/seed.sql
 ```
 
-The operation is strictly read-only (`SET SESSION read only`).
-
-## Restore
-
-The dump is a complete, ordered SQL script (types → tables → constraints →
-indexes → data) wrapped in a single transaction. Restore into an **empty**
-database:
-
+### Workflow B: Full Snapshot Restore
 ```bash
-createdb cdss_restore
-psql -d cdss_restore -f backups/cdss_prod_<date>.sql
-```
-
-The restored database lands on the same Alembic revision as the source
-(`alembic_version` is included), so `alembic current` will match and further
-migrations apply cleanly.
-
-## Refresh the local database from a snapshot
-
-`restore.py` wipes the target's `public` schema and replays a snapshot
-(DDL + data). It is **fail-closed**: the target host must be local
-(`localhost`/`127.0.0.1`/`postgres`), so it can never wipe a remote/production
-database.
-
-```bash
-uv run python backups/restore.py                                  # latest snapshot -> local cdss
-uv run python backups/restore.py --dump backups/cdss_prod_<date>.sql
-uv run python backups/restore.py --target postgresql://cdss:cdss@localhost:54321/cdss
+uv run python backups/restore.py --dump backups/backup.sql
 ```
