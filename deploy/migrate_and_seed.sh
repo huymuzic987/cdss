@@ -31,6 +31,12 @@ for i in $(seq 1 24); do
     sleep 5
 done
 
+# Make a backup copy of seed.sql before DB wipe if not already created
+if [ -f "backups/seed.sql" ] && [ ! -f "backups/seed.sql.bak" ]; then
+    echo "Creating backup of seed.sql before DB wipe..."
+    cp backups/seed.sql backups/seed.sql.bak
+fi
+
 echo "Wiping database..."
 $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 
@@ -38,4 +44,18 @@ echo "Applying Alembic migrations..."
 $COMPOSE run --rm backend alembic upgrade head
 
 echo "Seeding data from backups/seed.sql..."
-$COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" < backups/seed.sql
+if ! $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" < backups/seed.sql; then
+    echo "ERROR: Seeding data from backups/seed.sql failed!"
+    if [ -f "backups/seed.sql.bak" ]; then
+        echo "Reverting database back to previous working seed.sql file copy..."
+        $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+        $COMPOSE run --rm backend alembic upgrade head
+        echo "Applying previous working seed.sql copy..."
+        $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" < backups/seed.sql.bak
+        cp backups/seed.sql.bak backups/seed.sql
+        echo "Database successfully reverted to previous working seed data."
+    else
+        echo "No previous working seed.sql copy found to revert."
+    fi
+    exit 1
+fi

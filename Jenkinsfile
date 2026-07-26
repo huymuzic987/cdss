@@ -56,6 +56,9 @@ pipeline {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             mkdir -p ${DEPLOY_PATH}
+                            if [ -f ${DEPLOY_PATH}/backups/seed.sql ]; then
+                                cp ${DEPLOY_PATH}/backups/seed.sql ${DEPLOY_PATH}/backups/seed.sql.bak
+                            fi
                         "
 
                         rsync -avz --delete \
@@ -70,6 +73,7 @@ pipeline {
                             --exclude '.pytest_cache' \
                             --exclude '.ruff_cache' \
                             --exclude 'scratch' \
+                            --exclude 'backups/seed.sql.bak' \
                             ./ ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/
                     '''
                 }
