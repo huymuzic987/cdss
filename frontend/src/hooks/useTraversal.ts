@@ -7,6 +7,7 @@ import type {
   TraversalTraceEntry,
   TreeGraphResponse,
 } from '../api/types'
+import type { DrugToleranceResult } from '../panels/DrugToleranceCheckbox'
 
 type TraversalState = 'idle' | 'running' | 'done'
 
@@ -15,6 +16,44 @@ interface UseTraversalOptions {
   setActiveTreeKey: (treeKey: string) => void
   setFocusNodeKey: (nodeKey: string | null) => void
   setError: (error: string | null) => void
+}
+
+/** Update or insert a parameter value inside a FHIR R4 Bundle or flat input object */
+function updateBundleParameter(bundle: JsonObject, key: string, value: boolean): JsonObject {
+  if (bundle['resourceType'] !== 'Bundle' || !Array.isArray(bundle['entry'])) {
+    return { ...bundle, [key]: value }
+  }
+
+  const entries = [...bundle['entry']] as JsonObject[]
+  let foundParams = false
+
+  const updatedEntries: JsonObject[] = entries.map((e) => {
+    const resource = e['resource'] as JsonObject | undefined
+    if (resource && resource['resourceType'] === 'Parameters') {
+      foundParams = true
+      const params = (Array.isArray(resource['parameter']) ? [...resource['parameter']] : []) as JsonObject[]
+      const idx = params.findIndex((p) => p['name'] === key)
+      const newParam: JsonObject = { name: key, valueBoolean: value }
+      if (idx >= 0) {
+        params[idx] = newParam
+      } else {
+        params.push(newParam)
+      }
+      return { ...e, resource: { ...resource, parameter: params } }
+    }
+    return e
+  })
+
+  if (!foundParams) {
+    updatedEntries.push({
+      resource: {
+        resourceType: 'Parameters',
+        parameter: [{ name: key, valueBoolean: value }],
+      },
+    })
+  }
+
+  return { ...bundle, entry: updatedEntries }
 }
 
 export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, setError }: UseTraversalOptions) {
@@ -39,6 +78,10 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
     result: null,
     partial: null,
   })
+
+  // Store original traversal params so we can update tolerance variables and re-evaluate
+  const manualStartTreeKeyRef = useRef<string>('')
+  const manualInputRef = useRef<JsonObject>({})
 
   // Generation token: each start/reset bumps this, and every in-flight call
   // captures its own id so a stale call can never be "un-cancelled" by a
@@ -155,6 +198,9 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
       setManualMode(false)
       setManualStepIndex(0)
 
+      manualStartTreeKeyRef.current = startTreeKey
+      manualInputRef.current = { ...input }
+
       const evaluation = await runEvaluation(runId, startTreeKey, input)
       if (!evaluation) return
       const { result, partial, traceLog } = evaluation
@@ -211,16 +257,51 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
     }
   }, [manualMode, manualStepIndex, showDrugTolerancePopup, setActiveTreeKey, setFocusNodeKey, finish])
 
-  const handleDrugToleranceConfirm = useCallback(() => {
+  const handleDrugToleranceChange = useCallback((fieldKey: 'tolerates_mra' | 'tolerates_spironolactone', value: boolean) => {
+    manualInputRef.current = updateBundleParameter(manualInputRef.current, fieldKey, value)
+  }, [])
+
+  const handleDrugToleranceConfirm = useCallback(async (toleranceResult: DrugToleranceResult) => {
     setShowDrugTolerancePopup(false)
-    // Check if that was the last step
-    const entries = manualEntriesRef.current
-    if (manualStepIndex >= entries.length) {
-      setManualMode(false)
-      finish(manualFinalRef.current.result, manualFinalRef.current.partial)
+
+    // Ensure the FHIR input bundle has both boolean variables properly updated inside its Parameters resource
+    let updatedInput = updateBundleParameter(manualInputRef.current, 'tolerates_mra', toleranceResult.tolerates_mra)
+    updatedInput = updateBundleParameter(updatedInput, 'tolerates_spironolactone', toleranceResult.tolerates_spironolactone)
+    manualInputRef.current = updatedInput
+
+    const runId = ++runIdRef.current
+    const currentTreeKey = activeTraversalTreeKey
+    const evaluation = await runEvaluation(
+      runId,
+      manualStartTreeKeyRef.current,
+      updatedInput,
+    )
+    if (!evaluation) return
+    const { result, partial, traceLog } = evaluation
+
+    // Keep viewing the current tree rather than jumping back to starting tree
+    if (currentTreeKey) {
+      setActiveTreeKey(currentTreeKey)
     }
-    // Otherwise, next canvas click will advance to the next step
-  }, [manualStepIndex, finish])
+
+    const newEnteredEntries = traceLog.filter((entry) => entry.event === 'node_entered')
+
+    const alreadyShown = manualEntriesRef.current.slice(0, manualStepIndex)
+    let newStartIdx = 0
+    for (let i = 0; i < newEnteredEntries.length && newStartIdx < alreadyShown.length; i++) {
+      if (newEnteredEntries[i].node_key === alreadyShown[newStartIdx].node_key) {
+        newStartIdx++
+      }
+    }
+    const remainingNew = newEnteredEntries.slice(newStartIdx)
+    manualEntriesRef.current = [...alreadyShown, ...remainingNew]
+    manualFinalRef.current = { result, partial }
+
+    if (manualStepIndex >= manualEntriesRef.current.length) {
+      setManualMode(false)
+      finish(result, partial)
+    }
+  }, [manualStepIndex, finish, runEvaluation, activeTraversalTreeKey, setActiveTreeKey])
 
   const handleDrugToleranceCancel = useCallback(() => {
     setShowDrugTolerancePopup(false)
@@ -255,6 +336,7 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
     showDrugTolerancePopup,
     handleDrugToleranceConfirm,
     handleDrugToleranceCancel,
+    handleDrugToleranceChange,
     handleStartTraversal,
     handleStartManualTraversal,
     handleManualStep,

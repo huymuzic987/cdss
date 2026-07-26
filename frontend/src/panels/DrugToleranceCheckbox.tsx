@@ -23,9 +23,10 @@ export interface DrugToleranceResult {
 interface DrugToleranceCheckboxProps {
   onConfirm: (result: DrugToleranceResult) => void
   onCancel: () => void
+  onChange?: (fieldKey: 'tolerates_mra' | 'tolerates_spironolactone', value: boolean) => void
 }
 
-export function DrugToleranceCheckbox({ onConfirm, onCancel }: DrugToleranceCheckboxProps) {
+export function DrugToleranceCheckbox({ onConfirm, onCancel, onChange }: DrugToleranceCheckboxProps) {
   // null = not yet answered
   const [mraTolerance, setMraTolerance] = useState<boolean | null>(null)
   const [spiroTolerance, setSpiroTolerance] = useState<boolean | null>(null)
@@ -38,10 +39,15 @@ export function DrugToleranceCheckbox({ onConfirm, onCancel }: DrugToleranceChec
     if (!canConfirm) return
     if (mraTolerance === true) {
       onConfirm({ tolerates_mra: true, tolerates_spironolactone: false })
+    } else if (mraTolerance === false && spiroTolerance === true) {
+      onConfirm({
+        tolerates_mra: false,
+        tolerates_spironolactone: true,
+      })
     } else {
       onConfirm({
         tolerates_mra: false,
-        tolerates_spironolactone: spiroTolerance === true,
+        tolerates_spironolactone: false,
       })
     }
   }
@@ -49,9 +55,16 @@ export function DrugToleranceCheckbox({ onConfirm, onCancel }: DrugToleranceChec
   // When MRA changes to Yes, reset spiro since it's no longer relevant
   const handleMraChange = (value: boolean) => {
     setMraTolerance(value)
+    if (onChange) onChange('tolerates_mra', value)
     if (value === true) {
       setSpiroTolerance(null)
+      if (onChange) onChange('tolerates_spironolactone', false)
     }
+  }
+
+  const handleSpiroChange = (value: boolean) => {
+    setSpiroTolerance(value)
+    if (onChange) onChange('tolerates_spironolactone', value)
   }
 
   return (
@@ -108,7 +121,7 @@ export function DrugToleranceCheckbox({ onConfirm, onCancel }: DrugToleranceChec
               <button
                 type="button"
                 className={`dtc-choice-btn dtc-yes${spiroTolerance === true ? ' active' : ''}${!spiroEnabled ? ' disabled' : ''}`}
-                onClick={() => spiroEnabled && setSpiroTolerance(true)}
+                onClick={() => spiroEnabled && handleSpiroChange(true)}
                 disabled={!spiroEnabled}
               >
                 Yes
@@ -116,7 +129,7 @@ export function DrugToleranceCheckbox({ onConfirm, onCancel }: DrugToleranceChec
               <button
                 type="button"
                 className={`dtc-choice-btn dtc-no${spiroTolerance === false ? ' active' : ''}${!spiroEnabled ? ' disabled' : ''}`}
-                onClick={() => spiroEnabled && setSpiroTolerance(false)}
+                onClick={() => spiroEnabled && handleSpiroChange(false)}
                 disabled={!spiroEnabled}
               >
                 No
@@ -133,7 +146,7 @@ export function DrugToleranceCheckbox({ onConfirm, onCancel }: DrugToleranceChec
             )}
             {mraTolerance === true && (
               <span className="dtc-summary-value">
-                tolerates_mra = <strong>true</strong>
+                tolerates_mra = <strong>true</strong> · tolerates_spironolactone = <strong>false</strong>
               </span>
             )}
             {mraTolerance === false && spiroTolerance === null && (

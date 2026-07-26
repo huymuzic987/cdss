@@ -55,6 +55,7 @@ function App() {
     showDrugTolerancePopup,
     handleDrugToleranceConfirm,
     handleDrugToleranceCancel,
+    handleDrugToleranceChange,
     handleStartTraversal,
     handleStartManualTraversal,
     handleManualStep,
@@ -300,6 +301,7 @@ function App() {
         <DrugToleranceCheckbox
           onConfirm={handleDrugToleranceConfirm}
           onCancel={handleDrugToleranceCancel}
+          onChange={handleDrugToleranceChange}
         />
       )}
     </div>
