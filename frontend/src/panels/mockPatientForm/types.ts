@@ -90,8 +90,7 @@ export interface PatientFormData {
   is_lifestyle_follow_up: boolean
   is_medication_follow_up: boolean
   medication_follow_up_stage: 'INITIAL_REGIMEN' | 'ESCALATED_REGIMEN' | ''
-  // Active BP target
-  has_active_bp_target: boolean
+  // Active BP target (required for medication follow-up)
   target_sbp_upper: string
   target_dbp_upper: string
 }
@@ -167,7 +166,6 @@ export const DEFAULT_FORM: PatientFormData = {
   is_lifestyle_follow_up: false,
   is_medication_follow_up: false,
   medication_follow_up_stage: '',
-  has_active_bp_target: false,
   target_sbp_upper: '',
   target_dbp_upper: '',
 }
