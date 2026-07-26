@@ -41,7 +41,7 @@ echo "Wiping database..."
 $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 
 echo "Applying Alembic migrations..."
-$COMPOSE run --rm backend alembic upgrade head
+$COMPOSE run --rm --build backend alembic upgrade head
 
 echo "Seeding data from backups/seed.sql..."
 if ! $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" < backups/seed.sql; then
@@ -49,7 +49,7 @@ if ! $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGR
     if [ -f "backups/seed.sql.bak" ]; then
         echo "Reverting database back to previous working seed.sql file copy..."
         $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-        $COMPOSE run --rm backend alembic upgrade head
+        $COMPOSE run --rm --build backend alembic upgrade head
         echo "Applying previous working seed.sql copy..."
         $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" < backups/seed.sql.bak
         cp backups/seed.sql.bak backups/seed.sql
