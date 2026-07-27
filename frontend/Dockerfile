@@ -20,6 +20,8 @@ COPY . .
 # build served over https from a non-localhost domain.
 ARG VITE_TLDRAW_LICENSE_KEY
 ENV VITE_TLDRAW_LICENSE_KEY=$VITE_TLDRAW_LICENSE_KEY
+ARG VITE_PRODUCTION=0
+ENV VITE_PRODUCTION=$VITE_PRODUCTION
 RUN pnpm build
 
 FROM nginx:1.27-alpine AS runtime

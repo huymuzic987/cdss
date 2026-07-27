@@ -143,22 +143,30 @@ export function TraversalResultModal({ result, partial, onClose }: TraversalResu
   const log = result?.traversal_log ?? partial?.partial_run_state?.traversal_log ?? []
   const actions = result?.actions ?? partial?.partial_run_state?.actions ?? []
   const context = result?.context ?? partial?.partial_run_state?.context ?? {}
+  const references = result?.references ?? partial?.partial_run_state?.references ?? []
   const isSuccess = !!result
+  const isProduction = import.meta.env.VITE_PRODUCTION === '1'
 
   const conditionEntries = log.filter(
     (e) => e.event === 'candidate_evaluated' && e.condition_result !== null,
   )
   const enteredNodes = log.filter((e) => e.event === 'node_entered')
+  const traversedTreeKeys = new Set(enteredNodes.map((entry) => entry.tree_key))
+  const clinicalPathways = (result?.tree_metadata ?? []).filter((tree) =>
+    traversedTreeKeys.has(tree.tree_key),
+  )
+  const evidenceSources = Array.from(
+    new Map(references.map((reference) => [reference.source_title, reference])).values(),
+  )
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className={`modal-header ${isSuccess ? 'success' : 'partial'}`}>
-          <div className="modal-header-icon">{isSuccess ? '✅' : '⚠️'}</div>
           <div>
             <div className="modal-header-title">
-              {isSuccess ? 'Traversal Complete' : 'Partial Traversal – Unresolved Link'}
+              {isSuccess ? 'Clinical Decision Support Result' : 'Incomplete Decision Support Result'}
             </div>
             {!isSuccess && partial && (
               <div className="modal-header-sub">{partial.message}</div>
@@ -170,20 +178,27 @@ export function TraversalResultModal({ result, partial, onClose }: TraversalResu
               </div>
             )}
           </div>
-          <button type="button" className="modal-close" onClick={onClose}>✕</button>
         </div>
 
         <div className="modal-body">
+          {result?.inferred_follow_up_type && (
+            <div className="modal-action-card">
+              <div className="modal-alert-reason">
+                Inferred workflow: {result.inferred_follow_up_type.replaceAll('_', ' ')}
+              </div>
+              {result.previous_recommended_action_types.length > 0 && (
+                <div className="modal-alert-detail">
+                  Previous guideline recommendation: {result.previous_recommended_action_types.join(', ')}
+                </div>
+              )}
+            </div>
+          )}
           {/* Actions */}
           {actions.map((action, i) => {
             const medicineOptions = getMedicineOptions(action.payload)
             const medicines = getMedicines(action.payload)
             return (
               <div key={i} className="modal-action-card">
-                <div className="modal-action-header">
-                  <span className="modal-action-type">{String(action.payload.action_type ?? 'ACTION')}</span>
-                  <span className="modal-action-node">{action.node_key}</span>
-                </div>
                 <div className="modal-alert-reason">{action.text_vi}</div>
                 {action.text_en && <div className="modal-alert-detail">{action.text_en}</div>}
 
@@ -246,8 +261,62 @@ export function TraversalResultModal({ result, partial, onClose }: TraversalResu
 
           {/* Everything below is collapsed by default — debug / audit detail, not part of the alert itself */}
           <details className="modal-debug">
-            <summary>Traversal details</summary>
-            <div className="modal-debug-body">
+            <summary>{isProduction ? 'Clinical details' : 'Traversal details'}</summary>
+            {isProduction ? (
+              <div className="modal-clinical-details">
+                <div className={'modal-clinical-status ' + (isSuccess ? 'complete' : 'incomplete')}>
+                  <span className="modal-clinical-status-mark">{isSuccess ? '✓' : '!'}</span>
+                  <div>
+                    <div className="modal-clinical-status-title">
+                      {isSuccess ? 'Clinical review complete' : 'Clinical review incomplete'}
+                    </div>
+                    <div className="modal-clinical-status-copy">
+                      {isSuccess
+                        ? actions.length + ' recommendation' + (actions.length === 1 ? '' : 's') + ' generated from the provided patient data.'
+                        : 'Some clinical information or pathway data could not be resolved. Review the notice above before acting.'}
+                    </div>
+                  </div>
+                </div>
+
+                {clinicalPathways.length > 0 && (
+                  <section className="modal-clinical-section">
+                    <div className="modal-clinical-section-title">Clinical pathways reviewed</div>
+                    <div className="modal-clinical-list">
+                      {clinicalPathways.map((tree) => (
+                        <div key={tree.tree_key} className="modal-clinical-list-item">
+                          <span className="modal-clinical-list-mark">✓</span>
+                          <span>{tree.name_vi || tree.name_en}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {evidenceSources.length > 0 && (
+                  <section className="modal-clinical-section">
+                    <div className="modal-clinical-section-title">Supporting guidance</div>
+                    <div className="modal-clinical-list">
+                      {evidenceSources.slice(0, 3).map((reference) => (
+                        <div key={reference.source_title} className="modal-clinical-evidence">
+                          <div>{reference.source_title}</div>
+                          {(reference.locator || reference.locator_detail) && (
+                            <div className="modal-clinical-evidence-locator">
+                              {[reference.locator, reference.locator_detail].filter(Boolean).join(' · ')}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {evidenceSources.length > 3 && (
+                        <div className="modal-clinical-more">
+                          +{evidenceSources.length - 3} additional source{evidenceSources.length - 3 === 1 ? '' : 's'}
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                )}
+              </div>
+            ) : (
+              <div className="modal-debug-body">
               <div className="modal-stats">
                 <div className="modal-stat">
                   <div className="modal-stat-value">{enteredNodes.length}</div>
@@ -300,14 +369,9 @@ export function TraversalResultModal({ result, partial, onClose }: TraversalResu
                   ))}
                 </div>
               </section>
-            </div>
+              </div>
+            )}
           </details>
-        </div>
-
-        <div className="modal-footer">
-          <button type="button" className="modal-footer-btn" onClick={onClose}>
-            Close
-          </button>
         </div>
       </div>
     </div>
