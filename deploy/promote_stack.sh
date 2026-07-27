@@ -58,6 +58,28 @@ find_port_containers() {
     docker ps --format '{{.ID}} {{.Ports}}' | awk -v port=":${APP_PORT}->" '$0 ~ port {print $1}'
 }
 
+start_backup_service() {
+    local backup_container=""
+
+    echo "Starting daily database backup service..."
+    if ! $COMPOSE up -d backup; then
+        return 1
+    fi
+
+    for i in $(seq 1 5); do
+        backup_container="$($COMPOSE ps -q backup)"
+        if [ -n "$backup_container" ] \
+            && [ "$(docker inspect -f '{{.State.Running}}' "$backup_container")" = "true" ]; then
+            return 0
+        fi
+        sleep 2
+    done
+
+    echo "ERROR: daily database backup service did not stay running." >&2
+    $COMPOSE logs --tail 50 backup
+    return 1
+}
+
 stop_old_stack
 
 PORT_CONTAINERS="$(find_port_containers)"
@@ -75,8 +97,11 @@ for i in $(seq 1 12); do
     if curl -s -f -L "http://localhost:${APP_PORT}/" > /dev/null 2>&1 \
         && $COMPOSE exec -T backend curl -s -f http://localhost:8000/health > /dev/null 2>&1; then
         echo "${NEW_PROJECT} healthy on port ${APP_PORT}"
-        echo "$NEW_VERSION" > "$VERSION_FILE"
-        exit 0
+        if start_backup_service; then
+            echo "$NEW_VERSION" > "$VERSION_FILE"
+            exit 0
+        fi
+        break
     fi
     echo "Attempt $i failed. Waiting 5s..."
     sleep 5

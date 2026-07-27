@@ -43,7 +43,8 @@ pipeline {
 
                     for f in pyproject.toml uv.lock frontend/package.json frontend/pnpm-lock.yaml \
                              Dockerfile.backend frontend/Dockerfile docker-compose.prod.yml \
-                             backups/backup.sql backups/seed.sql; do
+                             backups/backup.sql backups/seed.sql \
+                             deploy/backup_db.sh deploy/backup_current_db.sh; do
                         if [ ! -f "$f" ]; then
                             echo "ERROR: required file missing: $f"
                             exit 1
@@ -77,6 +78,7 @@ pipeline {
                             --exclude '.ruff_cache' \
                             --exclude 'scratch' \
                             --exclude 'deploy/.current_version' \
+                            --exclude 'persistent-backups' \
                             ./ ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/
                     '''
                 }
@@ -95,6 +97,24 @@ pipeline {
                             "
                         '''
                     }
+                }
+            }
+        }
+
+        // Takes a plain-SQL dump of the currently-live database before any
+        // new stack is provisioned. The dump is written to the persistent
+        // host backup directory, outside all per-version Docker volumes.
+        stage('Backup Current Database') {
+            steps {
+                sshagent(['ubuntu-vm-jenkins']) {
+                    sh '''
+                        ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                            set -e
+                            cd ${DEPLOY_PATH}
+                            chmod +x deploy/backup_current_db.sh deploy/backup_db.sh
+                            ./deploy/backup_current_db.sh
+                        "
+                    '''
                 }
             }
         }
