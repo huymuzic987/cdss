@@ -78,14 +78,26 @@ export interface TreeNodePosition {
   y: number
 }
 
+export interface TreeEdgeLayout {
+  x: number
+  y: number
+  bend: number
+  elbowMidPoint: number
+  start: { x: number; y: number }
+  end: { x: number; y: number }
+  start_anchor?: { x: number; y: number }
+  end_anchor?: { x: number; y: number }
+}
 export interface TreeLayoutResponse {
   positions: Record<string, TreeNodePosition>
   arrow_kind: 'straight' | 'elbow'
+  edge_layouts: Record<string, TreeEdgeLayout>
 }
 
 export interface TreeLayoutRequest {
   positions: Record<string, TreeNodePosition>
   arrow_kind: 'straight' | 'elbow'
+  edge_layouts: Record<string, TreeEdgeLayout>
 }
 
 export interface ApiErrorResponse {
@@ -150,6 +162,8 @@ export interface EvaluationResponse {
   tree_metadata: { tree_key: string; name_en: string; name_vi: string }[]
   started_at: string
   completed_at: string
+  inferred_follow_up_type: 'INITIAL_VISIT' | 'LIFESTYLE_FOLLOW_UP' | 'MEDICATION_FOLLOW_UP' | null
+  previous_recommended_action_types: string[]
 }
 
 export interface EvaluationRequest {

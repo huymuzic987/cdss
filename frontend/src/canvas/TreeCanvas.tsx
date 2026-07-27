@@ -24,8 +24,6 @@ const HIDDEN_COMPONENTS = {
   ContextMenu: null,
   QuickActions: null,
   SelectionBackground: null,
-  SelectionForeground: null,
-  SelectionOutline: null,
 }
 
 interface TreeCanvasProps {
@@ -59,6 +57,7 @@ export function TreeCanvas({
     shapeIdsRef,
     lastSavedPositionsRef,
     lastSavedArrowKindRef,
+    lastSavedEdgeLayoutsRef,
     isSceneLoaded,
     arrowKind,
     setArrowKind,
@@ -72,6 +71,7 @@ export function TreeCanvas({
     shapeIdsRef,
     lastSavedPositionsRef,
     lastSavedArrowKindRef,
+    lastSavedEdgeLayoutsRef,
     graph,
     setArrowKind,
   })
@@ -87,10 +87,6 @@ export function TreeCanvas({
       onClickCapture={handleClickCapture}
     >
       <div className="canvas-toolbar">
-        <span className="canvas-tree-name" title={graph.tree.name_en}>{graph.tree.name_en}</span>
-
-        <div className="canvas-toolbar-divider" />
-
         <div className="canvas-toolbar-search">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
