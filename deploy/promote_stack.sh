@@ -5,13 +5,19 @@
 # prune_old_stacks.sh for retention/cleanup), starts the new stack's
 # frontend now that the public port is free, then runs the full health
 # check. If that final check fails, the new frontend is stopped again and
-# the old stack is restarted immediately, so the site is back up within
-# one health-check cycle instead of staying down.
+# whatever was stopped for the port handover is restarted, so the site is
+# back up within one health-check cycle instead of staying down.
 #
 # Records the live version in deploy/.current_version on success -- that
 # file is server-local state, not part of the repo (see the Jenkinsfile's
 # rsync excludes), and is how this script and prune_old_stacks.sh know
 # which stack is live vs. an old rollback candidate.
+#
+# deploy/.current_version is a bookkeeping hint, not the source of truth for
+# "what currently holds the public port" -- it doesn't exist yet on the
+# first deploy after switching to this blue/green flow (or if it ever drifts
+# out of sync), so whatever container is actually bound to APP_PORT is found
+# and stopped directly by container ID as a second, authoritative check.
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
@@ -31,21 +37,34 @@ if [ -f "$VERSION_FILE" ]; then
     OLD_VERSION="$(cat "$VERSION_FILE")"
 fi
 
-stop_old() {
+stop_old_stack() {
     if [ -n "$OLD_VERSION" ] && [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
         echo "Stopping previous stack cdss-${OLD_VERSION}..."
         ( export VERSION="$OLD_VERSION"; resolve_compose "cdss-${OLD_VERSION}"; $COMPOSE stop )
     fi
 }
 
-restart_old() {
+restart_old_stack() {
     if [ -n "$OLD_VERSION" ] && [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
-        echo "Restarting previous stack cdss-${OLD_VERSION} to restore service..."
+        echo "Restarting previous stack cdss-${OLD_VERSION}..."
         ( export VERSION="$OLD_VERSION"; resolve_compose "cdss-${OLD_VERSION}"; $COMPOSE start )
     fi
 }
 
-stop_old
+find_port_containers() {
+    # Matches the "0.0.0.0:3001->80/tcp, :::3001->80/tcp" style Ports column
+    # -- avoids relying on the `docker ps --filter publish=`, which isn't
+    # available on older Docker versions.
+    docker ps --format '{{.ID}} {{.Ports}}' | awk -v port=":${APP_PORT}->" '$0 ~ port {print $1}'
+}
+
+stop_old_stack
+
+PORT_CONTAINERS="$(find_port_containers)"
+if [ -n "$PORT_CONTAINERS" ]; then
+    echo "Stopping container(s) still bound to port ${APP_PORT}: ${PORT_CONTAINERS}"
+    docker stop $PORT_CONTAINERS
+fi
 
 resolve_compose "$NEW_PROJECT"
 echo "Starting frontend for ${NEW_PROJECT}..."
@@ -69,6 +88,11 @@ $COMPOSE logs --tail 50 backend frontend
 echo "Stopping the broken new frontend to free the port..."
 $COMPOSE stop frontend
 
-restart_old
+if [ -n "$PORT_CONTAINERS" ]; then
+    echo "Restarting previously-stopped container(s): ${PORT_CONTAINERS}"
+    docker start $PORT_CONTAINERS
+else
+    restart_old_stack
+fi
 
 exit 1
