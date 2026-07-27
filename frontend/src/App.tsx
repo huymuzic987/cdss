@@ -272,6 +272,7 @@ function App() {
           <NodeDetailPanel
             node={selectedNode}
             references={activeGraph?.references ?? []}
+            tree={activeGraph?.tree ?? null}
             onJumpToLink={(targetTreeKey, targetNodeKey) => {
               void handleJumpToLink(targetTreeKey, targetNodeKey)
             }}

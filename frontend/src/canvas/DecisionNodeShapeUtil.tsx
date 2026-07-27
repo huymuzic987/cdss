@@ -1,5 +1,7 @@
 import { BaseBoxShapeUtil, HTMLContainer, T, type RecordProps, type TLBaseShape } from 'tldraw'
 import type { NodeType } from '../api/types'
+import { ClinicalCodeList } from '../components/ClinicalCodeList'
+import type { ClinicalCode } from '../clinicalCodes'
 
 export interface DecisionNodeShapeProps {
   w: number
@@ -10,6 +12,7 @@ export interface DecisionNodeShapeProps {
   highlightStatus: 'none' | 'entered' | 'active'
   dimmed: boolean
   theme: 'dark' | 'light'
+  clinicalCodesJson: string
 }
 
 export type DecisionNodeShape = TLBaseShape<'decisionNode', DecisionNodeShapeProps>
@@ -65,10 +68,11 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
     highlightStatus: T.literalEnum('none', 'entered', 'active'),
     dimmed: T.boolean,
     theme: T.literalEnum('dark', 'light'),
+    clinicalCodesJson: T.string,
   }
 
   override getDefaultProps(): DecisionNodeShape['props'] {
-    return { w: 220, h: 72, nodeKey: '', nodeType: 'ACTION', label: '', highlightStatus: 'none', dimmed: false, theme: 'dark' }
+    return { w: 220, h: 72, nodeKey: '', nodeType: 'ACTION', label: '', highlightStatus: 'none', dimmed: false, theme: 'dark', clinicalCodesJson: '[]' }
   }
 
   override canEdit(): boolean {
@@ -107,6 +111,7 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
     const colors = getNodeTypeColors(shape.props.nodeType, shape.props.theme)
     const { highlightStatus, dimmed, theme } = shape.props
     const isLight = theme === 'light'
+    const clinicalCodes = JSON.parse(shape.props.clinicalCodesJson) as ClinicalCode[]
 
     let borderColor = colors.border
     let borderWidth = isLight ? 3 : 2
@@ -131,6 +136,7 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
 
     return (
       <HTMLContainer
+        className="decision-node-card"
         style={{
           width: shape.props.w,
           height: shape.props.h,
@@ -145,7 +151,7 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
           pointerEvents: 'all',
           fontFamily: 'system-ui, sans-serif',
           boxSizing: 'border-box',
-          overflow: 'hidden',
+          overflow: 'visible',
           boxShadow,
           transform,
           opacity,
@@ -176,6 +182,14 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
         >
           {shape.props.label}
         </div>
+        {clinicalCodes.length > 0 && (
+          <>
+            <div className="clinical-code-indicator">Codes</div>
+            <div className="clinical-code-tooltip" role="tooltip">
+              <ClinicalCodeList codes={clinicalCodes} compact />
+            </div>
+          </>
+        )}
       </HTMLContainer>
     )
   }

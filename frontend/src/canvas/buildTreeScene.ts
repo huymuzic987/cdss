@@ -2,6 +2,8 @@ import { createShapeId, type Editor, type TLShapeId } from 'tldraw'
 import type { TreeEdgeLayout, TreeGraphEdge, TreeGraphNode } from '../api/types'
 import type { NodePosition } from '../layout/elkLayout'
 import { NODE_HEIGHT, NODE_WIDTH } from '../layout/elkLayout'
+import { getClinicalCodesForNode } from '../clinicalCodes'
+import type { TreeSummary } from '../api/types'
 
 export function buildTreeScene(
   editor: Editor,
@@ -11,6 +13,7 @@ export function buildTreeScene(
   arrowKind: 'straight' | 'elbow' = 'straight',
   theme: 'dark' | 'light' = 'dark',
   edgeLayouts: Record<string, TreeEdgeLayout> = {},
+  tree?: TreeSummary,
 ): Map<string, TLShapeId> {
   const shapeIdByNodeKey = new Map<string, TLShapeId>()
 
@@ -30,6 +33,7 @@ export function buildTreeScene(
         nodeType: node.node_type,
         label: node.text_en,
         theme,
+        clinicalCodesJson: JSON.stringify(tree ? getClinicalCodesForNode(node, tree) : []),
       },
     })
   }

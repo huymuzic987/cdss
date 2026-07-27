@@ -1,10 +1,13 @@
-import type { JsonObject, TreeGraphNode, TreeGraphSourceReference } from '../api/types'
+import type { JsonObject, TreeGraphNode, TreeGraphSourceReference, TreeSummary } from '../api/types'
 import { getNodeTypeColors } from '../canvas/DecisionNodeShapeUtil'
+import { clinicalCodesToText, getClinicalCodesForNode } from '../clinicalCodes'
+import { ClinicalCodeList } from '../components/ClinicalCodeList'
 import { CopyButton } from './CopyButton'
 
 interface NodeDetailPanelProps {
   node: TreeGraphNode | null
   references: TreeGraphSourceReference[]
+  tree: TreeSummary | null
   onJumpToLink: (targetTreeKey: string, targetNodeKey: string | null) => void
   theme: 'dark' | 'light'
 }
@@ -23,7 +26,7 @@ function JsonBlock({ label, value }: { label: string; value: JsonObject | null }
   )
 }
 
-export function NodeDetailPanel({ node, references, onJumpToLink, theme }: NodeDetailPanelProps) {
+export function NodeDetailPanel({ node, references, tree, onJumpToLink, theme }: NodeDetailPanelProps) {
   if (!node) {
     return (
       <div className="panel">
@@ -33,6 +36,7 @@ export function NodeDetailPanel({ node, references, onJumpToLink, theme }: NodeD
   }
 
   const nodeReferences = references.filter((reference) => reference.node_key === node.node_key)
+  const clinicalCodes = tree ? getClinicalCodesForNode(node, tree) : []
   const colors = getNodeTypeColors(node.node_type, theme)
   const upperSectionText = `Key: ${node.node_key}\nEnglish: ${node.text_en}\nVietnamese: ${node.text_vi}`
 
@@ -59,6 +63,16 @@ export function NodeDetailPanel({ node, references, onJumpToLink, theme }: NodeD
       <JsonBlock label="Condition" value={node.condition_definition} />
       <JsonBlock label="Context patch" value={node.context_patch} />
       <JsonBlock label="Action payload" value={node.action_payload} />
+
+      {clinicalCodes.length > 0 && (
+        <div className="detail-field">
+          <div className="detail-field-header">
+            <div className="detail-field-label">Clinical terminology</div>
+            <CopyButton text={clinicalCodesToText(clinicalCodes)} />
+          </div>
+          <ClinicalCodeList codes={clinicalCodes} />
+        </div>
+      )}
 
       {node.node_type === 'LINK' && node.link_target_tree_key && (
         <div className="detail-field">

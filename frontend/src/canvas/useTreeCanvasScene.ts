@@ -71,7 +71,16 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
           }
         }
 
-        shapeIdsRef.current = buildTreeScene(editor, graph.nodes, graph.edges, mergedPositions, savedLayout.arrow_kind, theme, savedLayout.edge_layouts)
+        shapeIdsRef.current = buildTreeScene(
+          editor,
+          graph.nodes,
+          graph.edges,
+          mergedPositions,
+          savedLayout.arrow_kind,
+          theme,
+          savedLayout.edge_layouts,
+          graph.tree,
+        )
 
         if (focusNodeKey) {
           const shapeId = shapeIdsRef.current.get(focusNodeKey)
