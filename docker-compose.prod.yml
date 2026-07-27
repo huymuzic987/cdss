@@ -1,4 +1,4 @@
-# Production deployment: db + backend + frontend. Built and run on the
+# Production deployment: db + backend + frontend + backup. Built and run on the
 # target host by the Jenkinsfile. `docker compose` auto-loads a `.env` file
 # next to this one for the ${...} substitutions below; that same .env is
 # also passed into the backend container via env_file.
@@ -68,6 +68,33 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # The fourth container only creates database backups. It writes through a
+  # bind mount to a host directory that Jenkins excludes from rsync cleanup
+  # and that is independent of every per-version Docker volume.
+  backup:
+    image: postgres:16
+    user: "0:0"
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGPORT: "5432"
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      DEPLOY_VERSION: ${VERSION:-unknown}
+      BACKUP_RETENTION: ${BACKUP_RETENTION:-10}
+      BACKUP_FILE_MODE: ${BACKUP_FILE_MODE:-0644}
+      TZ: ${BACKUP_TIMEZONE:-Asia/Ho_Chi_Minh}
+    volumes:
+      - ${BACKUP_HOST_DIR:-./persistent-backups}:/backups
+      - ./deploy/backup_db.sh:/usr/local/bin/backup_db.sh:ro
+    entrypoint: ["/bin/bash", "/usr/local/bin/backup_db.sh"]
+    command: ["daemon"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [cdss_net]
 
 networks:
   cdss_net:
