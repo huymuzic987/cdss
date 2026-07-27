@@ -183,12 +183,9 @@ export class DecisionNodeShapeUtil extends BaseBoxShapeUtil<DecisionNodeShape> {
           {shape.props.label}
         </div>
         {clinicalCodes.length > 0 && (
-          <>
-            <div className="clinical-code-indicator">Codes</div>
-            <div className="clinical-code-tooltip" role="tooltip">
-              <ClinicalCodeList codes={clinicalCodes} compact />
-            </div>
-          </>
+          <div className="clinical-code-tooltip" role="tooltip">
+            <ClinicalCodeList codes={clinicalCodes} compact />
+          </div>
         )}
       </HTMLContainer>
     )

@@ -389,25 +389,10 @@
   position: relative;
 }
 
-.clinical-code-indicator {
-  position: absolute;
-  top: 5px;
-  right: 6px;
-  padding: 2px 5px;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  color: var(--accent-text);
-  background: var(--bg-panel);
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-}
-
 .clinical-code-tooltip {
   position: absolute;
-  z-index: 1000;
-  top: calc(100% + 8px);
+  z-index: 100000;
+  bottom: calc(100% + 8px);
   left: 50%;
   display: none;
   width: 290px;
@@ -420,11 +405,15 @@
   border: 1px solid var(--border-soft-strong);
   border-radius: 8px;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .decision-node-card:hover .clinical-code-tooltip {
   display: block;
+}
+
+.tl-shape:has(.decision-node-card:hover) {
+  z-index: 100000 !important;
 }
 
 .clinical-code-list.compact .clinical-code-entry {
