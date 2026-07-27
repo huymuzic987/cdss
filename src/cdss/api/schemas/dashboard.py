@@ -29,6 +29,7 @@ class OverviewResponse(ApiModel):
     age_distribution: list[Count]
     gender_distribution: list[Count]
     comorbidity_prevalence: list[RatePoint]
+    risk_factor_distribution: list[Count]
 
 
 class OverdueVisit(ApiModel):
@@ -60,6 +61,9 @@ class VisitNumberOutcome(ApiModel):
 class OutcomesResponse(ApiModel):
     bp_target_distribution: list[Count]
     outcomes_by_visit_number: list[VisitNumberOutcome]
+    sbp_severity_distribution: list[Count]
+    mean_sbp: float | None
+    median_sbp: float | None
 
 
 class CdssUsageResponse(ApiModel):
@@ -67,6 +71,7 @@ class CdssUsageResponse(ApiModel):
     hypertension_class_distribution: list[Count]
     risk_level_distribution: list[Count]
     recommended_action_frequency: list[Count]
+    drug_class_distribution: list[Count]
 
 
 class AdherenceByVisitNumber(ApiModel):
@@ -86,6 +91,8 @@ class EfficacyResponse(ApiModel):
     medication_change_count: int
     medication_change_rate: float
     adherence_rate_by_visit_number: list[AdherenceByVisitNumber]
+    adherent_visit_count: int
+    non_adherent_visit_count: int
 
 
 class ImportBatchSummary(ApiModel):
@@ -116,3 +123,85 @@ class NeedsAttentionPatient(ApiModel):
 
 class NeedsAttentionResponse(ApiModel):
     patients: list[NeedsAttentionPatient]
+
+
+class DashboardSummaryResponse(ApiModel):
+    """Everything the dashboard page needs in one response, built from a
+    single patient load instead of the 7 separate round trips the old
+    per-metric endpoints each required."""
+
+    overview: OverviewResponse
+    visits: VisitsResponse
+    outcomes: OutcomesResponse
+    cdss_usage: CdssUsageResponse
+    efficacy: EfficacyResponse
+    fhir_import_status: FhirImportStatusResponse
+    needs_attention: NeedsAttentionResponse
+
+
+class VisitMedicationSummary(ApiModel):
+    drug_id: str | None
+    drug_name: str
+    drug_class_note: str | None
+    dose_value: float | None
+    dose_unit: str | None
+
+
+class VisitObservationSummary(ApiModel):
+    loinc_code: str
+    display_name: str | None
+    value: float
+    unit: str | None
+
+
+class PatientVisitDetail(ApiModel):
+    visit_number: int
+    visit_date: date
+    facility_capability: str | None
+    is_early_revisit: bool
+    early_revisit_reason: str | None
+    scheduled_next_visit_date: date | None
+    clinic_sbp: int | None
+    clinic_dbp: int | None
+    bp_target_sbp: int | None
+    bp_target_dbp: int | None
+    bp_controlled: bool | None
+    hypertension_class: str | None
+    risk_level: str | None
+    cdss_recommended_action: str | None
+    adherent_to_cdss: bool | None
+    medications: list[VisitMedicationSummary]
+    observations: list[VisitObservationSummary]
+
+
+class PatientConditionSummary(ApiModel):
+    icd10_code: str | None
+    snomed_code: str | None
+    condition_text: str | None
+
+
+class PatientDetailResponse(ApiModel):
+    fhir_id: str
+    gender: str | None
+    birth_date: date | None
+    department: str | None
+    risk_factor_count: int
+    conditions: list[PatientConditionSummary]
+    visits: list[PatientVisitDetail]
+
+
+class PatientListItem(ApiModel):
+    fhir_id: str
+    gender: str | None
+    birth_date: date | None
+    department: str | None
+    last_visit_date: date | None
+    visit_count: int
+    last_bp_controlled: bool | None
+    last_risk_level: str | None
+    is_overdue: bool
+
+
+class PatientListResponse(ApiModel):
+    items: list[PatientListItem]
+    total: int

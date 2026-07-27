@@ -1,4 +1,4 @@
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { ChartTooltip } from './ChartTooltip'
 
 interface BarStatProps {
@@ -7,9 +7,25 @@ interface BarStatProps {
   formatValue?: (value: number) => string
   height?: number
   labelWidth?: number
+  /** Per-bar colors, in data order (e.g. an ordinal severity ramp). Omit for
+   * a plain single-hue bar chart -- never assign rainbow colors to a nominal
+   * single-series chart, that spends the identity channel on nothing. */
+  colors?: string[]
+  /** Always-visible value labels. Required (not just a hover tooltip) for
+   * any chart using a hue that falls below 3:1 contrast on the light-theme
+   * surface -- see the dataviz skill's "relief channel" requirement. */
+  showValueLabels?: boolean
 }
 
-export function BarStat({ data, layout = 'horizontal', formatValue, height = 220, labelWidth = 160 }: BarStatProps) {
+export function BarStat({
+  data,
+  layout = 'horizontal',
+  formatValue,
+  height = 220,
+  labelWidth = 160,
+  colors,
+  showValueLabels,
+}: BarStatProps) {
   const isVertical = layout === 'vertical'
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -51,7 +67,18 @@ export function BarStat({ data, layout = 'horizontal', formatValue, height = 220
           cursor={{ fill: 'var(--accent-divider-soft)' }}
           content={<ChartTooltip formatValue={formatValue as (v: number | string) => string} />}
         />
-        <Bar dataKey="value" fill="var(--accent-solid)" radius={isVertical ? [0, 4, 4, 0] : [4, 4, 0, 0]} maxBarSize={24} />
+        <Bar dataKey="value" fill="var(--accent-solid)" radius={isVertical ? [0, 4, 4, 0] : [4, 4, 0, 0]} maxBarSize={24}>
+          {colors && data.map((_, i) => <Cell key={i} fill={colors[Math.min(i, colors.length - 1)]} />)}
+          {showValueLabels && (
+            <LabelList
+              dataKey="value"
+              position={isVertical ? 'right' : 'top'}
+              formatter={(v) => (formatValue ? formatValue(Number(v)) : String(v))}
+              fill="var(--text-secondary)"
+              fontSize={11}
+            />
+          )}
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   )

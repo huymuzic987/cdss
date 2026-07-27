@@ -45,6 +45,22 @@
 
   --info-text: #8ec5fc;
 
+  /* ---- Chart colors (dataviz skill palette, validated against --bg-panel #090d16) ---- */
+  --chart-series-1: #3987e5;
+  --chart-series-2: #d95926;
+  --chart-ordinal-1: #cde2fb;
+  --chart-ordinal-2: #9ec5f4;
+  --chart-ordinal-3: #6da7ec;
+  --chart-ordinal-4: #3987e5;
+  --chart-ordinal-5: #256abf;
+  /* Fixed per-section hues (one per chart section, never rainbow within a
+     single series) -- slots 2/3/7/8 of the validated 8-hue categorical set. */
+  --chart-violet: #9085e9;
+  --chart-red: #e66767;
+  --chart-orange: #d95926;
+  --chart-teal: #199e70;
+  --chart-neutral: #475569;
+
   /* ---- Inputs / toggles ---- */
   --input-bg: rgba(0, 0, 0, 0.4);
   --toggle-track-bg: rgba(255, 255, 255, 0.15);
@@ -117,6 +133,24 @@
   --accent-modal-glow: rgba(var(--accent-rgb), 0.35);
 
   --info-text: #2563eb;
+
+  /* ---- Chart colors (dataviz skill palette, validated against --bg-panel #f3f5f7) ---- */
+  --chart-series-1: #2a78d6;
+  --chart-series-2: #eb6834;
+  --chart-ordinal-1: #6da7ec;
+  --chart-ordinal-2: #3987e5;
+  --chart-ordinal-3: #256abf;
+  --chart-ordinal-4: #184f95;
+  --chart-ordinal-5: #0d366b;
+  /* Fixed per-section hues (one per chart section, never rainbow within a
+     single series) -- slots 2/3/7/8 of the validated 8-hue categorical set.
+     Orange/teal sit below 3:1 contrast on this light surface (documented
+     WARN band), so charts using them always ship visible value labels. */
+  --chart-violet: #4a3aa7;
+  --chart-red: #e34948;
+  --chart-orange: #eb6834;
+  --chart-teal: #1baf7a;
+  --chart-neutral: #94a3b8;
 
   /* ---- Inputs / toggles ---- */
   --input-bg: rgba(15, 23, 42, 0.045);

@@ -1,20 +1,17 @@
 import type {
   ApiErrorResponse,
-  CdssUsageResponse,
   DashboardFilters,
-  EfficacyResponse,
+  DashboardSummaryResponse,
   EvaluationRequest,
   EvaluationResponse,
-  FhirImportStatusResponse,
   ImportResult,
-  NeedsAttentionResponse,
-  OutcomesResponse,
-  OverviewResponse,
+  PatientDetailResponse,
+  PatientListResponse,
+  PatientSearchParams,
   TreeGraphResponse,
   TreeLayoutRequest,
   TreeLayoutResponse,
   TreeSummary,
-  VisitsResponse,
 } from './types'
 
 // Relative on purpose: the Vite dev server proxies these paths to the
@@ -61,11 +58,13 @@ async function deleteRequest(path: string): Promise<void> {
   }
 }
 
-function buildQuery(params: DashboardFilters): string {
-  const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== '')
+function buildQuery(params: object): string {
+  const entries = (Object.entries(params) as [string, string | number | undefined][]).filter(
+    ([, v]) => v !== undefined && v !== '',
+  )
   if (entries.length === 0) return ''
   return (
-    '?' + entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v as string)}`).join('&')
+    '?' + entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join('&')
   )
 }
 
@@ -113,32 +112,16 @@ export async function evaluateTree(request: EvaluationRequest): Promise<{
 
 // ---- Dashboard ----
 
-export function fetchDashboardOverview(filters: DashboardFilters): Promise<OverviewResponse> {
-  return getJson<OverviewResponse>(`/dashboard/overview${buildQuery(filters)}`)
+export function fetchDashboardSummary(filters: DashboardFilters): Promise<DashboardSummaryResponse> {
+  return getJson<DashboardSummaryResponse>(`/dashboard/summary${buildQuery(filters)}`)
 }
 
-export function fetchDashboardVisits(filters: DashboardFilters): Promise<VisitsResponse> {
-  return getJson<VisitsResponse>(`/dashboard/visits${buildQuery(filters)}`)
+export function fetchPatients(params: PatientSearchParams): Promise<PatientListResponse> {
+  return getJson<PatientListResponse>(`/dashboard/patients${buildQuery(params)}`)
 }
 
-export function fetchDashboardOutcomes(filters: DashboardFilters): Promise<OutcomesResponse> {
-  return getJson<OutcomesResponse>(`/dashboard/outcomes${buildQuery(filters)}`)
-}
-
-export function fetchDashboardCdssUsage(): Promise<CdssUsageResponse> {
-  return getJson<CdssUsageResponse>('/dashboard/cdss-usage')
-}
-
-export function fetchDashboardEfficacy(): Promise<EfficacyResponse> {
-  return getJson<EfficacyResponse>('/dashboard/efficacy')
-}
-
-export function fetchFhirImportStatus(): Promise<FhirImportStatusResponse> {
-  return getJson<FhirImportStatusResponse>('/dashboard/fhir-import-status')
-}
-
-export function fetchNeedsAttention(): Promise<NeedsAttentionResponse> {
-  return getJson<NeedsAttentionResponse>('/dashboard/needs-attention')
+export function fetchPatientDetail(fhirId: string): Promise<PatientDetailResponse> {
+  return getJson<PatientDetailResponse>(`/dashboard/patients/${encodeURIComponent(fhirId)}`)
 }
 
 export function seedDashboardData(source: 'preset' | 'synthetic' | 'real_test_case'): Promise<ImportResult> {

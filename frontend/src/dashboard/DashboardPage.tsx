@@ -1,30 +1,17 @@
 import { useEffect, useState } from 'react'
-import {
-  fetchDashboardCdssUsage,
-  fetchDashboardEfficacy,
-  fetchDashboardOutcomes,
-  fetchDashboardOverview,
-  fetchDashboardVisits,
-  fetchFhirImportStatus,
-  fetchNeedsAttention,
-  seedDashboardData,
-} from '../api/client'
-import type {
-  CdssUsageResponse,
-  DashboardFilters,
-  EfficacyResponse,
-  FhirImportStatusResponse,
-  NeedsAttentionResponse,
-  OutcomesResponse,
-  OverviewResponse,
-  VisitsResponse,
-} from '../api/types'
+import { fetchDashboardSummary, seedDashboardData } from '../api/client'
+import type { DashboardFilters, DashboardSummaryResponse, PatientSearchParams } from '../api/types'
 import { BarStat } from './charts/BarStat'
 import { LineStat } from './charts/LineStat'
+import { DonutStat } from './charts/DonutStat'
+import { flatColors, ordinalColor, SECTION_COLORS } from './chartColors'
 import { DataTable } from './DataTable'
 import { downloadCsv } from './csv'
+import { EXPLANATIONS } from './explanations'
 import { FiltersBar } from './FiltersBar'
 import { humanize } from './humanize'
+import { PatientDetailModal } from './PatientDetailModal'
+import { PatientsPanel } from './PatientsPanel'
 import { SectionCard } from './SectionCard'
 import { SeedControls, type SeedSource } from './SeedControls'
 import { StatTile } from './StatTile'
@@ -33,52 +20,28 @@ import './dashboard.css'
 
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`
 const compact = (v: number) => new Intl.NumberFormat(undefined, { notation: 'compact' }).format(v)
+const mmHg = (v: number | null) => (v === null ? 'No data' : `${v.toFixed(1)} mmHg`)
 
 export function DashboardPage() {
   const [filters, setFilters] = useState<DashboardFilters>({})
   const [refreshKey, setRefreshKey] = useState(0)
 
-  const [overview, setOverview] = useState<OverviewResponse | null>(null)
-  const [visits, setVisits] = useState<VisitsResponse | null>(null)
-  const [outcomes, setOutcomes] = useState<OutcomesResponse | null>(null)
-  const [cdssUsage, setCdssUsage] = useState<CdssUsageResponse | null>(null)
-  const [efficacy, setEfficacy] = useState<EfficacyResponse | null>(null)
-  const [importStatus, setImportStatus] = useState<FhirImportStatusResponse | null>(null)
-  const [needsAttention, setNeedsAttention] = useState<NeedsAttentionResponse | null>(null)
-
+  const [summary, setSummary] = useState<DashboardSummaryResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [seeding, setSeeding] = useState<SeedSource | null>(null)
 
+  const [selectedPatient, setSelectedPatient] = useState<string | null>(null)
+  const [patientsStatusFilter, setPatientsStatusFilter] = useState<PatientSearchParams['status']>(undefined)
+
   useEffect(() => {
     let cancelled = false
-    Promise.all([fetchDashboardOverview(filters), fetchDashboardVisits(filters), fetchDashboardOutcomes(filters)])
-      .then(([o, v, out]) => {
-        if (cancelled) return
-        setOverview(o)
-        setVisits(v)
-        setOutcomes(out)
-      })
+    fetchDashboardSummary(filters)
+      .then((s) => !cancelled && setSummary(s))
       .catch((e: unknown) => !cancelled && setError(e instanceof Error ? e.message : String(e)))
     return () => {
       cancelled = true
     }
   }, [filters, refreshKey])
-
-  useEffect(() => {
-    let cancelled = false
-    Promise.all([fetchDashboardCdssUsage(), fetchDashboardEfficacy(), fetchFhirImportStatus(), fetchNeedsAttention()])
-      .then(([u, e, s, n]) => {
-        if (cancelled) return
-        setCdssUsage(u)
-        setEfficacy(e)
-        setImportStatus(s)
-        setNeedsAttention(n)
-      })
-      .catch((e: unknown) => !cancelled && setError(e instanceof Error ? e.message : String(e)))
-    return () => {
-      cancelled = true
-    }
-  }, [refreshKey])
 
   const handleSeed = async (source: SeedSource) => {
     setSeeding(source)
@@ -93,7 +56,16 @@ export function DashboardPage() {
     }
   }
 
-  const hasData = overview !== null && overview.total_patients > 0
+  const jumpToPatients = (status: PatientSearchParams['status']) => {
+    setPatientsStatusFilter(status)
+    document.getElementById('dash-patients-section')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const { overview, visits, outcomes, cdss_usage: cdssUsage, efficacy, fhir_import_status: importStatus, needs_attention: needsAttention } =
+    summary ?? {}
+
+  const hasData = overview !== undefined && overview.total_patients > 0
+  const hasActiveFilters = Object.values(filters).some((v) => v !== undefined)
 
   const onScheduleVerdict = visits ? rateVerdict(visits.on_schedule_rate, 0.8, 0.6) : null
   const adherenceVerdict = efficacy ? rateVerdict(efficacy.overall_adherence_rate, 0.75, 0.5) : null
@@ -101,6 +73,24 @@ export function DashboardPage() {
     visits && overview
       ? inverseRateVerdict(overview.total_patients ? visits.overdue_patients.length / overview.total_patients : 0, 0.1, 0.25)
       : null
+
+  const maleCount = overview?.gender_distribution.find((g) => g.label === 'male')?.count ?? 0
+  const femaleCount = overview?.gender_distribution.find((g) => g.label === 'female')?.count ?? 0
+
+  const exportCohortCsv = () => {
+    if (!overview || !efficacy) return
+    downloadCsv('cohort_stats.csv', [
+      {
+        total_patients: overview.total_patients,
+        male: maleCount,
+        female: femaleCount,
+        cdss_adherent_visits: efficacy.adherent_visit_count,
+        cdss_adherence_rate: pct(efficacy.overall_adherence_rate),
+        mean_sbp: outcomes?.mean_sbp ?? '',
+        median_sbp: outcomes?.median_sbp ?? '',
+      },
+    ])
+  }
 
   const effectivenessSentence =
     efficacy &&
@@ -117,16 +107,15 @@ export function DashboardPage() {
     <div className="dashboard">
       <div className="dash-header">
         <div>
-          <h2 className="dash-title">Statistics Dashboard</h2>
+          <h2 className="dash-title">Patient Cohort Dashboard</h2>
           <p className="dash-subtitle">
-            A plain-language summary of patients, follow-up visits, and whether following CDSS advice actually helps —
-            built from imported FHIR R4 records.
+            Filter the cohort and see the clinical distribution — built from imported FHIR R4 records.
           </p>
         </div>
         <SeedControls seeding={seeding} onSeed={handleSeed} filters={filters} />
       </div>
 
-      <FiltersBar filters={filters} onChange={setFilters} />
+      <FiltersBar filters={filters} onChange={setFilters} onExportCsv={hasData ? exportCohortCsv : undefined} />
 
       {error && <div className="error-banner">{error}</div>}
 
@@ -137,80 +126,146 @@ export function DashboardPage() {
         </p>
       )}
 
-      {hasData && overview && visits && (
+      {hasData && overview && efficacy && (
         <div className="dash-kpi-row">
           <StatTile
-            label="Total patients"
+            label="Patients (filtered)"
             value={compact(overview.total_patients)}
-            hint="Everyone currently loaded in the system"
+            hint={hasActiveFilters ? 'Matches the current filters' : 'Everyone currently loaded'}
           />
+          <StatTile label="Male" value={compact(maleCount)} />
+          <StatTile label="Female" value={compact(femaleCount)} />
           <StatTile
-            label="Total visits"
-            value={compact(overview.total_visits)}
-            hint="Initial diagnosis visits plus every follow-up"
+            label="CDSS adherence"
+            value={`${efficacy.adherent_visit_count.toLocaleString()} (${pct(efficacy.overall_adherence_rate)})`}
+            explain={EXPLANATIONS.adherence}
           />
-          <StatTile
-            label="New patients (30 days)"
-            value={compact(overview.new_patients_last_30_days)}
-            hint="First visit recorded in the last month"
-          />
-          <StatTile
-            label="Follow-up visits"
-            value={compact(visits.follow_up_visit_count)}
-            hint="Return visits after the initial diagnosis"
-          />
-          {onScheduleVerdict && (
-            <StatTile
-              label="Followed-up on time"
-              value={pct(visits.on_schedule_rate)}
-              hint="Patients who came back on or after their scheduled recheck date"
-              status={onScheduleVerdict.status}
-              badge={onScheduleVerdict.badge}
-            />
-          )}
-          <StatTile
-            label="Returned early"
-            value={pct(visits.early_revisit_rate)}
-            hint="Came back before the scheduled date — e.g. side effects, worsening symptoms, wrong medication"
-            status="neutral"
-          />
-          {adherenceVerdict && efficacy && (
-            <StatTile
-              label="Clinicians followed CDSS advice"
-              value={pct(efficacy.overall_adherence_rate)}
-              hint="Share of follow-up visits where the actual treatment matched the recommendation"
-              status={adherenceVerdict.status}
-              badge={adherenceVerdict.badge}
-            />
-          )}
-          {overdueVerdict && (
-            <StatTile
-              label="Patients overdue for a check-up"
-              value={compact(visits.overdue_patients.length)}
-              hint="Past their scheduled recheck date with no new visit yet"
-              status={overdueVerdict.status}
-              badge={overdueVerdict.badge}
-            />
-          )}
         </div>
       )}
 
+      {hasData && outcomes && (
+        <div className="dash-inline-stats">
+          <span>
+            Mean SBP: <strong>{mmHg(outcomes.mean_sbp)}</strong>
+          </span>
+          <span>
+            Median SBP: <strong>{mmHg(outcomes.median_sbp)}</strong>
+          </span>
+          <span>
+            Weight: <strong>No data</strong>
+          </span>
+          <span>
+            BMI: <strong>No data</strong>
+          </span>
+        </div>
+      )}
+
+      <SectionCard
+        title="Find a patient"
+        subtitle="Search by patient ID or department, filter by gender or clinical status, then open a patient to see their full visit history."
+        span={2}
+      >
+        <div id="dash-patients-section">
+          <PatientsPanel onSelect={setSelectedPatient} presetStatus={patientsStatusFilter} />
+        </div>
+      </SectionCard>
+
       {hasData && overview && (
         <div className="dash-grid">
-          <SectionCard title="Patients by age group" subtitle="How the patient population is spread across age bands">
-            <BarStat data={overview.age_distribution.map((c) => ({ label: c.label, value: c.count }))} />
-          </SectionCard>
-
-          <SectionCard title="Patients by gender">
-            <BarStat data={overview.gender_distribution.map((c) => ({ label: humanize(c.label), value: c.count }))} />
-          </SectionCard>
-
-          <SectionCard title="Common existing conditions" subtitle="Share of patients who also have each condition, alongside hypertension">
+          <SectionCard
+            title="Comorbidities (by ICD-10)"
+            subtitle="Share of patients who also have each condition, alongside hypertension — I10 excluded since every patient has it"
+          >
             <BarStat
               layout="vertical"
               formatValue={(v) => compact(v)}
               data={overview.comorbidity_prevalence.map((r) => ({ label: humanize(r.label), value: r.count }))}
+              colors={flatColors(SECTION_COLORS.comorbidities, overview.comorbidity_prevalence.length)}
             />
+            <div className="dash-table-wrap" style={{ marginTop: 10 }}>
+              <table className="dash-table">
+                <thead>
+                  <tr>
+                    <th>ICD-10</th>
+                    <th>Condition</th>
+                    <th>Patients</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {overview.comorbidity_prevalence.map((r) => (
+                    <tr key={r.label}>
+                      <td>{r.label}</td>
+                      <td>{humanize(r.label)}</td>
+                      <td>{r.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </SectionCard>
+
+          {outcomes && (
+            <SectionCard
+              title="Blood pressure levels (SBP)"
+              subtitle="Every visit's systolic reading, bucketed by severity"
+            >
+              <BarStat
+                layout="vertical"
+                data={outcomes.sbp_severity_distribution.map((c) => ({ label: c.label, value: c.count }))}
+                colors={outcomes.sbp_severity_distribution.map((_, i) => ordinalColor(i))}
+              />
+            </SectionCard>
+          )}
+
+          <SectionCard
+            title="Risk factor count"
+            subtitle="How many of the tracked risk factors (CAD, heart failure, stroke/TIA, CKD, diabetes, atrial fibrillation, dyslipidemia) each patient has"
+          >
+            <BarStat
+              data={overview.risk_factor_distribution.map((c) => ({ label: c.label, value: c.count }))}
+              colors={flatColors(SECTION_COLORS.riskFactorCount, overview.risk_factor_distribution.length)}
+            />
+          </SectionCard>
+
+          <SectionCard title="Age distribution" subtitle="How the patient population is spread across age bands">
+            <BarStat
+              data={overview.age_distribution.map((c) => ({ label: c.label, value: c.count }))}
+              colors={flatColors(SECTION_COLORS.age, overview.age_distribution.length)}
+              showValueLabels
+            />
+          </SectionCard>
+
+          {efficacy && (
+            <SectionCard title="CDSS adherence" subtitle="Share of flagged visits where the clinician followed the CDSS recommendation">
+              <DonutStat
+                centerLabel={pct(efficacy.overall_adherence_rate)}
+                slices={[
+                  { label: 'Followed advice', value: efficacy.adherent_visit_count, color: SECTION_COLORS.adherenceYes },
+                  { label: "Didn't follow", value: efficacy.non_adherent_visit_count, color: SECTION_COLORS.adherenceNo },
+                ]}
+              />
+            </SectionCard>
+          )}
+
+          {cdssUsage && (
+            <SectionCard
+              title="Antihypertensive drug classes"
+              subtitle="Medication records grouped by class across all visits"
+              span={2}
+            >
+              <BarStat
+                layout="vertical"
+                height={200}
+                labelWidth={200}
+                data={cdssUsage.drug_class_distribution.map((c) => ({ label: c.label, value: c.count }))}
+                colors={flatColors(SECTION_COLORS.drugClasses, cdssUsage.drug_class_distribution.length)}
+                showValueLabels
+              />
+            </SectionCard>
+          )}
+
+          <SectionCard title="Patients by gender">
+            <BarStat data={overview.gender_distribution.map((c) => ({ label: humanize(c.label), value: c.count }))} />
           </SectionCard>
 
           {visits && (
@@ -219,7 +274,10 @@ export function DashboardPage() {
                 title="How many follow-ups patients get"
                 subtitle="Every bar past 'Visit 1' is a follow-up — shows patients being tracked through 3 or more return visits"
               >
-                <BarStat data={visits.visits_by_visit_number.map((c) => ({ label: `Visit ${c.label}`, value: c.count }))} />
+                <BarStat
+                  data={visits.visits_by_visit_number.map((c) => ({ label: `Visit ${c.label}`, value: c.count }))}
+                  colors={visits.visits_by_visit_number.map((_, i) => ordinalColor(i))}
+                />
               </SectionCard>
 
               <SectionCard title="Why patients came back early" subtitle="Reasons recorded for visits that happened ahead of schedule">
@@ -245,16 +303,40 @@ export function DashboardPage() {
                 }
                 span={2}
               >
-                <DataTable
-                  columns={[
-                    { key: 'id', header: 'Patient', render: (r) => r.patient_fhir_id },
-                    { key: 'last', header: 'Last seen', render: (r) => r.last_visit_date },
-                    { key: 'sched', header: 'Should have returned by', render: (r) => r.scheduled_next_visit_date },
-                    { key: 'overdue', header: 'Days overdue', render: (r) => String(r.days_overdue) },
-                  ]}
-                  rows={visits.overdue_patients.slice(0, 10)}
-                  emptyLabel="No overdue patients — everyone is up to date."
-                />
+                {visits.overdue_patients.length === 0 ? (
+                  <p className="dash-empty">No overdue patients — everyone is up to date.</p>
+                ) : (
+                  <div className="dash-table-wrap">
+                    <table className="dash-table">
+                      <thead>
+                        <tr>
+                          <th>Patient</th>
+                          <th>Last seen</th>
+                          <th>Should have returned by</th>
+                          <th>Days overdue</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {visits.overdue_patients.slice(0, 10).map((o) => (
+                          <tr key={o.patient_fhir_id}>
+                            <td>
+                              <button
+                                type="button"
+                                className="dash-table-row-btn"
+                                onClick={() => setSelectedPatient(o.patient_fhir_id)}
+                              >
+                                {o.patient_fhir_id}
+                              </button>
+                            </td>
+                            <td>{o.last_visit_date}</td>
+                            <td>{o.scheduled_next_visit_date}</td>
+                            <td>{o.days_overdue}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </SectionCard>
             </>
           )}
@@ -267,29 +349,45 @@ export function DashboardPage() {
               >
                 <LineStat
                   yDomain={[0, 1]}
-                  formatValue={(v) => pct(v)}
+                  formatValue={(v) => pct(v as number)}
                   data={outcomes.outcomes_by_visit_number.map((o) => ({ label: `Visit ${o.visit_number}`, value: o.bp_controlled_rate }))}
                 />
               </SectionCard>
 
-              <SectionCard title="Average systolic (top number)" subtitle="mmHg, averaged across all patients at each visit">
+              <SectionCard
+                title="Average blood pressure"
+                subtitle="mmHg, averaged across all patients at each visit — systolic and diastolic shown together, the way BP is actually read"
+                span={2}
+              >
+                <div className="dash-chart-legend">
+                  <span className="dash-chart-legend-item">
+                    <span className="dash-chart-legend-swatch" style={{ background: 'var(--chart-series-1)' }} />
+                    Systolic (top number)
+                  </span>
+                  <span className="dash-chart-legend-item">
+                    <span className="dash-chart-legend-swatch" style={{ background: 'var(--chart-series-2)' }} />
+                    Diastolic (bottom number)
+                  </span>
+                </div>
                 <LineStat
                   data={outcomes.outcomes_by_visit_number
-                    .filter((o) => o.avg_sbp !== null)
-                    .map((o) => ({ label: `Visit ${o.visit_number}`, value: o.avg_sbp as number }))}
+                    .filter((o) => o.avg_sbp !== null && o.avg_dbp !== null)
+                    .map((o) => ({ label: `Visit ${o.visit_number}`, sbp: o.avg_sbp as number, dbp: o.avg_dbp as number }))}
+                  series={[
+                    { key: 'sbp', label: 'Systolic' },
+                    { key: 'dbp', label: 'Diastolic' },
+                  ]}
                 />
               </SectionCard>
 
-              <SectionCard title="Average diastolic (bottom number)" subtitle="mmHg, averaged across all patients at each visit">
-                <LineStat
-                  data={outcomes.outcomes_by_visit_number
-                    .filter((o) => o.avg_dbp !== null)
-                    .map((o) => ({ label: `Visit ${o.visit_number}`, value: o.avg_dbp as number }))}
+              <SectionCard
+                title="Blood pressure goals assigned"
+                subtitle="130/80 for higher-risk patients, 140/80 for everyone else"
+              >
+                <BarStat
+                  data={outcomes.bp_target_distribution.map((c) => ({ label: `${c.label} mmHg`, value: c.count }))}
+                  colors={outcomes.bp_target_distribution.map((_, i) => ordinalColor(i))}
                 />
-              </SectionCard>
-
-              <SectionCard title="Blood pressure goals assigned" subtitle="130/80 for higher-risk patients, 140/80 for everyone else">
-                <BarStat data={outcomes.bp_target_distribution.map((c) => ({ label: `${c.label} mmHg`, value: c.count }))} />
               </SectionCard>
             </>
           )}
@@ -300,12 +398,24 @@ export function DashboardPage() {
                 <BarStat data={cdssUsage.facility_capability_distribution.map((c) => ({ label: humanize(c.label), value: c.count }))} />
               </SectionCard>
 
-              <SectionCard title="Severity at first diagnosis" subtitle="How serious the hypertension was when each patient was first diagnosed">
-                <BarStat data={cdssUsage.hypertension_class_distribution.map((c) => ({ label: humanize(c.label), value: c.count }))} />
+              <SectionCard
+                title="Severity at first diagnosis"
+                subtitle="How serious the hypertension was when each patient was first diagnosed"
+              >
+                <BarStat
+                  data={cdssUsage.hypertension_class_distribution.map((c) => ({ label: humanize(c.label), value: c.count }))}
+                  colors={cdssUsage.hypertension_class_distribution.map((_, i) => ordinalColor(i))}
+                />
               </SectionCard>
 
-              <SectionCard title="Overall cardiovascular risk" subtitle="Risk level assigned by the CDSS, combining BP severity with other risk factors">
-                <BarStat data={cdssUsage.risk_level_distribution.map((c) => ({ label: humanize(c.label), value: c.count }))} />
+              <SectionCard
+                title="Overall cardiovascular risk"
+                subtitle="Risk level assigned by the CDSS, combining BP severity with other risk factors"
+              >
+                <BarStat
+                  data={cdssUsage.risk_level_distribution.map((c) => ({ label: humanize(c.label), value: c.count }))}
+                  colors={cdssUsage.risk_level_distribution.map((_, i) => ordinalColor(i))}
+                />
               </SectionCard>
 
               <SectionCard title="Most common CDSS advice" subtitle="The treatment recommendations given most often across all visits">
@@ -343,18 +453,18 @@ export function DashboardPage() {
                   label="Advantage from following CDSS advice"
                   value={`+${pct(efficacy.effectiveness_delta)}`}
                   status="success"
-                  hint="Percentage-point difference in BP control between the two groups above"
+                  explain={EXPLANATIONS.effectivenessDelta}
                 />
                 <StatTile
                   label="How often treatment changed between visits"
                   value={pct(efficacy.medication_change_rate)}
-                  hint="Share of follow-ups where the medication plan was adjusted from the visit before"
+                  explain={EXPLANATIONS.medicationChangeRate}
                 />
               </div>
               <p className="dash-chart-caption">Share of visits where the clinician followed CDSS advice, by visit number:</p>
               <LineStat
                 yDomain={[0, 1]}
-                formatValue={(v) => pct(v)}
+                formatValue={(v) => pct(v as number)}
                 data={efficacy.adherence_rate_by_visit_number.map((a) => ({ label: `Visit ${a.visit_number}`, value: a.adherence_rate }))}
               />
             </SectionCard>
@@ -382,7 +492,7 @@ export function DashboardPage() {
             </SectionCard>
           )}
 
-          {needsAttention && (
+          {needsAttention && overdueVerdict && onScheduleVerdict && adherenceVerdict && visits && (
             <SectionCard
               title="Patients who need attention"
               subtitle={`${needsAttention.patients.length} patients flagged — uncontrolled blood pressure, overdue for a check-up, or recently returned early`}
@@ -405,20 +515,93 @@ export function DashboardPage() {
               }
               span={2}
             >
-              <DataTable
-                columns={[
-                  { key: 'id', header: 'Patient', render: (r) => r.patient_fhir_id },
-                  { key: 'reasons', header: 'Why', render: (r) => r.reasons.map(humanize).join(', ') },
-                  { key: 'last', header: 'Last seen', render: (r) => r.last_visit_date },
-                  { key: 'bp', header: 'Last BP', render: (r) => (r.clinic_sbp && r.clinic_dbp ? `${r.clinic_sbp}/${r.clinic_dbp} mmHg` : '—') },
-                  { key: 'target', header: 'Goal', render: (r) => (r.bp_target_sbp && r.bp_target_dbp ? `${r.bp_target_sbp}/${r.bp_target_dbp} mmHg` : '—') },
-                ]}
-                rows={needsAttention.patients.slice(0, 15)}
-                emptyLabel="No patients currently flagged — everyone looks good."
-              />
+              <div className="dash-table-wrap">
+                <table className="dash-table">
+                  <thead>
+                    <tr>
+                      <th>Patient</th>
+                      <th>Why</th>
+                      <th>Last seen</th>
+                      <th>Last BP</th>
+                      <th>Goal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {needsAttention.patients.slice(0, 15).map((r) => (
+                      <tr key={r.patient_fhir_id}>
+                        <td>
+                          <button
+                            type="button"
+                            className="dash-table-row-btn"
+                            onClick={() => setSelectedPatient(r.patient_fhir_id)}
+                          >
+                            {r.patient_fhir_id}
+                          </button>
+                        </td>
+                        <td>{r.reasons.map(humanize).join(', ')}</td>
+                        <td>{r.last_visit_date}</td>
+                        <td>{r.clinic_sbp && r.clinic_dbp ? `${r.clinic_sbp}/${r.clinic_dbp} mmHg` : '—'}</td>
+                        <td>{r.bp_target_sbp && r.bp_target_dbp ? `${r.bp_target_sbp}/${r.bp_target_dbp} mmHg` : '—'}</td>
+                      </tr>
+                    ))}
+                    {needsAttention.patients.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="dash-empty">No patients currently flagged — everyone looks good.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </SectionCard>
           )}
         </div>
+      )}
+
+      {hasData && overview && (
+        <div className="dash-kpi-row" style={{ marginTop: 4 }}>
+          {onScheduleVerdict && visits && (
+            <StatTile
+              label="Followed-up on time"
+              value={pct(visits.on_schedule_rate)}
+              status={onScheduleVerdict.status}
+              badge={onScheduleVerdict.badge}
+              explain={EXPLANATIONS.onSchedule}
+            />
+          )}
+          {visits && (
+            <StatTile
+              label="Returned early"
+              value={pct(visits.early_revisit_rate)}
+              status="neutral"
+              explain={EXPLANATIONS.earlyReturn}
+            />
+          )}
+          {overdueVerdict && visits && (
+            <button
+              type="button"
+              className="dash-tile-link"
+              onClick={() => jumpToPatients('overdue')}
+              title="View overdue patients"
+            >
+              <StatTile
+                label="Patients overdue for a check-up"
+                value={compact(visits.overdue_patients.length)}
+                status={overdueVerdict.status}
+                badge={overdueVerdict.badge}
+                explain={EXPLANATIONS.overdue}
+              />
+            </button>
+          )}
+          <StatTile
+            label="New patients (30 days)"
+            value={compact(overview.new_patients_last_30_days)}
+            hint="First visit recorded in the last month"
+          />
+        </div>
+      )}
+
+      {selectedPatient && (
+        <PatientDetailModal fhirId={selectedPatient} onClose={() => setSelectedPatient(null)} />
       )}
     </div>
   )
