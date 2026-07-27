@@ -1,10 +1,12 @@
-"""Statistics dashboard aggregation endpoints, plus the seed-data loader.
+"""Statistics dashboard summary endpoint, patient search/detail, plus the
+seed-data loader.
 
 ``overview``/``outcomes`` aggregate with SQL GROUP BY (see
 ``DashboardRepository.overview_counts``/``outcomes_counts``). The rest still
-aggregate in Python over the full patient/visit set, which needs
-cross-visit sequential logic that doesn't reduce to a single GROUP BY --
-see ``DashboardRepository`` for why.
+aggregate in Python over the full patient/visit set -- see
+``DashboardRepository`` for why. Every section respects the same filter set
+(department, age range, gender, comorbidity, CDSS adherence), applied
+uniformly via one shared patient load per request.
 """
 
 from __future__ import annotations
@@ -22,6 +24,7 @@ from cdss.api.schemas.dashboard import (
     AdherenceByVisitNumber,
     CdssUsageResponse,
     Count,
+    DashboardSummaryResponse,
     EfficacyResponse,
     FhirImportStatusResponse,
     ImportBatchSummary,
@@ -30,14 +33,26 @@ from cdss.api.schemas.dashboard import (
     OutcomesResponse,
     OverdueVisit,
     OverviewResponse,
+    PatientConditionSummary,
+    PatientDetailResponse,
+    PatientListItem,
+    PatientListResponse,
+    PatientVisitDetail,
     RatePoint,
+    VisitMedicationSummary,
     VisitNumberOutcome,
+    VisitObservationSummary,
     VisitsResponse,
 )
 from cdss.api.schemas.fhir_clinical import ImportResult
 from cdss.core.database import get_db
 from cdss.infrastructure.db.clinical_import import import_bundle
-from cdss.infrastructure.db.dashboard_repository import DashboardRepository, invalidate_cache
+from cdss.infrastructure.db.dashboard_repository import (
+    AGE_BUCKET_ORDER,
+    SBP_BUCKET_ORDER,
+    DashboardRepository,
+    invalidate_cache,
+)
 from cdss.infrastructure.db.models import Patient, Visit
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -53,6 +68,10 @@ def _today() -> date:
 
 def _rate(numerator: int, denominator: int) -> float:
     return (numerator / denominator) if denominator else 0.0
+
+
+def _last_visit(patient: Patient) -> Visit | None:
+    return max(patient.visits, key=lambda v: v.visit_number) if patient.visits else None
 
 
 @router.post("/seed", response_model=ImportResult)
@@ -95,22 +114,46 @@ def seed_dashboard_data(
     return result
 
 
-@router.get("/overview", response_model=OverviewResponse)
-def get_overview(
-    repository: Annotated[DashboardRepository, Depends(get_dashboard_repository)],
-    facility_capability: str | None = Query(default=None),
-    comorbidity_icd10: str | None = Query(default=None),
-) -> OverviewResponse:
-    stats = repository.overview_counts(
-        today=_today(),
-        facility_capability=facility_capability,
-        comorbidity_icd10=comorbidity_icd10,
-    )
+class _Filters:
+    """Bundles the dashboard's shared filter set so every ``_build_*``
+    helper and the repository calls below take the same six params."""
+
+    def __init__(
+        self,
+        department: str | None,
+        min_age: int | None,
+        max_age: int | None,
+        gender: str | None,
+        comorbidity_icd10: str | None,
+        adherent_to_cdss: bool | None,
+    ) -> None:
+        self.department = department
+        self.min_age = min_age
+        self.max_age = max_age
+        self.gender = gender
+        self.comorbidity_icd10 = comorbidity_icd10
+        self.adherent_to_cdss = adherent_to_cdss
+
+    def as_kwargs(self) -> dict[str, str | int | bool | None]:
+        return {
+            "department": self.department,
+            "min_age": self.min_age,
+            "max_age": self.max_age,
+            "gender": self.gender,
+            "comorbidity_icd10": self.comorbidity_icd10,
+            "adherent_to_cdss": self.adherent_to_cdss,
+        }
+
+
+def _build_overview(repository: DashboardRepository, today: date, filters: _Filters) -> OverviewResponse:
+    stats = repository.overview_counts(today=today, **filters.as_kwargs())
     return OverviewResponse(
         total_patients=stats.total_patients,
         total_visits=stats.total_visits,
         new_patients_last_30_days=stats.new_patients_last_30_days,
-        age_distribution=[Count(label=k, count=v) for k, v in sorted(stats.age_counts.items())],
+        age_distribution=[
+            Count(label=k, count=stats.age_counts[k]) for k in AGE_BUCKET_ORDER if k in stats.age_counts
+        ],
         gender_distribution=[
             Count(label=k, count=v) for k, v in sorted(stats.gender_counts.items())
         ],
@@ -122,20 +165,13 @@ def get_overview(
             key=lambda r: r.count,
             reverse=True,
         ),
+        risk_factor_distribution=[
+            Count(label=k, count=v) for k, v in sorted(stats.risk_factor_counts.items())
+        ],
     )
 
 
-@router.get("/visits", response_model=VisitsResponse)
-def get_visits(
-    repository: Annotated[DashboardRepository, Depends(get_dashboard_repository)],
-    facility_capability: str | None = Query(default=None),
-    comorbidity_icd10: str | None = Query(default=None),
-) -> VisitsResponse:
-    patients = repository.list_patients(
-        facility_capability=facility_capability, comorbidity_icd10=comorbidity_icd10
-    )
-    today = _today()
-
+def _build_visits(patients: list[Patient], today: date) -> VisitsResponse:
     all_visits = [v for p in patients for v in p.visits]
     follow_ups = [v for v in all_visits if v.visit_number > 1]
     early_count = sum(1 for v in follow_ups if v.is_early_revisit)
@@ -185,15 +221,8 @@ def get_visits(
     )
 
 
-@router.get("/outcomes", response_model=OutcomesResponse)
-def get_outcomes(
-    repository: Annotated[DashboardRepository, Depends(get_dashboard_repository)],
-    facility_capability: str | None = Query(default=None),
-    comorbidity_icd10: str | None = Query(default=None),
-) -> OutcomesResponse:
-    stats = repository.outcomes_counts(
-        facility_capability=facility_capability, comorbidity_icd10=comorbidity_icd10
-    )
+def _build_outcomes(repository: DashboardRepository, today: date, filters: _Filters) -> OutcomesResponse:
+    stats = repository.outcomes_counts(today=today, **filters.as_kwargs())
     return OutcomesResponse(
         bp_target_distribution=sorted(
             (Count(label=k, count=v) for k, v in stats.target_counts.items()),
@@ -210,49 +239,68 @@ def get_outcomes(
             )
             for agg in stats.by_visit_number
         ],
+        sbp_severity_distribution=[
+            Count(label=k, count=stats.sbp_severity_counts[k])
+            for k in SBP_BUCKET_ORDER
+            if k in stats.sbp_severity_counts
+        ],
+        mean_sbp=stats.mean_sbp,
+        median_sbp=stats.median_sbp,
     )
 
 
-@router.get("/cdss-usage", response_model=CdssUsageResponse)
-def get_cdss_usage(
-    repository: Annotated[DashboardRepository, Depends(get_dashboard_repository)],
-) -> CdssUsageResponse:
-    patients = repository.list_patients()
+def _build_cdss_usage(repository: DashboardRepository, patients: list[Patient]) -> CdssUsageResponse:
     all_visits = [v for p in patients for v in p.visits]
 
-    def _counts(values: list[str]) -> list[Count]:
+    def _tally(values: list[str]) -> dict[str, int]:
         tally: dict[str, int] = {}
         for value in values:
             tally[value] = tally.get(value, 0) + 1
+        return tally
+
+    def _counts(values: list[str]) -> list[Count]:
         return sorted(
-            (Count(label=k, count=v) for k, v in tally.items()), key=lambda c: c.count, reverse=True
+            (Count(label=k, count=v) for k, v in _tally(values).items()),
+            key=lambda c: c.count,
+            reverse=True,
         )
+
+    # These two are colored with an ordinal (severity) ramp on the frontend,
+    # so they need to come back in clinical order rather than by frequency --
+    # otherwise "darker = more severe" would be coloring the wrong bars.
+    hypertension_class_order = ["NORMAL_BP", "HIGH_NORMAL_BP", "GRADE_1_HYPERTENSION", "GRADE_2_HYPERTENSION"]
+    risk_level_order = ["LOW", "MEDIUM", "HIGH"]
+
+    hypertension_tally = _tally([v.hypertension_class for v in all_visits if v.hypertension_class])
+    risk_level_tally = _tally([v.risk_level for v in all_visits if v.risk_level])
 
     return CdssUsageResponse(
         facility_capability_distribution=_counts(
             [v.facility_capability for v in all_visits if v.facility_capability]
         ),
-        hypertension_class_distribution=_counts(
-            [v.hypertension_class for v in all_visits if v.hypertension_class]
-        ),
-        risk_level_distribution=_counts([v.risk_level for v in all_visits if v.risk_level]),
+        hypertension_class_distribution=[
+            Count(label=k, count=hypertension_tally[k]) for k in hypertension_class_order if k in hypertension_tally
+        ],
+        risk_level_distribution=[
+            Count(label=k, count=risk_level_tally[k]) for k in risk_level_order if k in risk_level_tally
+        ],
         recommended_action_frequency=_counts(
             [v.cdss_recommended_action for v in all_visits if v.cdss_recommended_action]
         )[:10],
+        drug_class_distribution=sorted(
+            (Count(label=k, count=v) for k, v in repository.drug_class_counts().items()),
+            key=lambda c: c.count,
+            reverse=True,
+        ),
     )
 
 
-@router.get("/efficacy", response_model=EfficacyResponse)
-def get_efficacy(
-    repository: Annotated[DashboardRepository, Depends(get_dashboard_repository)],
-) -> EfficacyResponse:
-    patients = repository.list_patients()
+def _build_efficacy(patients: list[Patient]) -> EfficacyResponse:
     all_visits = [v for p in patients for v in p.visits]
 
     adherence_flagged = [v for v in all_visits if v.adherent_to_cdss is not None]
-    overall_rate = _rate(
-        sum(1 for v in adherence_flagged if v.adherent_to_cdss), len(adherence_flagged)
-    )
+    adherent_count = sum(1 for v in adherence_flagged if v.adherent_to_cdss)
+    overall_rate = _rate(adherent_count, len(adherence_flagged))
 
     # Same-visit adherence vs. that same visit's BP control is circular: a
     # visit is only ever marked non-adherent when BP wasn't already controlled
@@ -313,15 +361,15 @@ def get_efficacy(
         medication_change_count=change_count,
         medication_change_rate=_rate(change_count, change_opportunities),
         adherence_rate_by_visit_number=adherence_by_number,
+        adherent_visit_count=adherent_count,
+        non_adherent_visit_count=len(adherence_flagged) - adherent_count,
     )
 
 
-@router.get("/fhir-import-status", response_model=FhirImportStatusResponse)
-def get_fhir_import_status(
-    repository: Annotated[DashboardRepository, Depends(get_dashboard_repository)],
+def _build_fhir_import_status(
+    repository: DashboardRepository, patients: list[Patient]
 ) -> FhirImportStatusResponse:
     batches = repository.list_import_batches()
-    patients = repository.list_patients()
     all_visits = [v for p in patients for v in p.visits]
     total_visits = len(all_visits)
     # Every visit has an SBP + DBP reading (dedicated columns) plus whatever
@@ -348,18 +396,12 @@ def get_fhir_import_status(
     )
 
 
-@router.get("/needs-attention", response_model=NeedsAttentionResponse)
-def get_needs_attention(
-    repository: Annotated[DashboardRepository, Depends(get_dashboard_repository)],
-    limit: int = Query(default=100, le=500),
-) -> NeedsAttentionResponse:
-    patients: list[Patient] = repository.list_patients()
-    today = _today()
+def _build_needs_attention(patients: list[Patient], today: date, *, limit: int) -> NeedsAttentionResponse:
     results: list[NeedsAttentionPatient] = []
     for p in patients:
-        if not p.visits:
+        last = _last_visit(p)
+        if last is None:
             continue
-        last = max(p.visits, key=lambda v: v.visit_number)
         reasons: list[str] = []
         if last.bp_controlled is False:
             reasons.append("BP_NOT_CONTROLLED")
@@ -381,3 +423,160 @@ def get_needs_attention(
             )
     results.sort(key=lambda r: len(r.reasons), reverse=True)
     return NeedsAttentionResponse(patients=results[:limit])
+
+
+@router.get("/summary", response_model=DashboardSummaryResponse)
+def get_summary(
+    repository: Annotated[DashboardRepository, Depends(get_dashboard_repository)],
+    department: str | None = Query(default=None),
+    min_age: int | None = Query(default=None, ge=0),
+    max_age: int | None = Query(default=None, ge=0),
+    gender: str | None = Query(default=None),
+    comorbidity_icd10: str | None = Query(default=None),
+    adherent_to_cdss: bool | None = Query(default=None),
+) -> DashboardSummaryResponse:
+    today = _today()
+    filters = _Filters(department, min_age, max_age, gender, comorbidity_icd10, adherent_to_cdss)
+    patients = repository.list_patients(**filters.as_kwargs())
+
+    return DashboardSummaryResponse(
+        overview=_build_overview(repository, today, filters),
+        visits=_build_visits(patients, today),
+        outcomes=_build_outcomes(repository, today, filters),
+        cdss_usage=_build_cdss_usage(repository, patients),
+        efficacy=_build_efficacy(patients),
+        fhir_import_status=_build_fhir_import_status(repository, patients),
+        needs_attention=_build_needs_attention(patients, today, limit=100),
+    )
+
+
+@router.get("/patients", response_model=PatientListResponse)
+def search_patients(
+    repository: Annotated[DashboardRepository, Depends(get_dashboard_repository)],
+    q: str | None = Query(default=None, description="Matches patient ID or department"),
+    gender: str | None = Query(default=None),
+    status: Literal["overdue", "bp_not_controlled", "early_revisit"] | None = Query(default=None),
+    limit: int = Query(default=25, le=100),
+    offset: int = Query(default=0, ge=0),
+) -> PatientListResponse:
+    """Search/browse patients by ID, department, gender, or clinical status.
+
+    There is no patient name anywhere in the data model -- FHIR imports carry
+    only an id, gender, birth date, and department -- so ``q`` matches against
+    ``fhir_id``/``department`` rather than a name. Independent of the cohort
+    filter bar on the main dashboard.
+    """
+    today = _today()
+
+    def _matches(p: Patient) -> bool:
+        if gender and (p.gender or "unknown") != gender:
+            return False
+        if q:
+            needle = q.strip().lower()
+            haystack = f"{p.fhir_id} {p.department or ''}".lower()
+            if needle not in haystack:
+                return False
+        if status:
+            last = _last_visit(p)
+            if last is None:
+                return False
+            if status == "overdue" and not (
+                last.scheduled_next_visit_date and last.scheduled_next_visit_date < today
+            ):
+                return False
+            if status == "bp_not_controlled" and last.bp_controlled is not False:
+                return False
+            if status == "early_revisit" and not last.is_early_revisit:
+                return False
+        return True
+
+    def _sort_key(p: Patient) -> date:
+        last = _last_visit(p)
+        return last.visit_date if last else date.min
+
+    matched = [p for p in repository.list_patients() if _matches(p)]
+    matched.sort(key=_sort_key, reverse=True)
+
+    page = matched[offset : offset + limit]
+    items = []
+    for p in page:
+        last = _last_visit(p)
+        items.append(
+            PatientListItem(
+                fhir_id=p.fhir_id,
+                gender=p.gender,
+                birth_date=p.birth_date,
+                department=p.department,
+                last_visit_date=last.visit_date if last else None,
+                visit_count=len(p.visits),
+                last_bp_controlled=last.bp_controlled if last else None,
+                last_risk_level=last.risk_level if last else None,
+                is_overdue=bool(
+                    last and last.scheduled_next_visit_date and last.scheduled_next_visit_date < today
+                ),
+            )
+        )
+    return PatientListResponse(items=items, total=len(matched))
+
+
+@router.get("/patients/{fhir_id}", response_model=PatientDetailResponse)
+def get_patient_detail(
+    fhir_id: str,
+    repository: Annotated[DashboardRepository, Depends(get_dashboard_repository)],
+) -> PatientDetailResponse:
+    patient = repository.get_patient_by_fhir_id(fhir_id)
+    if patient is None:
+        raise HTTPException(status_code=404, detail=f"patient not found: {fhir_id}")
+
+    return PatientDetailResponse(
+        fhir_id=patient.fhir_id,
+        gender=patient.gender,
+        birth_date=patient.birth_date,
+        department=patient.department,
+        risk_factor_count=patient.risk_factor_count,
+        conditions=[
+            PatientConditionSummary(
+                icd10_code=c.icd10_code, snomed_code=c.snomed_code, condition_text=c.condition_text
+            )
+            for c in patient.conditions
+        ],
+        visits=[
+            PatientVisitDetail(
+                visit_number=v.visit_number,
+                visit_date=v.visit_date,
+                facility_capability=v.facility_capability,
+                is_early_revisit=v.is_early_revisit,
+                early_revisit_reason=v.early_revisit_reason,
+                scheduled_next_visit_date=v.scheduled_next_visit_date,
+                clinic_sbp=v.clinic_sbp,
+                clinic_dbp=v.clinic_dbp,
+                bp_target_sbp=v.bp_target_sbp,
+                bp_target_dbp=v.bp_target_dbp,
+                bp_controlled=v.bp_controlled,
+                hypertension_class=v.hypertension_class,
+                risk_level=v.risk_level,
+                cdss_recommended_action=v.cdss_recommended_action,
+                adherent_to_cdss=v.adherent_to_cdss,
+                medications=[
+                    VisitMedicationSummary(
+                        drug_id=m.drug_id,
+                        drug_name=m.drug_name,
+                        drug_class_note=m.drug_class_note,
+                        dose_value=m.dose_value,
+                        dose_unit=m.dose_unit,
+                    )
+                    for m in v.medications
+                ],
+                observations=[
+                    VisitObservationSummary(
+                        loinc_code=o.loinc_code,
+                        display_name=o.display_name,
+                        value=o.value,
+                        unit=o.unit,
+                    )
+                    for o in v.observations
+                ],
+            )
+            for v in sorted(patient.visits, key=lambda v: v.visit_number)
+        ],
+    )
