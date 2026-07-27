@@ -13,6 +13,12 @@ pipeline {
         // Keepalive probes stop the connection from being dropped as "idle"
         // during quiet stretches of a long remote command like a Docker build.
         SSH_OPTS = '-o StrictHostKeyChecking=no -o ServerAliveInterval=15 -o ServerAliveCountMax=6 -o ConnectTimeout=10'
+
+        // Names this deploy's isolated stack (cdss-<VERSION>) -- see
+        // deploy/provision_stack.sh. BUILD_NUMBER is unique and monotonically
+        // increasing, which prune_old_stacks.sh relies on to find the oldest
+        // stacks to remove.
+        VERSION = "${BUILD_NUMBER}"
     }
 
     triggers {
@@ -37,7 +43,8 @@ pipeline {
 
                     for f in pyproject.toml uv.lock frontend/package.json frontend/pnpm-lock.yaml \
                              Dockerfile.backend frontend/Dockerfile docker-compose.prod.yml \
-                             backups/backup.sql backups/seed.sql; do
+                             backups/backup.sql backups/seed.sql \
+                             deploy/backup_db.sh deploy/backup_current_db.sh; do
                         if [ ! -f "$f" ]; then
                             echo "ERROR: required file missing: $f"
                             exit 1
@@ -56,9 +63,6 @@ pipeline {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             mkdir -p ${DEPLOY_PATH}
-                            if [ -f ${DEPLOY_PATH}/backups/seed.sql ]; then
-                                cp ${DEPLOY_PATH}/backups/seed.sql ${DEPLOY_PATH}/backups/seed.sql.bak
-                            fi
                         "
 
                         rsync -avz --delete \
@@ -73,7 +77,8 @@ pipeline {
                             --exclude '.pytest_cache' \
                             --exclude '.ruff_cache' \
                             --exclude 'scratch' \
-                            --exclude 'backups/seed.sql.bak' \
+                            --exclude 'deploy/.current_version' \
+                            --exclude 'persistent-backups' \
                             ./ ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/
                     '''
                 }
@@ -96,61 +101,97 @@ pipeline {
             }
         }
 
-        stage('Migrate & Seed Database') {
+        // Takes a plain-SQL dump of the currently-live database before any
+        // new stack is provisioned. The dump is written to the persistent
+        // host backup directory, outside all per-version Docker volumes.
+        stage('Backup Current Database') {
             steps {
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
                             cd ${DEPLOY_PATH}
-                            chmod +x deploy/migrate_and_seed.sh
-                            ./deploy/migrate_and_seed.sh
+                            chmod +x deploy/backup_current_db.sh deploy/backup_db.sh
+                            ./deploy/backup_current_db.sh
                         "
                     '''
                 }
             }
         }
 
-        stage('Build & Start App') {
+        // Builds a brand-new stack (cdss-${VERSION}: its own db + backend
+        // container, network, and volume) and migrates/seeds it, entirely
+        // side by side with whatever is currently live. The live stack is
+        // never touched in this stage -- a failure here means production
+        // keeps running untouched.
+        stage('Provision New Stack') {
             steps {
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
                             cd ${DEPLOY_PATH}
-                            chmod +x deploy/start_app.sh
-                            ./deploy/start_app.sh
+                            chmod +x deploy/provision_stack.sh
+                            ./deploy/provision_stack.sh ${VERSION}
                         "
                     '''
                 }
             }
         }
 
-        stage('Health Check') {
+        // Stops the previously-live stack, starts the new stack's frontend
+        // on the now-free public port, and health-checks it. If that check
+        // fails, deploy/promote_stack.sh itself restarts the old stack
+        // before exiting non-zero, so the site is back up within one
+        // health-check cycle rather than staying down.
+        stage('Promote New Stack') {
             steps {
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
                             cd ${DEPLOY_PATH}
-                            chmod +x deploy/health_check.sh
-                            ./deploy/health_check.sh ${APP_PORT}
+                            chmod +x deploy/promote_stack.sh
+                            ./deploy/promote_stack.sh ${VERSION}
                         "
                     '''
                 }
             }
-    }
+        }
+
+        stage('Prune Old Stacks') {
+            steps {
+                sshagent(['ubuntu-vm-jenkins']) {
+                    sh '''
+                        ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                            set -e
+                            cd ${DEPLOY_PATH}
+                            chmod +x deploy/prune_old_stacks.sh
+                            ./deploy/prune_old_stacks.sh
+                        "
+                    '''
+                }
+            }
+        }
     }
 
     post {
 
         success {
             echo 'Deployment successful'
-            echo "cdss running on ${TARGET_SERVER}:${APP_PORT}"
+            echo "cdss running on ${TARGET_SERVER}:${APP_PORT} (version ${VERSION})"
         }
 
         failure {
             echo 'Deployment failed - check the failing stage log above.'
+            echo 'Tearing down the failed new stack, if any was created; the previous version was never stopped for good and keeps serving traffic (promote_stack.sh restarts it automatically if the failure happened after the port handover).'
+            sshagent(['ubuntu-vm-jenkins']) {
+                sh '''
+                    ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                        cd ${DEPLOY_PATH} 2>/dev/null && docker compose -p cdss-${VERSION} -f docker-compose.prod.yml down -v --rmi all || true
+                    "
+                '''
+            }
         }
 
         always {

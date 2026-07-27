@@ -78,14 +78,26 @@ export interface TreeNodePosition {
   y: number
 }
 
+export interface TreeEdgeLayout {
+  x: number
+  y: number
+  bend: number
+  elbowMidPoint: number
+  start: { x: number; y: number }
+  end: { x: number; y: number }
+  start_anchor?: { x: number; y: number }
+  end_anchor?: { x: number; y: number }
+}
 export interface TreeLayoutResponse {
   positions: Record<string, TreeNodePosition>
   arrow_kind: 'straight' | 'elbow'
+  edge_layouts: Record<string, TreeEdgeLayout>
 }
 
 export interface TreeLayoutRequest {
   positions: Record<string, TreeNodePosition>
   arrow_kind: 'straight' | 'elbow'
+  edge_layouts: Record<string, TreeEdgeLayout>
 }
 
 export interface ApiErrorResponse {
@@ -150,6 +162,8 @@ export interface EvaluationResponse {
   tree_metadata: { tree_key: string; name_en: string; name_vi: string }[]
   started_at: string
   completed_at: string
+  inferred_follow_up_type: 'INITIAL_VISIT' | 'LIFESTYLE_FOLLOW_UP' | 'MEDICATION_FOLLOW_UP' | null
+  previous_recommended_action_types: string[]
 }
 
 export interface EvaluationRequest {
@@ -177,6 +191,7 @@ export interface OverviewResponse {
   age_distribution: Count[]
   gender_distribution: Count[]
   comorbidity_prevalence: RatePoint[]
+  risk_factor_distribution: Count[]
 }
 
 export interface OverdueVisit {
@@ -208,6 +223,9 @@ export interface VisitNumberOutcome {
 export interface OutcomesResponse {
   bp_target_distribution: Count[]
   outcomes_by_visit_number: VisitNumberOutcome[]
+  sbp_severity_distribution: Count[]
+  mean_sbp: number | null
+  median_sbp: number | null
 }
 
 export interface CdssUsageResponse {
@@ -215,6 +233,7 @@ export interface CdssUsageResponse {
   hypertension_class_distribution: Count[]
   risk_level_distribution: Count[]
   recommended_action_frequency: Count[]
+  drug_class_distribution: Count[]
 }
 
 export interface AdherenceByVisitNumber {
@@ -231,6 +250,8 @@ export interface EfficacyResponse {
   medication_change_count: number
   medication_change_rate: number
   adherence_rate_by_visit_number: AdherenceByVisitNumber[]
+  adherent_visit_count: number
+  non_adherent_visit_count: number
 }
 
 export interface ImportBatchSummary {
@@ -272,6 +293,96 @@ export interface ImportResult {
 }
 
 export interface DashboardFilters {
-  facility_capability?: string
+  department?: string
+  min_age?: number
+  max_age?: number
+  gender?: string
   comorbidity_icd10?: string
+  adherent_to_cdss?: boolean
+}
+
+export interface DashboardSummaryResponse {
+  overview: OverviewResponse
+  visits: VisitsResponse
+  outcomes: OutcomesResponse
+  cdss_usage: CdssUsageResponse
+  efficacy: EfficacyResponse
+  fhir_import_status: FhirImportStatusResponse
+  needs_attention: NeedsAttentionResponse
+}
+
+export interface VisitMedicationSummary {
+  drug_id: string | null
+  drug_name: string
+  drug_class_note: string | null
+  dose_value: number | null
+  dose_unit: string | null
+}
+
+export interface VisitObservationSummary {
+  loinc_code: string
+  display_name: string | null
+  value: number
+  unit: string | null
+}
+
+export interface PatientVisitDetail {
+  visit_number: number
+  visit_date: string
+  facility_capability: string | null
+  is_early_revisit: boolean
+  early_revisit_reason: string | null
+  scheduled_next_visit_date: string | null
+  clinic_sbp: number | null
+  clinic_dbp: number | null
+  bp_target_sbp: number | null
+  bp_target_dbp: number | null
+  bp_controlled: boolean | null
+  hypertension_class: string | null
+  risk_level: string | null
+  cdss_recommended_action: string | null
+  adherent_to_cdss: boolean | null
+  medications: VisitMedicationSummary[]
+  observations: VisitObservationSummary[]
+}
+
+export interface PatientConditionSummary {
+  icd10_code: string | null
+  snomed_code: string | null
+  condition_text: string | null
+}
+
+export interface PatientDetailResponse {
+  fhir_id: string
+  gender: string | null
+  birth_date: string | null
+  department: string | null
+  risk_factor_count: number
+  conditions: PatientConditionSummary[]
+  visits: PatientVisitDetail[]
+}
+
+export interface PatientListItem {
+  fhir_id: string
+  gender: string | null
+  birth_date: string | null
+  department: string | null
+  last_visit_date: string | null
+  visit_count: number
+  last_bp_controlled: boolean | null
+  last_risk_level: string | null
+  is_overdue: boolean
+}
+
+export interface PatientListResponse {
+  items: PatientListItem[]
+  total: number
+}
+
+export interface PatientSearchParams {
+  q?: string
+  gender?: string
+  status?: 'overdue' | 'bp_not_controlled' | 'early_revisit'
+  limit?: number
+  offset?: number
 }

@@ -14,9 +14,11 @@ const FOLLOW_UP = 'Follow-Up Visits'
 const MODIFIER_TREES = 'Modifier & Complication Trees'
 const PREGNANCY = 'Pregnancy & Postpartum'
 
-const MEDICATION_TARGET: Pick<PatientFormData, 'target_sbp_upper' | 'target_dbp_upper'> = {
+const MEDICATION_TARGET: Pick<PatientFormData, 'target_sbp_upper' | 'target_dbp_upper' | 'previous_sbp' | 'previous_dbp'> = {
   target_sbp_upper: '130',
   target_dbp_upper: '80',
+  previous_sbp: '150',
+  previous_dbp: '95',
 }
 
 export const PATIENT_PRESETS: PatientPreset[] = [
@@ -267,13 +269,13 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     id: 'lifestyle-followup',
     label: 'Lifestyle Follow-Up — BP Improved',
     category: FOLLOW_UP,
-    description: 'Meets the stored 10/5 mmHg reduction rule after lifestyle changes.',
+    description: 'Meets the stored 15/10 mmHg reduction rule after lifestyle changes.',
     data: {
-      clinic_1_sbp: '140', clinic_1_dbp: '90',
+      clinic_1_sbp: '115', clinic_1_dbp: '75',
       is_lifestyle_follow_up: true,
-      previous_sbp: '150', previous_dbp: '95',
+      previous_sbp: '130', previous_dbp: '85',
       previous_target_sbp: '140', previous_target_dbp: '90',
-      current_clinic_sbp: '140', current_clinic_dbp: '90',
+      current_clinic_sbp: '115', current_clinic_dbp: '75',
       age: '55', risk_factor_count: '2',
     },
   },

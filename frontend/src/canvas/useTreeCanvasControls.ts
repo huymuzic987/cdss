@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import type { Editor, TLShapeId } from 'tldraw'
 import { resetTreeLayout, saveTreeLayout } from '../api/client'
-import type { TreeGraphResponse } from '../api/types'
+import type { TreeEdgeLayout, TreeGraphResponse } from '../api/types'
+import { currentEdgeLayouts } from './edgeLayout'
 import { layoutTree } from '../layout/elkLayout'
 
 function updateArrowShapes(editor: Editor, kind: 'straight' | 'elbow') {
@@ -35,6 +36,7 @@ interface UseTreeCanvasControlsOptions {
   shapeIdsRef: React.RefObject<Map<string, TLShapeId>>
   lastSavedPositionsRef: React.RefObject<Record<string, { x: number; y: number }>>
   lastSavedArrowKindRef: React.RefObject<'straight' | 'elbow'>
+  lastSavedEdgeLayoutsRef: React.RefObject<Record<string, TreeEdgeLayout>>
   graph: TreeGraphResponse
   setArrowKind: (kind: 'straight' | 'elbow') => void
 }
@@ -46,6 +48,7 @@ export function useTreeCanvasControls({
   shapeIdsRef,
   lastSavedPositionsRef,
   lastSavedArrowKindRef,
+  lastSavedEdgeLayoutsRef,
   graph,
   setArrowKind,
 }: UseTreeCanvasControlsOptions) {
@@ -77,7 +80,9 @@ export function useTreeCanvasControls({
     }
 
     const positions = editor ? currentNodePositions(editor) : {}
-    void saveTreeLayout(graph.tree.tree_key, { positions, arrow_kind: kind }).catch((error) =>
+    const edgeLayouts = editor ? currentEdgeLayouts(editor) : {}
+    lastSavedEdgeLayoutsRef.current = edgeLayouts
+    void saveTreeLayout(graph.tree.tree_key, { positions, arrow_kind: kind, edge_layouts: edgeLayouts }).catch((error) =>
       console.error('Failed to save layout', error),
     )
   }
@@ -113,6 +118,7 @@ export function useTreeCanvasControls({
     // Clear last saved positions and arrow kind cache to match defaults
     lastSavedPositionsRef.current = {}
     lastSavedArrowKindRef.current = 'elbow'
+    lastSavedEdgeLayoutsRef.current = {}
 
     // Zoom to fit
     editor.zoomToFit({ animation: { duration: 200 } })

@@ -98,16 +98,10 @@ function formToFlatInput(form: PatientFormData): JsonObject {
 
   // Care setting
   if (form.facility_capability) out['facility_capability'] = form.facility_capability
-  out['is_lifestyle_follow_up'] = form.is_lifestyle_follow_up
-  out['is_medication_follow_up'] = form.is_medication_follow_up
-  if (form.medication_follow_up_stage) out['medication_follow_up_stage'] = form.medication_follow_up_stage
+  // The backend derives these from the previous visit's guideline result.
+  out['is_lifestyle_follow_up'] = false
+  out['is_medication_follow_up'] = false
   // Active BP target — SBP/DBP must each be below the given threshold
-  if (form.is_medication_follow_up) {
-    const target: JsonObject = {}
-    if (form.target_sbp_upper) target['sbp'] = { upper_exclusive_mmhg: num(form.target_sbp_upper)! }
-    if (form.target_dbp_upper) target['dbp'] = { upper_exclusive_mmhg: num(form.target_dbp_upper)! }
-    out['active_bp_target'] = target
-  }
   // Previous visit's BP target — record only, kept alongside previous_sbp/dbp
   if (form.previous_target_sbp || form.previous_target_dbp) {
     const previousTarget: JsonObject = {}

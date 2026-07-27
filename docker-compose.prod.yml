@@ -1,7 +1,14 @@
-# Production deployment: db + backend + frontend. Built and run on the
+# Production deployment: db + backend + frontend + backup. Built and run on the
 # target host by the Jenkinsfile. `docker compose` auto-loads a `.env` file
 # next to this one for the ${...} substitutions below; that same .env is
 # also passed into the backend container via env_file.
+#
+# Deployed with `docker compose -p cdss-<VERSION>` (see deploy/lib.sh and
+# deploy/provision_stack.sh) so each deploy gets its own fully isolated
+# stack -- containers, network, and volume -- side by side with whatever
+# is currently live. VERSION also tags the backend/frontend images so an
+# old, stopped stack keeps working images to roll back to even after a
+# newer version has been built.
 
 services:
   db:
@@ -24,7 +31,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    image: cdss-backend:latest
+    image: cdss-backend:${VERSION:-latest}
     restart: unless-stopped
     env_file: .env
     environment:
@@ -48,7 +55,8 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_TLDRAW_LICENSE_KEY: ${VITE_TLDRAW_LICENSE_KEY:-}
-    image: cdss-frontend:latest
+        VITE_PRODUCTION: ${PRODUCTION:-1}
+    image: cdss-frontend:${VERSION:-latest}
     restart: unless-stopped
     ports:
       - "${APP_PORT:-3000}:80"
@@ -61,6 +69,33 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # The fourth container only creates database backups. It writes through a
+  # bind mount to a host directory that Jenkins excludes from rsync cleanup
+  # and that is independent of every per-version Docker volume.
+  backup:
+    image: postgres:16
+    user: "0:0"
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGPORT: "5432"
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      DEPLOY_VERSION: ${VERSION:-unknown}
+      BACKUP_RETENTION: ${BACKUP_RETENTION:-10}
+      BACKUP_FILE_MODE: ${BACKUP_FILE_MODE:-0644}
+      TZ: ${BACKUP_TIMEZONE:-Asia/Ho_Chi_Minh}
+    volumes:
+      - ${BACKUP_HOST_DIR:-./persistent-backups}:/backups
+      - ./deploy/backup_db.sh:/usr/local/bin/backup_db.sh:ro
+    entrypoint: ["/bin/bash", "/usr/local/bin/backup_db.sh"]
+    command: ["daemon"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [cdss_net]
 
 networks:
   cdss_net:

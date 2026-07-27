@@ -339,7 +339,7 @@ def test_tree_1_emergency_route_now_needs_pregnancy_status(
     _assert_references(state, [])
 
 
-def test_tree_3_lifestyle_follow_up_meets_stored_10_5_rule(
+def test_tree_3_lifestyle_follow_up_meets_stored_15_10_rule(
     seeded_trees: SeededTrees,
 ) -> None:
     runtime_input = {
@@ -347,16 +347,16 @@ def test_tree_3_lifestyle_follow_up_meets_stored_10_5_rule(
         "is_lifestyle_follow_up": True,
         "previous_sbp": 150,
         "previous_dbp": 95,
-        "current_clinic_sbp": 140,
-        "current_clinic_dbp": 90,
+        "current_clinic_sbp": 135,
+        "current_clinic_dbp": 85,
     }
 
     result = walk_tree(seeded_trees.graphs[T3], runtime_input, repository=seeded_trees.repository)
 
     assert result.context == {
         "diagnosis": {
-            "current_clinic_sbp": 140,
-            "current_clinic_dbp": 90,
+            "current_clinic_sbp": 135,
+            "current_clinic_dbp": 85,
         }
     }
     assert [(action.node_key, action.text_vi, action.payload) for action in result.actions] == [
@@ -368,8 +368,8 @@ def test_tree_3_lifestyle_follow_up_meets_stored_10_5_rule(
                 "follow_up_mode": "NEW_ENCOUNTER",
                 "follow_up_required": True,
                 "lifestyle_response_threshold_mmhg": {
-                    "minimum_dbp_reduction": 5,
-                    "minimum_sbp_reduction": 10,
+                    "minimum_dbp_reduction": 10,
+                    "minimum_sbp_reduction": 15,
                     "require_both": True,
                 },
                 "restart_tree_key": T1,

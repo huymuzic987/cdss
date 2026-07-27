@@ -41,6 +41,7 @@ def put_tree_layout(
         tree_key,
         arrow_kind=body.arrow_kind,
         node_positions={key: position.model_dump() for key, position in body.positions.items()},
+        edge_layouts=body.edge_layouts,
     )
     return TreeLayoutResponse.from_model(layout)
 
