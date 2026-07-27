@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { TreeCanvas } from './canvas/TreeCanvas'
 import { DashboardPage } from './dashboard/DashboardPage'
 import { useSidebarResize } from './hooks/useSidebarResize'
@@ -208,17 +209,14 @@ function App() {
         {/* ---- LEFT COLLAPSE TOGGLE ---- */}
         <button
           type="button"
-          className="panel-toggle-btn"
+          className="panel-toggle-btn panel-toggle-left"
+          style={{ left: leftCollapsed ? 14 : 280 }}
           onClick={() => setLeftCollapsed((v) => !v)}
-          title={leftCollapsed ? 'Expand left panel' : 'Collapse left panel'}
-          aria-label={leftCollapsed ? 'Expand left panel' : 'Collapse left panel'}
+          title={leftCollapsed ? 'Show patient panel' : 'Hide patient panel'}
+          aria-label={leftCollapsed ? 'Show patient panel' : 'Hide patient panel'}
+          aria-expanded={!leftCollapsed}
         >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            {leftCollapsed
-              ? <path d="M4 2l4 4-4 4"/>
-              : <path d="M8 2L4 6l4 4"/>
-            }
-          </svg>
+          {leftCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
         </button>
 
         {/* ---- CENTER: Canvas ---- */}
@@ -252,17 +250,14 @@ function App() {
         {/* ---- RIGHT COLLAPSE TOGGLE ---- */}
         <button
           type="button"
-          className="panel-toggle-btn"
+          className="panel-toggle-btn panel-toggle-right"
+          style={{ right: rightCollapsed ? 14 : rightSidebarWidth }}
           onClick={() => setRightCollapsed((v) => !v)}
-          title={rightCollapsed ? 'Expand right panel' : 'Collapse right panel'}
-          aria-label={rightCollapsed ? 'Expand right panel' : 'Collapse right panel'}
+          title={rightCollapsed ? 'Show details panel' : 'Hide details panel'}
+          aria-label={rightCollapsed ? 'Show details panel' : 'Hide details panel'}
+          aria-expanded={!rightCollapsed}
         >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            {rightCollapsed
-              ? <path d="M8 2L4 6l4 4"/>
-              : <path d="M4 2l4 4-4 4"/>
-            }
-          </svg>
+          {rightCollapsed ? <PanelRightOpen size={16} /> : <PanelRightClose size={16} />}
         </button>
 
         {/* ---- RIGHT: Side panels ---- */}

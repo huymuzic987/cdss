@@ -110,6 +110,7 @@
 .app-body {
   flex: 1;
   display: flex;
+  position: relative;
   min-height: 0;
 }
 
@@ -142,17 +143,6 @@
   border-radius: 8px;
   padding: 5px 10px;
   box-shadow: 0 2px 8px var(--shadow-color);
-}
-
-.canvas-tree-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-bright);
-  white-space: nowrap;
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 0;
 }
 
 .canvas-toolbar-divider {
@@ -494,20 +484,27 @@
    ========================================================================= */
 
 .panel-toggle-btn {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  flex-shrink: 0;
+  width: 28px;
+  height: 40px;
   padding: 0;
-  border: none;
-  border-left: 1px solid var(--border);
-  border-right: 1px solid var(--border);
-  background: var(--bg-surface);
-  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-panel-translucent);
+  color: var(--text-secondary);
+  box-shadow: 0 2px 8px var(--shadow-color);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-  z-index: 10;
+  transition: left 0.2s ease, right 0.2s ease, background 0.15s ease, color 0.15s ease;
+  z-index: 60;
+}
+
+.panel-toggle-right {
+  transform: translate(50%, -50%);
 }
 
 .panel-toggle-btn:hover {
@@ -1212,11 +1209,23 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.modal-body::-webkit-scrollbar { width: 4px; }
-.modal-body::-webkit-scrollbar-thumb { background: var(--accent-scroll-thumb); border-radius: 2px; }
+/* Keep every scrollable area in the output modal usable, but hide its bars. */
+.modal-box,
+.modal-box * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.modal-box::-webkit-scrollbar,
+.modal-box *::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
 
 .modal-stats {
   display: grid;
@@ -1473,6 +1482,97 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.modal-clinical-details {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 12px 12px;
+}
+
+.modal-clinical-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: var(--bg-panel);
+}
+
+.modal-clinical-status.complete { border-color: #287a49; }
+.modal-clinical-status.incomplete { border-color: #a16207; }
+
+.modal-clinical-status-mark {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  place-items: center;
+  border-radius: 50%;
+  background: #166534;
+  color: #dcfce7;
+  font-weight: 700;
+}
+
+.modal-clinical-status.incomplete .modal-clinical-status-mark {
+  background: #92400e;
+  color: #fef3c7;
+}
+
+.modal-clinical-status-title,
+.modal-clinical-section-title {
+  color: var(--text-bright);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.modal-clinical-status-copy {
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.modal-clinical-section,
+.modal-clinical-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-clinical-list { gap: 6px; }
+
+.modal-clinical-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--text-primary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.modal-clinical-list-mark {
+  color: #22c55e;
+  font-weight: 700;
+}
+
+.modal-clinical-evidence {
+  padding: 9px 10px;
+  border-left: 3px solid var(--accent-border);
+  border-radius: 0 6px 6px 0;
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.modal-clinical-evidence-locator,
+.modal-clinical-more {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 11px;
 }
 
 /* Context JSON */
@@ -1760,8 +1860,7 @@
 }
 
 :root[data-theme="light"] .panel-toggle-btn {
-  border-left-width: 2px;
-  border-right-width: 2px;
+  border-width: 2px;
 }
 
 :root[data-theme="light"] .tree-nav {
