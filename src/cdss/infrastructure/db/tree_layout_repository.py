@@ -30,7 +30,12 @@ class TreeLayoutRepository:
         ).scalar_one_or_none()
 
     def upsert_layout(
-        self, tree_key: str, *, arrow_kind: str, node_positions: dict[str, Any]
+        self,
+        tree_key: str,
+        *,
+        arrow_kind: str,
+        node_positions: dict[str, Any],
+        edge_layouts: dict[str, Any],
     ) -> TreeLayout:
         tree_id = self._resolve_tree_id(tree_key)
         layout = self._session.execute(
@@ -41,6 +46,7 @@ class TreeLayoutRepository:
             self._session.add(layout)
         layout.arrow_kind = arrow_kind
         layout.node_positions = node_positions
+        layout.edge_layouts = edge_layouts
         self._session.commit()
         self._session.refresh(layout)
         return layout

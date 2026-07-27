@@ -1,5 +1,5 @@
 import { createShapeId, type Editor, type TLShapeId } from 'tldraw'
-import type { TreeGraphEdge, TreeGraphNode } from '../api/types'
+import type { TreeEdgeLayout, TreeGraphEdge, TreeGraphNode } from '../api/types'
 import type { NodePosition } from '../layout/elkLayout'
 import { NODE_HEIGHT, NODE_WIDTH } from '../layout/elkLayout'
 
@@ -10,6 +10,7 @@ export function buildTreeScene(
   positions: Map<string, NodePosition>,
   arrowKind: 'straight' | 'elbow' = 'straight',
   theme: 'dark' | 'light' = 'dark',
+  edgeLayouts: Record<string, TreeEdgeLayout> = {},
 ): Map<string, TLShapeId> {
   const shapeIdByNodeKey = new Map<string, TLShapeId>()
 
@@ -38,15 +39,21 @@ export function buildTreeScene(
     const toShapeId = shapeIdByNodeKey.get(edge.to_node_key)
     if (!fromShapeId || !toShapeId) continue
 
+    const edgeKey = `${edge.from_node_key}->${edge.to_node_key}`
+    const saved = edgeLayouts[edgeKey]
     const arrowId = createShapeId()
     editor.createShape({
       id: arrowId,
       type: 'arrow',
+      x: saved?.x ?? 0,
+      y: saved?.y ?? 0,
+      meta: { edgeKey },
       props: {
         kind: arrowKind === 'elbow' ? 'elbow' : 'arc',
-        bend: 0,
-        start: { x: 0, y: 0 },
-        end: { x: 1, y: 1 },
+        bend: saved?.bend ?? 0,
+        elbowMidPoint: saved?.elbowMidPoint ?? 0.5,
+        start: saved?.start ?? { x: 0, y: 0 },
+        end: saved?.end ?? { x: 1, y: 1 },
       },
     })
     editor.createBindings([
@@ -56,7 +63,7 @@ export function buildTreeScene(
         toId: fromShapeId,
         props: {
           terminal: 'start',
-          normalizedAnchor: { x: 0.5, y: 1 },
+          normalizedAnchor: saved?.start_anchor ?? { x: 0.5, y: 1 },
           isExact: false,
           isPrecise: true,
           snap: 'none',
@@ -68,7 +75,7 @@ export function buildTreeScene(
         toId: toShapeId,
         props: {
           terminal: 'end',
-          normalizedAnchor: { x: 0.5, y: 0 },
+          normalizedAnchor: saved?.end_anchor ?? { x: 0.5, y: 0 },
           isExact: false,
           isPrecise: true,
           snap: 'none',

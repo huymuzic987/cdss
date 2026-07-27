@@ -76,12 +76,16 @@ def test_upsert_layout_creates_row_when_none_exists() -> None:
     repository = TreeLayoutRepository(cast(Session, scripted_session))
 
     layout = repository.upsert_layout(
-        "test-tree", arrow_kind="straight", node_positions={"n1": {"x": 1.0, "y": 2.0}}
+        "test-tree",
+        arrow_kind="straight",
+        node_positions={"n1": {"x": 1.0, "y": 2.0}},
+        edge_layouts={"n1->n2": {"bend": 4}},
     )
 
     assert layout.tree_id == TREE_ID
     assert layout.arrow_kind == "straight"
     assert layout.node_positions == {"n1": {"x": 1.0, "y": 2.0}}
+    assert layout.edge_layouts == {"n1->n2": {"bend": 4}}
     assert scripted_session.added == [layout]
     assert scripted_session.commit_count == 1
     assert scripted_session.refreshed == [layout]
@@ -93,7 +97,10 @@ def test_upsert_layout_updates_existing_row_in_place() -> None:
     repository = TreeLayoutRepository(cast(Session, scripted_session))
 
     layout = repository.upsert_layout(
-        "test-tree", arrow_kind="straight", node_positions={"n1": {"x": 5.0, "y": 6.0}}
+        "test-tree",
+        arrow_kind="straight",
+        node_positions={"n1": {"x": 5.0, "y": 6.0}},
+        edge_layouts={},
     )
 
     assert layout is existing

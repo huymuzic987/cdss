@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Editor, TLShapeId } from 'tldraw'
 import { fetchTreeLayout, saveTreeLayout } from '../api/client'
-import type { TreeGraphNode, TreeGraphResponse, TreeLayoutResponse } from '../api/types'
+import type { TreeEdgeLayout, TreeGraphNode, TreeGraphResponse, TreeLayoutResponse } from '../api/types'
 import { layoutTree, type NodePosition } from '../layout/elkLayout'
 import { buildTreeScene } from './buildTreeScene'
+import { currentEdgeLayouts } from './edgeLayout'
 
 interface UseTreeCanvasSceneOptions {
   graph: TreeGraphResponse
@@ -35,6 +36,7 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
   const isSceneLoadedRef = useRef(false)
   const lastSavedPositionsRef = useRef<Record<string, { x: number; y: number }>>({})
   const lastSavedArrowKindRef = useRef<'straight' | 'elbow'>('elbow')
+  const lastSavedEdgeLayoutsRef = useRef<Record<string, TreeEdgeLayout>>({})
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleMount = useCallback(
@@ -49,13 +51,14 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
         layoutTree(graph.nodes, graph.edges),
         fetchTreeLayout(graph.tree.tree_key).catch((error): TreeLayoutResponse => {
           console.error('Failed to load saved layout', error)
-          return { positions: {}, arrow_kind: 'elbow' }
+          return { positions: {}, arrow_kind: 'elbow', edge_layouts: {} }
         }),
       ]).then(([positions, savedLayout]) => {
         if (cancelled) return
 
         setArrowKind(savedLayout.arrow_kind)
         lastSavedArrowKindRef.current = savedLayout.arrow_kind
+        lastSavedEdgeLayoutsRef.current = savedLayout.edge_layouts
 
         // Merge calculated ELK layout with saved positions
         const mergedPositions = new Map<string, NodePosition>()
@@ -68,7 +71,7 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
           }
         }
 
-        shapeIdsRef.current = buildTreeScene(editor, graph.nodes, graph.edges, mergedPositions, savedLayout.arrow_kind, theme)
+        shapeIdsRef.current = buildTreeScene(editor, graph.nodes, graph.edges, mergedPositions, savedLayout.arrow_kind, theme, savedLayout.edge_layouts)
 
         if (focusNodeKey) {
           const shapeId = shapeIdsRef.current.get(focusNodeKey)
@@ -101,6 +104,7 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
         void saveTreeLayout(graph.tree.tree_key, {
           positions: lastSavedPositionsRef.current,
           arrow_kind: lastSavedArrowKindRef.current,
+          edge_layouts: lastSavedEdgeLayoutsRef.current,
         }).catch((error) => console.error('Failed to save layout', error))
       }
 
@@ -145,7 +149,10 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
             currentArrowKind = hasElbow ? 'elbow' : 'straight'
           }
 
-          const hasArrowChanged = currentArrowKind !== lastSavedArrowKindRef.current
+          const currentEdgeLayout = currentEdgeLayouts(editor)
+          const hasArrowChanged =
+            currentArrowKind !== lastSavedArrowKindRef.current ||
+            JSON.stringify(currentEdgeLayout) !== JSON.stringify(lastSavedEdgeLayoutsRef.current)
 
           if (currentArrowKind !== arrowKindRef.current) {
             setArrowKind(currentArrowKind)
@@ -154,6 +161,7 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
           if (hasNodeMoved || hasArrowChanged) {
             lastSavedPositionsRef.current = currentPositions
             lastSavedArrowKindRef.current = currentArrowKind
+            lastSavedEdgeLayoutsRef.current = currentEdgeLayout
             if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
             saveTimeoutRef.current = setTimeout(flushSave, SAVE_DEBOUNCE_MS)
           }
@@ -180,6 +188,7 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
     shapeIdsRef,
     lastSavedPositionsRef,
     lastSavedArrowKindRef,
+    lastSavedEdgeLayoutsRef,
     isSceneLoaded,
     arrowKind,
     setArrowKind,
