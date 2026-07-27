@@ -46,10 +46,22 @@ class EvaluationResponse(ApiModel):
     tree_metadata: list[TreeMetadata]
     started_at: datetime
     completed_at: datetime
+    inferred_follow_up_type: Literal[
+        "INITIAL_VISIT", "LIFESTYLE_FOLLOW_UP", "MEDICATION_FOLLOW_UP"
+    ] | None = None
+    previous_recommended_action_types: list[str] = Field(default_factory=list)
 
     @classmethod
     def from_result(
-        cls, result: TraversalResult, *, debug_output: bool = False
+        cls,
+        result: TraversalResult,
+        *,
+        debug_output: bool = False,
+        inferred_follow_up_type: Literal[
+            "INITIAL_VISIT", "LIFESTYLE_FOLLOW_UP", "MEDICATION_FOLLOW_UP"
+        ]
+        | None = None,
+        previous_recommended_action_types: list[str] | None = None,
     ) -> EvaluationResponse:
         return cls(
             status=result.status,
@@ -61,6 +73,8 @@ class EvaluationResponse(ApiModel):
             tree_metadata=result.tree_metadata,
             started_at=result.started_at,
             completed_at=result.completed_at,
+            inferred_follow_up_type=inferred_follow_up_type,
+            previous_recommended_action_types=previous_recommended_action_types or [],
         )
 
 

@@ -24,6 +24,7 @@ from cdss.domain.decision_tree import (
 from cdss.main import create_app
 
 MEDICATION_FOLLOW_UP_TREE_KEY = "treatment-threshold-and-bp-target"
+INITIAL_TREE_KEY = "hypertension-diagnosis"
 ESSENTIAL_TREE_KEY = "essential-treatment-strategy"
 ACTIVE_BP_TARGET = {
     "sbp": {"upper_exclusive_mmhg": 130},
@@ -53,7 +54,9 @@ class ApiTestContext:
 
 @pytest.fixture
 def api_context() -> Iterator[ApiTestContext]:
-    repository = RecordingRepository([_tree3_graph(), _essential_treatment_graph()])
+    repository = RecordingRepository(
+        [_initial_treatment_graph(), _tree3_graph(), _essential_treatment_graph()]
+    )
     settings = Settings(
         _env_file=None,  # type: ignore[call-arg]
         app_env="test",
@@ -177,6 +180,56 @@ def test_follow_up_request_missing_input_field_returns_invalid_request(
     assert body["code"] == "invalid_request"
 
 
+def test_evaluate_infers_medication_follow_up_from_previous_guideline_run(
+    api_context: ApiTestContext,
+) -> None:
+    response = api_context.client.post(
+        "/evaluate",
+        json={
+            "start_tree_key": INITIAL_TREE_KEY,
+            "input": input_to_bundle(
+                {
+                    "previous_sbp": 150,
+                    "previous_dbp": 95,
+                    "current_clinic_sbp": 125,
+                    "current_clinic_dbp": 75,
+                    "facility_capability": "LIMITED_RESOURCES",
+                }
+            ),
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["inferred_follow_up_type"] == "MEDICATION_FOLLOW_UP"
+    assert body["previous_recommended_action_types"] == ["INITIAL_TWO_DRUG_COMBINATION"]
+    assert body["input_snapshot"]["is_medication_follow_up"] is True
+    assert body["input_snapshot"]["active_bp_target"] == ACTIVE_BP_TARGET
+    assert api_context.repository.read_tree_keys == [
+        INITIAL_TREE_KEY,
+        MEDICATION_FOLLOW_UP_TREE_KEY,
+        ESSENTIAL_TREE_KEY,
+    ]
+
+
+def _initial_treatment_graph() -> TreeGraph:
+    tree = _tree(50, INITIAL_TREE_KEY)
+    start = _node(tree, 51, "start", NodeType.START)
+    prescribe = _node(
+        tree,
+        52,
+        "prescribe",
+        NodeType.ACTION,
+        context_patch={"treatment": {"bp_target": ACTIVE_BP_TARGET}},
+        action_payload={
+            "action_type": "INITIAL_TWO_DRUG_COMBINATION",
+            "follow_up_required": True,
+            "next_medication_follow_up_stage": "INITIAL_REGIMEN",
+        },
+    )
+    return _graph(tree, [start, prescribe], [_edge(tree, 59, start, prescribe, 1)])
+
+
 def _tree3_graph() -> TreeGraph:
     """Mirrors the real Tree 3 medication-follow-up branch: restore the
     caller-supplied active_bp_target into context, then route to the
@@ -204,7 +257,11 @@ def _tree3_graph() -> TreeGraph:
         103,
         "link-essential",
         NodeType.LINK,
-        condition_definition={"op": "eq", "path": "input.facility_capability", "value": "LIMITED_RESOURCES"},
+        condition_definition={
+            "op": "eq",
+            "path": "input.facility_capability",
+            "value": "LIMITED_RESOURCES",
+        },
         link_target_tree_key=ESSENTIAL_TREE_KEY,
     )
     return _graph(
