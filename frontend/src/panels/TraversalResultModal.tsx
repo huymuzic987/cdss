@@ -155,6 +155,10 @@ export function TraversalResultModal({ result, partial, onClose }: TraversalResu
   const clinicalPathways = (result?.tree_metadata ?? []).filter((tree) =>
     traversedTreeKeys.has(tree.tree_key),
   )
+  const clinicalPathwayNames = clinicalPathways.map((tree) => tree.name_vi || tree.name_en)
+  const pathwaySummary = clinicalPathwayNames.length > 0
+    ? clinicalPathwayNames.slice(0, 3).join(', ') + (clinicalPathwayNames.length > 3 ? ', and related pathways' : '')
+    : 'the relevant clinical pathways'
   const evidenceSources = Array.from(
     new Map(references.map((reference) => [reference.source_title, reference])).values(),
   )
@@ -181,6 +185,19 @@ export function TraversalResultModal({ result, partial, onClose }: TraversalResu
         </div>
 
         <div className="modal-body">
+          <section className={`modal-decision-summary ${actions.length > 0 ? 'action-required' : 'review-only'}`}>
+            <div className="modal-decision-summary-title">
+              {actions.length > 0
+                ? 'This patient needs clinical action based on the findings identified in the review.'
+                : 'No clinical action was identified from the available patient data.'}
+            </div>
+            <div className="modal-decision-summary-detail">
+              {actions.length > 0
+                ? <>The review followed {pathwaySummary}; the supplied findings matched the criteria leading to {actions.length === 1 ? 'the recommendation' : 'the recommendations'} below.</>
+                : <>The review followed {pathwaySummary}; the available findings did not match criteria requiring a recommendation.</>}
+            </div>
+          </section>
+
           {result?.inferred_follow_up_type && (
             <div className="modal-action-card">
               <div className="modal-alert-reason">
