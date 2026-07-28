@@ -166,11 +166,6 @@ export interface EvaluationResponse {
   previous_recommended_action_types: string[]
 }
 
-export interface EvaluationRequest {
-  start_tree_key: string
-  input: JsonObject
-}
-
 // ---- Dashboard (mirrors src/cdss/api/schemas/dashboard.py) ----
 
 export interface Count {
