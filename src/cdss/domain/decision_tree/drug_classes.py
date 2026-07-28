@@ -146,6 +146,13 @@ def build_medicine_options(
     if not combos:
         return None
     mandated = _mandated_additional_classes(treatment_preferences, medicine_repository)
+    dose_strategy = treatment_preferences.get("dose_strategy")
+    if not isinstance(dose_strategy, str):
+        dose_strategy = (
+            "USUAL_DOSE"
+            if isinstance(treatment_preferences.get("escalation_options"), list)
+            else None
+        )
 
     medicine_options: list[JsonObject] = []
     for combo in combos:
@@ -153,6 +160,7 @@ def build_medicine_options(
         medicine_options.append(
             {
                 "classes": cast(JsonValue, classes),
+                "dose_strategy": dose_strategy,
                 "medicines": {
                     class_letter: cast(
                         JsonValue, _oral_available_medicines(class_letter, medicine_repository)

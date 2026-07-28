@@ -1,49 +1,45 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ApiErrorResponse, EvaluationResponse, TraversalTraceEntry } from '../api/types'
-import { buildClinicalPresentation, type AcknowledgementOption, type RecommendedOrder } from './clinicalDecisionSupportAdapter'
+import { buildClinicalPresentation, type RecommendedDrugClass, type RecommendedOrder } from './clinicalDecisionSupportAdapter'
 import { getClinicalDecisionSupportMessages, type ClinicalDecisionSupportLocale } from './clinicalDecisionSupportMessages'
 
-export type { OrderDecision, RecommendedOrder } from './clinicalDecisionSupportAdapter'
-
-export interface AcknowledgementState { reason: string | null; otherText?: string }
-export interface ClinicalDecisionSubmission {
-  mode: 'place-orders' | 'acknowledge'
-  orders: RecommendedOrder[]
-  additionalActions: string[]
-  acknowledgement: AcknowledgementState | null
-}
+export type { RecommendedOrder } from './clinicalDecisionSupportAdapter'
 
 interface TraversalResultModalProps {
   result: EvaluationResponse | null
   partial: ApiErrorResponse | null
   onClose: () => void
-  onSubmit?: (submission: ClinicalDecisionSubmission) => void | Promise<void>
   locale?: ClinicalDecisionSupportLocale
 }
 
-function summariseCondition(definition: Record<string, unknown>): string {
-  if ('all' in definition) return `ALL (${(definition.all as unknown[]).length} checks)`
-  if ('any' in definition) return `ANY (${(definition.any as unknown[]).length} checks)`
-  if ('not' in definition) return 'NOT (…)'
-  if ('op' in definition) {
-    const path = String(definition.path ?? definition.left ?? '?').replace(/^input\./, '')
-    const right = 'value_from_path' in definition ? String(definition.value_from_path) : JSON.stringify(definition.value)
-    return `${path} ${String(definition.op)} ${right}`
-  }
-  return JSON.stringify(definition).slice(0, 80)
+const TECHNICAL_NODE_TOKENS = new Set([
+  'ACTION', 'CHECK', 'COND', 'CONDITION', 'END', 'GLOBAL', 'INF', 'INFERENCE', 'LINK', 'NODE', 'START',
+])
+
+function readableIdentifier(value: string): string {
+  const words = value
+    .replace(/^T\d+[A-Z]?(?:_|-)/i, '')
+    .split(/[_-]+/)
+    .filter((word) => word && !TECHNICAL_NODE_TOKENS.has(word.toUpperCase()))
+    .map((word) => word.toLowerCase())
+  if (words.length === 0) return 'Clinical assessment'
+  const text = words.join(' ')
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
-function ConditionRow({ entry }: { entry: TraversalTraceEntry }) {
-  const passed = entry.condition_result === true
-  return (
-    <div className="modal-condition-row">
-      <span className={`modal-condition-badge ${passed ? 'passed' : 'failed'}`}>{passed ? '✓' : '×'}</span>
-      <div className="modal-condition-info">
-        <div className="modal-condition-node"><span className="modal-node-key">{entry.candidate_node_key ?? entry.node_key}</span></div>
-        {entry.condition_definition && <div className="modal-condition-def">{summariseCondition(entry.condition_definition)}</div>}
-      </div>
-    </div>
-  )
+function readablePathStep(
+  entry: TraversalTraceEntry,
+  actions: EvaluationResponse['actions'],
+  locale: ClinicalDecisionSupportLocale,
+): string {
+  const action = actions.find((item) => item.tree_key === entry.tree_key && item.node_key === entry.node_key)
+  if (action) return locale === 'vi' ? action.text_vi || action.text_en : action.text_en || action.text_vi
+  const subject = readableIdentifier(entry.node_key)
+  if (entry.node_type === 'START') return locale === 'vi' ? 'Bắt đầu đánh giá lâm sàng' : 'Begin clinical assessment'
+  if (entry.node_type === 'CONDITION') return locale === 'vi' ? `Đánh giá: ${subject}` : `Assess: ${subject}`
+  if (entry.node_type === 'INFERENCE') return locale === 'vi' ? `Xác định: ${subject}` : `Determine: ${subject}`
+  if (entry.node_type === 'LINK') return locale === 'vi' ? `Tiếp tục đánh giá: ${subject}` : `Continue assessment: ${subject}`
+  return subject
 }
 
 function TriggerEvidence({ items, title, emptyText }: {
@@ -63,66 +59,71 @@ function TriggerEvidence({ items, title, emptyText }: {
   )
 }
 
-function OrderDecisionRow({ order, onDecision, locale }: {
-  order: RecommendedOrder; onDecision: (decision: 'order' | 'do-not-order') => void; locale: ClinicalDecisionSupportLocale
+function DrugClassDetails({ drugClass, orderId, locale }: {
+  drugClass: RecommendedDrugClass; orderId: string; locale: ClinicalDecisionSupportLocale
 }) {
   const messages = getClinicalDecisionSupportMessages(locale)
+  const [open, setOpen] = useState(false)
+  const tooltipId = `cds-class-${orderId}-${drugClass.code}`.replace(/[^a-zA-Z0-9_-]/g, '-')
   return (
-    <div className="cds-order-row">
-      <div className="cds-order-copy">
-        <div className="cds-order-name">{order.name}</div>
-        {order.dose && <div className="cds-order-dose">{messages.startingDose}: {order.dose}</div>}
-        {order.classLabel && <div className="cds-order-class">{order.classLabel}</div>}
-      </div>
-      <fieldset className="cds-decision-group">
-        <legend className="sr-only">{order.name}</legend>
-        <label className={order.decision === 'order' ? 'selected' : ''}>
-          <input type="radio" name={`decision-${order.id}`} value="order" checked={order.decision === 'order'} onChange={() => onDecision('order')} />
-          {messages.order}
-        </label>
-        <label className={order.decision === 'do-not-order' ? 'selected decline' : ''}>
-          <input type="radio" name={`decision-${order.id}`} value="do-not-order" checked={order.decision === 'do-not-order'} onChange={() => onDecision('do-not-order')} />
-          {messages.doNotOrder}
-        </label>
-      </fieldset>
+    <div
+      className="cds-drug-class"
+      tabIndex={0}
+      aria-describedby={open ? tooltipId : undefined}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={() => setOpen(false)}
+    >
+      <span className="cds-drug-class-label">{drugClass.label}</span>
+      {open && <div className="cds-drug-tooltip" id={tooltipId} role="tooltip">
+        <div className="cds-drug-tooltip-title">{drugClass.label}{drugClass.doseLabel ? ` · ${drugClass.doseLabel}` : ''}</div>
+        {drugClass.medicines.length === 0 ? <p className="cds-empty">{messages.noMedicines}</p> : (
+          <table>
+            <thead><tr><th>{messages.medicineName}</th><th>{messages.dose}</th></tr></thead>
+            <tbody>{drugClass.medicines.map((medicine) => (
+              <tr key={medicine.id}>
+                <td><strong>{medicine.name}</strong>{medicine.subgroup && <small>{medicine.subgroup}</small>}</td>
+                <td>{medicine.dose}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        )}
+      </div>}
     </div>
   )
 }
 
-function AcknowledgementReason({ options, value, error, onChange, locale }: {
-  options: AcknowledgementOption[]; value: AcknowledgementState; error: string | null
-  onChange: (value: AcknowledgementState) => void; locale: ClinicalDecisionSupportLocale
+function RecommendedOrderCard({ order, locale }: {
+  order: RecommendedOrder; locale: ClinicalDecisionSupportLocale
 }) {
   const messages = getClinicalDecisionSupportMessages(locale)
-  const selectedOption = options.find((option) => option.id === value.reason)
+  const normalizedName = order.name.toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')
+  const normalizedClass = order.classLabel?.toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')
+  const showClass = order.classLabel && normalizedClass !== normalizedName
   return (
-    <section className="cds-section cds-acknowledgement" aria-labelledby="cds-ack-title">
-      <h2 id="cds-ack-title">{messages.acknowledgementReason}</h2>
-      <p className="cds-section-help">{messages.acknowledgementHelp}</p>
-      <fieldset className="cds-ack-options" aria-describedby={error ? 'cds-ack-error' : undefined}>
-        <legend className="sr-only">{messages.acknowledgementReason}</legend>
-        {options.map((option) => (
-          <label key={option.id}>
-            <input type="radio" name="acknowledgement-reason" value={option.id} checked={value.reason === option.id} onChange={() => onChange({ reason: option.id })} />
-            {option.label}
-          </label>
-        ))}
-      </fieldset>
-      {selectedOption?.requiresText && (
-        <label className="cds-other-reason">
-          <span>{messages.otherReason}</span>
-          <input type="text" required value={value.otherText ?? ''} aria-invalid={Boolean(error)} onChange={(event) => onChange({ ...value, otherText: event.target.value })} />
-        </label>
-      )}
-      {error && <div id="cds-ack-error" className="cds-validation-error" role="alert">{error}</div>}
-    </section>
+    <div className="cds-order-row">
+      <div className="cds-order-copy">
+        {order.drugClasses?.length ? (
+          <div className="cds-order-name cds-class-combination">
+            {order.drugClasses.map((drugClass, index) => <div className="cds-class-part" key={drugClass.code}>
+              {index > 0 && <span className="cds-class-separator"> + </span>}
+              <DrugClassDetails drugClass={drugClass} orderId={order.id} locale={locale} />
+            </div>)}
+          </div>
+        ) : <>
+          <div className="cds-order-name">{order.name}</div>
+          {order.dose && <div className="cds-order-dose">{messages.startingDose}: {order.dose}</div>}
+          {showClass && <div className="cds-order-class">{order.classLabel}</div>}
+        </>}
+      </div>
+    </div>
   )
 }
 
-function ResultDialog({ result, partial, onClose, onSubmit, locale }: Omit<TraversalResultModalProps, 'locale'> & { locale: ClinicalDecisionSupportLocale }) {
+function ResultDialog({ result, partial, onClose, locale }: Omit<TraversalResultModalProps, 'locale'> & { locale: ClinicalDecisionSupportLocale }) {
   const messages = getClinicalDecisionSupportMessages(locale)
   const log = result?.traversal_log ?? partial?.partial_run_state?.traversal_log ?? []
-  const context = result?.context ?? partial?.partial_run_state?.context ?? {}
   const presentation = useMemo(
     () => buildClinicalPresentation(
       result?.actions ?? partial?.partial_run_state?.actions ?? [],
@@ -132,17 +133,9 @@ function ResultDialog({ result, partial, onClose, onSubmit, locale }: Omit<Trave
     ),
     [result, partial, locale],
   )
-  const [orders, setOrders] = useState<RecommendedOrder[]>(presentation.orders)
-  const [additionalActions, setAdditionalActions] = useState<string[]>([])
-  const [acknowledgement, setAcknowledgement] = useState<AcknowledgementState>({ reason: null })
-  const [acknowledgementRequested, setAcknowledgementRequested] = useState(false)
-  const [validationError, setValidationError] = useState<string | null>(null)
-  const [detailsOpen, setDetailsOpen] = useState(false)
+  const orders = presentation.orders
   const dialogRef = useRef<HTMLDivElement>(null)
-  const conditionEntries = log.filter((entry) => entry.event === 'candidate_evaluated' && entry.condition_result !== null)
   const enteredNodes = log.filter((entry) => entry.event === 'node_entered')
-  const needsAcknowledgement = acknowledgementRequested || orders.some((order) => order.decision === 'do-not-order')
-  const hasSelectedOrder = orders.some((order) => order.decision === 'order')
 
   useEffect(() => {
     dialogRef.current?.focus()
@@ -151,45 +144,18 @@ function ResultDialog({ result, partial, onClose, onSubmit, locale }: Omit<Trave
     return () => document.removeEventListener('keydown', closeOnEscape)
   }, [onClose])
 
-  function updateAction(id: string) {
-    setAdditionalActions((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
-  }
-
-  function validateAcknowledgement() {
-    if (!acknowledgement.reason) { setValidationError(messages.reasonRequired); return false }
-    const option = presentation.acknowledgementOptions.find((item) => item.id === acknowledgement.reason)
-    if (option?.requiresText && !acknowledgement.otherText?.trim()) { setValidationError(messages.otherRequired); return false }
-    setValidationError(null)
-    return true
-  }
-
-  async function submit(mode: ClinicalDecisionSubmission['mode']) {
-    const acknowledgementRequired = mode === 'acknowledge' || orders.some((order) => order.decision === 'do-not-order')
-    if (acknowledgementRequired && !validateAcknowledgement()) { setAcknowledgementRequested(true); return }
-    await onSubmit?.({
-      mode, orders, additionalActions,
-      acknowledgement: acknowledgementRequired ? { ...acknowledgement, otherText: acknowledgement.otherText?.trim() || undefined } : null,
-    })
-    onClose()
-  }
-
   return (
     <div className="modal-overlay" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <div ref={dialogRef} className="modal-box cds-modal" role="dialog" aria-modal="true" aria-labelledby="cds-modal-title" tabIndex={-1}>
         <header className="modal-header">
           <div>
-            <div id="cds-modal-title" className="modal-header-title">{result ? messages.title : messages.incompleteTitle}</div>
+            <div id="cds-modal-title" className="modal-header-title">{messages.recommendationTitle}</div>
             {!result && partial && <div className="modal-header-sub">{partial.message}</div>}
           </div>
           <button type="button" className="modal-close" onClick={onClose} aria-label={messages.cancel}>×</button>
         </header>
 
         <div className="modal-body cds-modal-body">
-          <section className="cds-alert" aria-labelledby="cds-alert-label">
-            <div id="cds-alert-label" className="cds-alert-label">{messages.alertLabel}</div>
-            <p>{presentation.alert}</p>
-          </section>
-
           <TriggerEvidence items={presentation.evidence} title={messages.whyTitle} emptyText={messages.noEvidence} />
 
           <section className="cds-section cds-recommendation" aria-labelledby="cds-recommendation-title">
@@ -197,65 +163,40 @@ function ResultDialog({ result, partial, onClose, onSubmit, locale }: Omit<Trave
             <p className="cds-recommendation-copy">{presentation.recommendation}</p>
             {presentation.recommendationSecondary && <p className="cds-bilingual-copy">{presentation.recommendationSecondary}</p>}
             <div className="cds-recommendation-meta">
-              <button type="button" className="cds-link-button" onClick={() => setDetailsOpen(true)}>{messages.viewGuideline}</button>
               {presentation.recommendationStrength && <span>{messages.recommendationStrength}: {presentation.recommendationStrength}</span>}
               {presentation.evidenceLevel && <span>{messages.evidenceLevel}: {presentation.evidenceLevel}</span>}
             </div>
           </section>
 
-          <section className="cds-section cds-orders" aria-labelledby="cds-orders-title">
-            <h2 id="cds-orders-title">{messages.recommendedOrders}</h2>
-            {orders.length === 0 ? <p className="cds-empty">{messages.noOrders}</p> : orders.map((order) => (
-              <OrderDecisionRow key={order.id} order={order} locale={locale} onDecision={(decision) => {
-                setOrders((current) => current.map((item) => item.id === order.id ? { ...item, decision } : item))
-                setValidationError(null)
-              }} />
-            ))}
-          </section>
+          {orders.length > 0 && <section className="cds-section cds-orders" aria-label={messages.recommendedOrders}>
+            {orders.map((order) => <RecommendedOrderCard key={order.id} order={order} locale={locale} />)}
+          </section>}
 
           <section className="cds-additional-actions" aria-labelledby="cds-additional-title">
             <h2 id="cds-additional-title">{messages.additionalActions}</h2>
-            {presentation.additionalActions.length === 0 ? <p className="cds-empty">{messages.noAdditionalActions}</p> : presentation.additionalActions.map((action) => (
-              <label key={action.id}>
-                <input type="checkbox" checked={additionalActions.includes(action.id)} onChange={() => updateAction(action.id)} />
-                {action.label}
-              </label>
-            ))}
+            {presentation.additionalActions.length === 0 ? <p className="cds-empty">{messages.noAdditionalActions}</p> : (
+              <ul>{presentation.additionalActions.map((action) => <li key={action.id}>{action.label}</li>)}</ul>
+            )}
           </section>
 
-          {needsAcknowledgement && <AcknowledgementReason options={presentation.acknowledgementOptions} value={acknowledgement} error={validationError} locale={locale} onChange={(value) => { setAcknowledgement(value); setValidationError(null) }} />}
-
-          <details className="modal-debug" open={detailsOpen} onToggle={(event) => setDetailsOpen(event.currentTarget.open)}>
-            <summary>{messages.clinicalDetails}</summary>
-            <div className="modal-clinical-details">
-              {presentation.clinicalDetails.length > 0 && <dl className="cds-evidence-grid">
-                {presentation.clinicalDetails.map((item) => <div className="cds-evidence-row" key={item.id}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
-              </dl>}
-              {presentation.guidelineReferences.length > 0 && <section className="modal-clinical-section">
-                <div className="modal-clinical-section-title">{messages.viewGuideline}</div>
-                {presentation.guidelineReferences.map((reference) => <div className="cds-reference" key={reference.id}>{reference.title}{reference.locator ? ` — ${reference.locator}` : ''}</div>)}
-              </section>}
-              <section className="modal-clinical-section">
-                <div className="modal-clinical-section-title">{messages.fullDecisionPath} ({enteredNodes.length})</div>
-                <div className="modal-path">{enteredNodes.map((entry, index) => <div className="modal-path-step" key={`${entry.tree_key}-${entry.node_key}-${index}`}>
-                  <span className="modal-path-num">{index + 1}</span><span className="modal-path-tree">{entry.tree_key}</span><span className="modal-path-node">{entry.node_key}</span>
-                </div>)}</div>
-              </section>
-              {!result && Object.keys(context).length > 0 && <section className="modal-clinical-section">
-                <div className="modal-clinical-section-title">{messages.derivedContext}</div><pre className="modal-json">{JSON.stringify(context, null, 2)}</pre>
-              </section>}
-              {!result && conditionEntries.length > 0 && <section className="modal-clinical-section">
-                <div className="modal-clinical-section-title">{messages.conditionChecks}</div>{conditionEntries.map((entry, index) => <ConditionRow entry={entry} key={index} />)}
-              </section>}
-            </div>
+          <details className="modal-debug cds-decision-path">
+            <summary>{messages.fullDecisionPath}</summary>
+            <div className="modal-path">{enteredNodes.map((entry, index) => {
+              const metadata = result?.tree_metadata.find((tree) => tree.tree_key === entry.tree_key)
+              const treeName = metadata
+                ? (locale === 'vi' ? metadata.name_vi || metadata.name_en : metadata.name_en || metadata.name_vi)
+                : readableIdentifier(entry.tree_key)
+              return <div className="modal-path-step" key={`${entry.tree_key}-${entry.node_key}-${index}`}>
+                <span className="modal-path-num">{index + 1}</span>
+                <span className="modal-path-copy">
+                  <span className="modal-path-node">{readablePathStep(entry, result?.actions ?? partial?.partial_run_state?.actions ?? [], locale)}</span>
+                  <span className="modal-path-tree">{treeName}</span>
+                </span>
+              </div>
+            })}</div>
           </details>
         </div>
 
-        <footer className="modal-footer cds-modal-footer">
-          <button type="button" className="cds-button secondary" onClick={onClose}>{messages.cancel}</button>
-          <button type="button" className="cds-button neutral" onClick={() => { setAcknowledgementRequested(true); void submit('acknowledge') }}>{messages.acknowledge}</button>
-          <button type="button" className="cds-button primary" disabled={!hasSelectedOrder} onClick={() => void submit('place-orders')}>{messages.acceptOrders}</button>
-        </footer>
       </div>
     </div>
   )
