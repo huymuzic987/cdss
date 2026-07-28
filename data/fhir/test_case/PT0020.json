@@ -1,0 +1,253 @@
+{
+  "resourceType": "Bundle",
+  "id": "bundle-PT0020",
+  "type": "collection",
+  "timestamp": "2024-06-01T07:30:00+07:00",
+  "entry": [
+    {
+      "fullUrl": "http://example.org/fhir/Patient/PT0020",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "PT0020",
+        "gender": "male",
+        "birthDate": "1967-11-07",
+        "extension": [
+          {
+            "url": "http://example.org/fhir/ai4life/StructureDefinition/department",
+            "valueString": "Nội tim mạch"
+          },
+          {
+            "url": "http://example.org/fhir/ai4life/StructureDefinition/cdss-adherent",
+            "valueBoolean": true
+          }
+        ],
+        "address": [
+          {
+            "use": "home",
+            "type": "physical",
+            "city": "Hà Nội",
+            "country": "VN"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/obs-1",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-1",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8459-0",
+              "display": "Huyết áp tâm thu (ngồi)"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/PT0020"
+        },
+        "effectiveDateTime": "2024-06-01T07:30:00+07:00",
+        "valueQuantity": {
+          "value": 142.0,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/obs-2",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-2",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4",
+              "display": "Huyết áp tâm trương"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/PT0020"
+        },
+        "effectiveDateTime": "2024-06-01T07:30:00+07:00",
+        "valueQuantity": {
+          "value": 86.0,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/obs-3",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-3",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "98979-8",
+              "display": "eGFR"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/PT0020"
+        },
+        "effectiveDateTime": "2024-06-01T07:30:00+07:00",
+        "valueQuantity": {
+          "value": 88.0,
+          "unit": "mL/min",
+          "system": "http://unitsofmeasure.org",
+          "code": "mL/min"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/obs-4",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-4",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "6298-4",
+              "display": "Kali (K+)"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/PT0020"
+        },
+        "effectiveDateTime": "2024-06-01T07:30:00+07:00",
+        "valueQuantity": {
+          "value": 4.1,
+          "unit": "mmol/L",
+          "system": "http://unitsofmeasure.org",
+          "code": "mmol/L"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/MedicationRequest/med-5",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-5",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "text": "LOSARTAN"
+        },
+        "subject": {
+          "reference": "Patient/PT0020"
+        },
+        "authoredOn": "2024-04-24",
+        "note": [
+          {
+            "text": "drugClass: RAAS_ARB"
+          }
+        ],
+        "dosageInstruction": [
+          {
+            "doseAndRate": [
+              {
+                "doseQuantity": {
+                  "value": 50,
+                  "unit": "mg",
+                  "system": "http://unitsofmeasure.org",
+                  "code": "mg"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/cond-6",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-6",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "I10"
+            }
+          ],
+          "text": "THA nguyên phát"
+        },
+        "subject": {
+          "reference": "Patient/PT0020"
+        }
+      }
+    }
+  ]
+}

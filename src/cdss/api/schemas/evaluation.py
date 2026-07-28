@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Annotated, Literal
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field
 
 from cdss.domain.decision_tree import (
     ExecutedAction,
@@ -23,19 +23,6 @@ class ApiModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class EvaluationRequest(ApiModel):
-    start_tree_key: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-    input: Annotated[
-        JsonObject,
-        Field(
-            description=(
-                "An HL7 FHIR R4 Bundle (resourceType == 'Bundle'); see "
-                "cdss.api.schemas.fhir_input for the resource-mapping contract."
-            )
-        ),
-    ]
-
-
 class EvaluationResponse(ApiModel):
     status: Literal["success"]
     input_snapshot: JsonObject
@@ -46,9 +33,9 @@ class EvaluationResponse(ApiModel):
     tree_metadata: list[TreeMetadata]
     started_at: datetime
     completed_at: datetime
-    inferred_follow_up_type: Literal[
-        "INITIAL_VISIT", "LIFESTYLE_FOLLOW_UP", "MEDICATION_FOLLOW_UP"
-    ] | None = None
+    inferred_follow_up_type: (
+        Literal["INITIAL_VISIT", "LIFESTYLE_FOLLOW_UP", "MEDICATION_FOLLOW_UP"] | None
+    ) = None
     previous_recommended_action_types: list[str] = Field(default_factory=list)
 
     @classmethod
@@ -62,12 +49,18 @@ class EvaluationResponse(ApiModel):
         ]
         | None = None,
         previous_recommended_action_types: list[str] | None = None,
+        input_snapshot: JsonObject | None = None,
+        actions: list[ExecutedAction] | None = None,
     ) -> EvaluationResponse:
         return cls(
             status=result.status,
-            input_snapshot=result.input_snapshot.to_dict(),
+            input_snapshot=input_snapshot or result.input_snapshot.to_dict(),
             context=result.context,
-            actions=select_output_actions(result.actions, debug_output=debug_output),
+            actions=(
+                actions
+                if actions is not None
+                else select_output_actions(result.actions, debug_output=debug_output)
+            ),
             traversal_log=result.trace,
             references=result.references,
             tree_metadata=result.tree_metadata,
@@ -76,20 +69,6 @@ class EvaluationResponse(ApiModel):
             inferred_follow_up_type=inferred_follow_up_type,
             previous_recommended_action_types=previous_recommended_action_types or [],
         )
-
-
-class FollowUpEvaluationRequest(ApiModel):
-    input: Annotated[
-        JsonObject,
-        Field(
-            description=(
-                "An HL7 FHIR R4 Bundle (resourceType == 'Bundle') carrying "
-                "facility_capability, medication_follow_up_stage, "
-                "active_bp_target, current_clinic_sbp, and current_clinic_dbp; "
-                "see cdss.api.schemas.fhir_input for the resource-mapping contract."
-            )
-        ),
-    ]
 
 
 class PartialRunStateResponse(ApiModel):

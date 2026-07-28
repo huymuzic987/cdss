@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -11,7 +13,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from cdss.api.dependencies import get_tree_graph_repository
-from cdss.api.schemas.fhir_input import input_to_bundle
 from cdss.core.config import Settings, get_settings
 from cdss.domain.decision_tree import (
     EdgeDefinition,
@@ -63,10 +64,8 @@ def api_context() -> Iterator[ApiTestContext]:
 
 
 def test_tree_1_essential_normal_bp_result(api_context: ApiTestContext) -> None:
-    response = api_context.client.post(
-        "/evaluate",
-        json={"start_tree_key": "hypertension-diagnosis", "input": input_to_bundle({})},
-    )
+    bundle = _canonical_bundle()
+    response = api_context.client.post("/evaluate", json=bundle)
 
     assert response.status_code == 200
     body = response.json()
@@ -80,20 +79,23 @@ def test_tree_1_essential_normal_bp_result(api_context: ApiTestContext) -> None:
         "tree_metadata",
         "started_at",
         "completed_at",
+        "inferred_follow_up_type",
+        "previous_recommended_action_types",
     }
     assert body["status"] == "success"
     assert body["context"]["diagnosis"]["hypertension_class"] == "NORMAL_BP"
-    assert body["input_snapshot"] == {}
+    assert body["input_snapshot"] == bundle
+    assert body["actions"][-1]["payload"]["presentation"]["schema_version"] == "1.0"
     assert body["traversal_log"]
 
 
 @pytest.mark.parametrize(
     "payload",
     [
+        {},
         {"input": {}},
         {"start_tree_key": "hypertension-diagnosis", "input": []},
-        {"start_tree_key": "", "input": {}},
-        {"start_tree_key": "hypertension-diagnosis", "input": {}, "extra": True},
+        [],
     ],
 )
 def test_malformed_input_returns_stable_validation_error(
@@ -104,16 +106,14 @@ def test_malformed_input_returns_stable_validation_error(
 
     assert response.status_code == 422
     body = response.json()
-    assert body["code"] == "invalid_request"
-    assert body["message"].startswith("Request validation failed.")
-    assert body["details"]["errors"]
+    assert body["code"] in {"invalid_request", "invalid_fhir_input"}
     assert "traceback" not in body
 
 
 def test_non_bundle_input_returns_invalid_fhir_input(api_context: ApiTestContext) -> None:
     response = api_context.client.post(
         "/evaluate",
-        json={"start_tree_key": "hypertension-diagnosis", "input": {"foo": "bar"}},
+        json={"foo": "bar"},
     )
 
     assert response.status_code == 422
@@ -123,16 +123,14 @@ def test_non_bundle_input_returns_invalid_fhir_input(api_context: ApiTestContext
 
 
 def test_tree_not_found_returns_404(api_context: ApiTestContext) -> None:
-    response = api_context.client.post(
-        "/evaluate",
-        json={"start_tree_key": "missing-tree", "input": input_to_bundle({})},
-    )
+    del api_context.repository.graphs["hypertension-diagnosis"]
+    response = api_context.client.post("/evaluate", json=_canonical_bundle())
 
     assert response.status_code == 404
     body = response.json()
     assert body["code"] == "tree_not_found"
-    assert body["message"] == "Decision tree 'missing-tree' was not found."
-    assert body["tree_key"] == "missing-tree"
+    assert body["message"] == "Decision tree 'hypertension-diagnosis' was not found."
+    assert body["tree_key"] == "hypertension-diagnosis"
     assert body["node_key"] is None
     assert body["details"] == {}
     assert body["partial_run_state"] is None
@@ -141,21 +139,22 @@ def test_tree_not_found_returns_404(api_context: ApiTestContext) -> None:
 def test_unresolved_link_returns_424_with_partial_execution_state(
     api_context: ApiTestContext,
 ) -> None:
-    response = api_context.client.post(
-        "/evaluate",
-        json={
-            "start_tree_key": "unresolved-tree",
-            "input": input_to_bundle({"request_id": "test"}),
-        },
-    )
+    api_context.repository.graphs["hypertension-diagnosis"] = api_context.repository.graphs[
+        "unresolved-tree"
+    ]
+    response = api_context.client.post("/evaluate", json=_canonical_bundle())
 
     assert response.status_code == 424
     body = response.json()
     assert body["code"] == "link_target_not_found"
     assert body["details"]["link_target_tree_key"] == "external-tree"
     partial = body["partial_run_state"]
-    assert partial["input_snapshot"] == {"request_id": "test"}
-    assert partial["context"] == {"prepared": True}
+    assert partial["input_snapshot"]["resourceType"] == "Bundle"
+    assert partial["context"]["prepared"] is True
+    assert partial["context"]["diagnosis"] == {
+        "current_clinic_sbp": 128.0,
+        "current_clinic_dbp": 80.0,
+    }
     assert [action["payload"] for action in partial["actions"]] == [{"recommendation": "prepare"}]
     assert partial["traversal_log"][-1]["node_key"] == "external-link"
     assert "traceback" not in body
@@ -164,11 +163,11 @@ def test_unresolved_link_returns_424_with_partial_execution_state(
 def test_evaluate_collapses_action_trail_to_the_terminal_action_by_default(
     api_context: ApiTestContext,
 ) -> None:
-    api_context.repository.graphs["multi-action-tree"] = _multi_action_graph()
+    api_context.repository.graphs["hypertension-diagnosis"] = _multi_action_graph()
 
     response = api_context.client.post(
         "/evaluate",
-        json={"start_tree_key": "multi-action-tree", "input": input_to_bundle({})},
+        json=_canonical_bundle(),
     )
 
     assert response.status_code == 200
@@ -181,7 +180,9 @@ def test_evaluate_collapses_action_trail_to_the_terminal_action_by_default(
 
 
 def test_evaluate_returns_full_action_trail_when_debug_output_is_enabled() -> None:
-    repository = RecordingRepository([_multi_action_graph()])
+    graph = _multi_action_graph()
+    repository = RecordingRepository([graph])
+    repository.graphs["hypertension-diagnosis"] = graph
     settings = Settings(
         _env_file=None,  # type: ignore[call-arg]
         app_env="test",
@@ -194,7 +195,7 @@ def test_evaluate_returns_full_action_trail_when_debug_output_is_enabled() -> No
     with TestClient(app) as client:
         response = client.post(
             "/evaluate",
-            json={"start_tree_key": "multi-action-tree", "input": input_to_bundle({})},
+            json=_canonical_bundle(),
         )
 
     assert response.status_code == 200
@@ -209,17 +210,16 @@ def test_evaluate_returns_full_action_trail_when_debug_output_is_enabled() -> No
 def test_request_completion_does_not_persist_patient_data(
     api_context: ApiTestContext,
 ) -> None:
-    response = api_context.client.post(
-        "/evaluate",
-        json={
-            "start_tree_key": "hypertension-diagnosis",
-            "input": input_to_bundle({"patient_external_id": "must-not-be-stored"}),
-        },
-    )
+    response = api_context.client.post("/evaluate", json=_canonical_bundle())
 
     assert response.status_code == 200
     assert api_context.repository.persisted_patient_data == []
     assert api_context.repository.read_tree_keys[-1] == "hypertension-diagnosis"
+
+
+def _canonical_bundle() -> dict[str, Any]:
+    path = Path(__file__).parents[2] / "data" / "fhir" / "test_case" / "PT0001.json"
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _normal_bp_graph() -> TreeGraph:
