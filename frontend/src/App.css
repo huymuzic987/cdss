@@ -1268,6 +1268,32 @@
 }
 
 /* Actions */
+.modal-decision-summary {
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--accent-border);
+  border-radius: 8px;
+  background: var(--bg-panel);
+}
+
+.modal-decision-summary.action-required {
+  border-left-color: #f59e0b;
+}
+
+.modal-decision-summary-title {
+  color: var(--text-bright);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.modal-decision-summary-detail {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .modal-action-card {
   background: var(--success-card-bg);
   border: 1px solid var(--success-card-border);
