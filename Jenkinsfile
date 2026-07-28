@@ -25,6 +25,16 @@ pipeline {
         githubPush()
     }
 
+    options {
+        // Checkout is performed explicitly below; avoid Declarative
+        // Pipeline's otherwise automatic duplicate checkout.
+        skipDefaultCheckout(true)
+        // Two deployments must never build/migrate/promote on the same host
+        // at once. A queued newer build waits instead of doubling host load.
+        disableConcurrentBuilds()
+        timestamps()
+    }
+
     stages {
 
         stage('Checkout') {
@@ -66,7 +76,10 @@ pipeline {
                             mkdir -p ${DEPLOY_PATH}
                         "
 
-                        rsync -avz --delete \
+                        # The target is on the same LAN. Compression consumes
+                        # more CPU than it saves for already-compressed build
+                        # inputs and was slowing both Jenkins and production.
+                        rsync -a --delete \
                             --exclude '.git' \
                             --exclude '.venv' \
                             --exclude 'node_modules' \
@@ -79,6 +92,7 @@ pipeline {
                             --exclude '.ruff_cache' \
                             --exclude 'scratch' \
                             --exclude 'deploy/.current_version' \
+                            --exclude 'deploy/.build_state' \
                             --exclude 'persistent-backups' \
                             ./ ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/
                     '''
