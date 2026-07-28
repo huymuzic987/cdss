@@ -90,7 +90,7 @@ fi
 
 resolve_compose "$NEW_PROJECT"
 echo "Starting frontend for ${NEW_PROJECT}..."
-$COMPOSE up -d --build frontend
+$COMPOSE up -d --no-build frontend
 
 echo "Running health check..."
 for i in $(seq 1 12); do
