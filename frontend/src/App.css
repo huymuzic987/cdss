@@ -1525,88 +1525,28 @@
   padding: 4px 12px 12px;
 }
 
-.modal-clinical-status {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid var(--border-soft);
-  border-radius: 8px;
-  background: var(--bg-panel);
-}
-
-.modal-clinical-status.complete { border-color: #287a49; }
-.modal-clinical-status.incomplete { border-color: #a16207; }
-
-.modal-clinical-status-mark {
-  display: grid;
-  width: 22px;
-  height: 22px;
-  flex: 0 0 22px;
-  place-items: center;
-  border-radius: 50%;
-  background: #166534;
-  color: #dcfce7;
-  font-weight: 700;
-}
-
-.modal-clinical-status.incomplete .modal-clinical-status-mark {
-  background: #92400e;
-  color: #fef3c7;
-}
-
-.modal-clinical-status-title,
 .modal-clinical-section-title {
   color: var(--text-bright);
   font-size: 13px;
   font-weight: 700;
 }
 
-.modal-clinical-status-copy {
-  margin-top: 3px;
-  color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.modal-clinical-section,
-.modal-clinical-list {
+.modal-clinical-section {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.modal-clinical-list { gap: 6px; }
-
-.modal-clinical-list-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  color: var(--text-primary);
-  font-size: 12px;
-  line-height: 1.45;
+.modal-clinical-details .modal-path {
+  max-height: none;
 }
 
-.modal-clinical-list-mark {
-  color: #22c55e;
-  font-weight: 700;
-}
-
-.modal-clinical-evidence {
-  padding: 9px 10px;
-  border-left: 3px solid var(--accent-border);
-  border-radius: 0 6px 6px 0;
-  background: var(--bg-panel);
-  color: var(--text-primary);
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.modal-clinical-evidence-locator,
-.modal-clinical-more {
-  margin-top: 2px;
-  color: var(--text-muted);
-  font-size: 11px;
+.modal-clinical-details .modal-path-tree {
+  width: 160px;
+  flex: 0 0 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Context JSON */

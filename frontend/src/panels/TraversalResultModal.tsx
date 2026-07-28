@@ -1,4 +1,10 @@
-import type { ApiErrorResponse, EvaluationResponse, JsonObject, TraversalTraceEntry } from '../api/types'
+import type {
+  ApiErrorResponse,
+  EvaluationResponse,
+  ExecutedAction,
+  JsonObject,
+  TraversalTraceEntry,
+} from '../api/types'
 
 interface TraversalResultModalProps {
   result: EvaluationResponse | null
@@ -26,6 +32,118 @@ interface MedicineOption {
 
 function asString(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback
+}
+
+function asObject(value: unknown): JsonObject | null {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? value as JsonObject
+    : null
+}
+
+function asNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+const DIAGNOSIS_LABELS: Record<string, string> = {
+  NORMAL_BP: 'Normal blood pressure',
+  HIGH_NORMAL_BP: 'High-normal blood pressure',
+  GRADE_1_HYPERTENSION: 'Stage 1 hypertension',
+  GRADE_2_HYPERTENSION: 'Stage 2 hypertension',
+  ISOLATED_SYSTOLIC_HYPERTENSION: 'Isolated systolic hypertension',
+}
+
+const RISK_LABELS: Record<string, string> = {
+  LOW: 'low',
+  MEDIUM: 'moderate',
+  HIGH: 'high',
+}
+
+function ensureSentence(value: string): string {
+  const normalized = value.trim().replace(/\s+/g, ' ')
+  return /[.!?]$/.test(normalized) ? normalized : normalized + '.'
+}
+
+function getBpReading(context: JsonObject, input: JsonObject): [number, number] | null {
+  const diagnosis = asObject(context.diagnosis)
+  const sbp = asNumber(diagnosis?.current_clinic_sbp)
+    ?? asNumber(input.current_clinic_sbp)
+    ?? asNumber(input.clinic_1_sbp)
+  const dbp = asNumber(diagnosis?.current_clinic_dbp)
+    ?? asNumber(input.current_clinic_dbp)
+    ?? asNumber(input.clinic_1_dbp)
+  return sbp !== null && dbp !== null ? [sbp, dbp] : null
+}
+
+function getBpTarget(context: JsonObject): [number, number] | null {
+  const treatment = asObject(context.treatment)
+  const target = asObject(treatment?.bp_target)
+  const sbp = asNumber(asObject(target?.sbp)?.upper_exclusive_mmhg)
+  const dbp = asNumber(asObject(target?.dbp)?.upper_exclusive_mmhg)
+  return sbp !== null && dbp !== null ? [sbp, dbp] : null
+}
+
+function buildDecisionSummary(
+  context: JsonObject,
+  input: JsonObject,
+  actions: ExecutedAction[],
+): { title: string; detail: string } {
+  const diagnosis = asObject(context.diagnosis)
+  const risk = asObject(context.risk)
+  const diagnosisCode = asString(diagnosis?.hypertension_class)
+  const diagnosisLabel = DIAGNOSIS_LABELS[diagnosisCode] ?? ''
+  const riskCode = asString(risk?.level)
+  const riskLabel = RISK_LABELS[riskCode] ?? ''
+  const recommendation = actions.at(-1)
+  const recommendationText = recommendation
+    ? asString(recommendation.text_en, recommendation.text_vi)
+    : ''
+
+  let title: string
+  if (recommendationText) {
+    const clinicalStatus = diagnosisLabel
+      ? diagnosisLabel + (riskLabel ? ' with ' + riskLabel + ' cardiovascular risk' : '')
+      : 'Clinical action required'
+    title = clinicalStatus + ': ' + ensureSentence(recommendationText)
+  } else if (diagnosisLabel) {
+    title = diagnosisLabel + ': no treatment action was triggered by this review.'
+  } else {
+    title = 'No clinical action was identified from the available patient data.'
+  }
+
+  const bp = getBpReading(context, input)
+  const riskFactorCount = asNumber(input.risk_factor_count)
+  const target = getBpTarget(context)
+  const findings: string[] = []
+
+  if (bp && diagnosisLabel) {
+    findings.push(
+      'Clinic BP ' + bp[0] + '/' + bp[1] + ' mmHg met criteria for '
+        + diagnosisLabel.toLowerCase(),
+    )
+  } else if (diagnosisLabel) {
+    findings.push('The recorded findings met criteria for ' + diagnosisLabel.toLowerCase())
+  } else if (bp) {
+    findings.push('Clinic BP was ' + bp[0] + '/' + bp[1] + ' mmHg')
+  }
+
+  if (riskLabel) {
+    findings.push(
+      riskFactorCount !== null
+        ? 'risk assessment recorded ' + riskFactorCount + ' risk factor'
+          + (riskFactorCount === 1 ? '' : 's')
+          + ' and classified cardiovascular risk as ' + riskLabel
+        : 'cardiovascular risk was classified as ' + riskLabel,
+    )
+  }
+
+  const findingsText = findings.length > 0
+    ? ensureSentence(findings.join('; '))
+    : 'The recommendation reflects the clinical findings supplied for this patient.'
+  const targetText = target
+    ? ' The treatment target is below ' + target[0] + '/' + target[1] + ' mmHg.'
+    : ''
+
+  return { title, detail: findingsText + targetText }
 }
 
 function parseMedicine(value: unknown): Medicine | null {
@@ -143,7 +261,7 @@ export function TraversalResultModal({ result, partial, onClose }: TraversalResu
   const log = result?.traversal_log ?? partial?.partial_run_state?.traversal_log ?? []
   const actions = result?.actions ?? partial?.partial_run_state?.actions ?? []
   const context = result?.context ?? partial?.partial_run_state?.context ?? {}
-  const references = result?.references ?? partial?.partial_run_state?.references ?? []
+  const input = result?.input_snapshot ?? partial?.partial_run_state?.input_snapshot ?? {}
   const isSuccess = !!result
   const isProduction = import.meta.env.VITE_PRODUCTION === '1'
 
@@ -151,17 +269,10 @@ export function TraversalResultModal({ result, partial, onClose }: TraversalResu
     (e) => e.event === 'candidate_evaluated' && e.condition_result !== null,
   )
   const enteredNodes = log.filter((e) => e.event === 'node_entered')
-  const traversedTreeKeys = new Set(enteredNodes.map((entry) => entry.tree_key))
-  const clinicalPathways = (result?.tree_metadata ?? []).filter((tree) =>
-    traversedTreeKeys.has(tree.tree_key),
+  const treeNames = new Map(
+    (result?.tree_metadata ?? []).map((tree) => [tree.tree_key, tree.name_en]),
   )
-  const clinicalPathwayNames = clinicalPathways.map((tree) => tree.name_vi || tree.name_en)
-  const pathwaySummary = clinicalPathwayNames.length > 0
-    ? clinicalPathwayNames.slice(0, 3).join(', ') + (clinicalPathwayNames.length > 3 ? ', and related pathways' : '')
-    : 'the relevant clinical pathways'
-  const evidenceSources = Array.from(
-    new Map(references.map((reference) => [reference.source_title, reference])).values(),
-  )
+  const decisionSummary = buildDecisionSummary(context, input, actions)
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -187,14 +298,10 @@ export function TraversalResultModal({ result, partial, onClose }: TraversalResu
         <div className="modal-body">
           <section className={`modal-decision-summary ${actions.length > 0 ? 'action-required' : 'review-only'}`}>
             <div className="modal-decision-summary-title">
-              {actions.length > 0
-                ? 'This patient needs clinical action based on the findings identified in the review.'
-                : 'No clinical action was identified from the available patient data.'}
+              {decisionSummary.title}
             </div>
             <div className="modal-decision-summary-detail">
-              {actions.length > 0
-                ? <>The review followed {pathwaySummary}; the supplied findings matched the criteria leading to {actions.length === 1 ? 'the recommendation' : 'the recommendations'} below.</>
-                : <>The review followed {pathwaySummary}; the available findings did not match criteria requiring a recommendation.</>}
+              {decisionSummary.detail}
             </div>
           </section>
 
@@ -281,56 +388,27 @@ export function TraversalResultModal({ result, partial, onClose }: TraversalResu
             <summary>{isProduction ? 'Clinical details' : 'Traversal details'}</summary>
             {isProduction ? (
               <div className="modal-clinical-details">
-                <div className={'modal-clinical-status ' + (isSuccess ? 'complete' : 'incomplete')}>
-                  <span className="modal-clinical-status-mark">{isSuccess ? '✓' : '!'}</span>
-                  <div>
-                    <div className="modal-clinical-status-title">
-                      {isSuccess ? 'Clinical review complete' : 'Clinical review incomplete'}
-                    </div>
-                    <div className="modal-clinical-status-copy">
-                      {isSuccess
-                        ? actions.length + ' recommendation' + (actions.length === 1 ? '' : 's') + ' generated from the provided patient data.'
-                        : 'Some clinical information or pathway data could not be resolved. Review the notice above before acting.'}
-                    </div>
+                <section className="modal-clinical-section">
+                  <div className="modal-clinical-section-title">
+                    Full decision path ({enteredNodes.length} steps)
                   </div>
-                </div>
-
-                {clinicalPathways.length > 0 && (
-                  <section className="modal-clinical-section">
-                    <div className="modal-clinical-section-title">Clinical pathways reviewed</div>
-                    <div className="modal-clinical-list">
-                      {clinicalPathways.map((tree) => (
-                        <div key={tree.tree_key} className="modal-clinical-list-item">
-                          <span className="modal-clinical-list-mark">✓</span>
-                          <span>{tree.name_vi || tree.name_en}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {evidenceSources.length > 0 && (
-                  <section className="modal-clinical-section">
-                    <div className="modal-clinical-section-title">Supporting guidance</div>
-                    <div className="modal-clinical-list">
-                      {evidenceSources.slice(0, 3).map((reference) => (
-                        <div key={reference.source_title} className="modal-clinical-evidence">
-                          <div>{reference.source_title}</div>
-                          {(reference.locator || reference.locator_detail) && (
-                            <div className="modal-clinical-evidence-locator">
-                              {[reference.locator, reference.locator_detail].filter(Boolean).join(' · ')}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                      {evidenceSources.length > 3 && (
-                        <div className="modal-clinical-more">
-                          +{evidenceSources.length - 3} additional source{evidenceSources.length - 3 === 1 ? '' : 's'}
-                        </div>
-                      )}
-                    </div>
-                  </section>
-                )}
+                  <div className="modal-path">
+                    {enteredNodes.map((entry, i) => (
+                      <div key={i} className="modal-path-step">
+                        <span className="modal-path-num">{i + 1}</span>
+                        <span className="modal-path-tree" title={entry.tree_key}>
+                          {treeNames.get(entry.tree_key) ?? entry.tree_key}
+                        </span>
+                        <span className="modal-path-node" title={entry.node_key}>
+                          {entry.node_key}
+                        </span>
+                        <span className={'modal-path-type modal-path-type-' + entry.node_type.toLowerCase()}>
+                          {entry.node_type}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
               </div>
             ) : (
               <div className="modal-debug-body">
