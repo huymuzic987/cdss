@@ -10,7 +10,9 @@ WORKDIR /app
 # Install dependencies first so this layer is cached independently of
 # application code changes.
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=cdss-pnpm-store,target=/pnpm/store \
+    pnpm config set store-dir /pnpm/store \
+    && pnpm install --frozen-lockfile
 
 COPY . .
 
