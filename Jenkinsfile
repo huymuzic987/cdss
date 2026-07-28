@@ -44,7 +44,8 @@ pipeline {
                     for f in pyproject.toml uv.lock frontend/package.json frontend/pnpm-lock.yaml \
                              Dockerfile.backend frontend/Dockerfile docker-compose.prod.yml \
                              backups/backup.sql backups/seed.sql \
-                             deploy/backup_db.sh deploy/backup_current_db.sh; do
+                             deploy/backup_db.sh deploy/backup_current_db.sh \
+                             deploy/build_images.sh deploy/seed_database.sh; do
                         if [ ! -f "$f" ]; then
                             echo "ERROR: required file missing: $f"
                             exit 1
@@ -101,6 +102,24 @@ pipeline {
             }
         }
 
+        // Build both application images once and in parallel after the new
+        // source and production environment have reached the target host.
+        // Provision and promotion reuse these exact images.
+        stage('Build Images') {
+            steps {
+                sshagent(['ubuntu-vm-jenkins']) {
+                    sh '''
+                        ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                            set -e
+                            cd ${DEPLOY_PATH}
+                            chmod +x deploy/build_images.sh
+                            ./deploy/build_images.sh ${VERSION}
+                        "
+                    '''
+                }
+            }
+        }
+
         // Takes a plain-SQL dump of the currently-live database before any
         // new stack is provisioned. The dump is written to the persistent
         // host backup directory, outside all per-version Docker volumes.
@@ -119,11 +138,9 @@ pipeline {
             }
         }
 
-        // Builds a brand-new stack (cdss-${VERSION}: its own db + backend
-        // container, network, and volume) and migrates/seeds it, entirely
-        // side by side with whatever is currently live. The live stack is
-        // never touched in this stage -- a failure here means production
-        // keeps running untouched.
+        // Creates an isolated database volume, clones the live database into
+        // it, then migrates and seeds it without changing tree_layouts.
+        // Production remains online throughout this stage.
         stage('Provision New Stack') {
             steps {
                 sshagent(['ubuntu-vm-jenkins']) {
