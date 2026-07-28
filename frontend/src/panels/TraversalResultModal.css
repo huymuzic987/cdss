@@ -3,11 +3,11 @@
 .cds-modal h2 { margin: 0; color: var(--text-bright); font-size: 14px; line-height: 1.35; }
 .cds-section { padding: 15px 16px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg-inset); }
 .cds-recommendation-copy { margin: 0; color: var(--text-bright); font-size: 15px; font-weight: 650; line-height: 1.5; }
-.cds-evidence-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0; margin: 12px 0 0; overflow: hidden; border: 1px solid var(--border); border-radius: 7px; }
-.cds-evidence-row { display: grid; grid-template-columns: minmax(130px,1.3fr) minmax(90px,1fr); gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
-.cds-evidence-row:nth-last-child(-n+2) { border-bottom: 0; }
+.cds-evidence-grid { display: grid; grid-template-columns: 1fr; gap: 0; margin: 12px 0 0; overflow: hidden; border: 1px solid var(--border); border-radius: 7px; }
+.cds-evidence-row { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.cds-evidence-row:last-child { border-bottom: 0; }
 .cds-evidence-row dt { color: var(--text-secondary); font-size: 12px; line-height: 1.4; }
-.cds-evidence-row dd { margin: 0; color: var(--text-bright); font-size: 12px; font-weight: 650; line-height: 1.4; text-align: right; }
+.cds-evidence-row dd { flex: 0 0 auto; margin: 0; color: var(--text-bright); font-size: 12px; font-weight: 650; line-height: 1.4; text-align: right; white-space: nowrap; }
 .cds-recommendation-copy { margin-top: 10px; font-size: 14px; }
 .cds-bilingual-copy,.cds-section-help,.cds-empty { margin: 6px 0 0; color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
 .cds-recommendation-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 12px; color: var(--text-muted); font-size: 11px; }
@@ -20,15 +20,17 @@
 .cds-class-part { display: inline-flex; align-items: center; gap: 4px; }
 .cds-class-separator { color: var(--text-secondary); }
 .cds-drug-class { position: relative; display: inline-flex; outline: none; }
-.cds-drug-class-label { padding: 5px 8px; border: 1px solid var(--accent-border); border-radius: 6px; background: var(--bg-panel-hover); color: var(--accent-text); cursor: help; }
+.cds-drug-class-label { padding: 5px 8px; border: 1px solid var(--accent-border); border-radius: 6px; background: var(--bg-panel-hover); color: var(--accent-text); cursor: default; }
 .cds-drug-class:focus-visible .cds-drug-class-label { outline: 2px solid var(--accent-text); outline-offset: 2px; }
-.cds-drug-tooltip { position: absolute; top: calc(100% + 8px); left: 0; z-index: 20; width: min(430px, 76vw); max-height: 300px; overflow: auto; padding: 12px; border: 1px solid var(--accent-border); border-radius: 8px; background: var(--bg-panel); box-shadow: 0 14px 35px rgba(0,0,0,.42); color: var(--text-primary); }
+.cds-drug-tooltip { position: fixed; z-index: 10000; box-sizing: border-box; overflow: auto; padding: 12px; border: 1px solid var(--accent-border); border-radius: 8px; background: var(--bg-panel); box-shadow: 0 14px 35px rgba(0,0,0,.42); color: var(--text-primary); }
 .cds-drug-tooltip-title { margin-bottom: 8px; color: var(--text-bright); font-size: 12px; font-weight: 750; }
 .cds-drug-tooltip table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.cds-drug-tooltip thead tr,.cds-drug-tooltip tbody tr { display: grid; grid-template-columns: minmax(0,1fr) auto; }
+.cds-drug-tooltip tbody { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); column-gap: 18px; }
 .cds-drug-tooltip th { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-muted); font-weight: 650; text-align: left; }
 .cds-drug-tooltip th:last-child,.cds-drug-tooltip td:last-child { text-align: right; white-space: nowrap; }
-.cds-drug-tooltip td { padding: 7px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
-.cds-drug-tooltip tr:last-child td { border-bottom: 0; }
+.cds-drug-tooltip tbody tr { border-bottom: 1px solid var(--border); }
+.cds-drug-tooltip td { padding: 7px 8px; vertical-align: top; }
 .cds-drug-tooltip td small { display: block; margin-top: 2px; color: var(--text-muted); font-size: 9px; font-weight: 400; }
 .cds-additional-actions input,.cds-ack-options input { accent-color: var(--accent-solid); }
 .cds-additional-actions { padding: 2px 1px; }
@@ -47,6 +49,5 @@
   .cds-modal { max-height: 100vh; border-radius: 0; }
   .cds-modal-body { padding: 14px; }
   .cds-evidence-grid { grid-template-columns: 1fr; }
-  .cds-evidence-row:nth-last-child(-n+2) { border-bottom: 1px solid var(--border); }
-  .cds-evidence-row:last-child { border-bottom: 0; }
+  .cds-drug-tooltip tbody { grid-template-columns: 1fr; }
 }
