@@ -59,6 +59,55 @@ def test_medications_are_presentation_details_even_when_not_runtime_inputs() -> 
     assert any(item["category"] == "medication" for item in parsed.clinical_details)
 
 
+def test_low_dose_combination_presents_class_medicines_with_only_low_doses() -> None:
+    bundle = json.loads(next(iter(sorted(FIXTURE_DIR.glob("*.json")))).read_text(encoding="utf-8"))
+    parsed = parse_clinical_bundle(bundle)
+    action = ExecutedAction(
+        tree_key="drug-combination",
+        node_key="T6_END_INITIAL_TWO_DRUG_COMBINATION",
+        node_type=NodeType.END,
+        text_en="Start two-drug low-dose combination",
+        text_vi="Khởi trị phối hợp hai thuốc liều thấp",
+        payload={
+            "medicine_options": [
+                {
+                    "classes": ["A", "C"],
+                    "dose_strategy": "LOW_DOSE",
+                    "medicines": {
+                        "A": [
+                            {
+                                "drug_id": "losartan",
+                                "name": "Losartan",
+                                "dose_low": "25 mg",
+                                "dose_usual": "50 - 100 mg",
+                                "available": True,
+                            }
+                        ],
+                        "C": [
+                            {
+                                "drug_id": "amlodipine",
+                                "name": "Amlodipine",
+                                "dose_low": "2.5 mg",
+                                "dose_usual": "5 - 10 mg",
+                                "available": True,
+                            }
+                        ],
+                    },
+                }
+            ]
+        },
+    )
+
+    order = build_presentation(action, parsed, [])["recommended_orders"][0]
+
+    assert order["name_en"] == "Drug Class A + Drug Class C"
+    assert order["dose_strategy"] == "LOW_DOSE"
+    assert order["drug_classes"][0]["medicines"] == [
+        {"id": "losartan", "name": "Losartan", "dose": "25 mg", "route": "", "subgroup": ""}
+    ]
+    assert order["drug_classes"][1]["medicines"][0]["dose"] == "2.5 mg"
+
+
 def test_legacy_parameters_resource_is_rejected() -> None:
     bundle = {
         "resourceType": "Bundle",

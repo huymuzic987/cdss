@@ -2,9 +2,7 @@
 .cds-modal-body { gap: 14px; padding: 18px 22px 24px; }
 .cds-modal h2 { margin: 0; color: var(--text-bright); font-size: 14px; line-height: 1.35; }
 .cds-section { padding: 15px 16px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg-inset); }
-.cds-alert { padding: 15px 16px; border: 1px solid rgba(245,158,11,.55); border-left: 4px solid #f59e0b; border-radius: 9px; background: rgba(245,158,11,.09); }
-.cds-alert-label { margin-bottom: 6px; color: #fbbf24; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-.cds-alert p,.cds-recommendation-copy { margin: 0; color: var(--text-bright); font-size: 15px; font-weight: 650; line-height: 1.5; }
+.cds-recommendation-copy { margin: 0; color: var(--text-bright); font-size: 15px; font-weight: 650; line-height: 1.5; }
 .cds-evidence-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0; margin: 12px 0 0; overflow: hidden; border: 1px solid var(--border); border-radius: 7px; }
 .cds-evidence-row { display: grid; grid-template-columns: minmax(130px,1.3fr) minmax(90px,1fr); gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
 .cds-evidence-row:nth-last-child(-n+2) { border-bottom: 0; }
@@ -13,44 +11,42 @@
 .cds-recommendation-copy { margin-top: 10px; font-size: 14px; }
 .cds-bilingual-copy,.cds-section-help,.cds-empty { margin: 6px 0 0; color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
 .cds-recommendation-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 12px; color: var(--text-muted); font-size: 11px; }
-.cds-link-button { padding: 0; border: 0; background: transparent; color: var(--accent-text); font: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-.cds-order-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 7px; background: var(--bg-panel); }
+.cds-orders { padding-top: 6px; }
+.cds-order-row { margin-top: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 7px; background: var(--bg-panel); }
 .cds-order-copy { min-width: 0; }
 .cds-order-name { color: var(--text-bright); font-size: 13px; font-weight: 700; line-height: 1.4; }
 .cds-order-dose,.cds-order-class { margin-top: 3px; color: var(--text-secondary); font-size: 11px; line-height: 1.35; }
-.cds-decision-group { display: flex; flex: 0 0 auto; gap: 6px; margin: 0; padding: 0; border: 0; }
-.cds-decision-group label { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; color: var(--text-secondary); font-size: 11px; font-weight: 650; cursor: pointer; }
-.cds-decision-group label.selected { border-color: var(--accent-border); background: var(--bg-panel-hover); color: var(--accent-text); }
-.cds-decision-group label.decline { border-color: var(--danger-border); color: var(--danger-text); }
-.cds-decision-group input,.cds-additional-actions input,.cds-ack-options input { accent-color: var(--accent-solid); }
+.cds-class-combination { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.cds-class-part { display: inline-flex; align-items: center; gap: 4px; }
+.cds-class-separator { color: var(--text-secondary); }
+.cds-drug-class { position: relative; display: inline-flex; outline: none; }
+.cds-drug-class-label { padding: 5px 8px; border: 1px solid var(--accent-border); border-radius: 6px; background: var(--bg-panel-hover); color: var(--accent-text); cursor: help; }
+.cds-drug-class:focus-visible .cds-drug-class-label { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+.cds-drug-tooltip { position: absolute; top: calc(100% + 8px); left: 0; z-index: 20; width: min(430px, 76vw); max-height: 300px; overflow: auto; padding: 12px; border: 1px solid var(--accent-border); border-radius: 8px; background: var(--bg-panel); box-shadow: 0 14px 35px rgba(0,0,0,.42); color: var(--text-primary); }
+.cds-drug-tooltip-title { margin-bottom: 8px; color: var(--text-bright); font-size: 12px; font-weight: 750; }
+.cds-drug-tooltip table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.cds-drug-tooltip th { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-muted); font-weight: 650; text-align: left; }
+.cds-drug-tooltip th:last-child,.cds-drug-tooltip td:last-child { text-align: right; white-space: nowrap; }
+.cds-drug-tooltip td { padding: 7px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.cds-drug-tooltip tr:last-child td { border-bottom: 0; }
+.cds-drug-tooltip td small { display: block; margin-top: 2px; color: var(--text-muted); font-size: 9px; font-weight: 400; }
+.cds-additional-actions input,.cds-ack-options input { accent-color: var(--accent-solid); }
 .cds-additional-actions { padding: 2px 1px; }
 .cds-additional-actions h2 { margin-bottom: 9px; }
-.cds-additional-actions label { display: flex; align-items: center; gap: 9px; margin-top: 7px; color: var(--text-primary); font-size: 12px; cursor: pointer; }
-.cds-acknowledgement { border-color: rgba(245,158,11,.35); }
-.cds-ack-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px 16px; margin: 12px 0 0; padding: 0; border: 0; }
-.cds-ack-options label { display: flex; align-items: center; gap: 8px; color: var(--text-primary); font-size: 12px; cursor: pointer; }
-.cds-other-reason { display: grid; gap: 6px; margin-top: 12px; color: var(--text-secondary); font-size: 12px; }
-.cds-other-reason input { width: 100%; box-sizing: border-box; padding: 9px 10px; border: 1px solid var(--border); border-radius: 6px; outline: none; background: var(--bg-panel); color: var(--text-bright); }
-.cds-validation-error { margin-top: 10px; color: var(--danger-text); font-size: 12px; font-weight: 650; }
-.cds-reference { color: var(--text-secondary); font-size: 12px; line-height: 1.45; }
-.cds-modal-footer { position: sticky; bottom: 0; z-index: 2; flex-wrap: wrap; gap: 8px; background: var(--bg-panel); }
-.cds-button { padding: 9px 14px; border: 1px solid var(--border); border-radius: 7px; color: var(--text-bright); font-size: 12px; font-weight: 700; cursor: pointer; }
-.cds-button.secondary { margin-right: auto; background: transparent; color: var(--text-secondary); }
-.cds-button.neutral { background: var(--bg-panel-hover); }
-.cds-button.primary { border-color: var(--accent-border); background: var(--accent-solid); color: #fff; }
-.cds-button:disabled { cursor: not-allowed; opacity: .42; }
+.cds-additional-actions ul { margin: 8px 0 0; padding-left: 20px; color: var(--text-primary); font-size: 12px; line-height: 1.6; }
+.cds-decision-path .modal-path { max-height: 320px; margin: 0 12px 12px; }
+.cds-decision-path .modal-path-step { align-items: flex-start; gap: 10px; padding: 8px; }
+.cds-decision-path .modal-path-num { padding-top: 2px; }
+.cds-decision-path .modal-path-copy { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 3px; }
+.cds-decision-path .modal-path-node { overflow: visible; font-family: inherit; font-size: 12px; font-weight: 650; line-height: 1.4; white-space: normal; }
+.cds-decision-path .modal-path-tree { color: var(--text-muted); font-size: 10px; font-weight: 500; }
 .cds-modal :is(button,input,summary):focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 @media (max-width:680px) {
   .modal-overlay { align-items: stretch; padding: 0; }
   .cds-modal { max-height: 100vh; border-radius: 0; }
   .cds-modal-body { padding: 14px; }
-  .cds-evidence-grid,.cds-ack-options { grid-template-columns: 1fr; }
+  .cds-evidence-grid { grid-template-columns: 1fr; }
   .cds-evidence-row:nth-last-child(-n+2) { border-bottom: 1px solid var(--border); }
   .cds-evidence-row:last-child { border-bottom: 0; }
-  .cds-order-row { align-items: stretch; flex-direction: column; }
-  .cds-decision-group { width: 100%; }
-  .cds-decision-group label { flex: 1; justify-content: center; }
-  .cds-modal-footer { display: grid; grid-template-columns: 1fr; }
-  .cds-button.secondary { margin-right: 0; order: 3; }
 }

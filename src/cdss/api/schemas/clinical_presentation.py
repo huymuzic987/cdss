@@ -89,18 +89,99 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
             if not isinstance(raw, dict):
                 continue
             classes = [str(item) for item in raw.get("classes", []) if isinstance(item, str)]
+            dose_strategy = _string(
+                raw.get("dose_strategy"),
+                _string(payload.get("dose_strategy"), "LOW_TO_USUAL_DOSE"),
+            )
+            drug_classes = _drug_class_details(raw, classes, dose_strategy)
+            labels_en = [f"Drug Class {code}" for code in classes]
+            labels_vi = [f"Nhóm thuốc {code}" for code in classes]
             orders.append(
                 {
                     "id": f"{action.node_key}-combination-{index}",
                     "type": "medication",
-                    "name_en": " + ".join(classes) or "Medication combination",
-                    "name_vi": " + ".join(classes) or "Phối hợp thuốc",
-                    "class_label_en": " + ".join(classes),
-                    "class_label_vi": " + ".join(classes),
+                    "name_en": " + ".join(labels_en) or "Medication combination",
+                    "name_vi": " + ".join(labels_vi) or "Phối hợp thuốc",
+                    "class_label_en": " + ".join(labels_en),
+                    "class_label_vi": " + ".join(labels_vi),
+                    "dose_strategy": dose_strategy,
+                    "drug_classes": drug_classes,
                     "source_data": deepcopy(raw),
                 }
             )
     return orders
+
+
+def _drug_class_details(
+    option: JsonObject, classes: list[str], dose_strategy: str
+) -> list[JsonObject]:
+    medicine_map = option.get("medicines")
+    if not isinstance(medicine_map, dict):
+        medicine_map = {}
+    result: list[JsonObject] = []
+    for code in classes:
+        raw_medicines = medicine_map.get(code)
+        medicines: list[JsonObject] = []
+        if isinstance(raw_medicines, list):
+            for index, raw in enumerate(raw_medicines):
+                if not isinstance(raw, dict) or raw.get("available") is False:
+                    continue
+                name = _string(raw.get("name"), _string(raw.get("drug_name")))
+                if not name:
+                    continue
+                medicines.append(
+                    {
+                        "id": _string(raw.get("drug_id"), f"{code}-medicine-{index}"),
+                        "name": name,
+                        "dose": _dose_for_strategy(raw, dose_strategy),
+                        "route": _string(raw.get("route")),
+                        "subgroup": _string(raw.get("subgroup")),
+                    }
+                )
+        result.append(
+            {
+                "code": code,
+                "label_en": f"Drug Class {code}",
+                "label_vi": f"Nhóm thuốc {code}",
+                "dose_strategy": dose_strategy,
+                "dose_label_en": _dose_strategy_label(dose_strategy, "en"),
+                "dose_label_vi": _dose_strategy_label(dose_strategy, "vi"),
+                "medicines": medicines,
+            }
+        )
+    return result
+
+
+def _dose_for_strategy(medicine: JsonObject, strategy: str) -> str:
+    low = _string(medicine.get("dose_low"))
+    usual = _string(medicine.get("dose_usual"))
+    maximum = _string(medicine.get("dose_max"))
+    if strategy == "LOW_DOSE":
+        return low
+    if strategy == "LOW_TO_USUAL_DOSE":
+        if low and usual and low != usual:
+            return f"{low} → {usual}"
+        return low or usual
+    if strategy in {"USUAL_DOSE", "USUAL_DOSE_OR_ESCALATED_COMBINATION"}:
+        return usual or low
+    if strategy == "MAX_DOSE":
+        return maximum or usual or low
+    return _string(medicine.get("starting_dose"), low or usual)
+
+
+def _dose_strategy_label(strategy: str, locale: str) -> str:
+    labels = {
+        "LOW_DOSE": ("Low dose", "Liều thấp"),
+        "LOW_TO_USUAL_DOSE": ("Low to usual dose", "Liều thấp đến liều thông thường"),
+        "USUAL_DOSE": ("Usual dose", "Liều thông thường"),
+        "USUAL_DOSE_OR_ESCALATED_COMBINATION": (
+            "Usual dose",
+            "Liều thông thường",
+        ),
+        "MAX_DOSE": ("Maximum dose", "Liều tối đa"),
+    }
+    label = labels.get(strategy, (_humanize(strategy), _humanize(strategy)))
+    return label[1] if locale == "vi" else label[0]
 
 
 def _additional_actions(payload: JsonObject) -> list[JsonObject]:

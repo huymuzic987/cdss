@@ -1,17 +1,30 @@
 import type { ExecutedAction, JsonObject, JsonValue } from '../api/types'
 import type { ClinicalDecisionSupportLocale } from './clinicalDecisionSupportMessages'
 
-export type OrderDecision = 'order' | 'do-not-order' | null
-
 export interface RecommendedOrder {
   id: string
   name: string
   dose?: string
   classLabel?: string
-  decision: OrderDecision
   orderType?: string
   sourceData?: JsonObject
   medicineIds?: string[]
+  drugClasses?: RecommendedDrugClass[]
+}
+
+export interface RecommendedMedicine {
+  id: string
+  name: string
+  dose: string
+  route?: string
+  subgroup?: string
+}
+
+export interface RecommendedDrugClass {
+  code: string
+  label: string
+  doseLabel: string
+  medicines: RecommendedMedicine[]
 }
 
 export interface EvidenceItem {
@@ -25,10 +38,6 @@ export interface ActionOption {
   label: string
 }
 
-export interface AcknowledgementOption extends ActionOption {
-  requiresText?: boolean
-}
-
 export interface ClinicalPresentation {
   alert: string
   evidence: EvidenceItem[]
@@ -38,16 +47,7 @@ export interface ClinicalPresentation {
   evidenceLevel?: string
   orders: RecommendedOrder[]
   additionalActions: ActionOption[]
-  acknowledgementOptions: AcknowledgementOption[]
-  clinicalDetails: EvidenceItem[]
-  guidelineReferences: GuidelineReference[]
   contractError?: string
-}
-
-export interface GuidelineReference {
-  id: string
-  title: string
-  locator?: string
 }
 
 interface Medicine {
@@ -124,11 +124,47 @@ function parseStructuredOrders(value: JsonValue | undefined, locale: ClinicalDec
       || components.map((component) => component.dose).filter(Boolean).join(' + ')
     const classLabel = localized(item, 'class_label', locale)
       || components.map((component) => component.classLabel).filter(Boolean).join(' + ')
+    const drugClasses = parseDrugClasses(item.drug_classes, locale)
     return [{
       id: stringValue(item.id, `order-${index}`), name, dose: dose || undefined,
-      classLabel: classLabel || undefined, decision: null,
+      classLabel: classLabel || undefined,
       orderType: stringValue(item.type, 'order'), sourceData: item,
       medicineIds: components.map((component) => component.drugId).filter(Boolean),
+      drugClasses: drugClasses.length > 0 ? drugClasses : undefined,
+    }]
+  })
+}
+
+function parseDrugClasses(
+  value: JsonValue | undefined,
+  locale: ClinicalDecisionSupportLocale,
+): RecommendedDrugClass[] {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((entry, classIndex) => {
+    const drugClass = objectValue(entry)
+    if (!drugClass) return []
+    const code = stringValue(drugClass.code, String(classIndex + 1))
+    const medicines = Array.isArray(drugClass.medicines)
+      ? drugClass.medicines.flatMap((rawMedicine, medicineIndex) => {
+          const medicine = objectValue(rawMedicine)
+          if (!medicine) return []
+          const name = stringValue(medicine.name)
+          const dose = stringValue(medicine.dose)
+          if (!name || !dose) return []
+          return [{
+            id: stringValue(medicine.id, `${code}-medicine-${medicineIndex}`),
+            name,
+            dose,
+            route: stringValue(medicine.route) || undefined,
+            subgroup: stringValue(medicine.subgroup) || undefined,
+          }]
+        })
+      : []
+    return [{
+      code,
+      label: localized(drugClass, 'label', locale) || `${locale === 'vi' ? 'Nhóm thuốc' : 'Drug Class'} ${code}`,
+      doseLabel: localized(drugClass, 'dose_label', locale),
+      medicines,
     }]
   })
 }
@@ -163,19 +199,6 @@ function codedLabel(value: JsonValue | undefined, locale: ClinicalDecisionSuppor
   return coded ? localized(coded, 'label', locale) || stringValue(coded.code) : ''
 }
 
-function parseGuidelineReferences(value: JsonValue | undefined, locale: ClinicalDecisionSupportLocale): GuidelineReference[] {
-  if (!Array.isArray(value)) return []
-  return value.flatMap((entry, index) => {
-    const reference = objectValue(entry)
-    if (!reference) return []
-    return [{
-      id: stringValue(reference.id, `reference-${index}`),
-      title: localized(reference, 'title', locale),
-      locator: stringValue(reference.locator) || undefined,
-    }]
-  })
-}
-
 export function buildClinicalPresentation(
   actions: ExecutedAction[], _input: JsonObject, _context: JsonObject, locale: ClinicalDecisionSupportLocale,
 ): ClinicalPresentation {
@@ -183,18 +206,14 @@ export function buildClinicalPresentation(
   if (!presentation || presentation.schema_version !== '1.0') {
     return {
       alert: locale === 'vi' ? 'Dữ liệu trình bày quyết định lâm sàng không hợp lệ.' : 'Invalid clinical presentation contract.',
-      evidence: [], recommendation: '', orders: [], additionalActions: [], acknowledgementOptions: [],
-      clinicalDetails: [], guidelineReferences: [], contractError: 'missing_or_unsupported_presentation',
+      evidence: [], recommendation: '', orders: [], additionalActions: [],
+      contractError: 'missing_or_unsupported_presentation',
     }
   }
   const structuredOrders = parseStructuredOrders(presentation.recommended_orders, locale)
   const evidence = parseEvidence(presentation.trigger_evidence, locale)
   const lastAction = actions.at(-1)
   const recommendation = localizedText(presentation.recommendation, locale)
-  const acknowledgement = parseOptions(presentation.acknowledgement_options, locale).map((option) => ({
-    ...option,
-    requiresText: objectValue((presentation.acknowledgement_options as JsonValue[] | undefined)?.find((entry) => objectValue(entry)?.id === option.id))?.requires_text === true,
-  }))
   return {
     alert: localizedText(presentation.alert, locale),
     evidence,
@@ -204,8 +223,5 @@ export function buildClinicalPresentation(
     evidenceLevel: codedLabel(presentation.evidence_level, locale),
     orders: Array.from(new Map(structuredOrders.map((order) => [order.id, order])).values()),
     additionalActions: parseOptions(presentation.additional_actions, locale),
-    acknowledgementOptions: acknowledgement,
-    clinicalDetails: parseEvidence(presentation.clinical_details, locale),
-    guidelineReferences: parseGuidelineReferences(presentation.guideline_references, locale),
   }
 }
