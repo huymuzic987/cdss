@@ -139,9 +139,7 @@ def test_tree_not_found_returns_404(api_context: ApiTestContext) -> None:
 def test_unresolved_link_returns_424_with_partial_execution_state(
     api_context: ApiTestContext,
 ) -> None:
-    api_context.repository.graphs["hypertension-diagnosis"] = api_context.repository.graphs[
-        "unresolved-tree"
-    ]
+    api_context.repository.graphs["hypertension-diagnosis"] = _unresolved_link_graph()
     response = api_context.client.post("/evaluate", json=_canonical_bundle())
 
     assert response.status_code == 424
@@ -160,7 +158,7 @@ def test_unresolved_link_returns_424_with_partial_execution_state(
     assert "traceback" not in body
 
 
-def test_evaluate_collapses_action_trail_to_the_terminal_action_by_default(
+def test_evaluate_stops_at_generic_action_even_when_it_has_outgoing_edges(
     api_context: ApiTestContext,
 ) -> None:
     api_context.repository.graphs["hypertension-diagnosis"] = _multi_action_graph()
@@ -172,14 +170,14 @@ def test_evaluate_collapses_action_trail_to_the_terminal_action_by_default(
 
     assert response.status_code == 200
     body = response.json()
-    assert [a["node_key"] for a in body["actions"]] == ["final"]
-    # The full trail is still visible in the audit log.
-    assert [
-        e["node_key"] for e in body["traversal_log"] if e["event"] == "node_entered"
-    ] == ["start", "intermediate-1", "intermediate-2", "final"]
+    assert [a["node_key"] for a in body["actions"]] == ["intermediate-1"]
+    assert [e["node_key"] for e in body["traversal_log"] if e["event"] == "node_entered"] == [
+        "start",
+        "intermediate-1",
+    ]
 
 
-def test_evaluate_returns_full_action_trail_when_debug_output_is_enabled() -> None:
+def test_debug_output_does_not_bypass_generic_action_termination() -> None:
     graph = _multi_action_graph()
     repository = RecordingRepository([graph])
     repository.graphs["hypertension-diagnosis"] = graph
@@ -200,11 +198,7 @@ def test_evaluate_returns_full_action_trail_when_debug_output_is_enabled() -> No
 
     assert response.status_code == 200
     body = response.json()
-    assert [a["node_key"] for a in body["actions"]] == [
-        "intermediate-1",
-        "intermediate-2",
-        "final",
-    ]
+    assert [a["node_key"] for a in body["actions"]] == ["intermediate-1"]
 
 
 def test_request_completion_does_not_persist_patient_data(
@@ -273,7 +267,7 @@ def _multi_action_graph() -> TreeGraph:
 
 
 def _unresolved_link_graph() -> TreeGraph:
-    tree = _tree(200, "unresolved-tree")
+    tree = _tree(200, "essential-treatment-strategy")
     start = _node(tree, 201, "start", NodeType.START)
     action = _node(
         tree,

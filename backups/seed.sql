@@ -430,7 +430,7 @@ VALUES ('7b695edb-dd31-4e32-af13-3feb66c48e66', (SELECT id FROM public.decision_
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-VALUES ('c82a074a-7873-40a8-9874-29f2f9a627a4', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-chronic-kidney-disease'), 'T11_ACTION_TEST_CREATININE_COMPARE_PRIOR', 'ACTION'::public.node_type, 'Test creatinine and compare with the prior measurement', 'Xét nghiệm chỉ số creatinine và đối chiếu với lần đo trước', NULL, NULL, '{"action_type": "TEST_CREATININE_COMPARE_PRIOR", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false}'::jsonb, NULL, NULL, NULL, 12, '2026-07-25 11:46:28.101935+00:00', '2026-07-25 11:46:28.101935+00:00')
+VALUES ('c82a074a-7873-40a8-9874-29f2f9a627a4', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-chronic-kidney-disease'), 'T11_ACTION_TEST_CREATININE_COMPARE_PRIOR', 'ACTION'::public.node_type, 'Test creatinine and compare with the prior measurement', 'Xét nghiệm chỉ số creatinine và đối chiếu với lần đo trước', NULL, NULL, '{"action_type": "TEST_CREATININE_COMPARE_PRIOR", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": true}'::jsonb, NULL, NULL, NULL, 12, '2026-07-25 11:46:28.101935+00:00', '2026-07-25 11:46:28.101935+00:00')
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
@@ -2031,9 +2031,14 @@ INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order
 VALUES ('01fee17a-e123-484e-8720-1429a6ad1d4d', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-chronic-kidney-disease' AND n.node_key = 'T11_ACTION_TEST_CREATININE_AND_MONITOR'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-chronic-kidney-disease' AND n.node_key = 'T11_LINK_OPTIMAL_TREATMENT_STRATEGY'), 2)
 ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
 
-INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-VALUES ('59b4b88a-2752-43f6-b4c7-a58349d3fc1d', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-chronic-kidney-disease' AND n.node_key = 'T11_ACTION_TEST_CREATININE_COMPARE_PRIOR'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-chronic-kidney-disease' AND n.node_key = 'T11_INF_DETERMINE_CREATININE_INCREASE_STATUS'), 1)
-ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
+DELETE FROM public.decision_edges
+WHERE from_node_id = (
+    SELECT n.id
+    FROM public.decision_nodes n
+    JOIN public.decision_trees t ON t.id = n.tree_id
+    WHERE t.tree_key = 'hypertension-chronic-kidney-disease'
+      AND n.node_key = 'T11_ACTION_TEST_CREATININE_COMPARE_PRIOR'
+);
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('7ec23be2-ad42-4e72-aa99-fbb1a76b2b6d', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-chronic-kidney-disease' AND n.node_key = 'T11_C_CREATININE_INCREASED_OVER_30_PERCENT'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-chronic-kidney-disease' AND n.node_key = 'T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR'), 1)

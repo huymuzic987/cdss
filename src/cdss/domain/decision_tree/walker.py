@@ -45,6 +45,10 @@ from cdss.domain.decision_tree.validator import validate_tree_graph
 
 DEFAULT_MAX_STEPS = 300
 
+_ACTION_CONTINUATION_TREE_KEYS = frozenset(
+    {"essential-treatment-strategy", "optimal-treatment-strategy"}
+)
+
 
 def walk_tree(
     graph: TreeGraph,
@@ -171,8 +175,17 @@ class _InternalTraversal:
             if current.node_type is NodeType.LINK:
                 self.graph, current = self._follow_link(current)
                 continue
-            if current.node_type is NodeType.ACTION and not outgoing_edges:
-                return
+            if current.node_type is NodeType.ACTION:
+                may_continue = (
+                    self.graph.tree.tree_key in _ACTION_CONTINUATION_TREE_KEYS
+                    and bool(outgoing_edges)
+                    and all(
+                        self.graph.nodes_by_id[edge.to_node_id].node_type is NodeType.LINK
+                        for edge in outgoing_edges
+                    )
+                )
+                if not may_continue:
+                    return
 
             current = self._select_next_node(current, outgoing_edges)
 

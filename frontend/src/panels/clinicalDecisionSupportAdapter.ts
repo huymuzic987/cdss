@@ -97,6 +97,86 @@ function parseEvidence(values: JsonValue | undefined, locale: ClinicalDecisionSu
   })
 }
 
+function nestedObject(root: JsonObject, key: string): JsonObject | null {
+  return objectValue(root[key])
+}
+
+function localizedCode(code: string, labels: Record<string, [string, string]>, locale: ClinicalDecisionSupportLocale): string {
+  const pair = labels[code]
+  if (!pair) return humanize(code)
+  return locale === 'vi' ? pair[1] : pair[0]
+}
+
+function buildClinicalSummaryEvidence(
+  presentation: JsonObject,
+  context: JsonObject,
+  hasMedicationOrder: boolean,
+  locale: ClinicalDecisionSupportLocale,
+): EvidenceItem[] {
+  const items: EvidenceItem[] = []
+  const diagnosis = nestedObject(context, 'diagnosis')
+  const hypertensionClass = stringValue(diagnosis?.hypertension_class)
+  if (hypertensionClass) {
+    items.push({
+      id: 'clinical-hypertension-stage',
+      label: locale === 'vi' ? 'Phân độ tăng huyết áp' : 'Hypertension stage',
+      value: localizedCode(hypertensionClass, {
+        NORMAL_BP: ['Normal blood pressure', 'Huyết áp bình thường'],
+        HIGH_NORMAL_BP: ['High-normal blood pressure', 'Huyết áp bình thường cao'],
+        GRADE_1_HYPERTENSION: ['Grade 1 hypertension', 'Tăng huyết áp độ 1'],
+        GRADE_2_HYPERTENSION: ['Grade 2 hypertension', 'Tăng huyết áp độ 2'],
+        ISOLATED_SYSTOLIC_HYPERTENSION: ['Isolated systolic hypertension', 'Tăng huyết áp tâm thu đơn độc'],
+        MASKED_HYPERTENSION: ['Masked hypertension', 'Tăng huyết áp ẩn giấu'],
+        HYPERTENSIVE_EMERGENCY: ['Hypertensive emergency', 'Tăng huyết áp cấp cứu'],
+      }, locale),
+    })
+  }
+
+  const details = Array.isArray(presentation.clinical_details) ? presentation.clinical_details : []
+  const conditions = Array.from(new Set(details.flatMap((entry) => {
+    const detail = objectValue(entry)
+    if (!detail || detail.category !== 'condition') return []
+    const value = formatValue(detail.value)
+    return value ? [value] : []
+  })))
+  if (conditions.length > 0) {
+    items.push({
+      id: 'clinical-comorbidities',
+      label: locale === 'vi' ? 'Chẩn đoán và bệnh đồng mắc' : 'Diagnoses and comorbidities',
+      value: conditions.join(', '),
+    })
+  }
+
+  const risk = nestedObject(context, 'risk')
+  const riskLevel = stringValue(risk?.level)
+  if (riskLevel) {
+    items.push({
+      id: 'clinical-risk-level',
+      label: locale === 'vi' ? 'Mức nguy cơ tim mạch' : 'Cardiovascular risk level',
+      value: localizedCode(riskLevel, {
+        LOW: ['Low risk', 'Nguy cơ thấp'],
+        MODERATE: ['Moderate risk', 'Nguy cơ trung bình'],
+        HIGH: ['High risk', 'Nguy cơ cao'],
+        VERY_HIGH: ['Very high risk', 'Nguy cơ rất cao'],
+      }, locale),
+    })
+  }
+
+  if (hasMedicationOrder) {
+    items.push({
+      id: 'clinical-treatment-indication',
+      label: locale === 'vi' ? 'Chỉ định điều trị' : 'Treatment indication',
+      value: locale === 'vi'
+        ? 'Mức huyết áp và hồ sơ nguy cơ đáp ứng tiêu chí điều trị bằng thuốc.'
+        : 'Blood pressure and the clinical risk profile meet criteria for pharmacologic treatment.',
+    })
+  }
+  return items
+}
+
+function mergeEvidence(...groups: EvidenceItem[][]): EvidenceItem[] {
+  return Array.from(new Map(groups.flat().map((item) => [item.id, item])).values())
+}
 function parseMedicine(value: JsonValue): Medicine | null {
   const medicine = objectValue(value)
   if (!medicine || medicine.available === false) return null
@@ -200,7 +280,7 @@ function codedLabel(value: JsonValue | undefined, locale: ClinicalDecisionSuppor
 }
 
 export function buildClinicalPresentation(
-  actions: ExecutedAction[], _input: JsonObject, _context: JsonObject, locale: ClinicalDecisionSupportLocale,
+  actions: ExecutedAction[], _input: JsonObject, context: JsonObject, locale: ClinicalDecisionSupportLocale,
 ): ClinicalPresentation {
   const presentation = findPresentation(actions)
   if (!presentation || presentation.schema_version !== '1.0') {
@@ -211,7 +291,12 @@ export function buildClinicalPresentation(
     }
   }
   const structuredOrders = parseStructuredOrders(presentation.recommended_orders, locale)
-  const evidence = parseEvidence(presentation.trigger_evidence, locale)
+  const evidence = mergeEvidence(
+    buildClinicalSummaryEvidence(
+      presentation, context, structuredOrders.some((order) => order.orderType === 'medication'), locale,
+    ),
+    parseEvidence(presentation.trigger_evidence, locale),
+  )
   const lastAction = actions.at(-1)
   const recommendation = localizedText(presentation.recommendation, locale)
   return {

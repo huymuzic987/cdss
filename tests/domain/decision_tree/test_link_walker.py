@@ -147,7 +147,7 @@ def _source_graph_with_link_state(
     *,
     target_node_key: str | None = None,
 ) -> tuple[TreeGraph, NodeDefinition]:
-    tree = _tree(700, "source-with-state")
+    tree = _tree(700, "essential-treatment-strategy")
     start = _node(tree, 701, "start", NodeType.START)
     action = _node(
         tree,
@@ -179,14 +179,14 @@ def _assert_preserved_link_state(error: DecisionTreeError, link: NodeDefinition)
     assert partial is not None
     assert partial.context == {"prepared": True}
     assert [action.payload for action in partial.actions] == [{"step": "prepare"}]
-    assert _entered(partial.trace)[-1] == ("source-with-state", link.node_key)
+    assert _entered(partial.trace)[-1] == ("essential-treatment-strategy", link.node_key)
     assert [(reference.node_key, reference.source_title) for reference in partial.references] == [
         (link.node_key, "Link evidence")
     ]
 
 
 def test_link_without_target_node_continues_from_target_start_and_does_not_return() -> None:
-    source_tree = _tree(100, "source-tree")
+    source_tree = _tree(100, "essential-treatment-strategy")
     source_start = _node(source_tree, 101, "source-start", NodeType.START)
     link = _node(
         source_tree,
@@ -248,9 +248,9 @@ def test_link_without_target_node_continues_from_target_start_and_does_not_retur
     )
 
     assert _entered(result.trace) == [
-        ("source-tree", "source-start"),
-        ("source-tree", "source-action"),
-        ("source-tree", "to-target"),
+        ("essential-treatment-strategy", "source-start"),
+        ("essential-treatment-strategy", "source-action"),
+        ("essential-treatment-strategy", "to-target"),
         ("target-tree", "target-start"),
         ("target-tree", "target-action"),
     ]
@@ -261,7 +261,7 @@ def test_link_without_target_node_continues_from_target_start_and_does_not_retur
     assert result.input_snapshot.to_dict() == {"shared_input": {"value": 1}}
     assert result.context == {"source_context": True}
     assert [metadata.tree_key for metadata in result.tree_metadata] == [
-        "source-tree",
+        "essential-treatment-strategy",
         "target-tree",
     ]
     assert result.tree_metadata[0].global_config == [{"source_setting": True}]
@@ -317,7 +317,7 @@ def test_link_with_target_node_enters_exact_node_without_target_start() -> None:
 
 
 def test_missing_link_target_tree_raises_typed_error_with_partial_state() -> None:
-    source_tree = _tree(100, "source-tree")
+    source_tree = _tree(100, "essential-treatment-strategy")
     start = _node(source_tree, 101, "start", NodeType.START)
     action = _node(
         source_tree,
@@ -350,7 +350,7 @@ def test_missing_link_target_tree_raises_typed_error_with_partial_state() -> Non
     assert partial is not None
     assert partial.context == {"prepared": True}
     assert [item.payload for item in partial.actions] == [{"step": "prepare"}]
-    assert _entered(partial.trace)[-1] == ("source-tree", "missing-link")
+    assert _entered(partial.trace)[-1] == ("essential-treatment-strategy", "missing-link")
     assert [(reference.node_key, reference.source_title) for reference in partial.references] == [
         ("missing-link", "Link evidence")
     ]
@@ -495,7 +495,7 @@ def test_linked_graph_is_validated_only_once_per_execution(
     walk_tree(source_graph, {}, repository=repository)
 
     assert repository_calls == ["target-tree", "target-tree"]
-    assert validation_calls == ["source-with-state", "target-tree"]
+    assert validation_calls == ["essential-treatment-strategy", "target-tree"]
 
 
 def test_references_are_aggregated_in_execution_order_and_deduplicated() -> None:

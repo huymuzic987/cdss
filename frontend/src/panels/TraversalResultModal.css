@@ -22,7 +22,8 @@
 .cds-drug-class { position: relative; display: inline-flex; outline: none; }
 .cds-drug-class-label { padding: 5px 8px; border: 1px solid var(--accent-border); border-radius: 6px; background: var(--bg-panel-hover); color: var(--accent-text); cursor: default; }
 .cds-drug-class:focus-visible .cds-drug-class-label { outline: 2px solid var(--accent-text); outline-offset: 2px; }
-.cds-drug-tooltip { position: fixed; z-index: 10000; box-sizing: border-box; overflow: auto; padding: 12px; border: 1px solid var(--accent-border); border-radius: 8px; background: var(--bg-panel); box-shadow: 0 14px 35px rgba(0,0,0,.42); color: var(--text-primary); }
+.cds-drug-tooltip { position: fixed; z-index: 10000; box-sizing: border-box; overflow: auto; padding: 12px; border: 1px solid var(--accent-border); border-radius: 8px; background: var(--bg-panel); box-shadow: 0 14px 35px rgba(0,0,0,.42); color: var(--text-primary); scrollbar-width: none; -ms-overflow-style: none; }
+.cds-drug-tooltip::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .cds-drug-tooltip-title { margin-bottom: 8px; color: var(--text-bright); font-size: 12px; font-weight: 750; }
 .cds-drug-tooltip table { width: 100%; border-collapse: collapse; font-size: 11px; }
 .cds-drug-tooltip thead tr,.cds-drug-tooltip tbody tr { display: grid; grid-template-columns: minmax(0,1fr) auto; }
