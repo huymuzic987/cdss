@@ -11,6 +11,8 @@ import type { DrugToleranceResult } from '../panels/DrugToleranceCheckbox'
 
 type TraversalState = 'idle' | 'running' | 'done'
 
+const DRUG_TOLERANCE_NODE_KEYS = new Set(['T13_A_CHECK_MRA'])
+
 interface UseTraversalOptions {
   ensureGraph: (treeKey: string) => Promise<TreeGraphResponse | null>
   setActiveTreeKey: (treeKey: string) => void
@@ -18,37 +20,38 @@ interface UseTraversalOptions {
   setError: (error: string | null) => void
 }
 
-/** Update or insert a parameter value inside a FHIR R4 Bundle or flat input object */
-function updateBundleParameter(bundle: JsonObject, key: string, value: boolean): JsonObject {
+/** Update or insert one canonical local clinical-flag Condition. */
+function updateBundleClinicalFlag(bundle: JsonObject, key: string, value: boolean): JsonObject {
   if (bundle['resourceType'] !== 'Bundle' || !Array.isArray(bundle['entry'])) {
     return { ...bundle, [key]: value }
   }
 
   const entries = [...bundle['entry']] as JsonObject[]
-  let foundParams = false
+  const patient = entries
+    .map((entry) => entry['resource'] as JsonObject | undefined)
+    .find((resource) => resource?.['resourceType'] === 'Patient')
+  const patientId = typeof patient?.['id'] === 'string' ? patient['id'] : 'simulated-patient'
+  let foundCondition = false
 
   const updatedEntries: JsonObject[] = entries.map((e) => {
     const resource = e['resource'] as JsonObject | undefined
-    if (resource && resource['resourceType'] === 'Parameters') {
-      foundParams = true
-      const params = (Array.isArray(resource['parameter']) ? [...resource['parameter']] : []) as JsonObject[]
-      const idx = params.findIndex((p) => p['name'] === key)
-      const newParam: JsonObject = { name: key, valueBoolean: value }
-      if (idx >= 0) {
-        params[idx] = newParam
-      } else {
-        params.push(newParam)
-      }
-      return { ...e, resource: { ...resource, parameter: params } }
+    const coding = resource?.['resourceType'] === 'Condition'
+      ? ((resource['code'] as JsonObject | undefined)?.['coding'] as JsonObject[] | undefined)
+      : undefined
+    if (coding?.some((item) => item['system'] === 'http://cdss.local/fhir/CodeSystem/clinical-flag' && item['code'] === key)) {
+      foundCondition = true
+      return { ...e, resource: { ...resource, verificationStatus: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/condition-ver-status', code: value ? 'confirmed' : 'refuted' }] } } }
     }
     return e
   })
 
-  if (!foundParams) {
+  if (!foundCondition) {
     updatedEntries.push({
       resource: {
-        resourceType: 'Parameters',
-        parameter: [{ name: key, valueBoolean: value }],
+        resourceType: 'Condition', id: `${patientId}-${key}`,
+        subject: { reference: `Patient/${patientId}` },
+        verificationStatus: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/condition-ver-status', code: value ? 'confirmed' : 'refuted' }] },
+        code: { coding: [{ system: 'http://cdss.local/fhir/CodeSystem/clinical-flag', code: key }] },
       },
     })
   }
@@ -100,7 +103,7 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
       if (runIdRef.current !== runId) return null
       setActiveTreeKey(startTreeKey)
 
-      const { result, partial, error: evalError } = await evaluateTree({ start_tree_key: startTreeKey, input })
+      const { result, partial, error: evalError } = await evaluateTree(input)
       if (runIdRef.current !== runId) return null
 
       if (evalError) {
@@ -256,9 +259,6 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
     [runEvaluation, finish, setError],
   )
 
-  // Node keys that trigger the drug-tolerance popup
-  const DRUG_TOLERANCE_NODE_KEYS = new Set(['T13_A_CHECK_MRA'])
-
   const handleManualStep = useCallback(() => {
     if (!manualMode || showDrugTolerancePopup) return
     const entries = manualEntriesRef.current
@@ -295,15 +295,15 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
   }, [manualMode, manualStepIndex, showDrugTolerancePopup, setActiveTreeKey, setFocusNodeKey, finish])
 
   const handleDrugToleranceChange = useCallback((fieldKey: 'tolerates_mra' | 'tolerates_spironolactone', value: boolean) => {
-    manualInputRef.current = updateBundleParameter(manualInputRef.current, fieldKey, value)
+    manualInputRef.current = updateBundleClinicalFlag(manualInputRef.current, fieldKey, value)
   }, [])
 
   const handleDrugToleranceConfirm = useCallback(async (toleranceResult: DrugToleranceResult) => {
     setShowDrugTolerancePopup(false)
 
     // Ensure the FHIR input bundle has both boolean variables properly updated inside its Parameters resource
-    let updatedInput = updateBundleParameter(manualInputRef.current, 'tolerates_mra', toleranceResult.tolerates_mra)
-    updatedInput = updateBundleParameter(updatedInput, 'tolerates_spironolactone', toleranceResult.tolerates_spironolactone)
+    let updatedInput = updateBundleClinicalFlag(manualInputRef.current, 'tolerates_mra', toleranceResult.tolerates_mra)
+    updatedInput = updateBundleClinicalFlag(updatedInput, 'tolerates_spironolactone', toleranceResult.tolerates_spironolactone)
     manualInputRef.current = updatedInput
 
     const runId = ++runIdRef.current

@@ -2,7 +2,6 @@ import type {
   ApiErrorResponse,
   DashboardFilters,
   DashboardSummaryResponse,
-  EvaluationRequest,
   EvaluationResponse,
   ImportResult,
   PatientDetailResponse,
@@ -13,6 +12,7 @@ import type {
   TreeLayoutResponse,
   TreeSummary,
 } from './types'
+import type { JsonObject } from './types'
 
 // Relative on purpose: the Vite dev server proxies these paths to the
 // backend (see vite.config.ts), and the production nginx container does the
@@ -88,7 +88,7 @@ export function resetTreeLayout(treeKey: string): Promise<void> {
   return deleteRequest(`/trees/${encodeURIComponent(treeKey)}/layout`)
 }
 
-export async function evaluateTree(request: EvaluationRequest): Promise<{
+export async function evaluateTree(bundle: JsonObject): Promise<{
   result: EvaluationResponse | null
   partial: ApiErrorResponse | null
   error: ApiErrorResponse | null
@@ -96,7 +96,7 @@ export async function evaluateTree(request: EvaluationRequest): Promise<{
   const response = await fetch(`${API_BASE_URL}/evaluate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request),
+    body: JSON.stringify(bundle),
   })
   const body = (await response.json()) as EvaluationResponse | ApiErrorResponse
   if (response.ok) {

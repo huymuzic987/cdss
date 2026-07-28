@@ -6,7 +6,7 @@ import { CareSettingSection } from './mockPatientForm/CareSettingSection'
 import { ComorbiditiesSection } from './mockPatientForm/ComorbiditiesSection'
 import { DemographicsSection } from './mockPatientForm/DemographicsSection'
 import { SectionHeader } from './mockPatientForm/FormControls'
-import { formToPayload } from './mockPatientForm/payload'
+import { bundleToForm, formToPayload } from './mockPatientForm/payload'
 import { DEFAULT_FORM, type PatientFormData } from './mockPatientForm/types'
 import { PATIENT_PRESETS } from './patientPresets'
 
@@ -47,7 +47,7 @@ export function MockPatientSidebar({ isRunning, canReset, onStart, onManualStart
       return
     }
     const preset = PATIENT_PRESETS.find((p) => p.id === presetId)
-    if (preset) setForm({ ...DEFAULT_FORM, ...preset.data })
+    if (preset) setForm(bundleToForm(preset.bundle))
   }
 
   /** Validate essential minimum data to prevent backend missing path errors.
