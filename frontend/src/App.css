@@ -1140,6 +1140,14 @@
   flex-direction: column;
   box-shadow: 0 20px 60px rgba(0, 240, 255, 0.15);
   overflow: hidden;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.modal-box button,
+.modal-box summary {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .modal-header {
