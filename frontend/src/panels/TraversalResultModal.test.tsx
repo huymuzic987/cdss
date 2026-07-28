@@ -12,7 +12,8 @@ const canonicalBundleModules = import.meta.glob('../../../data/fhir/test_case/*.
 const canonicalBundles = Object.entries(canonicalBundleModules)
 
 const result: EvaluationResponse = {
-  status: 'success', input_snapshot: { patient_marker: 'Rule-specific input' }, context: {},
+  status: 'success', input_snapshot: { patient_marker: 'Rule-specific input' },
+  context: { diagnosis: { hypertension_class: 'GRADE_2_HYPERTENSION' }, risk: { level: 'HIGH' } },
   actions: [{
     tree_key: 'example-rule', node_key: 'EXAMPLE_END', node_type: 'END',
     text_en: 'Use the recommended interventions and reassess.',
@@ -55,7 +56,10 @@ const result: EvaluationResponse = {
         { id: 'alternative-plan', label_en: 'Use an alternative plan', label_vi: 'Dùng phương án khác' },
         { id: 'other', label_en: 'Other', label_vi: 'Khác', requires_text: true },
       ],
-      clinical_details: [], guideline_references: [],
+      clinical_details: [
+        { id: 'ckd', category: 'condition', label_en: 'Condition', label_vi: 'Chẩn đoán', value: 'Chronic kidney disease' },
+      ],
+      guideline_references: [],
     } },
   }],
   traversal_log: [
@@ -92,6 +96,18 @@ describe('TraversalResultModal', () => {
     },
   )
 
+  it('explains the diagnosis, comorbidities, risk, and treatment indication', () => {
+    renderModal()
+
+    expect(screen.getByText('Hypertension stage')).toBeTruthy()
+    expect(screen.getByText('Grade 2 hypertension')).toBeTruthy()
+    expect(screen.getByText('Diagnoses and comorbidities')).toBeTruthy()
+    expect(screen.getByText('Chronic kidney disease')).toBeTruthy()
+    expect(screen.getByText('Cardiovascular risk level')).toBeTruthy()
+    expect(screen.getByText('High risk')).toBeTruthy()
+    expect(screen.getByText('Treatment indication')).toBeTruthy()
+    expect(screen.getByText('Blood pressure and the clinical risk profile meet criteria for pharmacologic treatment.')).toBeTruthy()
+  })
   it('removes redundant and technical recommendation UI', () => {
     renderModal()
 
