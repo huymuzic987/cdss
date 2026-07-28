@@ -2,9 +2,7 @@
 
 from cdss.api.schemas.evaluation import (
     EvaluationErrorResponse,
-    EvaluationRequest,
     EvaluationResponse,
-    FollowUpEvaluationRequest,
     PartialRunStateResponse,
 )
 from cdss.api.schemas.fhir_input import bundle_to_input, input_to_bundle
@@ -21,9 +19,7 @@ from cdss.api.schemas.tree_layout import NodePosition, TreeLayoutRequest, TreeLa
 __all__ = [
     "bundle_to_input",
     "EvaluationErrorResponse",
-    "EvaluationRequest",
     "EvaluationResponse",
-    "FollowUpEvaluationRequest",
     "input_to_bundle",
     "NodePosition",
     "PartialRunStateResponse",

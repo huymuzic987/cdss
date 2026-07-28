@@ -12,7 +12,6 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from cdss.api.dependencies import get_tree_graph_repository
-from cdss.api.schemas.fhir_input import input_to_bundle
 from cdss.core.config import Settings, get_settings
 from cdss.infrastructure.db.decision_tree_repository import SqlAlchemyTreeGraphRepository
 from cdss.infrastructure.db.models import (
@@ -70,12 +69,7 @@ def seeded_api_context(
 def test_seeded_tree_1_normal_bp_is_read_only(seeded_api_context: SeededApiContext) -> None:
     response = _post_read_only(
         seeded_api_context,
-        tree_key=T1,
-        runtime_input={
-            "is_pregnant": False,
-            "clinic_1_sbp": 120,
-            "clinic_1_dbp": 80,
-        },
+        bundle=_initial_bundle(sbp=120, dbp=80),
     )
 
     assert response.status_code == 200
@@ -92,8 +86,7 @@ def test_seeded_tree_5_target_reached_is_read_only(
 ) -> None:
     response = _post_read_only(
         seeded_api_context,
-        tree_key=T3,
-        runtime_input=_medication_input(current_sbp=129, current_dbp=79),
+        bundle=_medication_bundle(current_sbp=129, current_dbp=79),
     )
 
     assert response.status_code == 200
@@ -109,49 +102,32 @@ def test_seeded_tree_5_target_reached_is_read_only(
     assert body["references"]
 
 
-def test_seeded_drug_combination_resolves_link_then_fails_on_new_required_field(
+def test_seeded_drug_combination_uses_closed_world_clinical_defaults(
     seeded_api_context: SeededApiContext,
 ) -> None:
-    """drug-combination is now seeded (backups/cdss_merged.sql), so the LINK resolves
-    and traversal continues into it, working through several of its own INFERENCE
-    nodes, until it fails on a required field (`has_heart_failure`) this fixture
-    never had to supply for Trees 1-5, instead of raising LinkTargetNotFound.
-    """
     response = _post_read_only(
         seeded_api_context,
-        tree_key=T3,
-        runtime_input=_medication_input(current_sbp=130, current_dbp=80),
+        bundle=_medication_bundle(current_sbp=130, current_dbp=80),
     )
 
-    assert response.status_code == 422
+    assert response.status_code == 200
     body = response.json()
-    assert body["code"] == "missing_runtime_path"
-    assert body["details"]["path"] == "input.has_heart_failure"
-    partial = body["partial_run_state"]
-    assert partial["context"]["treatment"]["bp_target"] == ACTIVE_BP_TARGET
-    # T6's own compare/adjust/duplicate-check steps are INFERENCE nodes now, so
-    # T5's fixed-dose recommendation is the only action collected before drug-
-    # combination fails on the missing has_heart_failure input.
-    assert [a["node_key"] for a in partial["actions"]] == [
-        "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION"
-    ]
-    assert (
-        partial["traversal_log"][-1]["node_key"]
-        == "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION"
-    )
-    assert partial["references"]
+    assert body["status"] == "success"
+    assert body["context"]["treatment"]["bp_target"] == ACTIVE_BP_TARGET
+    assert any(entry["tree_key"] == "drug-combination" for entry in body["traversal_log"])
+    assert body["input_snapshot"]["resourceType"] == "Bundle"
+    assert body["references"]
 
 
 def _post_read_only(
     context: SeededApiContext,
     *,
-    tree_key: str,
-    runtime_input: dict[str, Any],
+    bundle: dict[str, Any],
 ):
     before = _database_row_counts(context.session)
     response = context.client.post(
         "/evaluate",
-        json={"start_tree_key": tree_key, "input": input_to_bundle(runtime_input)},
+        json=bundle,
     )
     assert _database_row_counts(context.session) == before
     return response
@@ -171,12 +147,70 @@ def _database_row_counts(session: Session) -> dict[str, int]:
     }
 
 
-def _medication_input(*, current_sbp: int, current_dbp: int) -> dict[str, Any]:
+def _initial_bundle(*, sbp: int, dbp: int) -> dict[str, Any]:
+    patient_id = "seeded-api-patient"
     return {
-        "is_medication_follow_up": True,
-        "facility_capability": "FULL_RESOURCES",
-        "medication_follow_up_stage": "INITIAL_REGIMEN",
-        "active_bp_target": ACTIVE_BP_TARGET,
-        "current_clinic_sbp": current_sbp,
-        "current_clinic_dbp": current_dbp,
+        "resourceType": "Bundle",
+        "type": "collection",
+        "entry": [
+            {"resource": {"resourceType": "Patient", "id": patient_id}},
+            {"resource": _bp(patient_id, None, "clinic-sbp", "8459-0", sbp)},
+            {"resource": _bp(patient_id, None, "clinic-dbp", "8462-4", dbp)},
+        ],
     }
+
+
+def _medication_bundle(*, current_sbp: int, current_dbp: int) -> dict[str, Any]:
+    patient_id = "seeded-api-follow-up"
+    return {
+        "resourceType": "Bundle",
+        "type": "collection",
+        "entry": [
+            {"resource": {"resourceType": "Patient", "id": patient_id}},
+            {"resource": _encounter(patient_id, "previous", "2026-01-01")},
+            {"resource": _encounter(patient_id, "current", "2026-02-01")},
+            {"resource": _bp(patient_id, "previous", "previous-sbp", "8459-0", 150)},
+            {"resource": _bp(patient_id, "previous", "previous-dbp", "8462-4", 95)},
+            {"resource": _bp(patient_id, "current", "current-sbp", "8459-0", current_sbp)},
+            {"resource": _bp(patient_id, "current", "current-dbp", "8462-4", current_dbp)},
+        ],
+    }
+
+
+def _encounter(patient_id: str, encounter_id: str, start: str) -> dict[str, Any]:
+    extensions = []
+    if encounter_id == "current":
+        extensions.append(
+            {
+                "url": "http://cdss.local/fhir/StructureDefinition/facility-capability",
+                "valueString": "FULL_RESOURCES",
+            }
+        )
+    return {
+        "resourceType": "Encounter",
+        "id": encounter_id,
+        "status": "finished",
+        "subject": {"reference": f"Patient/{patient_id}"},
+        "period": {"start": start},
+        "extension": extensions,
+    }
+
+
+def _bp(
+    patient_id: str,
+    encounter_id: str | None,
+    observation_id: str,
+    code: str,
+    value: int,
+) -> dict[str, Any]:
+    resource: dict[str, Any] = {
+        "resourceType": "Observation",
+        "id": observation_id,
+        "status": "final",
+        "code": {"coding": [{"system": "http://loinc.org", "code": code}]},
+        "subject": {"reference": f"Patient/{patient_id}"},
+        "valueQuantity": {"value": value, "unit": "mmHg"},
+    }
+    if encounter_id is not None:
+        resource["encounter"] = {"reference": f"Encounter/{encounter_id}"}
+    return resource
