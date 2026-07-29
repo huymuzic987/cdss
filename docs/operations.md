@@ -76,7 +76,8 @@ or Workflow B above instead.
 ## 2. Seeding the clinical/dashboard data
 
 This is unrelated to decision trees. `POST /dashboard/seed?source=<source>`
-(see [docs/api.md](api.md#51-post-dashboardseed)) loads one of three FHIR
+(see [complete API reference](api/complete-reference.md#51-post-dashboardseed))
+loads one of three FHIR
 bundle sources:
 
 - **`preset`**: `data/fhir/preset_patients.json`, 20 synthetic patients,
