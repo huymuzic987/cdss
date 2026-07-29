@@ -1255,8 +1255,37 @@ INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, te
 VALUES ('455fcd4a-e8f2-4b03-b67a-71784b796683', (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension'), 'T13_C_LIMITED', 'CONDITION'::public.node_type, 'Essential standard', 'Tiêu chuẩn thiết yếu', '{"op": "eq", "path": "input.facility_capability", "value": "LIMITED_RESOURCES"}'::jsonb, NULL, NULL, NULL, NULL, NULL, 2, '2026-07-04 11:03:11.134834+00:00', '2026-07-04 11:03:11.134834+00:00')
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
+DELETE FROM public.node_source_references
+WHERE node_id IN (
+    SELECT n.id
+    FROM public.decision_nodes n
+    JOIN public.decision_trees t ON t.id = n.tree_id
+    WHERE t.tree_key = 'resistant-hypertension'
+      AND n.node_key IN ('T13_A_ESSENTIAL_TREATMENT', 'T13_A_OPTIMAL_TREATMENT', 'T13_A_ADD_D')
+);
+
+DELETE FROM public.decision_edges
+WHERE from_node_id IN (
+    SELECT n.id
+    FROM public.decision_nodes n
+    JOIN public.decision_trees t ON t.id = n.tree_id
+    WHERE t.tree_key = 'resistant-hypertension'
+      AND n.node_key IN ('T13_A_ESSENTIAL_TREATMENT', 'T13_A_OPTIMAL_TREATMENT', 'T13_A_ADD_D')
+)
+OR to_node_id IN (
+    SELECT n.id
+    FROM public.decision_nodes n
+    JOIN public.decision_trees t ON t.id = n.tree_id
+    WHERE t.tree_key = 'resistant-hypertension'
+      AND n.node_key IN ('T13_A_ESSENTIAL_TREATMENT', 'T13_A_OPTIMAL_TREATMENT', 'T13_A_ADD_D')
+);
+
+DELETE FROM public.decision_nodes
+WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension')
+  AND node_key IN ('T13_A_ESSENTIAL_TREATMENT', 'T13_A_OPTIMAL_TREATMENT', 'T13_A_ADD_D');
+
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-VALUES ('d98b6c15-9c2b-4b7b-a6cb-f869f625f98a', (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension'), 'T13_A_ESSENTIAL_TREATMENT', 'ACTION'::public.node_type, 'Treat according to essential standard and enhance lifestyle changes', 'Điều trị theo tiêu chuẩn thiết yếu và Tăng cường biện pháp tđls, đặc biệt là hạn chế muối', NULL, NULL, '{"action_type": "LIFESTYLE_CHANGES", "salt_restriction": true}'::jsonb, NULL, NULL, NULL, 3, '2026-07-04 11:03:11.134834+00:00', '2026-07-04 11:03:11.134834+00:00')
+VALUES ('d98b6c15-9c2b-4b7b-a6cb-f869f625f98a', (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension'), 'T13_GLOBAL_ENHANCE_LIFESTYLE', 'GLOBAL'::public.node_type, 'Enhance lifestyle, especially reduce salt', 'Tăng cường lối sống, đặc biệt giảm muối', NULL, NULL, NULL, '{"applies_to": ["T13_C_LIMITED", "T13_C_FULL"], "lifestyle_changes": {"salt_restriction": true}}'::jsonb, NULL, NULL, 3, '2026-07-04 11:03:11.134834+00:00', '2026-07-04 11:03:11.134834+00:00')
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
@@ -1273,10 +1302,6 @@ ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_v
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
 VALUES ('39319a8a-753e-4b85-8611-24d214b78327', (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension'), 'T13_C_MRA_NOT_TOLERATED', 'CONDITION'::public.node_type, 'Does not tolerate MRA', 'Không có khả năng dung nạp MRA', '{"op": "eq", "path": "input.tolerates_mra", "value": false}'::jsonb, NULL, NULL, NULL, NULL, NULL, 7, '2026-07-04 11:03:11.134834+00:00', '2026-07-04 11:03:11.134834+00:00')
-ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
-
-INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-VALUES ('da1ba865-b2d4-4677-85ad-15496aad4653', (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension'), 'T13_A_ADD_D', 'ACTION'::public.node_type, 'Add D', 'Thêm D', NULL, NULL, '{"action_type": "ADD_D"}'::jsonb, NULL, NULL, NULL, 8, '2026-07-04 11:03:11.134834+00:00', '2026-07-04 11:03:11.134834+00:00')
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
@@ -1317,10 +1342,6 @@ ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_v
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
 VALUES ('b52de82a-7ee3-4efd-b12b-199031f33beb', (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension'), 'T13_C_FULL', 'CONDITION'::public.node_type, 'Optimal standard', 'Tiêu chuẩn tối ưu', '{"op": "eq", "path": "input.facility_capability", "value": "FULL_RESOURCES"}'::jsonb, NULL, NULL, NULL, NULL, NULL, 18, '2026-07-04 11:03:11.134834+00:00', '2026-07-04 11:03:11.134834+00:00')
-ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
-
-INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-VALUES ('0b167ff7-f286-4da4-8a3a-0ae20545c7b4', (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension'), 'T13_A_OPTIMAL_TREATMENT', 'ACTION'::public.node_type, 'Treat according to optimal standard and enhance lifestyle changes', 'Điều trị theo tiêu chuẩn tối ưu và Tăng cường biện pháp tđls, đặc biệt là hạn chế muối', NULL, NULL, '{"action_type": "LIFESTYLE_CHANGES", "salt_restriction": true}'::jsonb, NULL, NULL, NULL, 19, '2026-07-04 11:03:11.134834+00:00', '2026-07-04 11:03:11.134834+00:00')
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
@@ -2960,7 +2981,7 @@ VALUES ('7f580a2d-ba09-3510-aba8-e6af29a6ccd6', (SELECT n.id FROM public.decisio
 ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-VALUES ('c1ae4e3d-3fa0-4320-b53f-9ab4db9734d9', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_ADD_D'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_CHECK_SPIRONOLACTONE'), 1)
+VALUES ('c1ae4e3d-3fa0-4320-b53f-9ab4db9734d9', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_C_SPIRONOLACTONE_NOT_TOLERATED'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_CHECK_SPIRONOLACTONE'), 1)
 ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
@@ -3008,11 +3029,11 @@ VALUES ('845e061f-a7cf-4265-91cf-702bb5567d3d', (SELECT n.id FROM public.decisio
 ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-VALUES ('377d0452-46aa-44c4-883d-f159386271c9', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_ESSENTIAL_TREATMENT'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_CHECK_MRA'), 1)
+VALUES ('377d0452-46aa-44c4-883d-f159386271c9', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_C_LIMITED'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_CHECK_MRA'), 1)
 ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-VALUES ('51a363d2-fa3d-4c1f-8dd3-d9221eb21eaf', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_OPTIMAL_TREATMENT'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_CONSIDER_DEVICE'), 1)
+VALUES ('51a363d2-fa3d-4c1f-8dd3-d9221eb21eaf', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_C_FULL'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_CONSIDER_DEVICE'), 1)
 ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
@@ -3024,15 +3045,7 @@ VALUES ('87ff4a86-6c52-4900-903f-6b4a900871ce', (SELECT n.id FROM public.decisio
 ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-VALUES ('50957160-9860-4313-b829-5b000d97517e', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_C_FULL'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_OPTIMAL_TREATMENT'), 1)
-ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
-
-INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-VALUES ('c9aa1f5d-0898-4a9f-896b-9718c2af80f7', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_C_LIMITED'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_ESSENTIAL_TREATMENT'), 1)
-ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
-
-INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-VALUES ('03795239-89ba-4f82-b221-15e359143cea', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_C_MRA_NOT_TOLERATED'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_ADD_D'), 1)
+VALUES ('03795239-89ba-4f82-b221-15e359143cea', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_C_MRA_NOT_TOLERATED'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_CHECK_SPIRONOLACTONE'), 1)
 ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
@@ -4136,10 +4149,6 @@ VALUES ('729cbbd3-0ab8-d04e-0f0d-610256d8d158', (SELECT n.id FROM public.decisio
 ON CONFLICT (node_id, reference_order) DO UPDATE SET source_title = EXCLUDED.source_title, section_path = EXCLUDED.section_path, locator = EXCLUDED.locator, locator_detail = EXCLUDED.locator_detail, printed_page_numbers = EXCLUDED.printed_page_numbers, pdf_page_numbers = EXCLUDED.pdf_page_numbers, reference_note = EXCLUDED.reference_note;
 
 INSERT INTO public.node_source_references (id, node_id, source_title, section_path, locator, locator_detail, printed_page_numbers, pdf_page_numbers, reference_note, reference_order)
-VALUES ('f936b545-1c13-4e4c-9c17-e33f3737c350', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_ADD_D'), 'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)', '["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]'::jsonb, '3.6.1. Tăng huyết áp kháng trị', NULL, ARRAY[24]::smallint[], ARRAY[26]::smallint[], NULL, 1)
-ON CONFLICT (node_id, reference_order) DO UPDATE SET source_title = EXCLUDED.source_title, section_path = EXCLUDED.section_path, locator = EXCLUDED.locator, locator_detail = EXCLUDED.locator_detail, printed_page_numbers = EXCLUDED.printed_page_numbers, pdf_page_numbers = EXCLUDED.pdf_page_numbers, reference_note = EXCLUDED.reference_note;
-
-INSERT INTO public.node_source_references (id, node_id, source_title, section_path, locator, locator_detail, printed_page_numbers, pdf_page_numbers, reference_note, reference_order)
 VALUES ('ef962ce0-b85c-4eec-82a6-d8da0bf0b28a', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_ADD_MRA'), 'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)', '["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]'::jsonb, '3.6.1. Tăng huyết áp kháng trị', NULL, ARRAY[24]::smallint[], ARRAY[26]::smallint[], NULL, 1)
 ON CONFLICT (node_id, reference_order) DO UPDATE SET source_title = EXCLUDED.source_title, section_path = EXCLUDED.section_path, locator = EXCLUDED.locator, locator_detail = EXCLUDED.locator_detail, printed_page_numbers = EXCLUDED.printed_page_numbers, pdf_page_numbers = EXCLUDED.pdf_page_numbers, reference_note = EXCLUDED.reference_note;
 
@@ -4164,11 +4173,7 @@ VALUES ('872f274f-44fc-4645-8df5-47343d61a67d', (SELECT n.id FROM public.decisio
 ON CONFLICT (node_id, reference_order) DO UPDATE SET source_title = EXCLUDED.source_title, section_path = EXCLUDED.section_path, locator = EXCLUDED.locator, locator_detail = EXCLUDED.locator_detail, printed_page_numbers = EXCLUDED.printed_page_numbers, pdf_page_numbers = EXCLUDED.pdf_page_numbers, reference_note = EXCLUDED.reference_note;
 
 INSERT INTO public.node_source_references (id, node_id, source_title, section_path, locator, locator_detail, printed_page_numbers, pdf_page_numbers, reference_note, reference_order)
-VALUES ('b142117e-2912-4fea-9813-45d068679eef', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_ESSENTIAL_TREATMENT'), 'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)', '["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]'::jsonb, '3.6.1. Tăng huyết áp kháng trị', NULL, ARRAY[24]::smallint[], ARRAY[26]::smallint[], NULL, 1)
-ON CONFLICT (node_id, reference_order) DO UPDATE SET source_title = EXCLUDED.source_title, section_path = EXCLUDED.section_path, locator = EXCLUDED.locator, locator_detail = EXCLUDED.locator_detail, printed_page_numbers = EXCLUDED.printed_page_numbers, pdf_page_numbers = EXCLUDED.pdf_page_numbers, reference_note = EXCLUDED.reference_note;
-
-INSERT INTO public.node_source_references (id, node_id, source_title, section_path, locator, locator_detail, printed_page_numbers, pdf_page_numbers, reference_note, reference_order)
-VALUES ('5e035df0-0390-4e3e-88bd-1f68ace7488b', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_OPTIMAL_TREATMENT'), 'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)', '["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]'::jsonb, '3.6.1. Tăng huyết áp kháng trị', NULL, ARRAY[24]::smallint[], ARRAY[26]::smallint[], NULL, 1)
+VALUES ('b142117e-2912-4fea-9813-45d068679eef', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_GLOBAL_ENHANCE_LIFESTYLE'), 'Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)', '["3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t", "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"]'::jsonb, '3.6.1. Tăng huyết áp kháng trị', NULL, ARRAY[24]::smallint[], ARRAY[26]::smallint[], NULL, 1)
 ON CONFLICT (node_id, reference_order) DO UPDATE SET source_title = EXCLUDED.source_title, section_path = EXCLUDED.section_path, locator = EXCLUDED.locator, locator_detail = EXCLUDED.locator_detail, printed_page_numbers = EXCLUDED.printed_page_numbers, pdf_page_numbers = EXCLUDED.pdf_page_numbers, reference_note = EXCLUDED.reference_note;
 
 INSERT INTO public.node_source_references (id, node_id, source_title, section_path, locator, locator_detail, printed_page_numbers, pdf_page_numbers, reference_note, reference_order)
@@ -4468,7 +4473,7 @@ VALUES ('ee76fa04-6401-4646-b3cf-6fa6b0dd8643', (SELECT id FROM public.decision_
 ON CONFLICT (tree_id) DO UPDATE SET arrow_kind = EXCLUDED.arrow_kind, node_positions = EXCLUDED.node_positions, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.tree_layouts (id, tree_id, arrow_kind, node_positions, created_at, updated_at)
-VALUES ('284d57f9-b557-4b33-9ddb-71e62941bc95', (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension'), 'elbow', '{"T13_START": {"x": 356.0, "y": 12.0}, "T13_C_FULL": {"x": 133.0, "y": 276.0}, "T13_A_ADD_D": {"x": 356.0, "y": 672.0}, "T13_A_ADD_MRA": {"x": 653.0, "y": 1068.0}, "T13_C_LIMITED": {"x": 568.1054637865311, "y": 156.38119440914863}, "T13_END_REFER": {"x": -244.61118170266832, "y": 1425.74332909784}, "T13_A_CHECK_MRA": {"x": 782.1232528589583, "y": 346.0940279542567}, "T13_END_MAINTAIN": {"x": 430.0, "y": 1332.0}, "T13_A_ALTERNATIVES": {"x": 133.0, "y": 1068.0}, "T13_C_MRA_TOLERATED": {"x": 653.0, "y": 540.0}, "T13_A_CONSIDER_DEVICE": {"x": 12.0, "y": 672.0}, "T13_A_OPTIMAL_TREATMENT": {"x": 12.0, "y": 408.0}, "T13_C_BP_TARGET_REACHED": {"x": 430.0, "y": 1200.0}, "T13_C_MRA_NOT_TOLERATED": {"x": 356.0, "y": 540.0}, "T13_A_ADD_SPIRONOLACTONE": {"x": 393.0, "y": 1068.0}, "T13_A_ESSENTIAL_TREATMENT": {"x": 881.1728081321476, "y": 118.58195679796694}, "T13_A_CHECK_SPIRONOLACTONE": {"x": 356.0, "y": 804.0}, "T13_C_BP_TARGET_NOT_REACHED": {"x": 170.0, "y": 1200.0}, "T13_C_SPIRONOLACTONE_TOLERATED": {"x": 393.0, "y": 936.0}, "T13_C_SPIRONOLACTONE_NOT_TOLERATED": {"x": 133.0, "y": 936.0}}'::jsonb, '2026-07-26 08:13:07.281244+00:00', '2026-07-26 08:13:31.633768+00:00')
+VALUES ('284d57f9-b557-4b33-9ddb-71e62941bc95', (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension'), 'elbow', '{"T13_START": {"x": 356.0, "y": 12.0}, "T13_C_FULL": {"x": 133.0, "y": 276.0}, "T13_A_ADD_MRA": {"x": 653.0, "y": 1068.0}, "T13_C_LIMITED": {"x": 568.1054637865311, "y": 156.38119440914863}, "T13_END_REFER": {"x": -244.61118170266832, "y": 1425.74332909784}, "T13_A_CHECK_MRA": {"x": 782.1232528589583, "y": 346.0940279542567}, "T13_END_MAINTAIN": {"x": 430.0, "y": 1332.0}, "T13_A_ALTERNATIVES": {"x": 133.0, "y": 1068.0}, "T13_C_MRA_TOLERATED": {"x": 653.0, "y": 540.0}, "T13_A_CONSIDER_DEVICE": {"x": 12.0, "y": 672.0}, "T13_GLOBAL_ENHANCE_LIFESTYLE": {"x": 881.1728081321476, "y": 118.58195679796694}, "T13_C_BP_TARGET_REACHED": {"x": 430.0, "y": 1200.0}, "T13_C_MRA_NOT_TOLERATED": {"x": 356.0, "y": 540.0}, "T13_A_ADD_SPIRONOLACTONE": {"x": 393.0, "y": 1068.0}, "T13_A_CHECK_SPIRONOLACTONE": {"x": 356.0, "y": 804.0}, "T13_C_BP_TARGET_NOT_REACHED": {"x": 170.0, "y": 1200.0}, "T13_C_SPIRONOLACTONE_TOLERATED": {"x": 393.0, "y": 936.0}, "T13_C_SPIRONOLACTONE_NOT_TOLERATED": {"x": 133.0, "y": 936.0}}'::jsonb, '2026-07-26 08:13:07.281244+00:00', '2026-07-26 08:13:31.633768+00:00')
 ON CONFLICT (tree_id) DO UPDATE SET arrow_kind = EXCLUDED.arrow_kind, node_positions = EXCLUDED.node_positions, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.tree_layouts (id, tree_id, arrow_kind, node_positions, created_at, updated_at)
