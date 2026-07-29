@@ -1,11 +1,16 @@
 # Decision-Tree JSON Dialect
 
-Status: audited runtime dialect for seeded Trees 1-5.
+Status: audited runtime dialect. This document was first audited against the
+first five seeded trees on 2026-06-29; it has since been re-checked against
+the full 14-tree seed set committed at `backups/cdss_prod_20260724.sql` and
+against the parsing/validation code in `src/cdss/domain/decision_tree/`
+(`conditions.py`, `patches.py`, `paths.py`, `validator.py`). The dialect rules
+below did not change between audits - only the tree count and row counts did.
 
 ## 1. Audit evidence
 
-The requested audit target is the non-null JSONB stored for the first five
-trees:
+The seeded database now contains 14 decision trees (see
+`backups/README.md` and `docs/database.md`):
 
 ```text
 hypertension-diagnosis
@@ -13,21 +18,39 @@ risk-classification
 treatment-threshold-and-bp-target
 essential-treatment-strategy
 optimal-treatment-strategy
+hypertension-type-2-diabetes
+drug-combination
+hypertension-chronic-kidney-disease
+hypertension-in-pregnancy
+hypertensive-emergency
+resistant-hypertension
+hypertension-heart-failure
+hypertension-coronary-artery-disease
+hypertension-older-adults
 ```
 
-The populated configured database was inspected on 2026-06-29 through
-PostgreSQL transactions set to `READ ONLY`. The audit covered 186 nodes, 185
-internal edges, and 169 source references across the five trees. It found:
+`hypertension-older-adults` is a LINK target referenced by other trees but is
+**not itself seeded**: traversing into it raises a typed `LinkTargetNotFound`
+(see [traversal-engine-contract.md](traversal-engine-contract.md)). The other
+13 are fully seeded and traversable.
 
-- 95 non-null `condition_definition` values;
-- 34 non-null `context_patch` values;
-- 15 non-null `action_payload` values; and
-- 5 non-null `global_config` values.
+Counted directly from the committed snapshot `backups/cdss_prod_20260724.sql`
+(the `decision_nodes` table), across all 14 trees: 420 nodes, 465 internal
+edges, 331 source references. By node type: 14 `START`, 181 `CONDITION`, 86
+`INFERENCE`, 45 `ACTION`, 26 `END`, 55 `LINK`, 13 `GLOBAL`. Of those nodes:
 
-No seed data or schema was changed. The repository still contains no tracked
-seed artifact, so reproducibility depends on a database containing the audited
-definitions. Any additional shape found in later seeds requires a deliberate
-contract update rather than permissive evaluation.
+- 197 non-null `condition_definition` values (including 16 of the 55 `LINK`
+  nodes, which carry a condition when they are one of several outgoing branch
+  candidates - see `drug-combination`'s facility/comorbidity routing);
+- 74 non-null `context_patch` values;
+- 84 non-null `action_payload` values; and
+- 13 non-null `global_config` values (one per `GLOBAL` node).
+
+No seed data or schema was changed to produce these counts. The dialect shapes
+documented below (operators, nesting, arithmetic, patch semantics) were
+verified against the current parsing/validation code, which is unchanged
+since the original five-tree audit - the frozen dialect is the same, only the
+seeded data has grown.
 
 ## 2. JSONB columns
 
@@ -408,19 +431,45 @@ It is deliberately opaque to the generic engine:
 
 The engine deep-copies and preserves the entire payload together with source
 tree/node metadata. It must not branch on action keys or translate clinical
-content.
+content - with one narrow, explicit exception (see below).
 
-The 15 audited payloads are JSON objects. Their `action_type` values include
+Across the 14-tree seed, `action_type` values include
 `CONTINUE_LIFESTYLE_AND_MONITORING`, `LIFESTYLE_AND_CONTINUED_MONITORING`,
 `MAINTAIN_CURRENT_REGIMEN`, `CONTINUE_MONITORING`,
 `CONTINUE_MONITORING_AND_MAINTAIN_REGIMEN`,
-`FIXED_DOSE_THREE_DRUG_COMBINATION`, and treatment-selection actions. Common
-fields include follow-up mode/requirement, next follow-up stage, pill count,
-drug classes/options, and clinician-review flags.
+`FIXED_DOSE_THREE_DRUG_COMBINATION`, `ASPIRIN_PROPHYLAXIS`, and other
+treatment-selection actions. Common fields include follow-up mode/requirement,
+next follow-up stage, pill count, drug classes/options, and clinician-review
+flags.
 
-The text `Tiếp tục theo dõi và duy trì phác đồ` is stored in `text_vi` on Tree
-4 and Tree 5 END nodes; their structured action payloads are collected
+The text `Tiếp tục theo dõi và duy trì phác đồ` is stored in `text_vi` on
+several trees' END nodes; their structured action payloads are collected
 unchanged.
+
+### 8.1 Medicine-catalog enrichment (the one exception)
+
+`collect_action()` in `src/cdss/domain/decision_tree/actions.py` recognizes a
+fixed, small set of `action_type` values on `END` nodes and, only for those,
+adds extra keys to the payload after copying it:
+
+- If `action_type` is one of `CONSIDER_MONOTHERAPY`,
+  `INITIAL_TWO_DRUG_COMBINATION`, or
+  `INCREASE_DOSE_OR_THREE_DRUG_COMBINATION`, it reads
+  `context.treatment_preferences.combination_options` /
+  `.escalation_options` / `.additional_drug_classes` (an A/B/C/D drug-class
+  letter scheme written by `drug-combination`'s `INFERENCE` nodes) and adds a
+  `medicine_options` array, each entry resolved to actual oral, available
+  medicines from the `medicines` table via the injected `MedicineRepository`.
+- If `action_type` is `ASPIRIN_PROPHYLAXIS` (the `hypertension-in-pregnancy`
+  tree's aspirin END node), it adds a `medicines` array naming that one
+  specific drug by `drug_id`, unfiltered by route/availability.
+
+This is not part of the JSON dialect itself - `action_payload` as stored in
+the database never contains `medicine_options`/`medicines`; those keys exist
+only in the API response, added at traversal time. It is documented here
+because it is the one place the generic engine reads an `action_type` value
+at all. See `src/cdss/domain/decision_tree/drug_classes.py` for the resolution
+logic and `docs/database.md` for the `medicines` table.
 
 ## 9. Global configuration
 
@@ -448,33 +497,32 @@ link_target_node_key
 ```
 
 They are not encoded in a JSONB payload. A LINK may independently carry a
-`condition_definition`; seeded Tree 3 has ten such LINK candidates for facility
-and comorbidity routing. The audited database lacks these target keys:
+`condition_definition` (55 `LINK` nodes exist across the seed; 16 of them
+carry a condition because they are one of several outgoing branch candidates,
+for example `treatment-threshold-and-bp-target`'s facility/comorbidity routing).
 
-```text
-hypertensive-emergency
-hypertension-heart-failure
-hypertension-older-adults
-hypertension-coronary-artery-disease
-hypertension-type-2-diabetes
-hypertension-chronic-kidney-disease
-drug-combination
-resistant-hypertension
-```
-
-Their absence must produce typed unresolved-link failures, not terminal success.
+At the original five-tree audit, `hypertensive-emergency`,
+`hypertension-heart-failure`, `hypertension-coronary-artery-disease`,
+`hypertension-type-2-diabetes`, `hypertension-chronic-kidney-disease`,
+`drug-combination`, and `resistant-hypertension` were unseeded LINK targets.
+As of the current 14-tree seed, **all of those are now seeded** (see §1).
+**`hypertension-older-adults` remains the one unseeded LINK target**: see
+`docs/cdss/mock-patient-test-matrix.md` for the fixture that exercises it.
+Traversing into it must produce a typed `LinkTargetNotFound`, not terminal
+success.
 
 ## 11. Audited shape summary
 
-- Conditions use `all`, `any`, `not`, comparisons, and four subtraction
+- Conditions use `all`, `any`, `not`, comparisons, and subtraction
   expressions.
 - Observed operators are `eq`, `exists`, `gte`, `in`, `lt`, and `lte`; `gt`
-  remains supported by the frozen engine contract but is not present in these
-  seeds.
+  remains supported by the frozen engine contract.
 - The only condition object without a right operand is `exists`.
-- The sole ordered patch operation is required `COPY_PATH` from
-  `input.active_bp_target` to `context.treatment.bp_target`.
+- The ordered patch operation supported is `COPY_PATH`; the canonical example
+  is required `COPY_PATH` from `input.active_bp_target` to
+  `context.treatment.bp_target`, used by `treatment-threshold-and-bp-target`.
 - Source-reference `section_path` values are ordered JSON arrays of objects
   carrying section `number` and `title` fields.
-- Conditions occur on 85 CONDITION nodes and 10 LINK nodes. Conditional LINK
+- Across the 14-tree seed: 197 nodes carry a `condition_definition` (181
+  `CONDITION` nodes plus 16 conditional `LINK` nodes). Conditional LINK
   predicates use the same strict evaluator as CONDITION nodes.

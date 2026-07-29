@@ -1,0 +1,116 @@
+﻿/* =========================================================================
+   Layout
+   ========================================================================= */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+}
+
+
+
+/* =========================================================================
+   Tree Tabs Bar
+   ========================================================================= */
+
+.top-tabs-wrap {
+  position: relative;
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.top-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.top-tabs-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-scroll-btn {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 5;
+  width: 34px;
+  display: flex;
+  align-items: center;
+  border: none;
+  padding: 0 4px;
+  margin: 0;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.tab-scroll-left {
+  left: 0;
+  justify-content: flex-start;
+  background: linear-gradient(90deg, var(--bg-surface) 55%, transparent);
+}
+
+.tab-scroll-right {
+  right: 0;
+  justify-content: flex-end;
+  background: linear-gradient(270deg, var(--bg-surface) 55%, transparent);
+}
+
+.tab-scroll-btn:hover {
+  color: var(--accent-text);
+}
+
+.top-tab {
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  background: var(--bg-panel);
+  padding: 8px 16px;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.top-tab:hover {
+  background: var(--bg-panel-hover);
+  color: var(--accent-text);
+}
+
+.top-tab.active {
+  background: var(--accent-solid);
+  color: var(--text-on-accent);
+  border-color: var(--accent-solid);
+}
+
+.dashboard-tab {
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+.error-banner {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  padding: 8px 16px;
+  font-size: 13px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--danger-border);
+}
+
+.app-body {
+  flex: 1;
+  display: flex;
+  position: relative;
+  min-height: 0;
+}
+

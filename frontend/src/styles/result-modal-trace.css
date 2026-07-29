@@ -1,0 +1,102 @@
+﻿/* Traversal path */
+.modal-path {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--bg-inset);
+}
+
+.modal-path-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+
+.modal-path-step:hover {
+  background: var(--bg-panel);
+}
+
+.modal-path-num {
+  width: 18px;
+  text-align: right;
+  color: var(--text-muted);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.modal-path-tree {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-text);
+  min-width: 30px;
+}
+
+.modal-path-node {
+  flex: 1;
+  font-family: ui-monospace, Consolas, monospace;
+  color: var(--text-bright);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-path-type {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.modal-path-type-start    { background: #064e3b; color: #34d399; }
+.modal-path-type-condition{ background: #78350f; color: #fbbf24; }
+.modal-path-type-inference{ background: #1e3a8a; color: #60a5fa; }
+.modal-path-type-action   { background: #7c2d12; color: #fb923c; }
+.modal-path-type-end      { background: #581c87; color: #c084fc; }
+.modal-path-type-link     { background: #831843; color: #f472b6; }
+
+/* Footer */
+.modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.modal-footer-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-solid);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.modal-footer-btn:hover {
+  opacity: 0.85;
+}
+
+.ps-validation-error {
+  background: var(--danger-soft-bg);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  color: var(--danger-text);
+  font-size: 11px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  line-height: 1.4;
+  text-align: left;
+}
+

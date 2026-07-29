@@ -1,0 +1,110 @@
+﻿/* =========================================================================
+   Canvas
+   ========================================================================= */
+
+.canvas-area {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+  background-color: var(--bg-app);
+}
+
+.tree-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.canvas-toolbar {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-panel-translucent);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.canvas-toolbar-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.canvas-toolbar-search {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.canvas-toolbar-search svg {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.canvas-toolbar-search input {
+  padding: 3px 0;
+  border: none;
+  border-radius: 0;
+  font-size: 12px;
+  width: 150px;
+  background: transparent;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.canvas-toolbar-search input::placeholder { color: var(--text-muted); }
+
+.canvas-toolbar-group {
+  display: flex;
+  gap: 2px;
+}
+
+.canvas-toolbar button {
+  padding: 4px 9px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+  white-space: nowrap;
+}
+
+.canvas-toolbar button:hover {
+  background: var(--bg-panel-hover);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.panel-empty.loading {
+  padding: 24px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* =========================================================================
+   Right side panels
+   ========================================================================= */
+
+.side-panels {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  box-sizing: border-box;
+  background: var(--bg-surface);
+  scrollbar-width: thin;
+  flex-shrink: 0;
+}
+
+.side-panels::-webkit-scrollbar { width: 4px; }
+.side-panels::-webkit-scrollbar-thumb { background: var(--accent-scroll-thumb); border-radius: 2px; }
+

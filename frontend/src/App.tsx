@@ -1,313 +1,94 @@
-import { useEffect, useRef, useState } from 'react'
-import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react'
-import { TreeCanvas } from './canvas/TreeCanvas'
+import { useState } from 'react'
+import { TreeTabs } from './app/TreeTabs'
+import { TreeWorkspace } from './app/TreeWorkspace'
+import { useTheme } from './app/useTheme'
 import { DashboardPage } from './dashboard/DashboardPage'
 import { useSidebarResize } from './hooks/useSidebarResize'
 import { useTraversal } from './hooks/useTraversal'
 import { useTreeGraphs } from './hooks/useTreeGraphs'
-import { GlobalConfigPanel } from './panels/GlobalConfigPanel'
-import { Legend } from './panels/Legend'
-import { MockPatientSidebar } from './panels/MockPatientSidebar'
-import { NodeDetailPanel } from './panels/NodeDetailPanel'
-import { TraversalResultModal } from './panels/TraversalResultModal'
 import { DrugToleranceCheckbox } from './panels/DrugToleranceCheckbox'
+import { TraversalResultModal } from './panels/TraversalResultModal'
 import './App.css'
 
-type Theme = 'dark' | 'light'
-
 function App() {
-  const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem('cdss-theme')
-    return saved === 'dark' ? 'dark' : 'light'
-  })
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    localStorage.setItem('cdss-theme', theme)
-  }, [theme])
-
-  const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'))
-
-  const {
-    trees,
-    activeTreeKey,
-    setActiveTreeKey,
-    focusNodeKey,
-    selectedNode,
-    setSelectedNode,
-    error,
-    activeGraph,
-    ensureGraph,
-    handleSelectTab,
-    handleJumpToLink,
-    setError,
-    setFocusNodeKey,
-  } = useTreeGraphs()
-
-  const {
-    traversalState,
-    highlightedNodeKeys,
-    activeNodeKey,
-    activeTraversalTreeKey,
-    modalResult,
-    modalPartial,
-    showModal,
-    setShowModal,
-    showDrugTolerancePopup,
-    showPregnancyPopup,
-    pregnancyPopupResult,
-    handlePregnancyPopupClose,
-    handleDrugToleranceConfirm,
-    handleDrugToleranceCancel,
-    handleDrugToleranceChange,
-    handleStartTraversal,
-    handleStartManualTraversal,
-    handleManualStep,
-    manualMode,
-    manualStepInfo,
-    handleReset,
-  } = useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, setError })
-
-  const { width: rightSidebarWidth, isResizing, handleMouseDown } = useSidebarResize()
-
+  const { theme, toggleTheme } = useTheme()
   const [showDashboard, setShowDashboard] = useState(false)
+  const graphs = useTreeGraphs()
+  const traversal = useTraversal({
+    ensureGraph: graphs.ensureGraph,
+    setActiveTreeKey: graphs.setActiveTreeKey,
+    setFocusNodeKey: graphs.setFocusNodeKey,
+    setError: graphs.setError,
+  })
+  const sidebar = useSidebarResize()
 
-  const [leftCollapsed, setLeftCollapsed] = useState(false)
-  const [rightCollapsed, setRightCollapsed] = useState(false)
-
-  const tabsScrollRef = useRef<HTMLDivElement>(null)
-  const [canScrollTabsLeft, setCanScrollTabsLeft] = useState(false)
-  const [canScrollTabsRight, setCanScrollTabsRight] = useState(false)
-
-  const updateTabsScrollState = () => {
-    const el = tabsScrollRef.current
-    if (!el) return
-    setCanScrollTabsLeft(el.scrollLeft > 2)
-    setCanScrollTabsRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2)
-  }
-
-  // While a traversal is running or done, only show tabs for trees touched by
-  // the path (plus the tree the traversal is currently/last in). Resetting
-  // (traversalState -> 'idle') brings back the full tree list.
-  const visibleTrees =
-    traversalState === 'idle'
-      ? trees
-      : trees.filter(
-          (tree) => tree.tree_key === activeTraversalTreeKey || highlightedNodeKeys[tree.tree_key],
-        )
-
-  useEffect(() => {
-    updateTabsScrollState()
-    const el = tabsScrollRef.current
-    if (!el) return
-    const observer = new ResizeObserver(updateTabsScrollState)
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [visibleTrees])
-
-  const scrollTabs = (direction: -1 | 1) => {
-    tabsScrollRef.current?.scrollBy({ left: direction * 180, behavior: 'smooth' })
-  }
-
-  const handleTabsWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    const el = tabsScrollRef.current
-    if (!el) return
-    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-      el.scrollLeft += e.deltaY
-    }
-  }
-
-  // Only pass highlight props when the active tab matches the traversal tree
-  const isTraversalTab = activeTreeKey === activeTraversalTreeKey
-  const visibleHighlights =
-    activeTreeKey && highlightedNodeKeys[activeTreeKey]
-      ? highlightedNodeKeys[activeTreeKey]
-      : new Set<string>()
-  const visibleActiveNode =
-    isTraversalTab && traversalState !== 'idle' ? activeNodeKey : null
+  const visibleTrees = traversal.traversalState === 'idle'
+    ? graphs.trees
+    : graphs.trees.filter(
+      (tree) => tree.tree_key === traversal.activeTraversalTreeKey
+        || traversal.highlightedNodeKeys[tree.tree_key],
+    )
+  const visibleHighlights = graphs.activeTreeKey
+    ? traversal.highlightedNodeKeys[graphs.activeTreeKey] ?? new Set<string>()
+    : new Set<string>()
+  const visibleActiveNode = graphs.activeTreeKey === traversal.activeTraversalTreeKey
+    && traversal.traversalState !== 'idle'
+    ? traversal.activeNodeKey
+    : null
 
   return (
     <div className="app">
-      {/* ---- Tree tabs ---- */}
-      <div className="top-tabs-wrap">
-        {canScrollTabsLeft && (
-          <button
-            type="button"
-            className="tab-scroll-btn tab-scroll-left"
-            onClick={() => scrollTabs(-1)}
-            aria-label="Scroll tabs left"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-        )}
-        <div
-          className="top-tabs-bar"
-          ref={tabsScrollRef}
-          onScroll={updateTabsScrollState}
-          onWheel={handleTabsWheel}
-        >
-          <button
-            type="button"
-            className={`top-tab dashboard-tab${showDashboard ? ' active' : ''}`}
-            onClick={() => setShowDashboard(true)}
-          >
-            Dashboard
-          </button>
-          {visibleTrees.map((tree) => (
-            <button
-              key={tree.tree_key}
-              type="button"
-              className={`top-tab${!showDashboard && activeTreeKey === tree.tree_key ? ' active' : ''}`}
-              onClick={() => {
-                setShowDashboard(false)
-                handleSelectTab(tree.tree_key)
-              }}
-              title={tree.name_en}
-            >
-              {tree.name_en}
-            </button>
-          ))}
-        </div>
-        {canScrollTabsRight && (
-          <button
-            type="button"
-            className="tab-scroll-btn tab-scroll-right"
-            onClick={() => scrollTabs(1)}
-            aria-label="Scroll tabs right"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
-        )}
-      </div>
+      <TreeTabs
+        trees={visibleTrees}
+        activeTreeKey={graphs.activeTreeKey}
+        showDashboard={showDashboard}
+        onShowDashboard={() => setShowDashboard(true)}
+        onSelectTree={(treeKey) => {
+          setShowDashboard(false)
+          graphs.handleSelectTab(treeKey)
+        }}
+      />
 
-      {error && !showDashboard && <div className="error-banner">{error}</div>}
-
+      {graphs.error && !showDashboard && <div className="error-banner">{graphs.error}</div>}
       {showDashboard ? (
-        <div className="app-body">
-          <DashboardPage />
-        </div>
+        <div className="app-body"><DashboardPage /></div>
       ) : (
-      <div className="app-body">
-        {/* ---- LEFT: Patient Simulator ---- */}
-        <div className="left-panel" style={{ width: leftCollapsed ? 0 : 280 }}>
-          <MockPatientSidebar
-            isRunning={traversalState === 'running'}
-            canReset={traversalState !== 'idle'}
-            onStart={(treeKey, input) => {
-              void handleStartTraversal(treeKey, input)
-            }}
-            onManualStart={(treeKey, input) => {
-              void handleStartManualTraversal(treeKey, input)
-            }}
-            onReset={handleReset}
-            theme={theme}
-            onToggleTheme={toggleTheme}
-          />
-        </div>
-
-        {/* ---- LEFT COLLAPSE TOGGLE ---- */}
-        <button
-          type="button"
-          className="panel-toggle-btn panel-toggle-left"
-          style={{ left: leftCollapsed ? 14 : 280 }}
-          onClick={() => setLeftCollapsed((v) => !v)}
-          title={leftCollapsed ? 'Show patient panel' : 'Hide patient panel'}
-          aria-label={leftCollapsed ? 'Show patient panel' : 'Hide patient panel'}
-          aria-expanded={!leftCollapsed}
-        >
-          {leftCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-        </button>
-
-        {/* ---- CENTER: Canvas ---- */}
-        <div className="canvas-area" style={{ pointerEvents: isResizing ? 'none' : 'auto' }}>
-          {activeGraph ? (
-            <TreeCanvas
-              key={activeGraph.tree.tree_key}
-              graph={activeGraph}
-              theme={theme}
-              focusNodeKey={focusNodeKey}
-              onSelectNode={setSelectedNode}
-              highlightedNodeKeys={visibleHighlights}
-              activeNodeKey={visibleActiveNode}
-              manualMode={manualMode}
-              manualStepInfo={manualStepInfo}
-              onCanvasClick={handleManualStep}
-            />
-          ) : (
-            <div className="panel-empty loading">Loading tree…</div>
-          )}
-        </div>
-
-        {/* ---- RESIZER ---- */}
-        {!rightCollapsed && (
-          <div
-            className={`sidebar-resizer ${isResizing ? 'resizing' : ''}`}
-            onMouseDown={handleMouseDown}
-          />
-        )}
-
-        {/* ---- RIGHT COLLAPSE TOGGLE ---- */}
-        <button
-          type="button"
-          className="panel-toggle-btn panel-toggle-right"
-          style={{ right: rightCollapsed ? 14 : rightSidebarWidth }}
-          onClick={() => setRightCollapsed((v) => !v)}
-          title={rightCollapsed ? 'Show details panel' : 'Hide details panel'}
-          aria-label={rightCollapsed ? 'Show details panel' : 'Hide details panel'}
-          aria-expanded={!rightCollapsed}
-        >
-          {rightCollapsed ? <PanelRightOpen size={16} /> : <PanelRightClose size={16} />}
-        </button>
-
-        {/* ---- RIGHT: Side panels ---- */}
-        <div
-          className="side-panels"
-          style={rightCollapsed
-            ? { width: 0, padding: 0, overflow: 'hidden', minWidth: 0 }
-            : { width: rightSidebarWidth }
-          }
-        >
-          <Legend theme={theme} />
-          <NodeDetailPanel
-            node={selectedNode}
-            references={activeGraph?.references ?? []}
-            onJumpToLink={(targetTreeKey, targetNodeKey) => {
-              void handleJumpToLink(targetTreeKey, targetNodeKey)
-            }}
-            theme={theme}
-          />
-          <GlobalConfigPanel globalNodes={activeGraph?.global_nodes ?? []} />
-        </div>
-      </div>
-      )}
-
-      {/* ---- Result modal ---- */}
-      {showModal && (
-        <TraversalResultModal
-          result={modalResult}
-          partial={modalPartial}
-          onClose={() => setShowModal(false)}
+        <TreeWorkspace
+          graph={graphs.activeGraph}
+          theme={theme}
+          isRunning={traversal.traversalState === 'running'}
+          canReset={traversal.traversalState !== 'idle'}
+          sidebarWidth={sidebar.width}
+          isResizing={sidebar.isResizing}
+          onResizeStart={sidebar.handleMouseDown}
+          focusNodeKey={graphs.focusNodeKey}
+          selectedNode={graphs.selectedNode}
+          highlightedNodeKeys={visibleHighlights}
+          activeNodeKey={visibleActiveNode}
+          manualMode={traversal.manualMode}
+          manualStepInfo={traversal.manualStepInfo}
+          onSelectNode={graphs.setSelectedNode}
+          onJumpToLink={(treeKey, nodeKey) => void graphs.handleJumpToLink(treeKey, nodeKey)}
+          onStart={(treeKey, input) => void traversal.handleStartTraversal(treeKey, input)}
+          onManualStart={(treeKey, input) => void traversal.handleStartManualTraversal(treeKey, input)}
+          onManualStep={traversal.handleManualStep}
+          onReset={traversal.handleReset}
+          onToggleTheme={toggleTheme}
         />
       )}
 
-      {showPregnancyPopup && (
+      {traversal.showModal && (
         <TraversalResultModal
-          result={pregnancyPopupResult}
-          partial={null}
-          onClose={handlePregnancyPopupClose}
+          result={traversal.modalResult}
+          partial={traversal.modalPartial}
+          onClose={() => traversal.setShowModal(false)}
         />
       )}
-
-      {/* ---- Drug tolerance popup (MRA check) ---- */}
-      {showDrugTolerancePopup && (
+      {traversal.showDrugTolerancePopup && (
         <DrugToleranceCheckbox
-          onConfirm={handleDrugToleranceConfirm}
-          onCancel={handleDrugToleranceCancel}
-          onChange={handleDrugToleranceChange}
+          onConfirm={traversal.handleDrugToleranceConfirm}
+          onCancel={traversal.handleDrugToleranceCancel}
+          onChange={traversal.handleDrugToleranceChange}
         />
       )}
     </div>
