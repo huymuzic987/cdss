@@ -10,6 +10,11 @@ import { DrugToleranceCheckbox } from './panels/DrugToleranceCheckbox'
 import { TraversalResultModal } from './panels/TraversalResultModal'
 import './App.css'
 
+// Stable identity so an idle render (no highlighted nodes) doesn't hand
+// TreeCanvas a brand-new Set every time, which would otherwise re-trigger its
+// highlight-sync effect on every unrelated App re-render.
+const EMPTY_HIGHLIGHTS: ReadonlySet<string> = new Set()
+
 function App() {
   const { theme, toggleTheme } = useTheme()
   const [showDashboard, setShowDashboard] = useState(false)
@@ -29,8 +34,8 @@ function App() {
         || traversal.highlightedNodeKeys[tree.tree_key],
     )
   const visibleHighlights = graphs.activeTreeKey
-    ? traversal.highlightedNodeKeys[graphs.activeTreeKey] ?? new Set<string>()
-    : new Set<string>()
+    ? traversal.highlightedNodeKeys[graphs.activeTreeKey] ?? EMPTY_HIGHLIGHTS
+    : EMPTY_HIGHLIGHTS
   const visibleActiveNode = graphs.activeTreeKey === traversal.activeTraversalTreeKey
     && traversal.traversalState !== 'idle'
     ? traversal.activeNodeKey
