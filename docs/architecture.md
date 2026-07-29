@@ -259,7 +259,8 @@ This is the main clinical endpoint. Full route code:
 inference step and requires the caller to already know the active BP target,
 medication stage, and today's reading; it always starts from
 `treatment-threshold-and-bp-target`. See
-[docs/api.md](api.md) for both endpoints' exact request/response shapes.
+[complete API reference](api/complete-reference.md) for both endpoints' exact
+request/response shapes.
 
 ## Statelessness
 
