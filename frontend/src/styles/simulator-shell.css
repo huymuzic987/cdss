@@ -1,0 +1,135 @@
+﻿/* =========================================================================
+   Patient Simulator Sidebar (ps-)
+   ========================================================================= */
+
+.ps-sidebar {
+  flex: 1;
+  min-height: 0;
+  background: var(--sidebar-gradient);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* --- Header (sticky) --- */
+.ps-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid var(--accent-divider);
+}
+
+.ps-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ps-header-icon { font-size: 20px; line-height: 1; }
+
+.ps-header-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.ps-header-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.ps-theme-toggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.ps-theme-toggle:hover {
+  background: var(--bg-panel-hover);
+  color: var(--accent-text);
+  border-color: var(--accent-border);
+}
+
+/* --- Starting tree selector (sticky below header) --- */
+.ps-starting-tree {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--accent-divider-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* --- Scrollable body --- */
+.ps-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 0 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-divider) transparent;
+}
+
+.ps-body::-webkit-scrollbar { width: 4px; }
+.ps-body::-webkit-scrollbar-thumb { background: var(--accent-scroll-thumb); border-radius: 2px; }
+
+/* --- Section headers --- */
+.ps-section-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px 7px;
+  background: var(--bg-surface);
+  border: none;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-soft);
+  margin-top: 0;
+  cursor: pointer;
+  text-align: left;
+  user-select: none;
+  transition: background 0.1s;
+}
+
+.ps-section-header:hover { background: var(--bg-panel-hover); }
+
+.ps-section-icon { font-size: 13px; flex-shrink: 0; }
+
+.ps-section-label {
+  flex: 1;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+
+.ps-section-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+}
+
+.ps-section-chevron.open { transform: rotate(90deg); }
+
+.ps-sub-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  padding: 0 14px;
+  margin-top: 6px;
+}
+

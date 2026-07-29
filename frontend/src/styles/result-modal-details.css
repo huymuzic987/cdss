@@ -1,0 +1,171 @@
+﻿/* Acknowledge reason buttons */
+.modal-ack-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.modal-ack-btn {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.modal-ack-btn:hover {
+  border-color: var(--accent-border);
+  color: var(--accent-text);
+  background: var(--bg-panel-hover);
+}
+
+/* Collapsed debug detail */
+.modal-debug {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-inset);
+}
+
+.modal-debug summary {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.modal-debug-body {
+  padding: 4px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-clinical-details {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 12px 12px;
+}
+
+.modal-clinical-section-title {
+  color: var(--text-bright);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.modal-clinical-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-clinical-details .modal-path {
+  max-height: none;
+}
+
+.modal-clinical-details .modal-path-tree {
+  width: 160px;
+  flex: 0 0 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Context JSON */
+.modal-json {
+  background: var(--bg-inset);
+  color: var(--accent-text);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 12px;
+  overflow-x: auto;
+  margin: 0;
+  line-height: 1.5;
+  border: 1px solid var(--border);
+}
+
+/* Condition rows */
+.modal-conditions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--bg-inset);
+}
+
+.modal-condition-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.modal-condition-badge {
+  font-size: 12px;
+  font-weight: 700;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal-condition-badge.passed {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.modal-condition-badge.failed {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.modal-condition-badge.neutral {
+  background: var(--neutral-badge-bg);
+  color: var(--text-secondary);
+}
+
+.modal-condition-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.modal-condition-node {
+  font-size: 11px;
+  color: var(--text-primary);
+}
+
+.modal-node-tree {
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.modal-node-key {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+}
+
+.modal-condition-def {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: ui-monospace, Consolas, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+

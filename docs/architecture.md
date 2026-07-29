@@ -64,12 +64,18 @@ src/cdss/
 ├── domain/
 │   ├── decision_tree/          # Pure clinical traversal engine (no DB or API deps)
 │   │   ├── contracts.py        # RunState, TraversalResult, ExecutedAction, TreeMetadata, ...
-│   │   ├── graph.py            # Immutable TreeGraph/NodeDefinition/EdgeDefinition + TreeGraphRepository protocol
-│   │   ├── walker.py           # walk_tree(): the stateless traversal engine
-│   │   ├── conditions.py       # Condition-dialect parsing/evaluation
-│   │   ├── patches.py          # Context-patch application (merge + COPY_PATH)
+│   │   ├── graph.py            # Public graph types/protocol; delegates construction
+│   │   ├── graph_builder.py    # Index construction and START-node selection
+│   │   ├── graph_freezing.py   # Recursive immutable JSON conversion
+│   │   ├── walker.py           # Public traversal loop and composition root
+│   │   ├── walker_*.py         # Link, trace, and transition responsibilities
+│   │   ├── conditions.py       # Public condition API
+│   │   ├── condition_*.py      # Evaluation, operations, types, and validation
+│   │   ├── patches.py          # Public patch API and recursive merge
+│   │   ├── patch_*.py          # COPY_PATH operations, paths, and typed errors
 │   │   ├── paths.py            # input./context. path resolver
-│   │   ├── validator.py        # Static tree validation (cycles, reachability, edge/condition shape)
+│   │   ├── validator.py        # Public static-validation coordinator
+│   │   ├── validation_*.py     # Edge, semantic, topology, error, and result concerns
 │   │   ├── actions.py          # Action-payload collection, incl. medicine-catalog enrichment
 │   │   ├── drug_classes.py     # Resolves A/B/C/D drug-class combinations into medicines
 │   │   ├── medicine_catalog.py # Medicine dataclass + MedicineRepository protocol
@@ -167,6 +173,22 @@ this API), registers the domain-error-to-HTTP-status mapping
 `api/dependencies.py` is the only place that decides whether a request gets a
 caching or non-caching repository, based on `Settings`. Routes never
 instantiate a repository directly.
+
+The public router imports remain stable. `routes/dashboard.py` now composes
+the seed, summary, and patient routers; response construction is grouped into
+status, metrics, usage, and summary modules. `routes/fhir.py` still owns the
+endpoint functions, while clinical-record serialization is isolated in
+`routes/fhir_export.py`. No URL or response contract changed in this split.
+
+## Source-module size boundary
+
+`tests/architecture/test_source_module_size.py` enforces the refactor's module
+boundary: production Python behavior modules under `src/cdss` may contain at
+most 200 non-empty, non-comment code lines. API schema modules, test helpers,
+and the declarative ORM model file are excluded because their size is mostly
+data shape rather than behavior. When a behavior module reaches the limit,
+extract a cohesive responsibility behind the existing public entry point
+instead of moving callers to implementation modules.
 
 Every domain error (`TreeNotFound`, `MissingRuntimePath`,
 `NoMatchingTransition`, ...) is a typed Python exception with a `code`,
