@@ -19,6 +19,28 @@ orchestration rather than part of the generic graph interpreter.
 **Must not depend on:** FastAPI routes, HTTP status codes, ORM sessions, or
 database models.
 
+## Refactored internal composition
+
+The refactor keeps stable public entry modules and extracts focused behavior
+behind them:
+
+| Stable entry point | Focused implementation |
+| --- | --- |
+| `graph.py` | graph building and recursive JSON freezing |
+| `conditions.py` | evaluation, operations, result types, and definition validation |
+| `patches.py` | patch operations, path mutation, and typed patch errors |
+| `validator.py` | edge, semantic, topology, error, and result concerns |
+| `walker.py` | cross-tree links, trace recording, and transition selection |
+
+The same pattern applies at the outer layers. `DashboardRepository` composes
+focused query mixins, `clinical_import.import_bundle()` coordinates focused
+FHIR import helpers, `routes/dashboard.py` composes endpoint routers, and
+`routes/fhir.py` delegates clinical-record serialization to `fhir_export.py`.
+
+Import through the stable entry points unless you are changing their internals.
+The architecture test caps backend behavior modules at 200 non-empty,
+non-comment lines so future growth continues by cohesive extraction.
+
 ## Infrastructure
 
 Infrastructure implements domain repositories with PostgreSQL and SQLAlchemy.

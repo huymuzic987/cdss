@@ -37,6 +37,12 @@ The frontend may react to traversal results, but clinical branching belongs in
 database-defined trees. Any UI dependency on a particular tree or node key is
 an interface dependency and should be documented and tested.
 
+The current composition facades are `App.tsx`, `hooks/useTraversal.ts`,
+`panels/patientPresets.ts`, `mockPatientForm/fhirBundle.ts`, and the root CSS
+entry files. Focused implementation lives under `app/`, `hooks/traversal/`,
+`panels/patientPresets/`, `panels/clinicalPresentation/`,
+`panels/clinicalResult/`, `dashboard/sections/`, and the style directories.
+
 ## Detailed guides
 
 - [Frontend architecture](../docs/frontend.md)
