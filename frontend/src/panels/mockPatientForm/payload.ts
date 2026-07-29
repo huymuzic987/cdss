@@ -24,6 +24,10 @@ export function bundleToForm(bundle: JsonObject): PatientFormData {
       ;(form as unknown as Record<string, string | boolean>)[key] = String(value)
     }
   }
+  // Active BP target round-trips under its runtime key (active_bp_target_*),
+  // not the form field name (target_*_upper) - map it back explicitly.
+  if (typeof flat.active_bp_target_sbp_upper === 'number') form.target_sbp_upper = String(flat.active_bp_target_sbp_upper)
+  if (typeof flat.active_bp_target_dbp_upper === 'number') form.target_dbp_upper = String(flat.active_bp_target_dbp_upper)
   return form
 }
 

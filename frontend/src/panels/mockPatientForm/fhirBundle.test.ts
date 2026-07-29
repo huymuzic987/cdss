@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { PATIENT_PRESETS } from '../patientPresets'
+import { FOLLOW_UP } from '../patientPresets/shared'
 import { bundleToForm, formToPayload } from './payload'
+import { validatePatientForm } from './validation'
 
 describe('canonical FHIR patient presets', () => {
   it.each(PATIENT_PRESETS.map((preset) => [preset.id, preset] as const))(
@@ -31,6 +33,20 @@ describe('canonical FHIR patient presets', () => {
     expect(form.current_clinic_dbp).toBe('80')
     expect(form.has_high_preeclampsia_risk).toBe(true)
     expect(form.has_hypertension_after_week_20).toBe(false)
+  })
+
+  it('keeps Active BP Target populated for every known-stage medication follow-up preset', () => {
+    const knownStagePresets = PATIENT_PRESETS.filter((preset) => preset.category === FOLLOW_UP)
+      .map((preset) => ({ preset, form: bundleToForm(preset.bundle) }))
+      .filter(({ form }) => form.medication_follow_up_stage !== '')
+    expect(knownStagePresets.length).toBeGreaterThan(0)
+
+    for (const { preset, form } of knownStagePresets) {
+      expect(form.target_sbp_upper, `${preset.id} target_sbp_upper`).not.toBe('')
+      expect(form.target_dbp_upper, `${preset.id} target_dbp_upper`).not.toBe('')
+      const validation = validatePatientForm(form)
+      expect(validation.error, `${preset.id}: ${validation.error}`).toBeNull()
+    }
   })
 
   it('keeps the eclampsia preset anchored to preeclampsia', () => {
