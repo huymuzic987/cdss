@@ -1,11 +1,11 @@
-﻿import { MODIFIER_TREES, type PatientPresetDefinition } from './shared'
+import { MODIFIER_TREES, type PatientPresetDefinition } from './shared'
 
 export const renalModifierPresets: PatientPresetDefinition[] = [
   {
     id: 'heart-failure-hfpef',
-    label: 'Heart Failure â€” Preserved EF (HFpEF)',
+    label: 'Heart Failure — Preserved EF (HFpEF)',
     category: MODIFIER_TREES,
-    description: '65-year-old with HFpEF, BP target not yet reached â€” combines diuretic/SGLT2i/aldosterone antagonist then ARNI/CTTA, the third of the four EF-category branches.',
+    description: '65-year-old with HFpEF, BP target not yet reached — combines diuretic/SGLT2i/aldosterone antagonist then ARNI/CTTA, the third of the four EF-category branches.',
     data: {
       clinic_1_sbp: '158', clinic_1_dbp: '96',
       current_clinic_sbp: '159', current_clinic_dbp: '97',
@@ -18,9 +18,9 @@ export const renalModifierPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'heart-failure-lvh',
-    label: 'Heart Failure Tree â€” LVH (No Reduced EF)',
+    label: 'Heart Failure Tree — LVH (No Reduced EF)',
     category: MODIFIER_TREES,
-    description: '65-year-old with left ventricular hypertrophy but no HFrEF/HFmrEF/HFpEF flag, BP target not yet reached â€” the fourth and last EF-evaluation branch, adds an A+C or A+D combination.',
+    description: '65-year-old with left ventricular hypertrophy but no HFrEF/HFmrEF/HFpEF flag, BP target not yet reached — the fourth and last EF-evaluation branch, adds an A+C or A+D combination.',
     data: {
       clinic_1_sbp: '158', clinic_1_dbp: '96',
       current_clinic_sbp: '159', current_clinic_dbp: '97',
@@ -33,9 +33,9 @@ export const renalModifierPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'heart-failure-target-reached',
-    label: 'Heart Failure â€” HFrEF, BP Target Reached (Maintain)',
+    label: 'Heart Failure — HFrEF, BP Target Reached (Maintain)',
     category: MODIFIER_TREES,
-    description: '65-year-old with HFrEF whose BP is above the entry threshold but already at the personal target â€” after EF evaluation, maintains the current regimen instead of adding a CCB/adjusting dosage.',
+    description: '65-year-old with HFrEF whose BP is above the entry threshold but already at the personal target — after EF evaluation, maintains the current regimen instead of adding a CCB/adjusting dosage.',
     data: {
       clinic_1_sbp: '158', clinic_1_dbp: '96',
       current_clinic_sbp: '132', current_clinic_dbp: '86',
@@ -48,9 +48,9 @@ export const renalModifierPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'ckd-kidney-transplant',
-    label: 'Chronic Kidney Disease â€” Post-Transplant',
+    label: 'Chronic Kidney Disease — Post-Transplant',
     category: MODIFIER_TREES,
-    description: '50-year-old with CKD and a kidney transplant â€” uses the stricter post-transplant BP target (130/80) and a narrower combination list, then maintains the current regimen.',
+    description: '50-year-old with CKD and a kidney transplant — uses the stricter post-transplant BP target (130/80) and a narrower combination list, then maintains the current regimen.',
     data: {
       clinic_1_sbp: '148', clinic_1_dbp: '92',
       current_clinic_sbp: '135', current_clinic_dbp: '92',
@@ -62,9 +62,9 @@ export const renalModifierPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'ckd-ras-inhibitor-stopped',
-    label: 'Chronic Kidney Disease â€” Prior Test, RAS Inhibitor Already Stopped',
+    label: 'Chronic Kidney Disease — Prior Test, RAS Inhibitor Already Stopped',
     category: MODIFIER_TREES,
-    description: '50-year-old with CKD, has a prior creatinine test on file, and is no longer on a RAS inhibitor â€” maintains the current regimen without re-testing creatinine.',
+    description: '50-year-old with CKD, has a prior creatinine test on file, and is no longer on a RAS inhibitor — maintains the current regimen without re-testing creatinine.',
     data: {
       clinic_1_sbp: '148', clinic_1_dbp: '92',
       current_clinic_sbp: '135', current_clinic_dbp: '92',
@@ -77,9 +77,9 @@ export const renalModifierPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'ckd-creatinine-increased',
-    label: 'Chronic Kidney Disease â€” Creatinine Rose >30% on RAS Inhibitor',
+    label: 'Chronic Kidney Disease — Creatinine Rose >30% on RAS Inhibitor',
     category: MODIFIER_TREES,
-    description: '50-year-old with CKD, still on a RAS inhibitor, prior creatinine test shows a >30% rise â€” reduces the dose or stops the RAS inhibitor and flags for clinician review.',
+    description: '50-year-old with CKD, still on a RAS inhibitor, prior creatinine test shows a >30% rise — reduces the dose or stops the RAS inhibitor and flags for clinician review.',
     data: {
       clinic_1_sbp: '148', clinic_1_dbp: '92',
       current_clinic_sbp: '135', current_clinic_dbp: '92',
@@ -93,9 +93,9 @@ export const renalModifierPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'ckd-creatinine-stable',
-    label: 'Chronic Kidney Disease â€” Creatinine Stable on RAS Inhibitor',
+    label: 'Chronic Kidney Disease — Creatinine Stable on RAS Inhibitor',
     category: MODIFIER_TREES,
-    description: '50-year-old with CKD, still on a RAS inhibitor, prior creatinine test shows no significant rise â€” maintains the current regimen since creatinine is stable.',
+    description: '50-year-old with CKD, still on a RAS inhibitor, prior creatinine test shows no significant rise — maintains the current regimen since creatinine is stable.',
     data: {
       clinic_1_sbp: '148', clinic_1_dbp: '92',
       current_clinic_sbp: '135', current_clinic_dbp: '92',

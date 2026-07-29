@@ -1,11 +1,11 @@
-﻿import { PREGNANCY, type PatientPresetDefinition } from './shared'
+import { PREGNANCY, type PatientPresetDefinition } from './shared'
 
 export const pregnancyPresets: PatientPresetDefinition[] = [
   {
     id: 'pregnancy-chronic-htn',
-    label: 'Pregnancy â€” Pre-Existing (Chronic) Hypertension',
+    label: 'Pregnancy — Pre-Existing (Chronic) Hypertension',
     category: PREGNANCY,
-    description: 'Pregnant with pre-pregnancy hypertension and proteinuria beyond 6 weeks â€” classified as pre-existing hypertension, a simple terminal diagnosis.',
+    description: 'Pregnant with pre-pregnancy hypertension and proteinuria beyond 6 weeks — classified as pre-existing hypertension, a simple terminal diagnosis.',
     data: {
       clinic_1_sbp: '150', clinic_1_dbp: '95',
       age: '30', risk_factor_count: '1',
@@ -22,9 +22,9 @@ export const pregnancyPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'pregnancy-gestational-mild',
-    label: 'Pregnancy â€” Gestational Hypertension, Mild/Moderate',
+    label: 'Pregnancy — Gestational Hypertension, Mild/Moderate',
     category: PREGNANCY,
-    description: 'Hypertension after week 20, not yet resolved postpartum, mild/moderate BP range â€” classified as gestational hypertension, methyldopa first-line, referred to OB/GYN since the pregnancy BP target isnâ€™t met.',
+    description: 'Hypertension after week 20, not yet resolved postpartum, mild/moderate BP range — classified as gestational hypertension, methyldopa first-line, referred to OB/GYN since the pregnancy BP target isn’t met.',
     data: {
       clinic_1_sbp: '150', clinic_1_dbp: '95',
       age: '28', risk_factor_count: '1',
@@ -40,9 +40,9 @@ export const pregnancyPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'pregnancy-severe-eclampsia',
-    label: 'Pregnancy â€” Severe Signs (Eclampsia Path)',
+    label: 'Pregnancy — Severe Signs (Eclampsia Path)',
     category: PREGNANCY,
-    description: 'Severe headache and visual disturbance with no other classification match â€” routes through the eclampsia/HELLP severe-signs branch to IV labetalol + MgSO4, ending in emergency delivery since the treatment target isnâ€™t met.',
+    description: 'Severe headache and visual disturbance with no other classification match — routes through the eclampsia/HELLP severe-signs branch to IV labetalol + MgSO4, ending in emergency delivery since the treatment target isn’t met.',
     data: {
       clinic_1_sbp: '155', clinic_1_dbp: '100',
       age: '32', risk_factor_count: '2',
@@ -59,9 +59,9 @@ export const pregnancyPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'pregnancy-high-preeclampsia-risk-aspirin',
-    label: 'Pregnancy â€” High Preeclampsia Risk (Aspirin Prophylaxis)',
+    label: 'Pregnancy — High Preeclampsia Risk (Aspirin Prophylaxis)',
     category: PREGNANCY,
-    description: 'Gestational hypertension, mild/moderate BP, plus a high-preeclampsia-risk flag â€” after the drug/contraindication workup, the high-risk check wins over the BP-target checks that follow it, prescribing aspirin prophylaxis instead of referring to OB/GYN.',
+    description: 'Gestational hypertension, mild/moderate BP, plus a high-preeclampsia-risk flag — after the drug/contraindication workup, the high-risk check wins over the BP-target checks that follow it, prescribing aspirin prophylaxis instead of referring to OB/GYN.',
     data: {
       clinic_1_sbp: '150', clinic_1_dbp: '95',
       age: '28', risk_factor_count: '1',
@@ -78,9 +78,9 @@ export const pregnancyPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'pregnancy-bp-target-achieved',
-    label: 'Pregnancy â€” BP Target Achieved (Maintain Regimen)',
+    label: 'Pregnancy — BP Target Achieved (Maintain Regimen)',
     category: PREGNANCY,
-    description: 'Gestational hypertension classified via home BP, with current clinic BP threading the narrow 110â€“140/exactly-85 pregnancy target window â€” maintains the current regimen instead of referring to OB/GYN, the one outcome not exercised by the other pregnancy presets.',
+    description: 'Gestational hypertension classified via home BP, with current clinic BP threading the narrow 110–140/exactly-85 pregnancy target window — maintains the current regimen instead of referring to OB/GYN, the one outcome not exercised by the other pregnancy presets.',
     data: {
       clinic_1_sbp: '150', clinic_1_dbp: '95',
       age: '29', risk_factor_count: '1',

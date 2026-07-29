@@ -1,9 +1,9 @@
-﻿import { FOLLOW_UP, MEDICATION_TARGET, type PatientPresetDefinition } from './shared'
+import { FOLLOW_UP, MEDICATION_TARGET, type PatientPresetDefinition } from './shared'
 
 export const followUpPresets: PatientPresetDefinition[] = [
   {
     id: 'lifestyle-followup',
-    label: 'Lifestyle Follow-Up â€” BP Improved',
+    label: 'Lifestyle Follow-Up — BP Improved',
     category: FOLLOW_UP,
     description: 'Meets the stored 15/10 mmHg reduction rule after lifestyle changes.',
     data: {
@@ -17,7 +17,7 @@ export const followUpPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'med-followup-reached-full',
-    label: 'Medication Follow-Up â€” Target Reached (Full Resources)',
+    label: 'Medication Follow-Up — Target Reached (Full Resources)',
     category: FOLLOW_UP,
     description: 'On initial regimen, current BP within active target, full-resource facility.',
     data: {
@@ -32,9 +32,9 @@ export const followUpPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'med-followup-reached-limited',
-    label: 'Medication Follow-Up â€” Target Reached (Limited Resources)',
+    label: 'Medication Follow-Up — Target Reached (Limited Resources)',
     category: FOLLOW_UP,
-    description: 'Same as above but a limited-resource facility â€” different terminal action wording.',
+    description: 'Same as above but a limited-resource facility — different terminal action wording.',
     data: {
       clinic_1_sbp: '129', clinic_1_dbp: '79',
       is_medication_follow_up: true,
@@ -47,9 +47,9 @@ export const followUpPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'med-followup-not-reached-initial',
-    label: 'Medication Follow-Up â€” Initial Regimen, Target Not Reached',
+    label: 'Medication Follow-Up — Initial Regimen, Target Not Reached',
     category: FOLLOW_UP,
-    description: 'Initial regimen insufficient â€” routes toward drug-combination escalation.',
+    description: 'Initial regimen insufficient — routes toward drug-combination escalation.',
     data: {
       clinic_1_sbp: '130', clinic_1_dbp: '80',
       is_medication_follow_up: true,
@@ -62,9 +62,9 @@ export const followUpPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'med-followup-resistant',
-    label: 'Medication Follow-Up â€” Resistant Hypertension (Escalated)',
+    label: 'Medication Follow-Up — Resistant Hypertension (Escalated)',
     category: FOLLOW_UP,
-    description: 'Escalated regimen, target not reached â€” resistant hypertension path.',
+    description: 'Escalated regimen, target not reached — resistant hypertension path.',
     data: {
       clinic_1_sbp: '130', clinic_1_dbp: '80',
       is_medication_follow_up: true,
@@ -77,9 +77,9 @@ export const followUpPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'med-followup-resistant-limited',
-    label: 'Medication Follow-Up â€” Resistant Hypertension (Limited Resources)',
+    label: 'Medication Follow-Up — Resistant Hypertension (Limited Resources)',
     category: FOLLOW_UP,
-    description: 'Escalated regimen, target not reached, limited-resource facility â€” reaches resistant-hypertensionâ€™s MRA-tolerated branch and ends in referral since the BP target is still not met.',
+    description: 'Escalated regimen, target not reached, limited-resource facility — reaches resistant-hypertension’s MRA-tolerated branch and ends in referral since the BP target is still not met.',
     data: {
       clinic_1_sbp: '130', clinic_1_dbp: '80',
       is_medication_follow_up: true,
@@ -94,9 +94,9 @@ export const followUpPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'med-followup-resistant-spironolactone',
-    label: 'Medication Follow-Up â€” Resistant HTN, MRA Not Tolerated, Spironolactone Added',
+    label: 'Medication Follow-Up — Resistant HTN, MRA Not Tolerated, Spironolactone Added',
     category: FOLLOW_UP,
-    description: 'Escalated regimen, MRA not tolerated but spironolactone is â€” adds spironolactone; BP target reached, so it maintains rather than refers (distinct from the MRA-tolerated preset above).',
+    description: 'Escalated regimen, MRA not tolerated but spironolactone is — adds spironolactone; BP target reached, so it maintains rather than refers (distinct from the MRA-tolerated preset above).',
     data: {
       clinic_1_sbp: '130', clinic_1_dbp: '80',
       is_medication_follow_up: true,
@@ -112,9 +112,9 @@ export const followUpPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'med-followup-resistant-alternatives',
-    label: 'Medication Follow-Up â€” Resistant HTN, Neither MRA Nor Spironolactone Tolerated',
+    label: 'Medication Follow-Up — Resistant HTN, Neither MRA Nor Spironolactone Tolerated',
     category: FOLLOW_UP,
-    description: 'Escalated regimen, patient tolerates neither MRA nor spironolactone â€” falls through to therapeutic alternatives, still referred since target isnâ€™t met.',
+    description: 'Escalated regimen, patient tolerates neither MRA nor spironolactone — falls through to therapeutic alternatives, still referred since target isn’t met.',
     data: {
       clinic_1_sbp: '130', clinic_1_dbp: '80',
       is_medication_follow_up: true,
