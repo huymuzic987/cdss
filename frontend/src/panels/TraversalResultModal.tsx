@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import type { ApiErrorResponse, EvaluationResponse } from '../api/types'
 import { buildClinicalPresentation } from './clinicalDecisionSupportAdapter'
 import { getClinicalDecisionSupportMessages, type ClinicalDecisionSupportLocale } from './clinicalDecisionSupportMessages'
@@ -47,7 +47,7 @@ function ResultDialog({ result, partial, onClose, locale }: Omit<TraversalResult
             <div id="cds-modal-title" className="modal-header-title">{messages.recommendationTitle}</div>
             {!result && partial && <div className="modal-header-sub">{partial.message}</div>}
           </div>
-          <button type="button" className="modal-close" onClick={onClose} aria-label={messages.cancel}>Ã—</button>
+          <button type="button" className="modal-close" onClick={onClose} aria-label={messages.cancel}>×</button>
         </header>
         <div className="modal-body cds-modal-body">
           <TriggerEvidence items={presentation.evidence} title={messages.whyTitle} emptyText={messages.noEvidence} />
