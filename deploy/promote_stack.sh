@@ -1,29 +1,20 @@
 #!/usr/bin/env bash
-# Promotes a provisioned stack (see provision_stack.sh) to live.
+# Promotes an already-healthy private frontend without releasing the public
+# host port. A stable nginx container owns APP_PORT for its entire lifetime.
 #
-# Stops the previously-live stack (kept, not removed -- see
-# prune_old_stacks.sh for retention/cleanup), starts the new stack's
-# frontend now that the public port is free, then runs the full health
-# check. If that final check fails, the new frontend is stopped again and
-# whatever was stopped for the port handover is restarted, so the site is
-# back up within one health-check cycle instead of staying down.
-#
-# Records the live version in deploy/.current_version on success -- that
-# file is server-local state, not part of the repo (see the Jenkinsfile's
-# rsync excludes), and is how this script and prune_old_stacks.sh know
-# which stack is live vs. an old rollback candidate.
-#
-# deploy/.current_version is a bookkeeping hint, not the source of truth for
-# "what currently holds the public port" -- it doesn't exist yet on the
-# first deploy after switching to this blue/green flow (or if it ever drifts
-# out of sync), so whatever container is actually bound to APP_PORT is found
-# and stopped directly by container ID as a second, authoritative check.
+# On the first deployment of this scheme, the currently-live frontend is
+# adopted in place as "cdss-router": its nginx configuration is reloaded while
+# its old workers continue serving requests. Later deployments reuse that same
+# router. Nginx reloads are atomic, so existing connections finish on the old
+# configuration while new connections use the selected release.
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
 NEW_VERSION="${1:?usage: promote_stack.sh <new_version>}"
 NEW_PROJECT="cdss-${NEW_VERSION}"
 VERSION_FILE="deploy/.current_version"
+DRAIN_FILE="deploy/.router_drain_pending"
+ROUTER_NAME="cdss-router"
 
 export VERSION="$NEW_VERSION"
 resolve_compose "$NEW_PROJECT"
@@ -31,31 +22,12 @@ resolve_compose "$NEW_PROJECT"
 set -a
 source .env
 set +a
-
-OLD_VERSION=""
-if [ -f "$VERSION_FILE" ]; then
-    OLD_VERSION="$(cat "$VERSION_FILE")"
-fi
-
-stop_old_stack() {
-    if [ -n "$OLD_VERSION" ] && [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
-        echo "Stopping previous stack cdss-${OLD_VERSION}..."
-        ( export VERSION="$OLD_VERSION"; resolve_compose "cdss-${OLD_VERSION}"; $COMPOSE stop )
-    fi
-}
-
-restart_old_stack() {
-    if [ -n "$OLD_VERSION" ] && [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
-        echo "Restarting previous stack cdss-${OLD_VERSION}..."
-        ( export VERSION="$OLD_VERSION"; resolve_compose "cdss-${OLD_VERSION}"; $COMPOSE start )
-    fi
-}
+APP_PORT="${PUBLIC_APP_PORT:-${APP_PORT:-3000}}"
 
 find_port_containers() {
-    # Matches the "0.0.0.0:3001->80/tcp, :::3001->80/tcp" style Ports column
-    # -- avoids relying on the `docker ps --filter publish=`, which isn't
-    # available on older Docker versions.
-    docker ps --format '{{.ID}} {{.Ports}}' | awk -v port=":${APP_PORT}->" '$0 ~ port {print $1}'
+    # Matches the "0.0.0.0:3001->80/tcp, :::3001->80/tcp" style Ports column.
+    docker ps --format '{{.ID}} {{.Ports}}' \
+        | awk -v port=":${APP_PORT}->" '$0 ~ port {print $1}'
 }
 
 start_backup_service() {
@@ -80,44 +52,190 @@ start_backup_service() {
     return 1
 }
 
-stop_old_stack
-
-PORT_CONTAINERS="$(find_port_containers)"
-if [ -n "$PORT_CONTAINERS" ]; then
-    echo "Stopping container(s) still bound to port ${APP_PORT}: ${PORT_CONTAINERS}"
-    docker stop $PORT_CONTAINERS
+NEW_FRONTEND_ID="$($COMPOSE ps -q frontend)"
+if [ -z "$NEW_FRONTEND_ID" ] \
+    || [ "$(docker inspect -f '{{.State.Running}}' "$NEW_FRONTEND_ID")" != "true" ]; then
+    echo "ERROR: frontend for ${NEW_PROJECT} is not running." >&2
+    exit 1
 fi
 
-resolve_compose "$NEW_PROJECT"
-echo "Starting frontend for ${NEW_PROJECT}..."
-$COMPOSE up -d --no-build frontend
+NEW_NETWORK="$(
+    docker inspect \
+        -f '{{range $name, $settings := .NetworkSettings.Networks}}{{println $name}}{{end}}' \
+        "$NEW_FRONTEND_ID" \
+        | head -n 1
+)"
+if [ -z "$NEW_NETWORK" ]; then
+    echo "ERROR: could not determine the network for ${NEW_PROJECT}." >&2
+    exit 1
+fi
+NEW_FRONTEND_ALIAS="cdss-frontend-${NEW_VERSION}"
 
-echo "Running health check..."
-for i in $(seq 1 12); do
+mapfile -t PORT_CONTAINERS < <(find_port_containers)
+if [ "${#PORT_CONTAINERS[@]}" -gt 1 ]; then
+    echo "ERROR: multiple containers are bound to APP_PORT ${APP_PORT}: ${PORT_CONTAINERS[*]}" >&2
+    exit 1
+fi
+
+ROUTER_ID="$(docker ps -aq --filter "name=^/${ROUTER_NAME}$" | head -n 1)"
+if [ -n "$ROUTER_ID" ]; then
+    if [ "${#PORT_CONTAINERS[@]}" -eq 1 ] \
+        && [ "${PORT_CONTAINERS[0]}" != "$ROUTER_ID" ]; then
+        echo "ERROR: ${ROUTER_NAME} exists, but ${PORT_CONTAINERS[0]} owns APP_PORT ${APP_PORT}." >&2
+        exit 1
+    fi
+    if [ "$(docker inspect -f '{{.State.Running}}' "$ROUTER_ID")" != "true" ]; then
+        echo "Starting stable router..."
+        docker start "$ROUTER_ID" > /dev/null
+    fi
+elif [ "${#PORT_CONTAINERS[@]}" -eq 1 ]; then
+    # Zero-downtime bootstrap: the old frontend keeps serving while becoming
+    # the permanent router. docker rename does not restart the container.
+    ROUTER_ID="${PORT_CONTAINERS[0]}"
+    echo "Adopting the current APP_PORT container ${ROUTER_ID} as ${ROUTER_NAME}..."
+    docker rename "$ROUTER_ID" "$ROUTER_NAME"
+else
+    # First-ever deployment has no previous traffic to preserve.
+    echo "Creating stable router on host port ${APP_PORT}..."
+    docker run -d \
+        --name "$ROUTER_NAME" \
+        --restart unless-stopped \
+        -p "${APP_PORT}:80" \
+        nginx:1.27-alpine > /dev/null
+    ROUTER_ID="$(docker inspect -f '{{.Id}}' "$ROUTER_NAME")"
+fi
+
+CONNECTED_NEW_NETWORK=false
+PROMOTION_COMPLETE=false
+OLD_CONFIG=""
+NEW_CONFIG=""
+cleanup() {
+    [ -z "$OLD_CONFIG" ] || rm -f "$OLD_CONFIG"
+    [ -z "$NEW_CONFIG" ] || rm -f "$NEW_CONFIG"
+    if [ "$PROMOTION_COMPLETE" != "true" ] \
+        && [ "$CONNECTED_NEW_NETWORK" = "true" ]; then
+        docker network disconnect "$NEW_NETWORK" "$ROUTER_NAME" > /dev/null 2>&1 || true
+    fi
+}
+trap cleanup EXIT
+
+if ! docker inspect -f '{{range $name, $settings := .NetworkSettings.Networks}}{{println $name}}{{end}}' \
+    "$ROUTER_NAME" | grep -Fxq "$NEW_NETWORK"; then
+    echo "Connecting stable router to ${NEW_NETWORK}..."
+    docker network connect "$NEW_NETWORK" "$ROUTER_NAME"
+    CONNECTED_NEW_NETWORK=true
+fi
+
+# Check the release through the exact network path the router will use before
+# touching its loaded nginx configuration.
+if ! docker exec "$ROUTER_NAME" wget -qO- "http://${NEW_FRONTEND_ALIAS}/" > /dev/null 2>&1; then
+    echo "ERROR: router cannot reach ${NEW_FRONTEND_ALIAS} on ${NEW_NETWORK}." >&2
+    exit 1
+fi
+
+OLD_CONFIG="$(mktemp)"
+NEW_CONFIG="$(mktemp)"
+
+docker cp "${ROUTER_NAME}:/etc/nginx/conf.d/default.conf" "$OLD_CONFIG"
+cat > "$NEW_CONFIG" <<EOF
+server {
+    listen 80;
+    server_name _;
+
+    # Docker's embedded DNS is queried repeatedly, so a frontend container
+    # restart does not leave nginx pinned to its former IP address.
+    resolver 127.0.0.11 ipv6=off valid=10s;
+    set \$release_upstream http://${NEW_FRONTEND_ALIAS};
+
+    location / {
+        proxy_pass \$release_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+
+rollback_router() {
+    echo "Restoring the previous router configuration..."
+    docker cp "$OLD_CONFIG" "${ROUTER_NAME}:/etc/nginx/conf.d/default.conf"
+    docker exec "$ROUTER_NAME" nginx -t
+    docker exec "$ROUTER_NAME" nginx -s reload
+}
+
+# Replacing the file does not affect loaded workers. Only a successful
+# nginx -s reload switches traffic, and nginx keeps old workers alive until
+# their existing requests complete.
+docker cp "$NEW_CONFIG" "${ROUTER_NAME}:/etc/nginx/conf.d/default.conf"
+if ! docker exec "$ROUTER_NAME" nginx -t; then
+    rollback_router
+    exit 1
+fi
+
+echo "Atomically switching APP_PORT ${APP_PORT} to ${NEW_PROJECT}..."
+docker exec "$ROUTER_NAME" nginx -s reload
+
+promoted=false
+for i in $(seq 1 10); do
     if curl -s -f -L "http://localhost:${APP_PORT}/" > /dev/null 2>&1 \
-        && $COMPOSE exec -T backend curl -s -f http://localhost:8000/health > /dev/null 2>&1; then
-        echo "${NEW_PROJECT} healthy on port ${APP_PORT}"
-        if start_backup_service; then
-            echo "$NEW_VERSION" > "$VERSION_FILE"
-            exit 0
-        fi
+        && curl -s -f "http://localhost:${APP_PORT}/health" > /dev/null 2>&1; then
+        promoted=true
         break
     fi
-    echo "Attempt $i failed. Waiting 5s..."
-    sleep 5
+    sleep 1
 done
 
-echo "ERROR: ${NEW_PROJECT} failed health check after promotion."
-$COMPOSE logs --tail 50 backend frontend
-
-echo "Stopping the broken new frontend to free the port..."
-$COMPOSE stop frontend
-
-if [ -n "$PORT_CONTAINERS" ]; then
-    echo "Restarting previously-stopped container(s): ${PORT_CONTAINERS}"
-    docker start $PORT_CONTAINERS
-else
-    restart_old_stack
+if [ "$promoted" != "true" ]; then
+    echo "ERROR: ${NEW_PROJECT} failed its post-switch health check." >&2
+    rollback_router
+    $COMPOSE logs --tail 50 backend frontend
+    exit 1
 fi
 
-exit 1
+if ! start_backup_service; then
+    rollback_router
+    exit 1
+fi
+
+echo "$NEW_VERSION" > "$VERSION_FILE"
+PROMOTION_COMPLETE=true
+
+# Nginx's old workers retain established requests after reload. Wait for them
+# to finish before allowing prune to remove the old backend/frontend. If a
+# genuinely long request is still active, retain the old stacks and networks;
+# a later deployment will prune them after the worker exits.
+router_drained=false
+for i in $(seq 1 30); do
+    if ! router_processes="$(docker exec "$ROUTER_NAME" ps -o args 2>/dev/null)"; then
+        echo "Could not inspect router workers; preserving old release resources." >&2
+        break
+    fi
+    if ! printf '%s\n' "$router_processes" \
+        | grep -q '[w]orker process is shutting down'; then
+        router_drained=true
+        break
+    fi
+    sleep 1
+done
+
+if [ "$router_drained" = "true" ]; then
+    rm -f "$DRAIN_FILE"
+    while IFS= read -r network; do
+        if [ -n "$network" ] \
+            && [ "$network" != "$NEW_NETWORK" ] \
+            && [[ "$network" == cdss-* ]]; then
+            docker network disconnect "$network" "$ROUTER_NAME" || true
+        fi
+    done < <(
+        docker inspect \
+            -f '{{range $name, $settings := .NetworkSettings.Networks}}{{println $name}}{{end}}' \
+            "$ROUTER_NAME"
+    )
+else
+    echo "Long-running requests are still draining; preserving old release resources."
+    : > "$DRAIN_FILE"
+fi
+
+echo "${NEW_PROJECT} healthy and live through ${ROUTER_NAME} on port ${APP_PORT}."

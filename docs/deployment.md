@@ -68,14 +68,15 @@ private network (`cdss_net`), one named volume (`cdss_pgdata`):
 | --- | --- | --- |
 | `db` | `postgres:16` | Credentials/db name from `.env` (`POSTGRES_USER`/`PASSWORD`/`DB`). Healthcheck `pg_isready`. |
 | `backend` | built from `Dockerfile.backend`, tagged `cdss-backend:${VERSION:-latest}` | Loads `.env` via `env_file`, then **overrides `DATABASE_URL`** to `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}` regardless of any conflicting value in `.env` - it always points at the internal `db` service. `depends_on: db (service_healthy)`. No ports published; only reachable through the frontend's nginx proxy. |
-| `frontend` | built from `frontend/Dockerfile`, tagged `cdss-frontend:${VERSION:-latest}` | Build args `VITE_TLDRAW_LICENSE_KEY`, `VITE_PRODUCTION` (from `${PRODUCTION:-1}`). Published on `${APP_PORT:-3000}:80`. `depends_on: backend (service_healthy)`. |
+| `frontend` | built from `frontend/Dockerfile`, tagged `cdss-frontend:${VERSION:-latest}` | Build args `VITE_TLDRAW_LICENSE_KEY`, `VITE_PRODUCTION` (from `${PRODUCTION:-1}`). Private only, with release-specific alias `cdss-frontend-${VERSION}`. `depends_on: backend (service_healthy)`. |
 | `backup` | `postgres:16`, `user: "0:0"` | Runs `deploy/backup_db.sh` (bind-mounted read-only) as its entrypoint, default `command: ["daemon"]`. Writes to a host bind-mount (`${BACKUP_HOST_DIR:-./persistent-backups}`), not a Docker volume - see §"Backups" below. |
 
 Each Jenkins build deploys under an isolated Compose **project name**
 `cdss-<VERSION>` (`VERSION` = the Jenkins build number), so every version's
 containers/network/volume are fully namespaced and can coexist with the
-currently-live version during provisioning - this is what makes the
-blue/green flow below possible.
+currently-live version during provisioning. A persistent `cdss-router` nginx
+container sits outside the release stacks, owns the public host port, and
+atomically routes traffic to one release-specific frontend alias.
 
 ## `.env.prod.example`
 
@@ -91,7 +92,7 @@ in this file - `docker-compose.prod.yml` builds it internally from the
 | `APP_ENV` | `production` | |
 | `CDSS_MAX_STEPS` | `300` | Traversal safety limit, same meaning as local dev. |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | `cdss` / `change-me` / `cdss` | Change the password before first real deploy. |
-| `APP_PORT` | `3000` | Public host port for the frontend/nginx container. **The actual Jenkins deployment overrides this to `3001`** (see below) - the example's `3000` is a generic default, not what's live. |
+| `APP_PORT` | `3000` | Public host port owned continuously by the stable `cdss-router`. **The actual Jenkins deployment overrides this to `3001`** (see below). |
 | `BACKUP_HOST_DIR` | `./persistent-backups` | Resolved relative to `/opt/webapps/cdss` on the target host. A real host directory, not a Docker volume - Jenkins' rsync deploy step excludes it from `--delete`, and files in it are readable by other SSH users on that host. |
 | `BACKUP_TIMEZONE` / `BACKUP_RETENTION` / `BACKUP_FILE_MODE` | `Asia/Ho_Chi_Minh` / `10` / `0644` | Backup daemon config, see below. |
 
@@ -112,7 +113,7 @@ Stages, in order:
    required files is missing from the checkout: `pyproject.toml`,
    `uv.lock`, `frontend/package.json`, `frontend/pnpm-lock.yaml`,
    `Dockerfile.backend`, `frontend/Dockerfile`, `docker-compose.prod.yml`,
-   `backups/backup.sql`, `backups/seed.sql`, and the four `deploy/*.sh`
+   `backups/backup.sql`, `backups/seed.sql`, and all `deploy/*.sh`
    scripts used later in the pipeline. This means **`backups/backup.sql`
    and `backups/seed.sql` must always be committed and up to date**: a
    broken or missing seed file fails deployment before anything is touched.
@@ -120,7 +121,8 @@ Stages, in order:
    from the Jenkins workspace to `deploy@<host>:/opt/webapps/cdss/`,
    excluding `.git`, `.venv`, `node_modules`, `frontend/dist`, `.env*`,
    logs/caches, `scratch`, and the deploy scripts' own runtime state files
-   (`deploy/.current_version`, `deploy/.build_state`) and
+   (`deploy/.current_version`, `deploy/.build_state`,
+   `deploy/.router_drain_pending`) and
    `persistent-backups`.
 4. **Inject Environment**: copies the `cdss-prod-env` Jenkins credential
    (a file) to the host as `.env.new`, strips CRLF line endings, moves it to
@@ -132,11 +134,10 @@ Stages, in order:
 9. **Prune Old Stacks**: `deploy/prune_old_stacks.sh`.
 
 On success: logs `cdss running on <host>:<port> (version <version>)`. On
-failure: tears down the failed new stack
-(`docker compose -p cdss-<version> ... down -v --rmi all`) and notes that
-`promote_stack.sh` already auto-restarted the previous version if the
-failure happened after the port handover (see below) - the pipeline failing
-does not mean production is down. `cleanWs()` always runs at the end.
+failure: tears down the candidate stack only when it was not promoted. A
+failure in a later stage does not tear down the version already recorded as
+live. The stable router keeps the previous successfully routed release
+available throughout a failed promotion. `cleanWs()` always runs at the end.
 
 ## The blue/green deploy scripts (`deploy/`)
 
@@ -184,15 +185,14 @@ continuously in the live stack.
 ### `provision_stack.sh <version>`
 
 Creates a fully isolated new stack **without disrupting the live one**:
-starts only the new stack's `db`, waits for `pg_isready`, and - if an old
+starts the new stack's `db`, waits for `pg_isready`, and - if an old
 live version is recorded - clones it via a **streamed `pg_dump` piped
 directly into the new `db`'s `psql`** (a transactionally consistent clone
 taken while production keeps serving traffic). Then runs
 `alembic upgrade head` via a one-off `backend` container, seeds via
-`deploy/seed_database.sh`, and finally starts the new `backend` (polling its
-`/health` endpoint). It deliberately does **not** start the new `frontend` -
-only one stack can hold the public port at a time, and that handover is
-`promote_stack.sh`'s job.
+`deploy/seed_database.sh`, and finally starts both the new `backend` and its
+private `frontend`. Both must pass internal health checks before promotion;
+neither binds the public host port.
 
 Seed mode depends on whether this is a fresh install or a clone: fresh →
 `SEED_MODE=all` (`seed_database.sh` just streams the whole
@@ -212,34 +212,35 @@ working as intended.
 
 ### `promote_stack.sh <version>`
 
-The actual cutover, with automatic rollback:
+The zero-downtime cutover, with automatic rollback:
 
-1. Stops the old stack (`$COMPOSE stop`, containers kept for rollback - not
-   removed).
-2. As a second, independent safety check, finds and stops any container
-   still physically bound to `APP_PORT` regardless of which compose project
-   owns it (in case `deploy/.current_version` and the real host state ever
-   disagree).
-3. Starts the new stack's `frontend` (image already built, `--no-build`).
-4. Health-checks both the public HTTP endpoint and the backend's internal
-   `/health` (up to 12×5s each).
-5. **On success:** starts the new stack's `backup` service, then writes the
-   new version to `deploy/.current_version`.
-6. **On any failure:** dumps `backend`/`frontend` logs, stops the broken new
-   frontend, and restores service - either restarting whatever container
-   was previously bound to the port, or restarting the old compose stack -
-   then exits non-zero. This is what makes a failed promotion self-healing:
-   the pipeline can fail while production keeps serving the previous
-   version.
+1. Finds the healthy private frontend and its release network.
+2. Reuses the persistent `cdss-router`. During the first rollout of this
+   scheme, the currently bound frontend container is renamed and adopted as
+   that router without restarting it; a first-ever installation creates a
+   fresh router.
+3. Connects the router to the candidate network and verifies the candidate
+   through its unique `cdss-frontend-${VERSION}` alias.
+4. Writes and validates a new nginx upstream configuration, then runs
+   `nginx -s reload`. Nginx starts new workers atomically and lets old workers
+   finish existing requests, while the router retains `APP_PORT` throughout.
+5. Health-checks `/` and `/health` through the public port. On failure, the
+   previous nginx configuration is restored and reloaded.
+6. On success, starts the new backup service, records
+   `deploy/.current_version`, waits for old nginx workers to drain, and then
+   disconnects obsolete release networks. If a long-running request is still
+   active after 30 seconds, a server-local drain marker makes pruning retain
+   the old release until a later run confirms that the worker has exited.
 
 ### `prune_old_stacks.sh`
 
 Runs last. Discovers old versions purely from `docker ps -a` container
 naming (`cdss-<N>-...`), so it can't drift from actual host state. For every
 non-current version: always removes its `backend`/`frontend`/`backup`
-containers and images (keeping only the `db` container/volume as a rollback
-candidate). Then fully tears down (`$COMPOSE down -v` - container **and**
-volume) all but the 3 most recent old versions
+containers and images, except that it never removes the adopted
+`cdss-router` even if that container retains labels from its original
+Compose project. It keeps the `db` container/volume as a rollback candidate,
+then removes database resources for all but the 3 most recent old versions
 (`KEEP_RETENTION=3`, hardcoded), so up to 3 old database snapshots remain
 available as rollback targets at any time.
 

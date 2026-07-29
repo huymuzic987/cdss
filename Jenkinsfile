@@ -55,7 +55,9 @@ pipeline {
                              Dockerfile.backend frontend/Dockerfile docker-compose.prod.yml \
                              backups/backup.sql backups/seed.sql \
                              deploy/backup_db.sh deploy/backup_current_db.sh \
-                             deploy/build_images.sh deploy/seed_database.sh; do
+                             deploy/build_images.sh deploy/seed_database.sh \
+                             deploy/lib.sh deploy/provision_stack.sh \
+                             deploy/promote_stack.sh deploy/prune_old_stacks.sh; do
                         if [ ! -f "$f" ]; then
                             echo "ERROR: required file missing: $f"
                             exit 1
@@ -93,6 +95,7 @@ pipeline {
                             --exclude 'scratch' \
                             --exclude 'deploy/.current_version' \
                             --exclude 'deploy/.build_state' \
+                            --exclude 'deploy/.router_drain_pending' \
                             --exclude 'persistent-backups' \
                             ./ ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/
                     '''
@@ -170,11 +173,10 @@ pipeline {
             }
         }
 
-        // Stops the previously-live stack, starts the new stack's frontend
-        // on the now-free public port, and health-checks it. If that check
-        // fails, deploy/promote_stack.sh itself restarts the old stack
-        // before exiting non-zero, so the site is back up within one
-        // health-check cycle rather than staying down.
+        // Atomically reloads the stable router after the new private frontend
+        // is healthy. The router owns APP_PORT continuously; if post-switch
+        // checks fail, promote_stack.sh restores its previous configuration
+        // without stopping the old release.
         stage('Promote New Stack') {
             steps {
                 sshagent(['ubuntu-vm-jenkins']) {
@@ -183,7 +185,7 @@ pipeline {
                             set -e
                             cd ${DEPLOY_PATH}
                             chmod +x deploy/promote_stack.sh
-                            ./deploy/promote_stack.sh ${VERSION}
+                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/promote_stack.sh ${VERSION}
                         "
                     '''
                 }
@@ -215,11 +217,17 @@ pipeline {
 
         failure {
             echo 'Deployment failed - check the failing stage log above.'
-            echo 'Tearing down the failed new stack, if any was created; the previous version was never stopped for good and keeps serving traffic (promote_stack.sh restarts it automatically if the failure happened after the port handover).'
+            echo 'Tearing down the failed candidate stack if it was not promoted. The stable router keeps the last successful release serving throughout.'
             sshagent(['ubuntu-vm-jenkins']) {
                 sh '''
                     ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
-                        cd ${DEPLOY_PATH} 2>/dev/null && docker compose -p cdss-${VERSION} -f docker-compose.prod.yml down -v --rmi all || true
+                        cd ${DEPLOY_PATH} 2>/dev/null || exit 0
+                        current_version=\$(cat deploy/.current_version 2>/dev/null || true)
+                        if [ \"\$current_version\" != \"${VERSION}\" ]; then
+                            docker compose -p cdss-${VERSION} -f docker-compose.prod.yml down -v --rmi all || true
+                        else
+                            echo \"Version ${VERSION} is already live; leaving it running despite a later pipeline failure.\"
+                        fi
                     "
                 '''
             }

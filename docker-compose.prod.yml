@@ -5,8 +5,10 @@
 #
 # Deployed with `docker compose -p cdss-<VERSION>` (see deploy/lib.sh and
 # deploy/provision_stack.sh) so each deploy gets its own fully isolated
-# stack. Old application containers/images are pruned after promotion; three
-# old PostgreSQL containers and volumes are retained as database rollbacks.
+# stack. A stable router container, managed by deploy/promote_stack.sh, owns the
+# public host port and atomically switches between these private frontends.
+# Old application containers/images are pruned after promotion; three old
+# PostgreSQL containers and volumes are retained as database rollbacks.
 
 services:
   db:
@@ -56,12 +58,15 @@ services:
         VITE_PRODUCTION: ${PRODUCTION:-1}
     image: cdss-frontend:${VERSION:-latest}
     restart: unless-stopped
-    ports:
-      - "${APP_PORT:-3000}:80"
     depends_on:
       backend:
         condition: service_healthy
-    networks: [cdss_net]
+    networks:
+      cdss_net:
+        aliases:
+          # Unique across release networks so the stable router can resolve
+          # the selected release after an atomic nginx configuration reload.
+          - cdss-frontend-${VERSION:-latest}
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost/"]
       interval: 10s

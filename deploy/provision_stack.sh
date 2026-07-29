@@ -9,9 +9,8 @@
 # If anything in this script fails, nothing has been promoted and the
 # currently-running version keeps serving traffic untouched.
 #
-# Frontend is deliberately NOT started here: only one stack can bind the
-# public APP_PORT at a time on this single host, so frontend only comes up
-# in promote_stack.sh, after the old stack has been stopped.
+# The frontend has no host port. It starts and becomes healthy alongside the
+# backend while the stable router continues sending traffic to the old release.
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
@@ -91,19 +90,20 @@ echo "Seeding data from backups/seed.sql (mode: ${SEED_MODE})..."
 bash deploy/seed_database.sh "$SEED_MODE" backups/seed.sql \
     | $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"
 
-echo "Starting backend..."
-$COMPOSE up -d --no-build backend
+echo "Starting backend and private frontend..."
+$COMPOSE up -d --no-build backend frontend
 
-echo "Waiting for backend to report healthy..."
+echo "Waiting for backend and frontend to report healthy..."
 for i in $(seq 1 12); do
-    if $COMPOSE exec -T backend curl -s -f http://localhost:8000/health > /dev/null 2>&1; then
-        echo "Backend healthy for ${PROJECT}."
+    if $COMPOSE exec -T backend curl -s -f http://localhost:8000/health > /dev/null 2>&1 \
+        && $COMPOSE exec -T frontend wget -qO- http://localhost/ > /dev/null 2>&1; then
+        echo "Backend and frontend healthy for ${PROJECT}."
         exit 0
     fi
     echo "Attempt $i failed. Waiting 5s..."
     sleep 5
 done
 
-echo "ERROR: backend never became healthy for ${PROJECT}"
-$COMPOSE logs --tail 50 backend
+echo "ERROR: backend or frontend never became healthy for ${PROJECT}"
+$COMPOSE logs --tail 50 backend frontend
 exit 1
