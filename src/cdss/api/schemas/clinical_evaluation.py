@@ -200,7 +200,7 @@ def parse_clinical_bundle(bundle: Any) -> ParsedClinicalBundle:
                     _invalid(f"conflicting home {side} values")
                 home_bp[side] = value
                 continue
-            if encounter_id is None and role in {"clinic_1", "current_clinic", "previous"}:
+            if encounter_id is None and role in {"current_clinic", "previous"}:
                 role_bucket = bp_by_role.setdefault(role, {})
                 if side in role_bucket and role_bucket[side][0] != value:
                     _invalid(f"conflicting {role} {side} values")
@@ -235,11 +235,7 @@ def parse_clinical_bundle(bundle: Any) -> ParsedClinicalBundle:
         if None in bp_by_encounter:
             _invalid("BP Observations in a longitudinal Bundle must reference an Encounter")
         latest_id = ordered[-1][0]
-        _apply_bp_pair(
-            bp_by_encounter.get(latest_id),
-            runtime,
-            "clinic_1" if len(ordered) == 1 else "current_clinic",
-        )
+        _apply_bp_pair(bp_by_encounter.get(latest_id), runtime, "current_clinic")
         latest_encounter = next(e for e in encounters if e.get("id") == latest_id)
         _apply_extensions(latest_encounter, runtime)
         if len(ordered) > 1:
@@ -286,10 +282,10 @@ def parse_clinical_bundle(bundle: Any) -> ParsedClinicalBundle:
         if bp_by_role:
             for role, bucket in bp_by_role.items():
                 _apply_bp_pair(bucket, runtime, role)
-            if "clinic_1" not in bp_by_role and "current_clinic" not in bp_by_role:
-                _invalid("snapshot requires clinic_1 or current_clinic blood pressure")
+            if "current_clinic" not in bp_by_role:
+                _invalid("snapshot requires current_clinic blood pressure")
         else:
-            _apply_bp_pair(bp_by_encounter.get(None), runtime, "clinic_1")
+            _apply_bp_pair(bp_by_encounter.get(None), runtime, "current_clinic")
 
     if home_bp:
         if set(home_bp) != {"sbp", "dbp"}:
@@ -443,20 +439,19 @@ def _apply_medications(
 
 
 def _current_bp_evidence(runtime: Mapping[str, Any]) -> list[JsonObject]:
-    prefix = "current_clinic" if "current_clinic_sbp" in runtime else "clinic_1"
     return [
         {
             "id": "current-sbp",
             "label_en": "Current systolic blood pressure",
             "label_vi": "Huyết áp tâm thu hiện tại",
-            "value": runtime[f"{prefix}_sbp"],
+            "value": runtime["current_clinic_sbp"],
             "unit": "mmHg",
         },
         {
             "id": "current-dbp",
             "label_en": "Current diastolic blood pressure",
             "label_vi": "Huyết áp tâm trương hiện tại",
-            "value": runtime[f"{prefix}_dbp"],
+            "value": runtime["current_clinic_dbp"],
             "unit": "mmHg",
         },
     ]

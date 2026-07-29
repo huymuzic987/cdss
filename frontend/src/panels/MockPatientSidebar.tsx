@@ -53,7 +53,10 @@ export function MockPatientSidebar(props: MockPatientSidebarProps) {
     setValidationError(validation.error)
     if (!validation.payload) return
     const callback = manual ? props.onManualStart : props.onStart
-    callback('hypertension-diagnosis', validation.payload)
+    const startTreeKey = form.medication_follow_up_stage !== ''
+      ? 'treatment-threshold-and-bp-target'
+      : 'hypertension-diagnosis'
+    callback(startTreeKey, validation.payload)
   }
 
   const reset = () => {

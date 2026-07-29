@@ -11,9 +11,9 @@ function invalid(error: string): PatientFormValidation {
 }
 
 export function validatePatientForm(form: PatientFormData): PatientFormValidation {
-  const clinicSbp = Number.parseFloat(form.clinic_1_sbp)
-  const clinicDbp = Number.parseFloat(form.clinic_1_dbp)
-  if (!form.clinic_1_sbp || !form.clinic_1_dbp
+  const clinicSbp = Number.parseFloat(form.current_clinic_sbp)
+  const clinicDbp = Number.parseFloat(form.current_clinic_dbp)
+  if (!form.current_clinic_sbp || !form.current_clinic_dbp
     || Number.isNaN(clinicSbp) || Number.isNaN(clinicDbp)
     || clinicSbp <= 0 || clinicDbp <= 0) {
     return invalid('Clinic SBP and DBP are required positive numbers.')
@@ -41,12 +41,15 @@ export function validatePatientForm(form: PatientFormData): PatientFormValidatio
       || previousSbp <= 0 || previousDbp <= 0) {
       return invalid('Previous-visit SBP and DBP must be positive numbers.')
     }
-    const currentSbp = Number.parseFloat(form.current_clinic_sbp)
-    const currentDbp = Number.parseFloat(form.current_clinic_dbp)
-    if (!form.current_clinic_sbp || !form.current_clinic_dbp
-      || Number.isNaN(currentSbp) || Number.isNaN(currentDbp)
-      || currentSbp <= 0 || currentDbp <= 0) {
-      return invalid('Current SBP and DBP are required when a previous visit is provided.')
+  }
+
+  if (form.medication_follow_up_stage !== '') {
+    const targetSbp = Number.parseFloat(form.target_sbp_upper)
+    const targetDbp = Number.parseFloat(form.target_dbp_upper)
+    if (!form.target_sbp_upper || !form.target_dbp_upper
+      || Number.isNaN(targetSbp) || Number.isNaN(targetDbp)
+      || targetSbp <= 0 || targetDbp <= 0) {
+      return invalid('A known medication follow-up stage requires an Active BP Target (SBP and DBP).')
     }
   }
 

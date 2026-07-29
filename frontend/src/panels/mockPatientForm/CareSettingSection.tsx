@@ -1,4 +1,4 @@
-import { Toggle } from './FormControls'
+import { BpRow, Toggle } from './FormControls'
 import type { FormSectionProps } from './types'
 
 export function CareSettingSection({ form, setStr, setBool, disabled }: FormSectionProps) {
@@ -7,6 +7,28 @@ export function CareSettingSection({ form, setStr, setBool, disabled }: FormSect
       <div className="ps-field-hint" style={{ display: 'block', marginBottom: 8 }}>
         Enter both Previous Visit BP values to let the guideline infer whether today is a lifestyle or medication follow-up. Leave both empty for an initial visit.
       </div>
+
+      <div className="ps-field" style={{ marginTop: 8 }}>
+        <label className="ps-field-label" htmlFor="medication_follow_up_stage">Known Medication Follow-Up Stage</label>
+        <select
+          id="medication_follow_up_stage"
+          className="ps-select"
+          value={form.medication_follow_up_stage}
+          onChange={(e) => setStr('medication_follow_up_stage', e.target.value)}
+          disabled={disabled}
+        >
+          <option value="">— Infer from Previous Visit BP —</option>
+          <option value="INITIAL_REGIMEN">Initial Regimen</option>
+          <option value="ESCALATED_REGIMEN">Escalated Regimen</option>
+        </select>
+        <div className="ps-field-hint">
+          Set this to skip inference and evaluate a follow-up whose stage and BP target are already known (the only way to reach an escalated-regimen or resistant-hypertension outcome - inference from two BP readings alone can only ever conclude Initial Regimen).
+        </div>
+      </div>
+
+      {form.medication_follow_up_stage !== '' && (
+        <BpRow label="Active BP Target" sbpKey="target_sbp_upper" dbpKey="target_dbp_upper" form={form} onChange={setStr} disabled={disabled} />
+      )}
 
       <div className="ps-field" style={{ marginTop: 8 }}>
         <label className="ps-field-label">Facility Capability</label>

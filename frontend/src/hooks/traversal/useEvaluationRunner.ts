@@ -1,7 +1,9 @@
 import { useCallback } from 'react'
-import { evaluateTree } from '../../api/client'
+import { evaluateFollowUp, evaluateTree } from '../../api/client'
 import type { ApiErrorResponse, EvaluationResponse, JsonObject, TraversalTraceEntry, TreeGraphResponse } from '../../api/types'
 import type { TraversalStore } from './useTraversalStore'
+
+const FOLLOW_UP_START_TREE_KEY = 'treatment-threshold-and-bp-target'
 
 export interface TraversalDependencies {
   ensureGraph: (treeKey: string) => Promise<TreeGraphResponse | null>
@@ -26,7 +28,9 @@ export function useEvaluationRunner(store: TraversalStore, dependencies: Travers
     if (store.runIdRef.current !== runId) return null
     dependencies.setActiveTreeKey(startTreeKey)
 
-    const { result, partial, error } = await evaluateTree(input)
+    const { result, partial, error } = await (
+      startTreeKey === FOLLOW_UP_START_TREE_KEY ? evaluateFollowUp(input) : evaluateTree(input)
+    )
     if (store.runIdRef.current !== runId) return null
     if (error) {
       dependencies.setError(error.message)

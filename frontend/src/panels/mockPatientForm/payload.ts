@@ -35,10 +35,7 @@ function formToFlatInput(form: PatientFormData): JsonObject {
     out[key] = v
   }
 
-  // BP clinic
-  set('clinic_1_sbp', num(form.clinic_1_sbp))
-  set('clinic_1_dbp', num(form.clinic_1_dbp))
-  // BP follow-up
+  // BP — today's visit reading
   set('current_clinic_sbp', num(form.current_clinic_sbp))
   set('current_clinic_dbp', num(form.current_clinic_dbp))
   set('previous_sbp', num(form.previous_sbp))
@@ -112,13 +109,21 @@ function formToFlatInput(form: PatientFormData): JsonObject {
 
   // Care setting
   if (form.facility_capability) out['facility_capability'] = form.facility_capability
-  // The backend derives these from the previous visit's guideline result.
+  // The backend derives these from the previous visit's guideline result,
+  // unless medication_follow_up_stage below is set (known-stage follow-up).
   out['is_lifestyle_follow_up'] = false
   out['is_medication_follow_up'] = false
   // Active BP target — SBP/DBP must each be below the given threshold
   // Previous visit's BP target — record only, kept alongside previous_sbp/dbp
   set('previous_target_sbp', num(form.previous_target_sbp))
   set('previous_target_dbp', num(form.previous_target_dbp))
+  // Known medication follow-up stage — routes to /evaluate/follow-up instead
+  // of /evaluate's previous-visit inference (see CareSettingSection).
+  if (form.medication_follow_up_stage) {
+    out['medication_follow_up_stage'] = form.medication_follow_up_stage
+    set('active_bp_target_sbp_upper', num(form.target_sbp_upper))
+    set('active_bp_target_dbp_upper', num(form.target_dbp_upper))
+  }
 
   return out
 }

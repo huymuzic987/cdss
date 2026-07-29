@@ -93,7 +93,24 @@ export async function evaluateTree(bundle: JsonObject): Promise<{
   partial: ApiErrorResponse | null
   error: ApiErrorResponse | null
 }> {
-  const response = await fetch(`${API_BASE_URL}/evaluate`, {
+  return postEvaluation('/evaluate', bundle)
+}
+
+/** Known-stage medication follow-up: skips previous-visit inference. */
+export async function evaluateFollowUp(bundle: JsonObject): Promise<{
+  result: EvaluationResponse | null
+  partial: ApiErrorResponse | null
+  error: ApiErrorResponse | null
+}> {
+  return postEvaluation('/evaluate/follow-up', bundle)
+}
+
+async function postEvaluation(path: string, bundle: JsonObject): Promise<{
+  result: EvaluationResponse | null
+  partial: ApiErrorResponse | null
+  error: ApiErrorResponse | null
+}> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(bundle),

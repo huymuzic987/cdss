@@ -7,7 +7,6 @@ export const cardioModifierPresets: PatientPresetDefinition[] = [
     category: MODIFIER_TREES,
     description: '50-year-old, CKD only (no heart failure/CAD, which take precedence at Tree 3) — reaches the chronic-kidney-disease tree’s default path (no prior creatinine test on file, so it tests and monitors), then continues into the mainline optimal-treatment-strategy/drug-combination trees.',
     data: {
-      clinic_1_sbp: '148', clinic_1_dbp: '92',
       current_clinic_sbp: '135', current_clinic_dbp: '92',
       age: '50', risk_factor_count: '2',
       has_ckd: true,
@@ -20,7 +19,6 @@ export const cardioModifierPresets: PatientPresetDefinition[] = [
     category: MODIFIER_TREES,
     description: '50-year-old, type-2 diabetes with cardiovascular disease and BP above target — reaches the type-2-diabetes tree’s CV-risk branch (adds SGLT2 inhibitor / GLP-1 RA), then continues into the mainline optimal-treatment-strategy/drug-combination trees.',
     data: {
-      clinic_1_sbp: '145', clinic_1_dbp: '90',
       current_clinic_sbp: '135', current_clinic_dbp: '88',
       age: '50', risk_factor_count: '3',
       has_type_2_diabetes: true,
@@ -34,7 +32,6 @@ export const cardioModifierPresets: PatientPresetDefinition[] = [
     category: MODIFIER_TREES,
     description: '50-year-old, type-2 diabetes with no cardiovascular disease/stroke/CAD and BP above target — takes the no-CV-risk branch (maintain current regimen, no SGLT2i/GLP-1 RA added), contrasting with the CV-risk preset above.',
     data: {
-      clinic_1_sbp: '145', clinic_1_dbp: '90',
       current_clinic_sbp: '135', current_clinic_dbp: '88',
       age: '50', risk_factor_count: '1',
       has_type_2_diabetes: true,
@@ -47,7 +44,6 @@ export const cardioModifierPresets: PatientPresetDefinition[] = [
     category: MODIFIER_TREES,
     description: '55-year-old with CAD and a history of CCS revascularization (no AMI/CCS angina) — takes the "no routine beta-blocker" branch. Routes to Tree 4 (Essential Treatment Strategy) or Tree 5 (Optimal Treatment Strategy).',
     data: {
-      clinic_1_sbp: '148', clinic_1_dbp: '94',
       current_clinic_sbp: '150', current_clinic_dbp: '95',
       age: '55', risk_factor_count: '3',
       has_coronary_artery_disease: true, has_cardiovascular_disease: true,
@@ -61,7 +57,6 @@ export const cardioModifierPresets: PatientPresetDefinition[] = [
     category: MODIFIER_TREES,
     description: '55-year-old with CAD and a history of CABG (no AMI/angina/revasc flags) — takes the "early beta-blocker" branch, the last of the four CAD drug-recommendation branches. Same documented dead-LINK ending.',
     data: {
-      clinic_1_sbp: '148', clinic_1_dbp: '94',
       current_clinic_sbp: '150', current_clinic_dbp: '95',
       age: '55', risk_factor_count: '3',
       has_coronary_artery_disease: true, has_cardiovascular_disease: true,
@@ -75,7 +70,6 @@ export const cardioModifierPresets: PatientPresetDefinition[] = [
     category: MODIFIER_TREES,
     description: '55-year-old with CAD whose current BP is already below Tree 3’s own "at or above threshold" gate (which requires sbp≥130 or dbp≥90 before it will even present the comorbidity flag to a modifier tree). Result: the patient never reaches the coronary-artery-disease tree at all and instead exits via Tree 3’s generic lifestyle/follow-up action — meaning the "already at target" bypass branches inside the CAD, heart-failure, and type-2-diabetes trees (T9_C_BP3/BP4, T10_C_BP1, T8_C_BELOW_TARGET) are all structurally unreachable via normal routing, not exercisable by any preset.',
     data: {
-      clinic_1_sbp: '148', clinic_1_dbp: '94',
       current_clinic_sbp: '125', current_clinic_dbp: '80',
       age: '55', risk_factor_count: '3',
       has_coronary_artery_disease: true, has_cardiovascular_disease: true,
@@ -88,7 +82,6 @@ export const cardioModifierPresets: PatientPresetDefinition[] = [
     category: MODIFIER_TREES,
     description: '65-year-old with HFmrEF, BP target not yet reached — adds SGLT2i/aldosterone antagonist then ARNI/CTTA, distinct from the HFrEF branch tested elsewhere.',
     data: {
-      clinic_1_sbp: '158', clinic_1_dbp: '96',
       current_clinic_sbp: '159', current_clinic_dbp: '97',
       age: '65', risk_factor_count: '2',
       has_heart_failure: true,

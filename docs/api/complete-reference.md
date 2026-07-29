@@ -87,23 +87,28 @@ The main clinical endpoint. See
 full step-by-step request flow (FHIR-Bundle flattening, follow-up inference,
 traversal, action collapsing).
 
-**Request body:**
+**Request body:** the body *is* the FHIR Bundle directly - there is no
+wrapper object and no `start_tree_key` request field:
 
 ```json
 {
-  "start_tree_key": "hypertension-diagnosis",
-  "input": {
-    "resourceType": "Bundle",
-    "type": "collection",
-    "entry": [ /* Patient / Observation / Condition / Parameters resources - see 1.2 */ ]
-  }
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [ /* Patient / Condition / Encounter / Observation / MedicationRequest resources - see 1.2 */ ]
 }
 ```
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `start_tree_key` | string, required | Non-empty, whitespace-stripped. Any seeded `tree_key` (`GET /trees`). |
-| `input` | object, required | **Must be an HL7 FHIR R4 `Bundle`** (`resourceType == "Bundle"`). Pydantic only types this as an arbitrary JSON object - the Bundle shape is enforced at runtime, not by the schema, so Scalar/OpenAPI will show `input: object` with no further structure. See §1.2. |
+The route's FastAPI signature (`def evaluate(bundle: JsonObject, ...)`) takes
+this as its sole non-`Depends` parameter, so Pydantic types it as an
+arbitrary JSON object - the Bundle shape is enforced at runtime by
+`parse_clinical_bundle()`, not by the schema, so Scalar/OpenAPI will show the
+request body as an untyped object with no further structure. See §1.2.
+
+Which tree the traversal starts from is **not** caller-selectable: it's
+always `hypertension-diagnosis`, unless the route's own previous-visit
+replay (step 3 below) infers a follow-up, in which case it's overridden to
+`treatment-threshold-and-bp-target`. Use `POST /evaluate/follow-up` (§1.3) if
+you already know the follow-up stage and want to skip that inference.
 
 **Success response (200) - `EvaluationResponse`:**
 
@@ -140,9 +145,9 @@ Field notes:
   intermediate audit-only steps (e.g. `drug-combination`'s duplicate-class
   check). This is a server-side config toggle, invisible to the caller;
   don't assume `actions` is the full trail.
-- **`input_snapshot`** is the *flattened* input actually used for traversal -
-  it reflects `bundle_to_input()`'s output and any follow-up-inference
-  rewriting, not the raw `input` Bundle you sent.
+- **`input_snapshot`** is the raw Bundle you sent, echoed back as-is (`parsed.raw_bundle`) -
+  it is *not* the flattened `input.*` runtime object the engine actually
+  traverses with (that stays server-internal).
 - **`inferred_follow_up_type`** (`"INITIAL_VISIT" | "LIFESTYLE_FOLLOW_UP" |
   "MEDICATION_FOLLOW_UP" | null`) and **`previous_recommended_action_types`**
   are only populated when the route auto-detected a follow-up from
@@ -168,58 +173,102 @@ Field notes:
 including `TraversalCycleDetected`/`TraversalLimitExceeded`, which should
 never happen against a validated seeded tree).
 
-### 1.2 The `input` Bundle contract
+### 1.2 The Bundle contract
 
-`input` is not a raw dict of clinical fields and not the engine's native flat
-format - it must be a FHIR R4 `Bundle`, converted by
-`cdss.api.schemas.fhir_input.bundle_to_input()` into the flat `input.*`
-namespace the traversal engine actually reads (roughly 90 ad-hoc keys
-accumulated across the 14 seeded trees). Each `Bundle.entry.resource` is
-routed by `resourceType`:
+The request body is not a raw dict of clinical fields and not the engine's
+native flat format - it must be a FHIR R4 `Bundle`, converted by
+**`cdss.api.schemas.clinical_evaluation.parse_clinical_bundle()`** into the
+flat `input.*` namespace the traversal engine actually reads. This is the
+*same* Patient/Condition/Encounter/Observation/MedicationRequest profile the
+clinical-import API and the reference bundles under `data/fhir/test_case`
+use - not a bespoke evaluation-only dialect. `Bundle.resourceType` must be
+`"Bundle"`, every `entry[i].resource` must be present with a
+`resourceType`, and resource ids (when given) must be unique within the
+Bundle. Each resource is then routed by `resourceType`:
 
 | Resource | Maps to | Rule |
 | --- | --- | --- |
-| `Patient` | `input.age` | Computed from `Patient.birthDate` (years as of today). |
-| `Observation` (blood pressure) | one of three reading-role key pairs | Must carry LOINC panel `85354-9` with SBP (`8480-6`)/DBP (`8462-4`) components, plus a local `reading-role` extension (`http://cdss.local/fhir/StructureDefinition/reading-role`, value `current_clinic`, `previous_visit`, or `clinic_1`) selecting whether it becomes `current_clinic_sbp`/`dbp`, `previous_sbp`/`dbp`, or `clinic_1_sbp`/`dbp`. Missing/unrecognized role → `InvalidFhirInput` (422). |
-| `Observation` (labs) | `input.acr_mg_mmol` or `input.proteinuria_24h_mg` | Matched by LOINC code `9318-7` / `2889-4`. |
-| `Condition` | boolean `input.has_*`/`input.is_*` flag | Only `Condition`s coded on the local CodeSystem `http://cdss.local/fhir/CodeSystem/clinical-flag`; the code value becomes the flat key. `true` unless `verificationStatus` contains `refuted`. |
-| `Parameters` | everything else | One `input.*` key per `Parameters.parameter.name` - the catch-all for workflow/orchestration state (`facility_capability`, `active_bp_target`, `medication_follow_up_stage`, ...) and any key the mapper doesn't special-case. Nested objects/arrays are encoded via `parameter.part` (arrays carry a `parameter-is-array` extension so a single-element array isn't mistaken for a scalar). |
+| `Patient` (exactly one, required) | `input.age`, plus extension-driven keys below | `Patient.id` is required and is the subject every other resource's `subject.reference` must match (`Patient/{id}`). `Patient.birthDate` → `input.age` (years as of today). |
+| `Patient`/`Encounter` extensions | `input.facility_capability`, `input.risk_factor_count`, or any `input.<key>` | Dedicated: `.../StructureDefinition/facility-capability` (`valueCode`, `"FULL_RESOURCES"` or `"LIMITED_RESOURCES"`; defaults to `FULL_RESOURCES`) and `.../StructureDefinition/risk-factor-count` (`valueInteger`; defaults to `0`). Generic catch-all: any extension whose URL starts with `.../StructureDefinition/input/` becomes `input.<the-rest-of-the-url>`, read from whichever `value[x]` is present (`valueBoolean`/`valueInteger`/`valueDecimal`/`valueString`/`valueCode`/`valueDate`). This is how `/evaluate/follow-up` (§1.3) passes `medication_follow_up_stage`, `active_bp_target_sbp_upper`, `active_bp_target_dbp_upper`, etc. |
+| `Encounter` (zero or more) | selects **longitudinal** vs **snapshot** mode | If any `Encounter` is present, every BP `Observation` must reference one (`Observation.encounter`) and the Bundle is in *longitudinal* mode: encounters are sorted by `period.start` (ambiguous same-instant latest → `InvalidFhirInput`), the most recent becomes `current_clinic_sbp`/`dbp` (and its own extensions are applied for `facility_capability`/`risk_factor_count`/generic keys), and the second-most-recent (if any) becomes `previous_sbp`/`dbp`. If no `Encounter` is present, the Bundle is in *snapshot* mode (see next row). |
+| `Observation` (blood pressure) | `current_clinic_sbp`/`dbp`, `previous_sbp`/`dbp`, or `home_sbp`/`dbp` | LOINC `8459-0` = SBP, `8462-4` = DBP (matched via `Observation.code.coding` directly - no panel/component wrapper required). In *snapshot* mode (no Encounters), role comes from a `.../StructureDefinition/reading-role` extension with value `current_clinic`, `previous`, or `home`; if no BP Observation carries that extension, the unlabeled pair defaults to `current_clinic`. `current_clinic` is required in every mode; `home` BP requires both `home_sbp` and `home_dbp` together. Missing one side of a pair, conflicting duplicate values, or (in longitudinal mode) a BP Observation with no `encounter` reference all raise `InvalidFhirInput` (422). |
+| `Observation` (labs) | `input.acr_mg_mmol`, `input.proteinuria_24h_mg`, plus a `clinical_details` entry | LOINC `9318-7` (ACR) and `2889-4` (24h proteinuria) map to a named flat key *and* a `clinical_details` line item. LOINC `98979-8` (eGFR) and `6298-4` (potassium) are recorded as `clinical_details` line items only - the traversal engine currently has no flat key for them. |
+| `Condition` | boolean `input.has_*`/`input.is_*` flag | Two independent mechanisms, both can apply to the same Condition: (1) `Condition`s coded on the local CodeSystem `http://cdss.local/fhir/CodeSystem/clinical-flag` - the code value must be one of the closed-world `KNOWN_BOOLEAN_FLAGS` and becomes that flat key directly; (2) real-world ICD-10/SNOMED codes matched by prefix regardless of CodeSystem coding - `E11*`/SNOMED `44054006` → `has_type_2_diabetes` + `has_diabetes`; `N18*`/SNOMED `709044004` → `has_ckd`; `N18.3`-`N18.6`/SNOMED `433144002` → also `has_ckd_stage_3_or_higher`; `I25*`/SNOMED `53741008` → `has_coronary_artery_disease`. Either way, the flag is `true` unless `verificationStatus` contains `refuted`. Every flag not touched by some Condition defaults to `false`. |
+| `MedicationRequest` | `clinical_details` entry only | Recorded for the medication-history display (name + dose); does not set any `input.*` key. |
+| `Parameters` | **rejected** | Bundles carrying a `Parameters` resource raise `InvalidFhirInput` (422) - this is a hard difference from the older, no-longer-used dialect below. |
 | anything else | ignored | Forward-compatible: unrecognized resource types contribute nothing but don't error. |
 
-Malformed shapes the mapper must act on (bad date, missing subject reference,
-unrecognized BP reading-role) raise `InvalidFhirInput` → HTTP 422.
+Malformed shapes the mapper must act on (bad date, missing/mismatched
+`subject.reference`, an Encounter-less BP Observation in longitudinal mode,
+an unrecognized BP reading-role, a `Parameters` resource, a duplicate
+resource id, more or less than one `Patient`) all raise `InvalidFhirInput` →
+HTTP 422.
 
-`cdss.api.schemas.fhir_input.input_to_bundle()` is the reverse mapping (flat
-`input.*` → `Bundle`). It isn't used by any route, but it exists specifically
-so integrators and tests don't have to hand-write FHIR resources - see
-`tests/api/test_condition_fhirpath.py` / `test_fhir_input.py` for worked
-examples, or the frontend's own port of the same logic in
-`frontend/src/panels/mockPatientForm/fhirBundle.ts`.
+**A different, older dialect still exists on disk but is not what powers
+`/evaluate` or `/evaluate/follow-up`:** `cdss.api.schemas.fhir_input`
+(`bundle_to_input()`/`input_to_bundle()`) implements an earlier
+`Parameters`-resource-as-catch-all convention. It's neither imported by
+`evaluation.py` nor `evaluation_follow_up.py` - it's exercised only by its
+own tests (`tests/api/test_fhir_input.py`,
+`tests/api/test_condition_fhirpath.py`). Don't use it as a reference for what
+the live endpoints accept; use this table, or the frontend's port of the
+*current* dialect in `frontend/src/panels/mockPatientForm/fhirBundle.ts`.
 
 ### 1.3 `POST /evaluate/follow-up`
 
-A narrower sibling of `/evaluate`. It skips the previous-visit replay/
-inference step entirely - the caller must already know the active BP target
-and always starts from `treatment-threshold-and-bp-target`.
+A narrower sibling of `/evaluate`
+(`src/cdss/api/routes/evaluation_follow_up.py`), added to reach medication
+follow-up outcomes `/evaluate` cannot: `/evaluate`'s previous-visit replay
+(§1) forces `is_medication_follow_up=false` on that replay, so it can only
+ever conclude `medication_follow_up_stage == "INITIAL_REGIMEN"` for today's
+visit - there is no path by which it can conclude `"ESCALATED_REGIMEN"`, so
+`resistant-hypertension` (only reachable from the escalated-and-target-not-
+reached branch of `essential-treatment-strategy`/`optimal-treatment-strategy`)
+is unreachable through `/evaluate` for any input. This endpoint skips that
+replay/inference entirely and requires the caller to already know the stage
+and BP target - the caller decides, not a two-BP-reading heuristic.
 
-**Request body:** `{ "input": <FHIR Bundle> }` (same `EvaluationRequest.input`
-typing as above). After flattening via `bundle_to_input()`, the route
-requires these five keys to be present in the flattened result, or it raises
-`InvalidFhirInput` (422) - **this requirement is enforced in route code, not
-expressed in the OpenAPI schema**, so Scalar will only show `input: object`
-as required:
+**Request body:** the request body *is* the FHIR Bundle directly (same
+convention as `/evaluate` - there is no `{"input": ...}` wrapper; see §1.2 for
+how `Patient`/`Observation`/`Condition` resources map to flat `input.*` keys).
+In addition to `current_clinic_sbp`/`current_clinic_dbp` (from a blood-pressure
+`Observation`), the route requires three more flat keys, supplied as
+`http://cdss.local/fhir/StructureDefinition/input/<key>` extensions on the
+`Patient` resource (the same generic mechanism any `input.*` key not
+special-cased by the resource mapper uses):
 
-- `facility_capability`
-- `medication_follow_up_stage`
-- `active_bp_target`
-- `current_clinic_sbp`
-- `current_clinic_dbp`
+- `medication_follow_up_stage` (`valueString`: `"INITIAL_REGIMEN"` or `"ESCALATED_REGIMEN"`)
+- `active_bp_target_sbp_upper` (`valueDecimal`)
+- `active_bp_target_dbp_upper` (`valueDecimal`)
+
+The route assembles these two numbers into
+`context.treatment.bp_target = {"sbp": {"upper_exclusive_mmhg": ...}, "dbp": {"upper_exclusive_mmhg": ...}}`
+and forces `is_medication_follow_up=true`, `is_lifestyle_follow_up=false`
+before walking `treatment-threshold-and-bp-target`. Missing any of the five
+required keys raises `InvalidFhirInput` (422) - **this requirement is
+enforced in route code, not expressed in the OpenAPI schema**, so Scalar will
+only show the bundle's own `resourceType`/`entry` shape as required.
 
 **Success response:** same `EvaluationResponse` shape as `/evaluate`, except
 `inferred_follow_up_type` and `previous_recommended_action_types` are always
 `null`/`[]` (this endpoint never runs follow-up inference).
 
 **Errors:** same 404/422/424/500 set as `/evaluate`.
+
+**By design, currently pending frontend work:** the traversal engine's walker
+only continues past an `ACTION` node for a small tree allowlist
+(`essential-treatment-strategy`, `optimal-treatment-strategy`, and one
+`hypertension-in-pregnancy` node) - `resistant-hypertension` is not on that
+allowlist, so a traversal that reaches it halts at the first `ACTION` node
+(e.g. `T13_A_CHECK_MRA`) instead of continuing on
+`tolerates_mra`/`tolerates_spironolactone`/`bp_target_reached`. This is
+intentional: `resistant-hypertension` is meant to stop there so the frontend
+can show an interactive modal for a doctor to confirm/provide that
+information before traversal resumes, not a gap to close by adding the tree
+to the allowlist. That modal, and whatever mechanism resumes the halted
+traversal with the doctor's input, is still being built (owned outside this
+change) - until it lands, a call that reaches this tree simply stops at the
+ACTION node.
 
 ---
 

@@ -40,8 +40,6 @@ def build_previous_visit_input(runtime_input: Mapping[str, Any]) -> JsonObject:
     previous: JsonObject = dict(runtime_input)
     previous.update(
         {
-            "clinic_1_sbp": previous_sbp,
-            "clinic_1_dbp": previous_dbp,
             "current_clinic_sbp": previous_sbp,
             "current_clinic_dbp": previous_dbp,
             "is_lifestyle_follow_up": False,

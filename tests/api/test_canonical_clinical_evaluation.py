@@ -18,8 +18,8 @@ def test_reference_bundle_has_canonical_runtime_and_presentation(path: Path) -> 
     parsed = parse_clinical_bundle(bundle)
 
     assert parsed.raw_bundle == bundle
-    assert parsed.runtime_input["clinic_1_sbp"] > 0
-    assert parsed.runtime_input["clinic_1_dbp"] > 0
+    assert parsed.runtime_input["current_clinic_sbp"] > 0
+    assert parsed.runtime_input["current_clinic_dbp"] > 0
     assert parsed.runtime_input["facility_capability"] == "FULL_RESOURCES"
     assert parsed.runtime_input["is_pregnant"] is False
     assert {item["id"] for item in parsed.trigger_evidence} == {

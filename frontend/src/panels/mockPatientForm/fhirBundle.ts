@@ -48,8 +48,6 @@ export function flatToBundle(flat: JsonObject, patientId = 'simulated-patient'):
     entries.push({ resource: encounterResource(patientId, 'current', '2024-02-01', []) })
     appendBpEntries(entries, remaining, patientId, 'previous', `${patientId}-previous`, undefined)
     appendBpEntries(entries, remaining, patientId, 'current_clinic', `${patientId}-current`, undefined)
-    delete remaining['clinic_1_sbp']
-    delete remaining['clinic_1_dbp']
   } else {
     for (const role of Object.keys(BP_KEYS)) {
       appendBpEntries(entries, remaining, patientId, role, undefined, role)
@@ -116,9 +114,9 @@ export function bundleToFlat(bundle: JsonObject): JsonObject {
     if (typeof value !== 'number') continue
     const encounterId = String(asObject(observation.encounter)?.reference ?? '').split('/').at(-1)
     const explicitRole = extensionValue(observation.extension, EXT_READING_ROLE)
-    const role = (typeof explicitRole === 'string' ? explicitRole : encounterRole.get(encounterId ?? '')) ?? 'clinic_1'
-    if (code === LOINC_SBP) flat[BP_KEYS[role]?.[0] ?? 'clinic_1_sbp'] = value
-    else if (code === LOINC_DBP) flat[BP_KEYS[role]?.[1] ?? 'clinic_1_dbp'] = value
+    const role = (typeof explicitRole === 'string' ? explicitRole : encounterRole.get(encounterId ?? '')) ?? 'current_clinic'
+    if (code === LOINC_SBP) flat[BP_KEYS[role]?.[0] ?? 'current_clinic_sbp'] = value
+    else if (code === LOINC_DBP) flat[BP_KEYS[role]?.[1] ?? 'current_clinic_dbp'] = value
     else {
       const lab = Object.entries(LABS).find(([, metadata]) => metadata[0] === code)
       if (lab) flat[lab[0]] = value

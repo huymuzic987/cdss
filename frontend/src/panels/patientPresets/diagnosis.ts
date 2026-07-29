@@ -8,7 +8,7 @@ export const diagnosisPresets: PatientPresetDefinition[] = [
     category: DIAGNOSIS,
     description: 'Textbook normal clinic reading, no risk factors.',
     data: {
-      clinic_1_sbp: '120', clinic_1_dbp: '80',
+      current_clinic_sbp: '120', current_clinic_dbp: '80',
       age: '42', risk_factor_count: '0',
     },
   },
@@ -18,7 +18,7 @@ export const diagnosisPresets: PatientPresetDefinition[] = [
     category: DIAGNOSIS,
     description: 'Borderline elevated clinic reading; typical new-diagnosis presentation.',
     data: {
-      clinic_1_sbp: '135', clinic_1_dbp: '85',
+      current_clinic_sbp: '135', current_clinic_dbp: '85',
       age: '50', risk_factor_count: '2',
     },
   },
@@ -28,7 +28,7 @@ export const diagnosisPresets: PatientPresetDefinition[] = [
     category: DIAGNOSIS,
     description: 'Clearly elevated clinic reading.',
     data: {
-      clinic_1_sbp: '150', clinic_1_dbp: '95',
+      current_clinic_sbp: '150', current_clinic_dbp: '95',
       age: '55', risk_factor_count: '3',
       facility_capability: 'FULL_RESOURCES',
     },
@@ -39,7 +39,7 @@ export const diagnosisPresets: PatientPresetDefinition[] = [
     category: DIAGNOSIS,
     description: 'SBP ≥180 crisis threshold, no acute target organ damage — routes to the emergency tree and resolves to urgent (non-crisis) oral therapy.',
     data: {
-      clinic_1_sbp: '182', clinic_1_dbp: '80',
+      current_clinic_sbp: '182', current_clinic_dbp: '80',
       is_pregnant: false,
       has_target_organ_damage: false,
       age: '58', risk_factor_count: '2',
@@ -51,7 +51,7 @@ export const diagnosisPresets: PatientPresetDefinition[] = [
     category: DIAGNOSIS,
     description: 'Crisis BP with acute target organ damage but no single identified syndrome — falls through to the malignant hypertension/AKI fallback action.',
     data: {
-      clinic_1_sbp: '200', clinic_1_dbp: '124',
+      current_clinic_sbp: '200', current_clinic_dbp: '124',
       is_pregnant: false,
       has_target_organ_damage: true,
       age: '58', risk_factor_count: '3',
@@ -63,7 +63,6 @@ export const diagnosisPresets: PatientPresetDefinition[] = [
     category: DIAGNOSIS,
     description: 'Crisis BP with acute coronary syndrome — chains from the emergency tree into the coronary-artery-disease tree, which routes to Tree 4 (Essential Treatment Strategy) or Tree 5 (Optimal Treatment Strategy).',
     data: {
-      clinic_1_sbp: '200', clinic_1_dbp: '124',
       is_pregnant: false,
       has_target_organ_damage: true,
       has_acute_coronary_syndrome: true,
@@ -78,7 +77,7 @@ export const diagnosisPresets: PatientPresetDefinition[] = [
     category: DIAGNOSIS,
     description: 'Crisis BP with acute target organ damage and encephalopathy — the first of the eight organ-specific scenario checks, wins ahead of stroke/ACS/etc. Refers to stroke management.',
     data: {
-      clinic_1_sbp: '200', clinic_1_dbp: '124',
+      current_clinic_sbp: '200', current_clinic_dbp: '124',
       is_pregnant: false,
       has_target_organ_damage: true,
       has_hypertensive_encephalopathy: true,
@@ -91,7 +90,7 @@ export const diagnosisPresets: PatientPresetDefinition[] = [
     category: DIAGNOSIS,
     description: 'Crisis BP (>185/110) with acute ischemic stroke and thrombolysis eligibility — the second scenario check, targets a tighter 1-hour BP reduction window ahead of thrombolysis.',
     data: {
-      clinic_1_sbp: '200', clinic_1_dbp: '124',
+      current_clinic_sbp: '200', current_clinic_dbp: '124',
       is_pregnant: false,
       has_target_organ_damage: true,
       has_acute_ischemic_stroke: true,
@@ -105,7 +104,7 @@ export const diagnosisPresets: PatientPresetDefinition[] = [
     category: DIAGNOSIS,
     description: 'Very severe crisis BP (>220/120) with acute ischemic stroke but not a thrombolysis candidate — falls through to the third scenario check (severe AIS) instead of the thrombolysis-specific one.',
     data: {
-      clinic_1_sbp: '230', clinic_1_dbp: '124',
+      current_clinic_sbp: '230', current_clinic_dbp: '124',
       is_pregnant: false,
       has_target_organ_damage: true,
       has_acute_ischemic_stroke: true,
@@ -119,7 +118,7 @@ export const diagnosisPresets: PatientPresetDefinition[] = [
     category: DIAGNOSIS,
     description: 'Crisis BP (>180 SBP) with acute intracerebral hemorrhage and no ischemic-stroke flags — the fourth scenario check.',
     data: {
-      clinic_1_sbp: '200', clinic_1_dbp: '124',
+      current_clinic_sbp: '200', current_clinic_dbp: '124',
       is_pregnant: false,
       has_target_organ_damage: true,
       has_acute_intracerebral_hemorrhage: true,
@@ -132,7 +131,6 @@ export const diagnosisPresets: PatientPresetDefinition[] = [
     category: DIAGNOSIS,
     description: 'Crisis BP with acute cardiogenic pulmonary edema (sixth scenario check) — chains from the emergency tree into the hypertension-heart-failure tree, which correctly evaluates HFrEF/target-not-reached, but then dies with MissingRuntimePath (context.risk.level) once it links onward into essential-treatment-strategy. That path is normally populated by risk-classification (Tree 2), which the emergency route never visits — a genuine, previously undocumented cross-tree contract gap: any emergency patient chained into a modifier tree that continues into essential/optimal-treatment-strategy will error out, not just this one.',
     data: {
-      clinic_1_sbp: '200', clinic_1_dbp: '124',
       is_pregnant: false,
       has_target_organ_damage: true,
       has_acute_cardiogenic_pulmonary_edema: true,
@@ -149,7 +147,7 @@ export const diagnosisPresets: PatientPresetDefinition[] = [
     category: DIAGNOSIS,
     description: 'Crisis BP with acute aortic syndrome (seventh scenario check) — a strict heart-rate/SBP target ending in its own dedicated END node, distinct from every other emergency sub-syndrome.',
     data: {
-      clinic_1_sbp: '200', clinic_1_dbp: '124',
+      current_clinic_sbp: '200', current_clinic_dbp: '124',
       is_pregnant: false,
       has_target_organ_damage: true,
       has_acute_aortic_syndrome: true,
@@ -162,7 +160,6 @@ export const diagnosisPresets: PatientPresetDefinition[] = [
     category: DIAGNOSIS,
     description: 'Crisis BP with the eclampsia/HELLP scenario flag (eighth and last conditional scenario check) — chains into the hypertension-in-pregnancy tree via Tree 14’s own LINK (distinct from Tree 1’s is_pregnant-based entry). Note is_pregnant must be false here: Tree 1 checks is_pregnant before the crisis check and would otherwise divert straight into the pregnancy tree without ever reaching the emergency tree, so this preset can only reach Tree 14’s eclampsia scenario with is_pregnant=false — a documented tension in how the two trees connect. Once inside, a postpartum + breastfeeding flag routes to the postpartum drug-contraindications branch, testing a part of Tree 12 unreachable via Tree 1’s direct pregnancy entry (which always evaluates is_pregnant=true, shadowing the is_postpartum candidate).',
     data: {
-      clinic_1_sbp: '200', clinic_1_dbp: '124',
       is_pregnant: false,
       has_target_organ_damage: true,
       has_eclampsia_severe_preeclampsia_or_hellp: true,

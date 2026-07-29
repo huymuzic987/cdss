@@ -86,7 +86,6 @@ Examples required by the project contract:
 input.current_clinic_sbp
 input.is_medication_follow_up
 input.active_bp_target
-input.clinic_1_sbp
 input.facility_capability
 context.risk.level
 context.treatment.bp_target
@@ -272,7 +271,7 @@ The exact two-key form tests whether a path is present at all:
 ```json
 {
   "op": "exists",
-  "path": "input.clinic_1_sbp"
+  "path": "input.current_clinic_sbp"
 }
 ```
 

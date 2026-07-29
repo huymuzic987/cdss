@@ -3,10 +3,7 @@
 // ---------------------------------------------------------------------------
 
 export interface PatientFormData {
-  // BP — clinic reading
-  clinic_1_sbp: string
-  clinic_1_dbp: string
-  // BP — follow-up
+  // BP — today's visit reading (initial diagnosis or follow-up alike)
   current_clinic_sbp: string
   current_clinic_dbp: string
   previous_sbp: string
@@ -96,7 +93,6 @@ export interface PatientFormData {
 }
 
 export const DEFAULT_FORM: PatientFormData = {
-  clinic_1_sbp: '', clinic_1_dbp: '',
   current_clinic_sbp: '', current_clinic_dbp: '',
   previous_sbp: '', previous_dbp: '',
   previous_target_sbp: '', previous_target_dbp: '',

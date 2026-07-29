@@ -7,7 +7,6 @@ export const followUpPresets: PatientPresetDefinition[] = [
     category: FOLLOW_UP,
     description: 'Meets the stored 15/10 mmHg reduction rule after lifestyle changes.',
     data: {
-      clinic_1_sbp: '115', clinic_1_dbp: '75',
       is_lifestyle_follow_up: true,
       previous_sbp: '130', previous_dbp: '85',
       previous_target_sbp: '140', previous_target_dbp: '90',
@@ -21,7 +20,6 @@ export const followUpPresets: PatientPresetDefinition[] = [
     category: FOLLOW_UP,
     description: 'On initial regimen, current BP within active target, full-resource facility.',
     data: {
-      clinic_1_sbp: '129', clinic_1_dbp: '79',
       is_medication_follow_up: true,
       facility_capability: 'FULL_RESOURCES',
       medication_follow_up_stage: 'INITIAL_REGIMEN',
@@ -36,7 +34,6 @@ export const followUpPresets: PatientPresetDefinition[] = [
     category: FOLLOW_UP,
     description: 'Same as above but a limited-resource facility — different terminal action wording.',
     data: {
-      clinic_1_sbp: '129', clinic_1_dbp: '79',
       is_medication_follow_up: true,
       facility_capability: 'LIMITED_RESOURCES',
       medication_follow_up_stage: 'INITIAL_REGIMEN',
@@ -51,7 +48,6 @@ export const followUpPresets: PatientPresetDefinition[] = [
     category: FOLLOW_UP,
     description: 'Initial regimen insufficient — routes toward drug-combination escalation.',
     data: {
-      clinic_1_sbp: '130', clinic_1_dbp: '80',
       is_medication_follow_up: true,
       facility_capability: 'FULL_RESOURCES',
       medication_follow_up_stage: 'INITIAL_REGIMEN',
@@ -66,7 +62,6 @@ export const followUpPresets: PatientPresetDefinition[] = [
     category: FOLLOW_UP,
     description: 'Escalated regimen, target not reached — resistant hypertension path.',
     data: {
-      clinic_1_sbp: '130', clinic_1_dbp: '80',
       is_medication_follow_up: true,
       facility_capability: 'FULL_RESOURCES',
       medication_follow_up_stage: 'ESCALATED_REGIMEN',
@@ -79,9 +74,8 @@ export const followUpPresets: PatientPresetDefinition[] = [
     id: 'med-followup-resistant-limited',
     label: 'Medication Follow-Up — Resistant Hypertension (Limited Resources)',
     category: FOLLOW_UP,
-    description: 'Escalated regimen, target not reached, limited-resource facility — reaches resistant-hypertension’s MRA-tolerated branch and ends in referral since the BP target is still not met.',
+    description: 'Escalated regimen, target not reached, limited-resource facility — reaches resistant-hypertension via the known-stage /evaluate/follow-up endpoint, but currently halts at the first action (CHECK_MRA): the walker only continues past an ACTION node for a small allowlist of trees, which resistant-hypertension is not part of. Fixing that traversal-engine gap is a separate, not-yet-scheduled change.',
     data: {
-      clinic_1_sbp: '130', clinic_1_dbp: '80',
       is_medication_follow_up: true,
       facility_capability: 'LIMITED_RESOURCES',
       medication_follow_up_stage: 'ESCALATED_REGIMEN',
@@ -96,14 +90,13 @@ export const followUpPresets: PatientPresetDefinition[] = [
     id: 'med-followup-resistant-spironolactone',
     label: 'Medication Follow-Up — Resistant HTN, MRA Not Tolerated, Spironolactone Added',
     category: FOLLOW_UP,
-    description: 'Escalated regimen, MRA not tolerated but spironolactone is — adds spironolactone; BP target reached, so it maintains rather than refers (distinct from the MRA-tolerated preset above).',
+    description: 'Escalated regimen, target not yet reached at the treatment-strategy level (so it enters resistant-hypertension), MRA not tolerated but spironolactone is — same known walker limitation as the preset above means this currently halts at CHECK_MRA rather than reaching the spironolactone/maintain outcome the tree logic describes.',
     data: {
-      clinic_1_sbp: '130', clinic_1_dbp: '80',
       is_medication_follow_up: true,
       facility_capability: 'LIMITED_RESOURCES',
       medication_follow_up_stage: 'ESCALATED_REGIMEN',
       ...MEDICATION_TARGET,
-      current_clinic_sbp: '128', current_clinic_dbp: '78',
+      current_clinic_sbp: '135', current_clinic_dbp: '85',
       tolerates_mra: false,
       tolerates_spironolactone: true,
       bp_target_reached: true,
@@ -114,9 +107,8 @@ export const followUpPresets: PatientPresetDefinition[] = [
     id: 'med-followup-resistant-alternatives',
     label: 'Medication Follow-Up — Resistant HTN, Neither MRA Nor Spironolactone Tolerated',
     category: FOLLOW_UP,
-    description: 'Escalated regimen, patient tolerates neither MRA nor spironolactone — falls through to therapeutic alternatives, still referred since target isn’t met.',
+    description: 'Escalated regimen, patient tolerates neither MRA nor spironolactone — same known walker limitation as the two presets above means this currently halts at CHECK_MRA rather than reaching the therapeutic-alternatives/referral outcome the tree logic describes.',
     data: {
-      clinic_1_sbp: '130', clinic_1_dbp: '80',
       is_medication_follow_up: true,
       facility_capability: 'LIMITED_RESOURCES',
       medication_follow_up_stage: 'ESCALATED_REGIMEN',

@@ -5,7 +5,7 @@ export function BloodPressureSection({ form, setStr, disabled }: FormSectionProp
   return (
     <>
       <div className="ps-sub-label">Clinic Reading</div>
-      <BpRow label="Current" sbpKey="clinic_1_sbp" dbpKey="clinic_1_dbp" form={form} onChange={setStr} disabled={disabled} />
+      <BpRow label="Current" sbpKey="current_clinic_sbp" dbpKey="current_clinic_dbp" form={form} onChange={setStr} disabled={disabled} />
 
       <div className="ps-sub-label" style={{ marginTop: 8 }}>Follow-Up</div>
       <BpRow label="Previous Visit" sbpKey="previous_sbp" dbpKey="previous_dbp" form={form} onChange={setStr} disabled={disabled} />

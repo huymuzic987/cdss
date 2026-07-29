@@ -7,7 +7,6 @@ export const renalModifierPresets: PatientPresetDefinition[] = [
     category: MODIFIER_TREES,
     description: '65-year-old with HFpEF, BP target not yet reached — combines diuretic/SGLT2i/aldosterone antagonist then ARNI/CTTA, the third of the four EF-category branches.',
     data: {
-      clinic_1_sbp: '158', clinic_1_dbp: '96',
       current_clinic_sbp: '159', current_clinic_dbp: '97',
       age: '65', risk_factor_count: '2',
       has_heart_failure: true,
@@ -22,7 +21,6 @@ export const renalModifierPresets: PatientPresetDefinition[] = [
     category: MODIFIER_TREES,
     description: '65-year-old with left ventricular hypertrophy but no HFrEF/HFmrEF/HFpEF flag, BP target not yet reached — the fourth and last EF-evaluation branch, adds an A+C or A+D combination.',
     data: {
-      clinic_1_sbp: '158', clinic_1_dbp: '96',
       current_clinic_sbp: '159', current_clinic_dbp: '97',
       age: '65', risk_factor_count: '2',
       has_heart_failure: true,
@@ -37,7 +35,6 @@ export const renalModifierPresets: PatientPresetDefinition[] = [
     category: MODIFIER_TREES,
     description: '65-year-old with HFrEF whose BP is above the entry threshold but already at the personal target — after EF evaluation, maintains the current regimen instead of adding a CCB/adjusting dosage.',
     data: {
-      clinic_1_sbp: '158', clinic_1_dbp: '96',
       current_clinic_sbp: '132', current_clinic_dbp: '86',
       age: '65', risk_factor_count: '2',
       has_heart_failure: true,
@@ -52,7 +49,6 @@ export const renalModifierPresets: PatientPresetDefinition[] = [
     category: MODIFIER_TREES,
     description: '50-year-old with CKD and a kidney transplant — uses the stricter post-transplant BP target (130/80) and a narrower combination list, then maintains the current regimen.',
     data: {
-      clinic_1_sbp: '148', clinic_1_dbp: '92',
       current_clinic_sbp: '135', current_clinic_dbp: '92',
       age: '50', risk_factor_count: '2',
       has_ckd: true,
@@ -66,7 +62,6 @@ export const renalModifierPresets: PatientPresetDefinition[] = [
     category: MODIFIER_TREES,
     description: '50-year-old with CKD, has a prior creatinine test on file, and is no longer on a RAS inhibitor — maintains the current regimen without re-testing creatinine.',
     data: {
-      clinic_1_sbp: '148', clinic_1_dbp: '92',
       current_clinic_sbp: '135', current_clinic_dbp: '92',
       age: '50', risk_factor_count: '2',
       has_ckd: true,
@@ -81,7 +76,6 @@ export const renalModifierPresets: PatientPresetDefinition[] = [
     category: MODIFIER_TREES,
     description: '50-year-old with CKD, still on a RAS inhibitor, prior creatinine test shows a >30% rise — reduces the dose or stops the RAS inhibitor and flags for clinician review.',
     data: {
-      clinic_1_sbp: '148', clinic_1_dbp: '92',
       current_clinic_sbp: '135', current_clinic_dbp: '92',
       age: '50', risk_factor_count: '2',
       has_ckd: true,
@@ -97,7 +91,6 @@ export const renalModifierPresets: PatientPresetDefinition[] = [
     category: MODIFIER_TREES,
     description: '50-year-old with CKD, still on a RAS inhibitor, prior creatinine test shows no significant rise — maintains the current regimen since creatinine is stable.',
     data: {
-      clinic_1_sbp: '148', clinic_1_dbp: '92',
       current_clinic_sbp: '135', current_clinic_dbp: '92',
       age: '50', risk_factor_count: '2',
       has_ckd: true,

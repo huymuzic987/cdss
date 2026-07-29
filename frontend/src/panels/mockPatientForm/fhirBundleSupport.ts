@@ -12,7 +12,6 @@ export const LOINC_SBP = '8459-0'
 export const LOINC_DBP = '8462-4'
 
 export const BP_KEYS: Record<string, [string, string]> = {
-  clinic_1: ['clinic_1_sbp', 'clinic_1_dbp'],
   current_clinic: ['current_clinic_sbp', 'current_clinic_dbp'],
   previous: ['previous_sbp', 'previous_dbp'],
   home: ['home_sbp', 'home_dbp'],

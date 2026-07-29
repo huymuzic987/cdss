@@ -432,10 +432,10 @@ facades when extracting another cohesive responsibility.
   imported clinical data). None of the non-evaluation routes touch
   `walk_tree()`. See `docs/api.md` for the full endpoint list and
   `docs/architecture.md` for how the layers fit together.
-- `POST /evaluate`'s `input` field is an HL7 FHIR R4 `Bundle`, not a flat
+- `POST /evaluate`'s request body is an HL7 FHIR R4 `Bundle`, not a flat
   object; it is converted to the engine's flat `input.*` namespace by
-  `cdss.api.schemas.fhir_input.bundle_to_input()` before `walk_tree()` is
-  called. `POST /evaluate` also runs hypertension-specific follow-up
+  `cdss.api.schemas.clinical_evaluation.parse_clinical_bundle()` before
+  `walk_tree()` is called. `POST /evaluate` also runs hypertension-specific follow-up
   inference (`cdss.domain.follow_up`) ahead of traversal when the input
   carries a previous visit's readings - see `docs/architecture.md`'s request-flow
   walkthrough. Neither of these is part of the generic engine's contract;

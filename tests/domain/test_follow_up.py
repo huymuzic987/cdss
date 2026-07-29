@@ -38,9 +38,8 @@ def test_previous_visit_input_replays_previous_bp_as_initial_visit() -> None:
         }
     )
 
-    assert result["clinic_1_sbp"] == 150
-    assert result["clinic_1_dbp"] == 95
     assert result["current_clinic_sbp"] == 150
+    assert result["current_clinic_dbp"] == 95
     assert result["has_type_2_diabetes"] is True
     assert result["is_medication_follow_up"] is False
     assert "medication_follow_up_stage" not in result

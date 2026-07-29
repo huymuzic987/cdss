@@ -183,12 +183,6 @@ class RunState(RuntimeModel):
         sbp = runtime_input.get("current_clinic_sbp")
         dbp = runtime_input.get("current_clinic_dbp")
 
-        if sbp is None or dbp is None:
-            # Fallback to clinic_1
-            if runtime_input.get("clinic_1_sbp") is not None and runtime_input.get("clinic_1_dbp") is not None:
-                sbp = runtime_input["clinic_1_sbp"]
-                dbp = runtime_input["clinic_1_dbp"]
-
         if sbp is not None and dbp is not None:
             diagnosis = instance.context.setdefault("diagnosis", {})
             if isinstance(diagnosis, dict):

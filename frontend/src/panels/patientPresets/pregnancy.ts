@@ -7,7 +7,6 @@ export const pregnancyPresets: PatientPresetDefinition[] = [
     category: PREGNANCY,
     description: 'Pregnant with pre-pregnancy hypertension and proteinuria beyond 6 weeks — classified as pre-existing hypertension, a simple terminal diagnosis.',
     data: {
-      clinic_1_sbp: '150', clinic_1_dbp: '95',
       age: '30', risk_factor_count: '1',
       is_pregnant: true,
       home_sbp: '118', home_dbp: '75',
@@ -26,7 +25,6 @@ export const pregnancyPresets: PatientPresetDefinition[] = [
     category: PREGNANCY,
     description: 'Hypertension after week 20, not yet resolved postpartum, mild/moderate BP range — classified as gestational hypertension, methyldopa first-line, referred to OB/GYN since the pregnancy BP target isn’t met.',
     data: {
-      clinic_1_sbp: '150', clinic_1_dbp: '95',
       age: '28', risk_factor_count: '1',
       is_pregnant: true,
       home_sbp: '118', home_dbp: '75',
@@ -44,7 +42,6 @@ export const pregnancyPresets: PatientPresetDefinition[] = [
     category: PREGNANCY,
     description: 'Severe headache and visual disturbance with no other classification match — routes through the eclampsia/HELLP severe-signs branch to IV labetalol + MgSO4, ending in emergency delivery since the treatment target isn’t met.',
     data: {
-      clinic_1_sbp: '155', clinic_1_dbp: '100',
       age: '32', risk_factor_count: '2',
       is_pregnant: true,
       home_sbp: '120', home_dbp: '78',
@@ -63,7 +60,6 @@ export const pregnancyPresets: PatientPresetDefinition[] = [
     category: PREGNANCY,
     description: 'Normotensive pregnancy with a high-preeclampsia-risk flag — routes directly to aspirin prophylaxis instead of hypertension treatment.',
     data: {
-      clinic_1_sbp: '130', clinic_1_dbp: '80',
       age: '28', risk_factor_count: '1',
       is_pregnant: true,
       home_sbp: '118', home_dbp: '75',
@@ -82,7 +78,6 @@ export const pregnancyPresets: PatientPresetDefinition[] = [
     category: PREGNANCY,
     description: 'Gestational hypertension classified via home BP, with current clinic BP threading the narrow 110–140/exactly-85 pregnancy target window — maintains the current regimen instead of referring to OB/GYN, the one outcome not exercised by the other pregnancy presets.',
     data: {
-      clinic_1_sbp: '150', clinic_1_dbp: '95',
       age: '29', risk_factor_count: '1',
       is_pregnant: true,
       home_sbp: '138', home_dbp: '87',

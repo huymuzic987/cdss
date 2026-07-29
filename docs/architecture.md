@@ -148,26 +148,41 @@ themselves contain no `try/except` around traversal.
 This is the main clinical endpoint. Full route code:
 `src/cdss/api/routes/evaluation.py`.
 
-1. **FastAPI validates the request body** against `EvaluationRequest`:
-   `start_tree_key` (non-empty string) and `input`, which - despite the
-   name - is not a flat dict of clinical fields. It must be an **HL7 FHIR R4
-   `Bundle`** (`resourceType == "Bundle"`).
-2. **`bundle_to_input()`** (`api/schemas/fhir_input.py`) walks the bundle's
-   `entry` list and converts it into the flat `input.*` object the engine
-   actually consumes:
-   - `Patient.birthDate` → `age` (computed in years).
-   - Blood-pressure `Observation`s (LOINC panel `85354-9`, components `8480-6`
-     SBP / `8462-4` DBP) → one of three reading-role key pairs
-     (`current_clinic_sbp`/`dbp`, `previous_sbp`/`dbp`, `clinic_1_sbp`/`dbp`),
-     selected by a local `reading-role` extension.
+1. **FastAPI takes the request body as-is**: the route's only non-`Depends`
+   parameter is `bundle: JsonObject`, so the body *is* the FHIR Bundle
+   directly - no wrapper object, no `start_tree_key` request field. It must
+   be an **HL7 FHIR R4 `Bundle`** (`resourceType == "Bundle"`); which tree
+   the traversal starts from is decided by the route itself (step 3), not by
+   the caller.
+2. **`parse_clinical_bundle()`** (`api/schemas/clinical_evaluation.py`) walks
+   the bundle's `entry` list and converts it into the flat `input.*` object
+   the engine actually consumes. This is the same
+   Patient/Condition/Encounter/Observation/MedicationRequest profile the
+   clinical-import API uses, not a bespoke evaluation-only dialect:
+   - `Patient.birthDate` → `age` (computed in years); exactly one `Patient`
+     is required, and it's the subject every other resource must reference.
+   - Blood-pressure `Observation`s (LOINC `8459-0` SBP / `8462-4` DBP,
+     matched directly - no panel/component wrapper) → `current_clinic_sbp`/
+     `dbp`, `previous_sbp`/`dbp`, or `home_sbp`/`dbp`. Role is either
+     inferred from `Encounter` linkage (Bundles that include `Encounter`
+     resources: most recent → `current_clinic`, second-most-recent →
+     `previous`) or, when no `Encounter` is present, selected by a local
+     `reading-role` extension (`current_clinic`/`previous`/`home`, defaulting
+     to `current_clinic` if unlabeled).
    - A small set of lab `Observation`s (ACR, 24h proteinuria) → named numeric
-     keys.
-   - `Condition` resources coded on a local `clinical-flag` CodeSystem →
-     boolean `has_*`/`is_*` flags (true unless `verificationStatus` is
-     `refuted`).
-   - A `Parameters` resource → everything else (workflow/orchestration state
-     like `facility_capability`, `active_bp_target`, or any key the mapper
-     doesn't special-case), decoded from `Parameters.parameter`/`part`.
+     keys; eGFR and potassium are recorded as clinical-detail line items but
+     don't currently map to any flat key.
+   - `Condition` resources → boolean `has_*`/`is_*` flags, either coded on a
+     local `clinical-flag` CodeSystem or matched by real-world ICD-10/SNOMED
+     prefix (diabetes, CKD, coronary artery disease) - true unless
+     `verificationStatus` is `refuted`.
+   - `Patient`/`Encounter` extensions → `facility_capability`,
+     `risk_factor_count`, or (via a generic `.../StructureDefinition/input/`
+     URL prefix) any other `input.*` key not covered above.
+   - A `Parameters` resource is **rejected** (`InvalidFhirInput`) - this
+     dialect has no `Parameters`-as-catch-all convention. (An older dialect
+     that did, `api/schemas/fhir_input.py`, still exists on disk but isn't
+     used by this or any other route - only by its own tests.)
    - Unrecognized resource types are ignored; malformed shapes the mapper
      must act on raise `InvalidFhirInput` (→ HTTP 422).
 3. **Optional follow-up inference.** If both `previous_sbp` and `previous_dbp`
@@ -179,12 +194,12 @@ This is the main clinical endpoint. Full route code:
      `MEDICATION_FOLLOW_UP`, recovering the active BP target from the
      replayed run's context when it's a medication follow-up, and
    - injects the inferred flags into today's input; for a follow-up, the
-     traversal's actual `start_tree_key` is overridden to
-     `treatment-threshold-and-bp-target` regardless of what the caller passed.
+     route's internal `start_tree_key` variable is switched from
+     `hypertension-diagnosis` to `treatment-threshold-and-bp-target`.
 4. **`walk_tree(graph, runtime_input, ...)`** runs the traversal (see
    [docs/cdss/traversal-engine-contract.md](cdss/traversal-engine-contract.md)
-   for the full node-by-node semantics): the tree named by
-   `start_tree_key` (or the follow-up override) is loaded via
+   for the full node-by-node semantics): the tree named by that
+   `start_tree_key` variable is loaded via
    `TreeGraphRepository.get_tree()`, validated, then walked node by node until
    an `END` node or a terminal `ACTION` node (one with no outgoing edges) is
    reached. `LINK` nodes tail-transfer into another tree loaded through the

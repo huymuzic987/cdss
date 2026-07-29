@@ -260,8 +260,8 @@ def active_bp_target() -> dict[str, Any]:
 def test_tree_1_normal_bp_route(seeded_trees: SeededTrees) -> None:
     runtime_input = {
         "is_pregnant": False,
-        "clinic_1_sbp": 120,
-        "clinic_1_dbp": 80,
+        "current_clinic_sbp": 120,
+        "current_clinic_dbp": 80,
     }
 
     result = walk_tree(seeded_trees.graphs[T1], runtime_input, repository=seeded_trees.repository)
@@ -314,7 +314,7 @@ def test_tree_1_emergency_route_now_needs_pregnancy_status(
     fixture (which never had to supply that field for Trees 1-5) now fails at the
     very first candidate evaluation from T1_START, before even reaching the LINK.
     """
-    runtime_input = {"clinic_1_sbp": 180, "clinic_1_dbp": 80}
+    runtime_input = {"current_clinic_sbp": 180, "current_clinic_dbp": 80}
 
     with pytest.raises(MissingRuntimePath) as exc_info:
         walk_tree(seeded_trees.graphs[T1], runtime_input, repository=seeded_trees.repository)

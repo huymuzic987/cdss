@@ -21,10 +21,8 @@ export const PREGNANCY = 'Pregnancy & Postpartum'
 
 export const MEDICATION_TARGET: Pick<
   PatientFormData,
-  'target_sbp_upper' | 'target_dbp_upper' | 'previous_sbp' | 'previous_dbp'
+  'target_sbp_upper' | 'target_dbp_upper'
 > = {
   target_sbp_upper: '130',
   target_dbp_upper: '80',
-  previous_sbp: '150',
-  previous_dbp: '95',
 }
