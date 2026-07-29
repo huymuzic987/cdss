@@ -69,6 +69,62 @@ INSERT INTO public.decision_trees (id, tree_key, name_en, name_vi, created_at, u
 VALUES ('723b3d9d-5052-a626-1ab8-5f3a2145173e', 'treatment-threshold-and-bp-target', 'Treatment Threshold and BP Target', 'Ngưỡng Huyết Áp và Đích điều trị', '2026-06-27 10:16:47.509980+00:00', '2026-06-27 15:51:59.041846+00:00')
 ON CONFLICT (tree_key) DO UPDATE SET name_en = EXCLUDED.name_en, name_vi = EXCLUDED.name_vi, updated_at = EXCLUDED.updated_at;
 
+-- Remove obsolete resistant-hypertension nodes from existing databases.
+-- The two edge IDs are reused below with new endpoints, so remove their old
+-- records first to avoid a duplicate primary-key error during repeat seeding.
+DELETE FROM public.node_source_references
+WHERE node_id IN (
+    SELECT n.id
+    FROM public.decision_nodes n
+    JOIN public.decision_trees t ON t.id = n.tree_id
+    WHERE t.tree_key = 'resistant-hypertension'
+      AND n.node_key IN (
+          'T13_A_ESSENTIAL_TREATMENT',
+          'T13_A_OPTIMAL_TREATMENT',
+          'T13_A_ADD_D'
+      )
+);
+
+DELETE FROM public.decision_edges
+WHERE id IN (
+        '377d0452-46aa-44c4-883d-f159386271c9',
+        '51a363d2-fa3d-4c1f-8dd3-d9221eb21eaf'
+    )
+   OR from_node_id IN (
+        SELECT n.id
+        FROM public.decision_nodes n
+        JOIN public.decision_trees t ON t.id = n.tree_id
+        WHERE t.tree_key = 'resistant-hypertension'
+          AND n.node_key IN (
+              'T13_A_ESSENTIAL_TREATMENT',
+              'T13_A_OPTIMAL_TREATMENT',
+              'T13_A_ADD_D'
+          )
+    )
+   OR to_node_id IN (
+        SELECT n.id
+        FROM public.decision_nodes n
+        JOIN public.decision_trees t ON t.id = n.tree_id
+        WHERE t.tree_key = 'resistant-hypertension'
+          AND n.node_key IN (
+              'T13_A_ESSENTIAL_TREATMENT',
+              'T13_A_OPTIMAL_TREATMENT',
+              'T13_A_ADD_D'
+          )
+    );
+
+DELETE FROM public.decision_nodes
+WHERE tree_id = (
+        SELECT id
+        FROM public.decision_trees
+        WHERE tree_key = 'resistant-hypertension'
+    )
+  AND node_key IN (
+      'T13_A_ESSENTIAL_TREATMENT',
+      'T13_A_OPTIMAL_TREATMENT',
+      'T13_A_ADD_D'
+  );
+
 
 -- Remove the superseded pregnancy-classification action and graph rows whose
 -- endpoints changed. These targeted deletes keep this seed idempotent when it
