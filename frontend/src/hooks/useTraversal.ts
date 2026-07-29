@@ -9,24 +9,6 @@ export function useTraversal(dependencies: TraversalDependencies) {
   const handleStartTraversal = useStandardTraversal(store, dependencies, runEvaluation)
   const manual = useManualTraversal(store, dependencies, runEvaluation)
 
-  const handlePregnancyPopupClose = useCallback(() => {
-    setShowPregnancyPopup(false)
-    setPregnancyPopupResult(null)
-    const resume = pregnancyResumeRef.current
-    pregnancyResumeRef.current = null
-    if (!resume?.fullTraversal) return
-
-    setHighlightedNodeKeys(buildHighlights(resume.trace))
-    const lastEntry = [...resume.trace].reverse().find((entry) => entry.event === 'node_entered')
-    if (lastEntry) {
-      setActiveTraversalTreeKey(lastEntry.tree_key)
-      setActiveTreeKey(lastEntry.tree_key)
-      setActiveNodeKey(lastEntry.node_key)
-      setFocusNodeKey(lastEntry.node_key)
-    }
-    finish(resume.result, resume.partial)
-  }, [finish, setActiveTreeKey, setFocusNodeKey])
-
   const handleReset = () => {
     store.runIdRef.current += 1
     store.setTraversalState('idle')
