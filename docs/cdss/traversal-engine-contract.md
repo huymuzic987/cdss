@@ -1,6 +1,10 @@
 # CDSS Traversal Engine Contract
 
 Status: frozen design contract for the generic, stateless traversal engine.
+Re-audited against `src/cdss/domain/decision_tree/` and
+`src/cdss/api/routes/` as of this writing; see §16-17 for what changed since
+the original audit (the engine's runtime rules in §1-15 are unchanged - only
+the surrounding application grew).
 
 This document defines runtime behavior only. It does not authorize database
 schema changes, patient persistence, seed changes, API routes, or
@@ -155,7 +159,7 @@ contain unserializable ORM objects.
 The global traversal step limit (`max_steps`) bounds the number of **node
 entries** and applies across all linked trees; it is never reset on a link
 transfer. Candidate evaluations are recorded in the trace but do not consume the
-budget — the limit measures traversal progress (nodes entered), not branch
+budget - the limit measures traversal progress (nodes entered), not branch
 fan-out, so it does not shrink as trees grow wider. Termination is guaranteed
 independently by cycle detection; the step limit is a secondary safety bound.
 Trace step numbering is a separate monotonic sequence that still increases on
@@ -413,7 +417,26 @@ ORM rows into those domain objects. FastAPI schemas/routes belong under
 ## 16. Current application and test conventions
 
 - FastAPI is created by `cdss.main.create_app()`.
-- Routes are the unversioned synchronous `GET /health` and `POST /evaluate`.
+- Routes are unversioned and synchronous. The engine itself is reached only
+  through `POST /evaluate` and `POST /evaluate/follow-up`
+  (`src/cdss/api/routes/evaluation.py`). The application has grown well
+  beyond the engine since the original version of this contract: `GET /health`,
+  `GET /trees` and `GET /trees/{tree_key}/graph` (read-only graph export for
+  the frontend visualizer), `GET|PUT|DELETE /trees/{tree_key}/layout`
+  (editor-canvas layout persistence, unrelated to traversal), `GET /fhir/...`
+  (PlanDefinition/Library knowledge export plus clinical Patient
+  import/export), and `GET|POST /dashboard/...` (a statistics dashboard over
+  imported clinical data). None of the non-evaluation routes touch
+  `walk_tree()`. See `docs/api.md` for the full endpoint list and
+  `docs/architecture.md` for how the layers fit together.
+- `POST /evaluate`'s `input` field is an HL7 FHIR R4 `Bundle`, not a flat
+  object; it is converted to the engine's flat `input.*` namespace by
+  `cdss.api.schemas.fhir_input.bundle_to_input()` before `walk_tree()` is
+  called. `POST /evaluate` also runs hypertension-specific follow-up
+  inference (`cdss.domain.follow_up`) ahead of traversal when the input
+  carries a previous visit's readings - see `docs/architecture.md`'s request-flow
+  walkthrough. Neither of these is part of the generic engine's contract;
+  they are callers of it.
 - Evaluation uses API response schemas and typed domain-error mapping.
 - SQLAlchemy is synchronous.
 - `get_engine()` lazily creates one process-wide engine with
@@ -435,13 +458,18 @@ ORM rows into those domain objects. FastAPI schemas/routes belong under
   work, and cycle only that database from Alembic base to head.
 - The current migration tests are stateful within their module: later tests
   assume the first migration test has upgraded the schema.
-- There is no tracked seed fixture or seed loader in this checkout. A preflight
-  requires all five tree keys and fails with instructions when the local test
-  database has not been seeded from the external authoritative source.
+- A preflight requires the seeded tree keys (now 13 traversable trees plus
+  the intentionally-unseeded `hypertension-older-adults` LINK target - see
+  §17) and fails with instructions when the local test database has not been
+  seeded. As of this audit, `backups/seed.sql` is a tracked, pure-INSERT seed
+  file that reproduces this data - see `docs/operations.md`; it did not exist
+  at the time of the original audit below.
 
-## 17. Audited repository mismatches
+## 17. Audited repository mismatches (original audit, 2026-06-29)
 
-The supplied four-table schema and the repository are not identical:
+The original supplied four-table schema and the repository were not
+identical. This section is kept for history; the repository has grown
+considerably since (see the update below).
 
 - The repository has a fifth table, `development_runtime_logs`.
 - `decision_nodes` additionally enforces
@@ -449,12 +477,32 @@ The supplied four-table schema and the repository are not identical:
 - `node_source_references` additionally enforces
   `UNIQUE (node_id, reference_order)`.
 - ORM/migration timestamps are non-null.
-- No seed script or seed migration exists. The populated Trees 1-5 live outside
-  tracked repository artifacts.
 - The configured populated database was audited read-only on 2026-06-29; its
-  actual JSON shapes are recorded in `tree-json-dialect.md`.
+  actual JSON shapes were recorded in `json-dialect.md` (then named
+  `tree-json-dialect.md`).
 - `Settings.cdss_max_steps` and `.env.example` use the contract default of 300.
-- The README introduction says no ORM models or migrations exist, although both
-  are present later in the same README and in the repository.
 
-No schema or seed changes are part of this audit.
+No schema or seed changes were part of that original audit.
+
+### Update: schema and seed data as of this re-audit
+
+- `src/cdss/infrastructure/db/models.py` now defines **14 tables**, not 5:
+  the original `decision_trees`/`decision_nodes`/`decision_edges`/
+  `node_source_references`/`development_runtime_logs`, plus `tree_layouts`
+  (editor canvas layout, added after this contract was first written),
+  `medicines` (static drug reference catalog), `symptoms` (static reference
+  catalog, currently unused by the traversal engine or any route), and
+  `patients`/`patient_conditions`/`visits`/`visit_observations`/
+  `visit_medications`/`fhir_import_batches` (clinical data imported from FHIR
+  bundles, backing the statistics dashboard - entirely unrelated to
+  traversal). See `docs/database.md` for the full schema.
+- `backups/seed.sql` is now a tracked, pure-INSERT seed script reproducing 14
+  decision trees and the medicine catalog. This resolves the original
+  "no seed script exists" finding.
+- The seeded tree set has grown from 5 to 14 tree keys (13 traversable, one -
+  `hypertension-older-adults` - intentionally left unseeded as a LINK-failure
+  test fixture). See `docs/cdss/json-dialect.md` §1 for the current list and
+  row counts.
+- The stale README self-contradiction noted in the original audit (claiming
+  no ORM models/migrations exist, then describing both later in the same
+  file) has been corrected in the current `README.md`.

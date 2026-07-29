@@ -2,7 +2,24 @@
 
 A stateless, database-driven clinical decision-support API built with FastAPI, SQLAlchemy, and PostgreSQL. The clinical workflow is stored dynamically in the database as decision-tree nodes and edges, allowing a generic, stateless traversal engine to evaluate conditions, apply context patches, and collect actions without hardcoded branching in Python.
 
-A companion Vite + React + tldraw decision-tree visualizer resides in the [frontend](file:///c:/Users/Huy/Desktop/cdss/frontend) directory.
+A companion Vite + React + tldraw decision-tree visualizer (plus a statistics dashboard) resides in the [frontend](frontend/) directory.
+
+---
+
+## 📚 Documentation
+
+This README is a quickstart and overview. For anything deeper, see `docs/`:
+
+- [docs/architecture.md](docs/architecture.md): the three-layer design, why it's a modular monolith, and the full request flow for `POST /evaluate`.
+- [docs/api.md](docs/api.md): every endpoint, with request/response shapes.
+- [docs/database.md](docs/database.md): schema, SQLAlchemy models, Alembic migrations.
+- [docs/operations.md](docs/operations.md): seeding, backups, restore, port conflicts.
+- [docs/deployment.md](docs/deployment.md): Docker images, the production compose stack, the Jenkins pipeline.
+- [docs/frontend.md](docs/frontend.md): visualizer and dashboard structure.
+- [docs/cdss/json-dialect.md](docs/cdss/json-dialect.md): the decision-tree JSON dialect (condition operators, context patches).
+- [docs/cdss/authoring-a-tree.md](docs/cdss/authoring-a-tree.md): how to build a new decision tree.
+- [docs/cdss/traversal-engine-contract.md](docs/cdss/traversal-engine-contract.md) and [docs/cdss/context-contract.md](docs/cdss/context-contract.md): the frozen runtime-behavior and inter-tree data contracts.
+- [docs/testing.md](docs/testing.md): test database safety rules.
 
 ---
 
@@ -12,7 +29,7 @@ The project leverages a modern, robust tech stack designed for speed, clinical a
 
 ### Backend Core Stack
 1. **[FastAPI](https://fastapi.tiangolo.com/)**
-   * **What it does**: Handles the HTTP request/response cycle, routes evaluations, validates payloads using Pydantic, and generates interactive OpenAPI swagger docs.
+   * **What it does**: Handles the HTTP request/response cycle, routes evaluations, validates payloads using Pydantic, and generates an OpenAPI schema served through an interactive API reference UI.
    * **Why we use it**: It is extremely fast, fully supports type hints for automatic validation, and offers a stateless architecture ideal for high-throughput decision-support queries.
 2. **[SQLAlchemy ORM](https://www.sqlalchemy.org/)**
    * **What it does**: Serves as the Object-Relational Mapper (ORM), translating Python classes into database tables/queries and providing session/transaction management.
@@ -21,7 +38,7 @@ The project leverages a modern, robust tech stack designed for speed, clinical a
    * **What it does**: Manages database migrations, tracking revisions to update the PostgreSQL schema over time.
    * **Why we use it**: Ensures database schemas are synchronized across local development, test suites, and production environments without manual SQL interventions.
 4. **[PostgreSQL](https://www.postgresql.org/)**
-   * **What it does**: Stores decision trees, nodes, edges, references, and runtime logs.
+   * **What it does**: Stores decision trees, nodes, edges, references, the medicine reference catalog, and imported clinical data for the statistics dashboard.
    * **Why we use it**: It is a production-grade relational database with excellent native support for `JSONB` datatypes, which is essential for storing and querying dynamic condition definitions and context patches.
 5. **[Astral uv](https://docs.astral.sh/uv/)**
    * **What it does**: Serves as the package manager, virtual environment manager, and command executor.
@@ -33,7 +50,7 @@ The project leverages a modern, robust tech stack designed for speed, clinical a
    * **What they do**: Ruff acts as the static linter and formatter, while Pyright performs static type checking.
    * **Why we use them**: They enforce uniform style guidelines, catch syntax errors or unused imports, and guarantee type safety across the domain and api layers.
 
-### Frontend Stack (Visualizer)
+### Frontend Stack (Visualizer + Dashboard)
 1. **[React](https://react.dev/) & [TypeScript](https://www.typescriptlang.org/)**
    * **What they do**: Renders the dynamic interactive UI elements and manages the component state, checked with strict typing.
    * **Why we use them**: React's component model fits tree-rendering UI, and TypeScript provides compiler-level type safety when handling tree-graph JSON shapes received from the backend.
@@ -43,60 +60,34 @@ The project leverages a modern, robust tech stack designed for speed, clinical a
 3. **[tldraw SDK](https://tldraw.dev/)**
    * **What it does**: Powering the visualizer canvas, it renders the tree nodes and connecting edges on an interactive, infinite pan/zoom whiteboard.
    * **Why we use it**: Offers an out-of-the-box, premium-feeling canvas library for displaying flowchart-like graph visualizations and custom nodes without building canvas interaction logic from scratch.
+4. **[Recharts](https://recharts.org/)**
+   * **What it does**: Renders the statistics dashboard's charts (bar, line, donut).
 
 ---
 
-## 🏗️ Architecture and Component Design
+## 🏗️ Architecture (summary)
 
-The project is structured as a Python modular monolith inside the [src/cdss](file:///c:/Users/Huy/Desktop/cdss/src/cdss) package:
+The project is a Python modular monolith inside [src/cdss](src/cdss). Full details, including the exact request flow for `POST /evaluate`, are in [docs/architecture.md](docs/architecture.md).
 
 ```text
 src/cdss/
-├── domain/decision_tree/      # Pure clinical traversal engine (No DB or API deps)
-│   ├── contracts.py           # Core types, results, and trace models
-│   ├── graph.py               # Immutable decision-tree definitions and repo interface
-│   ├── walker.py              # Stateless decision-tree traversal engine (walk_tree)
-│   ├── conditions.py          # Parsing and evaluation logic for JSON condition definitions
-│   ├── patches.py             # Context-patch application (merges and COPY_PATH ops)
-│   ├── paths.py               # Dot-notated input and context path resolver
-│   ├── validator.py           # Static tree validation (cycle detection, link checks)
-│   └── errors.py              # Typed domain errors
-├── infrastructure/db/         # SQLAlchemy models and repository implementation
-│   ├── models.py              # Database table definitions
-│   ├── decision_tree_repository.py  # Bulk graph loading via 4 SQL queries
-│   └── caching_repository.py  # Thread-safe in-memory caching wrapper
-└── api/                       # Presentation layer
-    ├── routes/                # FastAPI routing endpoints (evaluation, fhir, tree_graph)
-    └── schemas/               # Request, response, and FHIR schema validations
+├── domain/decision_tree/      # Pure clinical traversal engine (no DB or API deps)
+├── domain/follow_up.py        # Hypertension-specific follow-up inference (used by the /evaluate route)
+├── infrastructure/db/         # SQLAlchemy models and repository implementations
+└── api/                       # FastAPI routes and Pydantic schemas
+    ├── routes/                # evaluation, tree_graph, tree_layout, fhir, dashboard, health
+    └── schemas/                # Request/response and FHIR schema validation
 ```
 
-### 1. Domain Layer (`cdss.domain.decision_tree`)
-* **[contracts.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/contracts.py)**: Defines runtime container structures, including [RunState](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/contracts.py#L17), [TraversalResult](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/contracts.py#L19), [ExecutedAction](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/contracts.py#L11), [ExecutedReference](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/contracts.py#L12), [NodeType](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/contracts.py#L16), and [TreeMetadata](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/contracts.py#L21).
-* **[graph.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/graph.py)**: Contains the immutable domain objects [TreeGraph](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/graph.py#L45), [NodeDefinition](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/graph.py#L42), and [EdgeDefinition](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/graph.py#L41), and the [TreeGraphRepository](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/graph.py#L46) interface.
-* **[walker.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/walker.py)**: Contains [walk_tree](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/walker.py#L55), the stateless core engine that executes traversal logic.
-* **[conditions.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/conditions.py)**: Evaluates complex boolean structures (`all`, `any`, `not`), comparisons (`eq`, `in`, `lt`, `lte`, `gt`, `gte`), arithmetic subtractions, and path existence.
-* **[patches.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/patches.py)**: Implements [apply_context_patch](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/patches.py#L48), executing static recursive merging and ordered `COPY_PATH` operations.
-* **[paths.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/paths.py)**: Contains [resolve_runtime_path](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/paths.py#L49) which traverses nested dictionary objects.
-* **[validator.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/validator.py)**: Runs static validation checking trees for cycles, start nodes, and broken edge configurations prior to traversal.
-* **[errors.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/errors.py)**: Defines strongly-typed domain errors (e.g., [MissingRuntimePath](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/errors.py#L33), [UnsupportedOperator](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/errors.py#L38)).
-
-### 2. Infrastructure Layer (`cdss.infrastructure.db`)
-* **[models.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/infrastructure/db/models.py)**: Holds SQLAlchemy representations for `decision_trees`, `decision_nodes`, `decision_edges`, `node_source_references`, and `development_runtime_logs`.
-* **[decision_tree_repository.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/infrastructure/db/decision_tree_repository.py)**: Implements [SqlAlchemyTreeGraphRepository](file:///c:/Users/Huy/Desktop/cdss/src/cdss/infrastructure/db/decision_tree_repository.py#L20), utilizing a 4-query loading scheme to load a full tree graph (trees, nodes, edges, references) in batch.
-* **[caching_repository.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/infrastructure/db/caching_repository.py)**: Implements [CachingTreeGraphRepository](file:///c:/Users/Huy/Desktop/cdss/src/cdss/infrastructure/db/caching_repository.py#L9), which wraps another repository in a thread-safe in-memory cache.
-
-### 3. API Layer (`cdss.api`)
-* **[routes/evaluation.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/api/routes/evaluation.py)**: Implements the stateless clinical evaluation `POST /evaluate` endpoint.
-* **[routes/fhir.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/api/routes/fhir.py)**: Exports decision trees as read-only HL7 FHIR R4 resources (`PlanDefinition` and `Library`).
-* **[routes/tree_graph.py](file:///c:/Users/Huy/Desktop/cdss/src/cdss/api/routes/tree_graph.py)**: Exposes representation graphs consumed by the Vite visualizer.
+**The core idea**: clinical logic lives in the database as decision-tree data (nodes, edges, JSON condition/patch/action documents), not in Python. There is no `if sbp >= 140` anywhere in `src/cdss`. See [docs/architecture.md](docs/architecture.md) for why this is a modular monolith rather than separate services.
 
 ---
 
 ## 🌳 Traversal Engine Concepts & Node Types
 
-Clinical workflows are evaluated without python-coded branching. Instead, [walk_tree](file:///c:/Users/Huy/Desktop/cdss/src/cdss/domain/decision_tree/walker.py#L55) traverses a decision tree graph. The engine evaluates target branch conditions based on priority (`traversal_order` on edges) and transitions between nodes.
+Clinical workflows are evaluated without Python-coded branching. `walk_tree` (`src/cdss/domain/decision_tree/walker.py`) traverses a decision-tree graph, evaluating target branch conditions by priority (`traversal_order` on edges) and transitioning between nodes.
 
-> For the full frozen runtime-behavior contract, see [docs/cdss/traversal-engine-contract.md](file:///c:/Users/Huy/Desktop/cdss/docs/cdss/traversal-engine-contract.md).
+> For the full frozen runtime-behavior contract, see [docs/cdss/traversal-engine-contract.md](docs/cdss/traversal-engine-contract.md).
 
 ### Node Types
 * **`START`**: Exactly one entry point per tree. No side effects; branches out immediately.
@@ -109,97 +100,63 @@ Clinical workflows are evaluated without python-coded branching. Instead, [walk_
 
 ---
 
-## 📜 Decision-Tree JSON Dialect
+## 📜 Decision-Tree JSON Dialect (summary)
 
-### 1. Condition Expressions
-Branch conditions resolved via target `condition_definition` values support:
-* **Operators**: `eq` (strict equality), `exists` (path presence check), `in` (strict array membership check), `lt`, `lte`, `gt`, `gte` (strict numeric comparisons).
-* **Nesting**: Logical operators `all` (AND), `any` (OR), and `not` (negation) can nest recursively:
-  ```json
-  {
-    "all": [
-      { "path": "input.current_clinic_sbp", "op": "gte", "value": 140 },
-      {
-        "not": {
-          "path": "input.is_medication_follow_up", "op": "eq", "value": true
-        }
-      }
-    ]
-  }
-  ```
-* **Arithmetic Subtraction**: Evaluates a mathematical difference before comparison:
-  ```json
-  {
-    "left": {
-      "expression": "subtract",
-      "left_path": "input.previous_clinic_sbp",
-      "right_path": "input.current_clinic_sbp"
-    },
-    "op": "gte",
-    "value": 10
-  }
-  ```
+Full grammar, with worked examples pulled from the real seeded trees, is in [docs/cdss/json-dialect.md](docs/cdss/json-dialect.md).
 
-### 2. Context Patches
-Patches are executed on node entry and can contain static values and operation lists:
-* **Static Merge**: JSON objects are recursively merged into `RunState.context`.
-* **Ordered Operations**: Evaluated after the merge. Currently supports `COPY_PATH` (deep copies a value from input or context into context):
-  ```json
-  {
-    "treatment": {
-      "follow_up_mode": "medication"
-    },
-    "operations": [
-      {
-        "op": "COPY_PATH",
-        "from_path": "input.active_bp_target",
-        "to_path": "context.treatment.bp_target",
-        "required": true
-      }
-    ]
-  }
-  ```
+* **Condition operators**: `eq`, `exists`, `in`, `lt`, `lte`, `gt`, `gte`, nested via `all`/`any`/`not`, plus a `subtract` arithmetic expression for comparing a difference against a threshold.
+* **Context patches**: a static recursive JSON merge into `RunState.context`, plus ordered `COPY_PATH` operations (deep-copying a value from `input.*` or `context.*` into `context.*`).
 
 ---
 
-## 🔗 Cross-Tree Context Contract
+## 🔗 Cross-Tree Context Contract (summary)
 
-Because trees execute dynamically, they pass data through a shared, mutable `RunState.context` object. The five seeded trees (`hypertension-diagnosis`, `risk-classification`, `treatment-threshold-and-bp-target`, `essential-treatment-strategy`, `optimal-treatment-strategy`) interact using the following load-bearing paths:
+Because trees execute dynamically, they pass data through a shared, mutable `RunState.context` object. This is a real, versioned contract, not an implementation detail. It currently spans 14 seeded trees (`hypertension-diagnosis`, `risk-classification`, `treatment-threshold-and-bp-target`, `essential-treatment-strategy`, `optimal-treatment-strategy`, `drug-combination`, `resistant-hypertension`, `hypertension-type-2-diabetes`, `hypertension-chronic-kidney-disease`, `hypertension-in-pregnancy`, `hypertensive-emergency`, `hypertension-heart-failure`, `hypertension-coronary-artery-disease`, and `hypertension-older-adults`, the last of which is intentionally left unseeded to exercise the unresolved-link failure path). The most load-bearing paths:
 
-1. **`context.diagnosis.hypertension_class`**: Set by `hypertension-diagnosis`. Read by `risk-classification` to decide risk tier branching.
-2. **`context.risk.level`**: Set by `risk-classification`. Read by `treatment-threshold-and-bp-target`, `essential-treatment-strategy`, and `optimal-treatment-strategy` to customize BP targets and regimens.
-3. **`context.treatment.bp_target`**: Restored or configured by `treatment-threshold-and-bp-target`. Read by `essential-treatment-strategy` and `optimal-treatment-strategy` to compare current BP against clinical targets.
+1. **`context.diagnosis.hypertension_class`**: Set by `hypertension-diagnosis`. Read by `risk-classification` to decide risk-tier branching.
+2. **`context.risk.level`**: Set by `risk-classification`. Read by the treatment-strategy trees to customize BP targets and regimens.
+3. **`context.treatment.bp_target`**: Restored or configured by `treatment-threshold-and-bp-target`. Read by the treatment-strategy trees to compare current BP against clinical targets.
 
-For complete path schemas, see the design contract in [docs/cdss/context-contract.md](file:///c:/Users/Huy/Desktop/cdss/docs/cdss/context-contract.md).
+For the complete path schema, including keys added by trees added after the original contract, see [docs/cdss/context-contract.md](docs/cdss/context-contract.md).
 
 ---
 
-## ⚡ API Specification
+## ⚡ API Specification (summary)
 
-Interactive swagger endpoints are available at `http://localhost:8000/docs`.
+Interactive API docs are at `http://localhost:8000/docs` (served via [Scalar](https://scalar.com/), not the default Swagger UI; the raw OpenAPI JSON is at `/openapi.json`). Full endpoint-by-endpoint reference, including exact request/response shapes and known quirks, is in [docs/api.md](docs/api.md).
 
 ### 1. Clinical Evaluation Endpoint: `POST /evaluate`
-Evaluates decision tree logic statelessly against a clinical input payload.
+Evaluates decision tree logic statelessly against a clinical input payload. **`input` must be an HL7 FHIR R4 `Bundle`** (`resourceType: "Bundle"`), not a flat object of clinical fields, it is converted to the engine's flat input format server-side. See [docs/api.md](docs/api.md#12-the-input-bundle-contract) for the full resource-mapping rules and a complete worked example.
 
-* **Sample Request**:
+* **Sample Request** (abbreviated; a real Bundle carries every clinical input as separate `Patient`/`Observation`/`Condition`/`Parameters` entries):
   ```json
   {
     "start_tree_key": "treatment-threshold-and-bp-target",
     "input": {
-      "is_medication_follow_up": true,
-      "is_lifestyle_follow_up": false,
-      "active_bp_target": {
-        "dbp": {"upper_exclusive_mmhg": 80},
-        "sbp": {
-          "lower_reference_mmhg": 120,
-          "or_lower": true,
-          "upper_exclusive_mmhg": 130
+      "resourceType": "Bundle",
+      "type": "collection",
+      "entry": [
+        {
+          "resource": {
+            "resourceType": "Parameters",
+            "parameter": [
+              { "name": "is_medication_follow_up", "valueBoolean": true },
+              { "name": "facility_capability", "valueString": "FULL_RESOURCES" }
+            ]
+          }
         },
-        "source": "TREE_3_GENERIC"
-      },
-      "facility_capability": "FULL_RESOURCES",
-      "current_clinic_sbp": 129,
-      "current_clinic_dbp": 79
+        {
+          "resource": {
+            "resourceType": "Observation",
+            "code": { "coding": [{ "system": "http://loinc.org", "code": "85354-9" }] },
+            "extension": [{ "url": "http://cdss.local/fhir/StructureDefinition/reading-role", "valueCode": "current_clinic" }],
+            "component": [
+              { "code": { "coding": [{ "system": "http://loinc.org", "code": "8480-6" }] }, "valueQuantity": { "value": 129 } },
+              { "code": { "coding": [{ "system": "http://loinc.org", "code": "8462-4" }] }, "valueQuantity": { "value": 79 } }
+            ]
+          }
+        }
+      ]
     }
   }
   ```
@@ -208,27 +165,8 @@ Evaluates decision tree logic statelessly against a clinical input payload.
   ```json
   {
     "status": "success",
-    "input_snapshot": {
-      "is_medication_follow_up": true,
-      "is_lifestyle_follow_up": false,
-      "active_bp_target": { ... },
-      "facility_capability": "FULL_RESOURCES",
-      "current_clinic_sbp": 129,
-      "current_clinic_dbp": 79
-    },
-    "context": {
-      "treatment": {
-        "bp_target": {
-          "dbp": { "upper_exclusive_mmhg": 80 },
-          "sbp": {
-            "lower_reference_mmhg": 120,
-            "or_lower": true,
-            "upper_exclusive_mmhg": 130
-          },
-          "source": "TREE_3_GENERIC"
-        }
-      }
-    },
+    "input_snapshot": { "is_medication_follow_up": true, "facility_capability": "FULL_RESOURCES", "current_clinic_sbp": 129, "current_clinic_dbp": 79 },
+    "context": { "treatment": { "bp_target": { "...": "..." } } },
     "actions": [
       {
         "tree_key": "optimal-treatment-strategy",
@@ -236,16 +174,12 @@ Evaluates decision tree logic statelessly against a clinical input payload.
         "node_type": "END",
         "text_en": "Target reached: Maintain current medication regimen",
         "text_vi": "Đạt huyết áp mục tiêu: Tiếp tục duy trì phác đồ điều trị hiện tại",
-        "payload": {
-          "action_type": "MAINTAIN_CURRENT_REGIMEN",
-          "follow_up_mode": "STANDARD_MONITORING",
-          "follow_up_required": true
-        }
+        "payload": { "action_type": "MAINTAIN_CURRENT_REGIMEN", "follow_up_mode": "STANDARD_MONITORING", "follow_up_required": true }
       }
     ],
-    "traversal_log": [ ... ],
-    "references": [ ... ],
-    "tree_metadata": [ ... ],
+    "traversal_log": [ ],
+    "references": [ ],
+    "tree_metadata": [ ],
     "started_at": "2026-07-03T09:00:00Z",
     "completed_at": "2026-07-03T09:00:00.021Z"
   }
@@ -253,13 +187,18 @@ Evaluates decision tree logic statelessly against a clinical input payload.
 
 ### 2. Visualization Endpoints
 * **`GET /trees`**: Lists summary metadata for all seeded decision trees.
-* **`GET /trees/{tree_key}/graph`**: Returns a tree graph represented in a custom JSON format designed for rendering inside the tldraw frontend canvas.
+* **`GET /trees/{tree_key}/graph`**: Returns a tree graph in a custom JSON format designed for rendering inside the tldraw frontend canvas.
+* **`GET|PUT|DELETE /trees/{tree_key}/layout`**: Persists the visualizer's saved canvas layout (node positions, connector style).
 
 ### 3. HL7 FHIR R4 Knowledge Export Endpoints
 * **`GET /fhir/PlanDefinition`**: Exports all decision trees inside a single FHIR Bundle container.
 * **`GET /fhir/PlanDefinition/{tree_key}`**: Exports a single tree represented as an HL7 FHIR `PlanDefinition`.
 * **`GET /fhir/Library/{tree_key}`**: Exports global configuration metadata for a tree represented as an HL7 FHIR `Library`.
 * *Note: The FHIR export maps condition definitions dynamically from the internal JSON expression dialect to FHIRPath expression structures.*
+
+### 4. Clinical Data Import/Export and Statistics Dashboard
+* **`POST /fhir/import`**, **`GET /fhir/Patient`**, **`GET /fhir/Patient/{fhir_id}`**: Import/export clinical data (unrelated to `/evaluate`) that backs the dashboard below.
+* **`POST /dashboard/seed`**, **`GET /dashboard/summary`**, **`GET /dashboard/patients`**, **`GET /dashboard/patients/{fhir_id}`**: A statistics dashboard over imported clinical data. See [docs/api.md](docs/api.md#5-statistics-dashboard-dashboard) and [docs/operations.md](docs/operations.md) for how to seed it.
 
 ---
 
@@ -268,10 +207,21 @@ Evaluates decision tree logic statelessly against a clinical input payload.
 ### Prerequisites
 - **Python 3.12+**
 - **uv** ( Astral's Python installer and package manager )
-- **Docker** with Compose support
+- **Docker Desktop** (or another Docker Engine) with Compose support, **running**
 - **Node.js 20+** ( required only for the optional frontend visualizer )
+- **Git** access to this repository (see [Troubleshooting](#-troubleshooting) if it's private and you haven't authenticated yet)
 
-### 1. Spin up and Configure Backend API
+### 1. Clone and configure
+
+```bash
+git clone https://github.com/huymuzic987/cdss.git
+cd cdss
+cp .env.example .env
+```
+
+### 2. Spin up and configure the backend API
+
+**macOS / Linux / WSL / Git Bash:**
 ```bash
 # Set link mode to copy (highly recommended if running on WSL/virtual environments on mounted drives)
 export UV_LINK_MODE=copy
@@ -279,8 +229,25 @@ export UV_LINK_MODE=copy
 # Sync dependencies and create a virtualenv
 uv sync
 
-# Create your local environment configuration file
-cp .env.example .env
+# Spin up local PostgreSQL container
+docker compose up -d postgres
+
+# Run database schema migrations
+uv run alembic upgrade head
+
+# Load the seeded decision trees and medicine catalog (an empty schema alone
+# has no clinical data - see docs/operations.md)
+docker compose exec -T postgres psql -U cdss -d cdss -f - < backups/seed.sql
+# (if you have a local psql client instead: psql -h localhost -p 54321 -U cdss -d cdss -f backups/seed.sql)
+
+# Run FastAPI with reload enabled
+./dev.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+# Sync dependencies and create a virtualenv
+uv sync
 
 # Spin up local PostgreSQL container
 docker compose up -d postgres
@@ -288,20 +255,23 @@ docker compose up -d postgres
 # Run database schema migrations
 uv run alembic upgrade head
 
+# Load the seeded decision trees and medicine catalog
+docker compose exec -T postgres psql -U cdss -d cdss -f - < backups/seed.sql
+
 # Run FastAPI with reload enabled
-./dev.sh       # macOS/Linux/WSL/Git Bash
-.\dev.ps1      # Windows PowerShell
+.\dev.ps1
 ```
-The API is now running at `http://localhost:8000`.
+
+`dev.sh`/`dev.ps1` are both one-line wrappers: they `cd` to the repository root and run `uv run uvicorn cdss.main:app --reload`. Either way, the API is now running at `http://localhost:8000`.
+
+> [!TIP]
+> **Restoring a full snapshot instead**: `backups/seed.sql` is a pure-data seed that assumes the schema already exists from Alembic. If you'd rather restore a complete, self-contained snapshot (schema + data, no separate `alembic upgrade` step needed), run `uv run python backups/restore.py` instead of the migrate+seed steps above. It targets your local Docker database only, it refuses to run against any non-local host, and picks the latest committed `backups/cdss_prod_*.sql` snapshot by default. See [docs/operations.md](docs/operations.md) for both workflows in full, including why you should **not** run `backups/dump.py` as a setup step (it reads from whatever `DATABASE_URL` already points at; it isn't a way to fetch data you don't already have).
 
 > [!NOTE]
 > **WSL Development Tip**: If you are running the backend in WSL and editing files on a mounted Windows drive (`/mnt/c/...`), WSL `inotify` file watchers may not automatically reload Uvicorn on changes. In such cases, restart Uvicorn manually to apply edits.
 
-> [!NOTE]
-> **PowerShell script policy**: If `.\dev.ps1` is blocked, PowerShell's default execution policy is disallowing local scripts. Run `Set-ExecutionPolicy -Scope Process RemoteSigned` in that session (or once for your user with `-Scope CurrentUser`) and try again.
-
-### 2. Spin up Frontend Visualizer
-The visualizer connects to the backend and renders graphs on an interactive whiteboard canvas:
+### 3. Spin up Frontend Visualizer
+The visualizer connects to the backend and renders graphs on an interactive whiteboard canvas, plus a statistics dashboard:
 ```bash
 cd frontend
 pnpm install
@@ -312,7 +282,6 @@ The visualizer runs at `http://localhost:5173`.
 > [!TIP]
 > * **Automatic CORS Port Matching**: If port `5173` is already in use, Vite will automatically select a different port (such as `5174`). The backend is configured to accept CORS requests dynamically from any local development port.
 > * **Untangling Layouts (Drag & Drop)**: If lines or cards overlap in complex clinical pathways, you can click and drag any node to rearrange the layout. Connected edges (arrows) will automatically stretch and follow the nodes.
-
 
 ---
 
@@ -339,11 +308,11 @@ cp .env.test.example .env.test
   uv run pytest -m "not database"
   ```
 * **Seeded Traversal & Integration Tests**:
-  Requires the five clinical trees to be loaded into the `cdss_test` database.
+  Requires the seeded decision trees loaded into the `cdss_test` database (apply migrations, then `backups/seed.sql`, against `cdss_test` - see [docs/operations.md](docs/operations.md)).
   ```bash
   uv run pytest -m database tests/db/test_seeded_tree_validation.py tests/db/test_seeded_link_execution.py tests/db/test_mock_patient_scenarios.py tests/api/test_seeded_evaluation.py
   ```
-  The mock-patient scenarios and their expected outcomes are documented in [docs/cdss/mock-patient-test-matrix.md](file:///c:/Users/Huy/Desktop/cdss/docs/cdss/mock-patient-test-matrix.md).
+  The mock-patient scenarios and their expected outcomes are documented in [docs/cdss/mock-patient-test-matrix.md](docs/cdss/mock-patient-test-matrix.md).
 * **Destructive Schema Migration Tests**:
   Verifies Alembic migrations by downgrading to base and upgrading to head on `cdss_schema_test`.
   ```bash
@@ -373,11 +342,36 @@ uv run alembic current
 uv run alembic revision --autogenerate -m "describe changes"
 ```
 
+See [docs/database.md](docs/database.md) for the full migration history and what each revision actually changed.
+
 ### Backups (Dump/Restore Scripts)
-Database snapshots and utility scripts are located in [backups](file:///c:/Users/Huy/Desktop/cdss/backups) (see [backups/README.md](file:///c:/Users/Huy/Desktop/cdss/backups/README.md)). To refresh your local PostgreSQL instance with production data, run:
+
+Database snapshots and utility scripts are located in [backups](backups/) (see [backups/README.md](backups/README.md)). **A fresh local database has no clinical data until you load it** - see step 2 of the setup above, or [docs/operations.md](docs/operations.md) for both seeding workflows in full.
+
+`backups/dump.py` and `backups/restore.py` are not a matched "run both to get set up" pair: `dump.py` reads (read-only) from whatever database `DATABASE_URL` already points at, it is how you *produce* a new snapshot from a database you already trust, not how you populate an empty one. To refresh your local PostgreSQL instance from a committed snapshot, run `restore.py` on its own:
+
 ```bash
-uv run python backups/dump.py && uv run python backups/restore.py
+uv run python backups/restore.py
 ```
+
+---
+
+## 🩺 Troubleshooting
+
+**Cloning fails with a permission/authentication error (private repository).**
+This repository is private on GitHub. Over HTTPS, `git clone` will prompt for credentials; a GitHub account password will not work, use a [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) as the password (or set up the [GitHub CLI](https://cli.github.com/) with `gh auth login` and let it handle credentials). Over SSH, make sure your public key is added to your GitHub account and, if you use multiple GitHub identities/keys, that your `~/.ssh/config` has a `Host` entry aliasing this repo's host to the right key, matching whatever remote URL you were given.
+
+**`docker compose up -d postgres` fails, or the backend can't connect to Postgres.**
+Docker Desktop (or your Docker engine) needs to actually be running first, not just installed. Check with `docker info`; if that errors or hangs, start Docker Desktop (or `sudo systemctl start docker` on Linux) and retry. If Docker is running but the command still fails, see the port-conflict entry below.
+
+**A native PostgreSQL install is already using port 5432, or something else is on port 54321.**
+This project's local Postgres container publishes on host port `54321`, not the default `5432`, specifically to avoid this class of conflict (see [compose.yaml](compose.yaml)). If `docker compose up -d postgres` still fails to bind, or `DATABASE_URL` in your `.env` was ever changed to point at `5432`, see [docs/operations.md](docs/operations.md#4-port-conflicts) for how to find out what's actually listening and how to resolve it without touching the container's internal port.
+
+**`.\dev.ps1` is blocked by PowerShell ("running scripts is disabled on this system").**
+This is PowerShell's default execution policy, not a bug in this repository. Run `Set-ExecutionPolicy -Scope Process RemoteSigned` in that session (applies only to the current window), or `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once to fix it for your user account, then re-run `.\dev.ps1`.
+
+**The API runs, but every tree lookup 404s / `/evaluate` says a tree wasn't found.**
+Running `uv run alembic upgrade head` alone creates empty tables, it does not load any decision trees. See step 2 of [Local Installation and Setup](#2-spin-up-and-configure-the-backend-api) above (`psql -f backups/seed.sql`, or `backups/restore.py` for a full snapshot instead) and [docs/operations.md](docs/operations.md) for the full explanation of why `dump.py` is not the fix here.
 
 ---
 
