@@ -25,7 +25,7 @@ Multi-stage build, context is the **repo root** (not `src/`), built with
    `appuser`. `EXPOSE 8000`.
 3. **Healthcheck:** `curl -f http://localhost:8000/health` (interval 10s,
    timeout 5s, start-period 10s, retries 5) - this is `GET /health`, see
-   [docs/api.md](api.md#6-health).
+   [complete API reference](api/complete-reference.md#6-health).
 4. **CMD:** `uvicorn cdss.main:app --host 0.0.0.0 --port 8000` (no
    `--reload` - that's dev-only, via `dev.sh`/`dev.ps1`).
 
