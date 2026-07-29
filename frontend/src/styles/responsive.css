@@ -1,0 +1,28 @@
+﻿/* =========================================================================
+   Light theme: heavier structural dividers so the sidebars read as
+   clearly separated panels instead of blending into the canvas.
+   ========================================================================= */
+
+:root[data-theme="light"] .top-tabs-wrap {
+  border-bottom-width: 2px;
+}
+
+:root[data-theme="light"] .left-panel {
+  border-right-width: 2px;
+}
+
+:root[data-theme="light"] .panel-toggle-btn {
+  border-width: 2px;
+}
+
+:root[data-theme="light"] .tree-nav {
+  border-bottom-width: 2px;
+}
+
+:root[data-theme="light"] .ps-header,
+:root[data-theme="light"] .ps-footer,
+:root[data-theme="light"] .ps-section-header {
+  border-top-width: 2px;
+  border-bottom-width: 2px;
+}
+

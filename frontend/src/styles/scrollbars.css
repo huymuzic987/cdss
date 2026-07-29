@@ -1,0 +1,115 @@
+﻿/* =========================================================================
+   Copy Button Styles & User Selection
+   ========================================================================= */
+
+.side-panels,
+.detail-text,
+.detail-json,
+.detail-key,
+.detail-field-label,
+.reference-list,
+.panel {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+.side-panels button,
+.side-panels .detail-badge,
+.side-panels .legend {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+.copy-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.copy-button:hover {
+  background: var(--border-soft);
+  color: var(--accent-text);
+}
+
+.copy-button.copied {
+  color: var(--success-text);
+}
+
+.copy-icon {
+  pointer-events: none;
+}
+
+.copy-icon.checkmark {
+  animation: scale-up 0.15s ease-out;
+}
+
+@keyframes scale-up {
+  from { transform: scale(0.8); }
+  to { transform: scale(1); }
+}
+
+.copy-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translate(-50%, -4px) scale(0.95);
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #1e293b;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.15s ease;
+  z-index: 100;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.copy-button:hover .copy-tooltip {
+  opacity: 1;
+  transform: translate(-50%, -4px) scale(1);
+}
+
+
+.jump-button {
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-btn-bg);
+  color: var(--accent-text);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.jump-button:hover {
+  background: var(--accent-solid-hover);
+  color: #ffffff;
+}
+
+.reference-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reference-locator {
+  font-size: 11px;
+  color: var(--info-text);
+}
+

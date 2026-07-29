@@ -1,0 +1,184 @@
+﻿.dash-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.dash-tile {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.dash-tile-success {
+  border-left-color: var(--success-text);
+}
+
+.dash-tile-danger {
+  border-left-color: var(--danger-text);
+}
+
+.dash-tile-warning {
+  border-left-color: var(--accent-text);
+}
+
+.dash-tile-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.dash-tile-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dash-tile-value {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-bright);
+  font-variant-numeric: proportional-nums;
+}
+
+.dash-tile-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.dash-tile-success .dash-tile-value {
+  color: var(--success-text);
+}
+
+.dash-tile-danger .dash-tile-value {
+  color: var(--danger-text);
+}
+
+.dash-tile-warning .dash-tile-value {
+  color: var(--accent-text);
+}
+
+.dash-tile-link {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.dash-tile-link:hover .dash-tile {
+  background: var(--bg-panel-hover);
+}
+
+.dash-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.dash-badge-success {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.dash-badge-warning {
+  background: var(--warning-bg-1);
+  color: var(--accent-text);
+}
+
+.dash-badge-danger {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.dash-badge-neutral {
+  background: var(--neutral-badge-bg);
+  color: var(--text-secondary);
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+.dash-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.dash-card-wide {
+  grid-column: span 2;
+}
+
+@media (max-width: 760px) {
+  .dash-card-wide {
+    grid-column: span 1;
+  }
+}
+
+.dash-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.dash-card-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dash-card-subtitle {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.dash-insight {
+  background: var(--accent-btn-bg);
+  border: 1px solid var(--accent-divider);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  margin: 0 0 12px;
+}
+
+.dash-insight strong {
+  color: var(--accent-text);
+}
+
+.dash-chart-caption {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin: 4px 0 6px;
+}
+
+.dash-efficacy-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
