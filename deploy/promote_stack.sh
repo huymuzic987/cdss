@@ -2,15 +2,18 @@
 # Promotes an already-healthy private frontend without releasing the public
 # host port. A stable nginx container owns APP_PORT for its entire lifetime.
 #
-# On the first deployment of this scheme, the currently-live frontend is
-# adopted in place as "cdss-router": its nginx configuration is reloaded while
-# its old workers continue serving requests. Later deployments reuse that same
-# router. Nginx reloads are atomic, so existing connections finish on the old
-# configuration while new connections use the selected release.
+# The router is a dedicated container with no Compose release labels. Nginx
+# reloads are atomic, so existing connections finish on the old configuration
+# while new connections use the selected release.
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
-NEW_VERSION="${1:?usage: promote_stack.sh <new_version>}"
+NEW_VERSION="${1:?usage: promote_stack.sh <new_version> [promote|route-only]}"
+MODE="${2:-promote}"
+if [ "$MODE" != "promote" ] && [ "$MODE" != "route-only" ]; then
+    echo "ERROR: mode must be promote or route-only." >&2
+    exit 2
+fi
 NEW_PROJECT="cdss-${NEW_VERSION}"
 VERSION_FILE="deploy/.current_version"
 DRAIN_FILE="deploy/.router_drain_pending"
@@ -89,14 +92,11 @@ if [ -n "$ROUTER_ID" ]; then
         docker start "$ROUTER_ID" > /dev/null
     fi
 elif [ "${#PORT_CONTAINERS[@]}" -eq 1 ]; then
-    # Zero-downtime bootstrap: the old frontend keeps serving while becoming
-    # the permanent router. docker rename does not restart the container.
-    ROUTER_ID="${PORT_CONTAINERS[0]}"
-    echo "Adopting the current APP_PORT container ${ROUTER_ID} as ${ROUTER_NAME}..."
-    docker rename "$ROUTER_ID" "$ROUTER_NAME"
+    echo "ERROR: ${PORT_CONTAINERS[0]} owns APP_PORT ${APP_PORT}, but it is not ${ROUTER_NAME}." >&2
+    echo "Refusing to adopt a release container as the stable router." >&2
+    exit 1
 else
-    # First-ever deployment has no previous traffic to preserve.
-    echo "Creating stable router on host port ${APP_PORT}..."
+    echo "Creating dedicated stable router on host port ${APP_PORT}..."
     docker run -d \
         --name "$ROUTER_NAME" \
         --restart unless-stopped \
@@ -141,6 +141,7 @@ cat > "$NEW_CONFIG" <<EOF
 server {
     listen 80;
     server_name _;
+    add_header X-CDSS-Release "${NEW_VERSION}" always;
 
     # Docker's embedded DNS is queried repeatedly, so a frontend container
     # restart does not leave nginx pinned to its former IP address.
@@ -179,8 +180,15 @@ docker exec "$ROUTER_NAME" nginx -s reload
 
 promoted=false
 for i in $(seq 1 10); do
-    if curl -s -f -L "http://localhost:${APP_PORT}/" > /dev/null 2>&1 \
-        && curl -s -f "http://localhost:${APP_PORT}/health" > /dev/null 2>&1; then
+    release_header="$(
+        curl -sS -f -D - -o /dev/null "http://127.0.0.1:${APP_PORT}/" 2>/dev/null \
+            | tr -d '\r' \
+            | sed -n 's/^X-CDSS-Release: //p' \
+            | tail -n 1 \
+            || true
+    )"
+    if [ "$release_header" = "$NEW_VERSION" ] \
+        && curl -sS -f "http://127.0.0.1:${APP_PORT}/health" > /dev/null 2>&1; then
         promoted=true
         break
     fi
@@ -194,12 +202,16 @@ if [ "$promoted" != "true" ]; then
     exit 1
 fi
 
-if ! start_backup_service; then
-    rollback_router
-    exit 1
-fi
+if [ "$MODE" = "promote" ]; then
+    if ! start_backup_service; then
+        rollback_router
+        exit 1
+    fi
 
-echo "$NEW_VERSION" > "$VERSION_FILE"
+    echo "$NEW_VERSION" > "$VERSION_FILE"
+else
+    echo "Live route for cdss-${NEW_VERSION} repaired and verified."
+fi
 PROMOTION_COMPLETE=true
 
 # Nginx's old workers retain established requests after reload. Wait for them

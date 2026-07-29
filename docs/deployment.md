@@ -127,17 +127,25 @@ Stages, in order:
 4. **Inject Environment**: copies the `cdss-prod-env` Jenkins credential
    (a file) to the host as `.env.new`, strips CRLF line endings, moves it to
    `.env`.
-5. **Build Images**: `deploy/build_images.sh <version>`.
-6. **Backup Current Database**: `deploy/backup_current_db.sh`.
-7. **Provision New Stack**: `deploy/provision_stack.sh <version>`.
-8. **Promote New Stack**: `deploy/promote_stack.sh <version>`.
-9. **Prune Old Stacks**: `deploy/prune_old_stacks.sh`.
+5. **Ensure Live Route**: repairs and verifies the public route to the version
+   in `deploy/.current_version`, recreating a missing dedicated router before
+   lengthy build or migration work begins.
+6. **Build Images**: `deploy/build_images.sh <version>`.
+7. **Backup Current Database**: `deploy/backup_current_db.sh`.
+8. **Provision New Stack**: `deploy/provision_stack.sh <version>`.
+9. **Promote New Stack**: `deploy/promote_stack.sh <version>`.
+10. **Prune Old Stacks**: `deploy/prune_old_stacks.sh`.
+11. **Verify Public Endpoint**: checks `https://cdss.click/` and `/health`
+    from the Jenkins agent and requires `X-CDSS-Release` to match the build
+    number. A host-local success can therefore no longer hide an external 502.
 
 On success: logs `cdss running on <host>:<port> (version <version>)`. On
 failure: tears down the candidate stack only when it was not promoted. A
 failure in a later stage does not tear down the version already recorded as
-live. The stable router keeps the previous successfully routed release
-available throughout a failed promotion. `cleanWs()` always runs at the end.
+live; instead, failure cleanup repairs and verifies that release's public
+route. Before removing an unpromoted candidate, cleanup first restores the
+previous promoted route. Candidate containers, networks, volumes, and images
+are then removed by Docker labels and IDs. `cleanWs()` always runs at the end.
 
 ## The blue/green deploy scripts (`deploy/`)
 
@@ -216,17 +224,18 @@ working as intended.
 The zero-downtime cutover, with automatic rollback:
 
 1. Finds the healthy private frontend and its release network.
-2. Reuses the persistent `cdss-router`. During the first rollout of this
-   scheme, the currently bound frontend container is renamed and adopted as
-   that router without restarting it; a first-ever installation creates a
-   fresh router.
+2. Reuses the dedicated persistent `cdss-router`, or creates it when absent.
+   The router has no Compose release labels and the script refuses to adopt
+   another container that happens to own the public port.
 3. Connects the router to the candidate network and verifies the candidate
    through its unique `cdss-frontend-${VERSION}` alias.
 4. Writes and validates a new nginx upstream configuration, then runs
    `nginx -s reload`. Nginx starts new workers atomically and lets old workers
    finish existing requests, while the router retains `APP_PORT` throughout.
-5. Health-checks `/` and `/health` through the public port. On failure, the
-   previous nginx configuration is restored and reloaded.
+5. Adds an `X-CDSS-Release` response header and checks `/` and `/health`
+   through the public port. Promotion succeeds only when the header identifies
+   the candidate release. On failure, the previous nginx configuration is
+   restored and reloaded.
 6. On success, starts the new backup service, records
    `deploy/.current_version`, waits for old nginx workers to drain, and then
    disconnects obsolete release networks. If a long-running request is still
@@ -238,12 +247,12 @@ The zero-downtime cutover, with automatic rollback:
 Runs last. Discovers old versions purely from `docker ps -a` container
 naming (`cdss-<N>-...`), so it can't drift from actual host state. For every
 non-current version: always removes its `backend`/`frontend`/`backup`
-containers and images, except that it never removes the adopted
-`cdss-router` even if that container retains labels from its original
-Compose project. It keeps the `db` container/volume as a rollback candidate,
-then removes database resources for all but the 3 most recent old versions
-(`KEEP_RETENTION=3`, hardcoded), so up to 3 old database snapshots remain
-available as rollback targets at any time.
+containers and images by immutable container ID. The exact live release and
+backend health are checked again after pruning. It stops each old `db`
+container but keeps its volume as a rollback candidate, then removes database
+resources for all but the 3 most recent old versions (`KEEP_RETENTION=3`,
+hardcoded), so up to 3 stopped database snapshots remain available as rollback
+targets at any time.
 
 ## Backups in production
 

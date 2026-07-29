@@ -7,6 +7,7 @@ pipeline {
 
         // 3000 is already taken by another project (qminh) on this host.
         APP_PORT = '3001'
+        PUBLIC_URL = 'https://cdss.click'
 
         DEPLOY_PATH = '/opt/webapps/cdss'
 
@@ -58,7 +59,8 @@ pipeline {
                              deploy/build_images.sh deploy/seed_database.sh \
                              deploy/lib.sh deploy/provision_stack.sh \
                              deploy/promote_stack.sh deploy/prune_old_stacks.sh \
-                             deploy/cleanup_failed_stack.sh; do
+                             deploy/cleanup_failed_stack.sh \
+                             deploy/ensure_live_route.sh; do
                         if [ ! -f "$f" ]; then
                             echo "ERROR: required file missing: $f"
                             exit 1
@@ -116,6 +118,23 @@ pipeline {
                             "
                         '''
                     }
+                }
+            }
+        }
+
+        // Repair and verify the currently promoted route before a potentially
+        // lengthy build. This also recreates a missing stable router.
+        stage('Ensure Live Route') {
+            steps {
+                sshagent(['ubuntu-vm-jenkins']) {
+                    sh '''
+                        ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                            set -e
+                            cd ${DEPLOY_PATH}
+                            chmod +x deploy/ensure_live_route.sh deploy/promote_stack.sh
+                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/ensure_live_route.sh
+                        "
+                    '''
                 }
             }
         }
@@ -201,10 +220,38 @@ pipeline {
                             set -e
                             cd ${DEPLOY_PATH}
                             chmod +x deploy/prune_old_stacks.sh
-                            ./deploy/prune_old_stacks.sh
+                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/prune_old_stacks.sh
                         "
                     '''
                 }
+            }
+        }
+
+        stage('Verify Public Endpoint') {
+            steps {
+                sh '''
+                    for attempt in $(seq 1 10); do
+                        release_header=$(
+                            curl -fsS --max-time 10 \
+                                -H 'Cache-Control: no-cache' \
+                                -D - -o /dev/null \
+                                "${PUBLIC_URL}/?deployment_check=${VERSION}" \
+                                | tr -d '\\r' \
+                                | awk 'tolower($1) == "x-cdss-release:" { print $2 }' \
+                                | tail -n 1 \
+                                || true
+                        )
+                        if [ "$release_header" = "${VERSION}" ] \
+                            && curl -fsS --max-time 10 "${PUBLIC_URL}/health" > /dev/null; then
+                            echo "Public endpoint is serving release ${VERSION}."
+                            exit 0
+                        fi
+                        echo "Public endpoint attempt ${attempt} failed (release header: ${release_header:-none})."
+                        sleep 2
+                    done
+                    echo "ERROR: ${PUBLIC_URL} did not serve healthy release ${VERSION}." >&2
+                    exit 1
+                '''
             }
         }
     }
@@ -223,8 +270,8 @@ pipeline {
                 sh '''
                     ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                         cd ${DEPLOY_PATH} 2>/dev/null || exit 0
-                        chmod +x deploy/cleanup_failed_stack.sh
-                        ./deploy/cleanup_failed_stack.sh ${VERSION}
+                        chmod +x deploy/cleanup_failed_stack.sh deploy/promote_stack.sh
+                        PUBLIC_APP_PORT=${APP_PORT} ./deploy/cleanup_failed_stack.sh ${VERSION}
                     "
                 '''
             }
