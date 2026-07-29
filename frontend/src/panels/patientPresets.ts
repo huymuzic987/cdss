@@ -1,10 +1,17 @@
 import type { PatientFormData } from './mockPatientForm/types'
+import { DEFAULT_FORM } from './mockPatientForm/types'
+import { formToPayload } from './mockPatientForm/payload'
+import type { JsonObject } from '../api/types'
 
 export interface PatientPreset {
   id: string
   label: string
   category: string
   description: string
+  bundle: JsonObject
+}
+
+interface PatientPresetDefinition extends Omit<PatientPreset, 'bundle'> {
   data: Partial<PatientFormData>
 }
 
@@ -21,7 +28,7 @@ const MEDICATION_TARGET: Pick<PatientFormData, 'target_sbp_upper' | 'target_dbp_
   previous_dbp: '95',
 }
 
-export const PATIENT_PRESETS: PatientPreset[] = [
+const PATIENT_PRESET_DEFINITIONS: PatientPresetDefinition[] = [
   // ---- Diagnosis Routes ----
   {
     id: 'normal-bp',
@@ -692,3 +699,8 @@ export const PATIENT_PRESETS: PatientPreset[] = [
     },
   },
 ]
+
+export const PATIENT_PRESETS: PatientPreset[] = PATIENT_PRESET_DEFINITIONS.map(({ data, ...preset }) => ({
+  ...preset,
+  bundle: formToPayload({ ...DEFAULT_FORM, ...data }, `preset-${preset.id}`),
+}))

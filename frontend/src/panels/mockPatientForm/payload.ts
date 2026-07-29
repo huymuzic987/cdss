@@ -1,6 +1,6 @@
 import type { JsonObject } from '../../api/types'
-import { flatToBundle } from './fhirBundle'
-import type { PatientFormData } from './types'
+import { bundleToFlat, flatToBundle } from './fhirBundle'
+import { DEFAULT_FORM, type PatientFormData } from './types'
 
 /** Convert string to number or omit if empty */
 function num(v: string): number | undefined {
@@ -9,8 +9,22 @@ function num(v: string): number | undefined {
 }
 
 /** Build the request `input`: an HL7 FHIR R4 Bundle, per /evaluate's contract. */
-export function formToPayload(form: PatientFormData): JsonObject {
-  return flatToBundle(formToFlatInput(form))
+export function formToPayload(form: PatientFormData, patientId?: string): JsonObject {
+  return flatToBundle(formToFlatInput(form), patientId)
+}
+
+export function bundleToForm(bundle: JsonObject): PatientFormData {
+  const flat = bundleToFlat(bundle)
+  const form: PatientFormData = { ...DEFAULT_FORM }
+  for (const key of Object.keys(form) as (keyof PatientFormData)[]) {
+    const value = flat[key]
+    if (typeof form[key] === 'boolean') {
+      ;(form as unknown as Record<string, string | boolean>)[key] = value === true
+    } else if (value !== undefined && value !== null) {
+      ;(form as unknown as Record<string, string | boolean>)[key] = String(value)
+    }
+  }
+  return form
 }
 
 function formToFlatInput(form: PatientFormData): JsonObject {
@@ -103,12 +117,8 @@ function formToFlatInput(form: PatientFormData): JsonObject {
   out['is_medication_follow_up'] = false
   // Active BP target — SBP/DBP must each be below the given threshold
   // Previous visit's BP target — record only, kept alongside previous_sbp/dbp
-  if (form.previous_target_sbp || form.previous_target_dbp) {
-    const previousTarget: JsonObject = {}
-    if (form.previous_target_sbp) previousTarget['sbp'] = { upper_exclusive_mmhg: num(form.previous_target_sbp)! }
-    if (form.previous_target_dbp) previousTarget['dbp'] = { upper_exclusive_mmhg: num(form.previous_target_dbp)! }
-    out['previous_bp_target'] = previousTarget
-  }
+  set('previous_target_sbp', num(form.previous_target_sbp))
+  set('previous_target_dbp', num(form.previous_target_dbp))
 
   return out
 }

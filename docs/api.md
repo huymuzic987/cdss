@@ -2,11 +2,11 @@
 
 Use the focused guide for the capability you are working with:
 
-| Capability | Guide |
-| --- | --- |
-| Endpoint map and shared behavior | [API guide](api/README.md) |
-| Clinical evaluation and FHIR input | [Evaluation](api/evaluation.md) |
-| Tree graphs and saved layouts | [Trees and layouts](api/trees-and-layouts.md) |
+| Capability                                   | Guide                                           |
+| -------------------------------------------- | ----------------------------------------------- |
+| Endpoint map and shared behavior             | [API guide](api/README.md)                      |
+| Clinical evaluation and FHIR input           | [Evaluation](api/evaluation.md)                 |
+| Tree graphs and saved layouts                | [Trees and layouts](api/trees-and-layouts.md)   |
 | FHIR export, clinical import, and statistics | [FHIR and dashboard](api/fhir-and-dashboard.md) |
 
 For every request field, response field, and extended example, use the

@@ -59,7 +59,7 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 _DATA_DIR = _REPO_ROOT / "data" / "fhir"
-_TEST_CASE_DIR = _REPO_ROOT / "backups" / "test_case"
+_TEST_CASE_DIR = _REPO_ROOT / "data" / "fhir" / "test_case"
 
 
 def _today() -> date:

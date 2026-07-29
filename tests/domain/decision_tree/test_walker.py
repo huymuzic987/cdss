@@ -1,6 +1,7 @@
 """Synthetic tests for the internal-tree traversal loop."""
 
 from collections.abc import Sequence
+from dataclasses import replace
 from typing import Any
 from uuid import UUID
 
@@ -70,8 +71,14 @@ def _edge(
     )
 
 
-def _graph(nodes: list[NodeDefinition], edges: list[EdgeDefinition]) -> TreeGraph:
-    return TreeGraph.build(tree=TREE, nodes=nodes, edges=edges, references=[])
+def _graph(
+    nodes: list[NodeDefinition],
+    edges: list[EdgeDefinition],
+    *,
+    tree_key: str = TREE.tree_key,
+) -> TreeGraph:
+    tree = replace(TREE, tree_key=tree_key)
+    return TreeGraph.build(tree=tree, nodes=nodes, edges=edges, references=[])
 
 
 def _entered_node_keys(trace: Sequence[TraversalTraceEntry]) -> list[str]:
@@ -208,7 +215,11 @@ def test_terminal_end_applies_context_patch() -> None:
     assert end_entry.changed_context_paths == ["context.diagnosis.status"]
 
 
-def test_action_with_outgoing_edge_continues() -> None:
+@pytest.mark.parametrize(
+    "tree_key",
+    ["essential-treatment-strategy", "optimal-treatment-strategy"],
+)
+def test_treatment_strategy_action_with_outgoing_link_continues(tree_key: str) -> None:
     start = _node(1, "start", NodeType.START)
     action = _node(
         2,
@@ -217,17 +228,39 @@ def test_action_with_outgoing_edge_continues() -> None:
         action_payload={"recommendation": "adjust"},
         context_patch={"treatment": {"adjusted": True}},
     )
+    link = _node(3, "link", NodeType.LINK, link_target_tree_key="next-tree")
+    graph = _graph(
+        [start, action, link],
+        [_edge(10, start, action), _edge(11, action, link)],
+        tree_key=tree_key,
+    )
+
+    with pytest.raises(LinkNotEnabled) as exc_info:
+        walk_tree(graph, {})
+
+    partial = exc_info.value.partial_run_state
+    assert partial is not None
+    assert _entered_node_keys(partial.trace) == ["start", "action", "link"]
+
+
+@pytest.mark.parametrize(
+    "tree_key",
+    ["walker-test-tree", "essential-treatment-strategy"],
+)
+def test_action_stops_unless_allowed_tree_targets_link_node(tree_key: str) -> None:
+    start = _node(1, "start", NodeType.START)
+    action = _node(2, "action", NodeType.ACTION, action_payload={"recommendation": "stop"})
     end = _node(3, "end", NodeType.END)
     graph = _graph(
         [start, action, end],
         [_edge(10, start, action), _edge(11, action, end)],
+        tree_key=tree_key,
     )
 
     result = walk_tree(graph, {})
 
-    assert _entered_node_keys(result.trace) == ["start", "action", "end"]
-    assert result.context == {"treatment": {"adjusted": True}}
-    assert [item.payload for item in result.actions] == [{"recommendation": "adjust"}]
+    assert _entered_node_keys(result.trace) == ["start", "action"]
+    assert [item.payload for item in result.actions] == [{"recommendation": "stop"}]
 
 
 def test_no_matching_transition_preserves_rejected_candidate_trace() -> None:
@@ -317,6 +350,7 @@ def test_link_not_enabled_preserves_prior_state_and_link_entry() -> None:
     graph = _graph(
         [start, action, link],
         [_edge(10, start, action), _edge(11, action, link)],
+        tree_key="essential-treatment-strategy",
     )
 
     with pytest.raises(LinkNotEnabled) as exc_info:
@@ -350,11 +384,15 @@ def test_non_finite_input_raises_typed_error_not_untyped_crash(bad_value: float)
 def test_candidate_evaluations_do_not_consume_the_step_budget() -> None:
     start = _node(1, "start", NodeType.START)
     cond_a = _node(
-        2, "cond-a", NodeType.CONDITION,
+        2,
+        "cond-a",
+        NodeType.CONDITION,
         condition_definition={"op": "exists", "path": "input.absent"},
     )
     cond_b = _node(
-        3, "cond-b", NodeType.CONDITION,
+        3,
+        "cond-b",
+        NodeType.CONDITION,
         condition_definition={"op": "exists", "path": "input.missing"},
     )
     end = _node(4, "end", NodeType.END)

@@ -126,12 +126,18 @@ def test_build_medicine_options_returns_none_without_treatment_preferences() -> 
 
 
 def test_build_medicine_options_expands_combination_options() -> None:
-    context = {"treatment_preferences": {"combination_options": [["A", "C"], ["A", "D"]]}}
+    context = {
+        "treatment_preferences": {
+            "dose_strategy": "LOW_DOSE",
+            "combination_options": [["A", "C"], ["A", "D"]],
+        }
+    }
 
     options = build_medicine_options(context, _FakeMedicineRepository())
 
     assert options is not None
     assert [o["classes"] for o in options] == [["A", "C"], ["A", "D"]]
+    assert all(option["dose_strategy"] == "LOW_DOSE" for option in options)
     assert "Losartan" in _medicine_names(options[0], "A")
     assert "Amlodipine" in _medicine_names(options[0], "C")
 
@@ -162,6 +168,7 @@ def test_build_medicine_options_expands_escalation_options_classes() -> None:
 
     assert options is not None
     assert [o["classes"] for o in options] == [["A", "C", "D"]]
+    assert options[0]["dose_strategy"] == "USUAL_DOSE"
 
 
 def test_build_medicine_options_merges_mandated_additional_classes() -> None:
