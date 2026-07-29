@@ -2031,14 +2031,9 @@ INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order
 VALUES ('01fee17a-e123-484e-8720-1429a6ad1d4d', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-chronic-kidney-disease' AND n.node_key = 'T11_ACTION_TEST_CREATININE_AND_MONITOR'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-chronic-kidney-disease' AND n.node_key = 'T11_LINK_OPTIMAL_TREATMENT_STRATEGY'), 2)
 ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
 
-DELETE FROM public.decision_edges
-WHERE from_node_id = (
-    SELECT n.id
-    FROM public.decision_nodes n
-    JOIN public.decision_trees t ON t.id = n.tree_id
-    WHERE t.tree_key = 'hypertension-chronic-kidney-disease'
-      AND n.node_key = 'T11_ACTION_TEST_CREATININE_COMPARE_PRIOR'
-);
+INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
+VALUES ('59b4b88a-2752-43f6-b4c7-a58349d3fc1d', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-chronic-kidney-disease' AND n.node_key = 'T11_ACTION_TEST_CREATININE_COMPARE_PRIOR'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-chronic-kidney-disease' AND n.node_key = 'T11_INF_DETERMINE_CREATININE_INCREASE_STATUS'), 1)
+ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('7ec23be2-ad42-4e72-aa99-fbb1a76b2b6d', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-chronic-kidney-disease' AND n.node_key = 'T11_C_CREATININE_INCREASED_OVER_30_PERCENT'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-chronic-kidney-disease' AND n.node_key = 'T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR'), 1)
