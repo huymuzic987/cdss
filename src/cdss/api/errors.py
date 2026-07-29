@@ -143,19 +143,20 @@ async def request_validation_error_handler(
     _request: Request,
     error: RequestValidationError,
 ) -> JSONResponse:
+    errors = error.errors()
     safe_errors: list[JsonValue] = [
         {
             "type": item["type"],
             "location": list(item["loc"]),
             "message": item["msg"],
         }
-        for item in error.errors()
+        for item in errors
     ]
     errors_summary = []
-    for item in error.errors():
+    for item in errors:
         loc_str = " -> ".join(str(loc) for loc in item["loc"])
         errors_summary.append(f"{loc_str}: {item['msg']}")
-    
+
     message = "Request validation failed."
     if errors_summary:
         message = f"Request validation failed. Errors: {', '.join(errors_summary)}"

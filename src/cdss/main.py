@@ -7,10 +7,6 @@ from starlette.middleware.cors import CORSMiddleware
 from cdss.api.errors import register_error_handlers
 from cdss.api.routes import dashboard, evaluation, fhir, health, tree_graph, tree_layout
 
-# The Vite dev server for the tree-graph/editor frontend. No patient data
-# crosses this API, so a small static allow-list is sufficient.
-_FRONTEND_DEV_ORIGIN = "http://localhost:5173"
-
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Hypertension CDSS", version="0.1.0", docs_url=None, redoc_url=None)

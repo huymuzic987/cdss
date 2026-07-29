@@ -75,6 +75,8 @@ def _build_efficacy(patients: list[Patient]) -> EfficacyResponse:
     adherent_count = sum(1 for v in adherence_flagged if v.adherent_to_cdss)
     overallrate = rate(adherent_count, len(adherence_flagged))
 
+    visits_sorted_by_patient = [sorted(p.visits, key=lambda v: v.visit_number) for p in patients]
+
     # Same-visit adherence vs. that same visit's BP control is circular: a
     # visit is only ever marked non-adherent when BP wasn't already controlled
     # (an already-controlled visit trivially "adheres" by maintaining the
@@ -85,8 +87,7 @@ def _build_efficacy(patients: list[Patient]) -> EfficacyResponse:
     adherent_decision_points = 0
     nonadherent_next_controlled = 0
     nonadherent_decision_points = 0
-    for p in patients:
-        visits_sorted = sorted(p.visits, key=lambda v: v.visit_number)
+    for visits_sorted in visits_sorted_by_patient:
         for prev, curr in zip(visits_sorted, visits_sorted[1:], strict=False):
             if prev.bp_controlled is not False or curr.bp_controlled is None:
                 continue
@@ -106,8 +107,7 @@ def _build_efficacy(patients: list[Patient]) -> EfficacyResponse:
 
     change_count = 0
     change_opportunities = 0
-    for p in patients:
-        visits_sorted = sorted(p.visits, key=lambda v: v.visit_number)
+    for visits_sorted in visits_sorted_by_patient:
         for prev, curr in zip(visits_sorted, visits_sorted[1:], strict=False):
             if prev.medications and curr.medications:
                 change_opportunities += 1

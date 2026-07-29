@@ -5,6 +5,7 @@ import type { TreeEdgeLayout, TreeGraphNode, TreeGraphResponse, TreeLayoutRespon
 import { layoutTree, type NodePosition } from '../layout/elkLayout'
 import { buildTreeScene } from './buildTreeScene'
 import { currentEdgeLayouts } from './edgeLayout'
+import { isValidTreeGraph } from './validateTreeGraph'
 
 interface UseTreeCanvasSceneOptions {
   graph: TreeGraphResponse
@@ -41,6 +42,10 @@ export function useTreeCanvasScene({ graph, theme, focusNodeKey, onSelectNode }:
 
   const handleMount = useCallback(
     (editor: Editor) => {
+      if (!isValidTreeGraph(graph)) {
+        throw new Error('Received a malformed tree graph from the server (missing or invalid nodes/edges).')
+      }
+
       editorRef.current = editor
       editor.user.updateUserPreferences({ colorScheme: theme })
 
