@@ -386,21 +386,20 @@ clinical execution or turn a failed run into a success.
 ## 15. Repository audit and module placement
 
 The current repository is a `src/`-layout modular monolith. The existing empty
-package `cdss.domain.decision_tree` is the appropriate ownership boundary for
-the generic engine.
-
-Recommended future layout:
+package `cdss.domain.decision_tree` is the ownership boundary for the generic
+engine. The refactored implementation keeps stable public façades and places
+focused implementation modules beside them:
 
 ```text
 src/cdss/domain/decision_tree/
   contracts.py
   errors.py
   paths.py
-  conditions.py
-  patches.py
-  graph.py
-  validator.py
-  walker.py
+  conditions.py + condition_*.py
+  patches.py + patch_*.py
+  graph.py + graph_builder.py + graph_freezing.py
+  validator.py + validation_*.py
+  walker.py + walker_*.py
 
 src/cdss/infrastructure/db/
   decision_tree_repository.py

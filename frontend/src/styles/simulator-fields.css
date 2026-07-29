@@ -1,0 +1,190 @@
+﻿/* --- Shared input styles --- */
+.ps-field-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.ps-field-hint {
+  cursor: help;
+  margin-left: 4px;
+  color: var(--text-muted);
+  font-style: normal;
+}
+
+.ps-select {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-input-border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 12px;
+  outline: none;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.ps-select option {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+}
+
+.ps-num-input,
+.ps-text-input {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-input-border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 12px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.ps-num-input:focus,
+.ps-text-input:focus,
+.ps-select:focus {
+  border-color: var(--accent-border);
+  box-shadow: 0 0 6px var(--accent-focus-ring);
+}
+
+/* Remove spin buttons/arrows for number inputs in the sidebar */
+.ps-sidebar input[type="number"]::-webkit-outer-spin-button,
+.ps-sidebar input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.ps-sidebar input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+
+/* --- BP rows --- */
+.ps-bp-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 14px;
+}
+
+.ps-bp-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  width: 62px;
+  flex-shrink: 0;
+}
+
+.ps-bp-input {
+  width: 56px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--accent-input-border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 12px;
+  outline: none;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.ps-bp-input:focus {
+  border-color: var(--accent-border);
+}
+
+.ps-bp-sep {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ps-bp-unit {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+/* --- Demographics field row --- */
+.ps-field-row {
+  display: flex;
+  gap: 8px;
+  padding: 6px 14px;
+}
+
+.ps-field {
+  flex: 1;
+  min-width: 0;
+}
+
+/* --- Toggles --- */
+.ps-toggles {
+  padding: 2px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ps-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border-soft);
+  cursor: pointer;
+  user-select: none;
+}
+
+.ps-toggle-disabled { opacity: 0.45; cursor: not-allowed; }
+
+.ps-toggle-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex: 1;
+  min-width: 0;
+}
+
+.ps-toggle-note {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.ps-toggle-track {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--toggle-track-bg);
+  border: 1px solid var(--toggle-track-border);
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.ps-toggle-track.checked {
+  background: var(--accent-border);
+  border-color: var(--accent-border);
+}
+
+.ps-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.ps-toggle-track.checked .ps-toggle-thumb {
+  transform: translateX(14px);
+}
+
