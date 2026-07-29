@@ -61,124 +61,69 @@ clear ownership of clinical-shape decisions) without that cost.
 
 ```text
 src/cdss/
-├── domain/
-│   ├── decision_tree/          # Pure clinical traversal engine (no DB or API deps)
-│   │   ├── contracts.py        # RunState, TraversalResult, ExecutedAction, TreeMetadata, ...
-│   │   ├── graph.py            # Public graph types/protocol; delegates construction
-│   │   ├── graph_builder.py    # Index construction and START-node selection
-│   │   ├── graph_freezing.py   # Recursive immutable JSON conversion
-│   │   ├── walker.py           # Public traversal loop and composition root
-│   │   ├── walker_*.py         # Link, trace, and transition responsibilities
-│   │   ├── conditions.py       # Public condition API
-│   │   ├── condition_*.py      # Evaluation, operations, types, and validation
-│   │   ├── patches.py          # Public patch API and recursive merge
-│   │   ├── patch_*.py          # COPY_PATH operations, paths, and typed errors
-│   │   ├── paths.py            # input./context. path resolver
-│   │   ├── validator.py        # Public static-validation coordinator
-│   │   ├── validation_*.py     # Edge, semantic, topology, error, and result concerns
-│   │   ├── actions.py          # Action-payload collection, incl. medicine-catalog enrichment
-│   │   ├── drug_classes.py     # Resolves A/B/C/D drug-class combinations into medicines
-│   │   ├── medicine_catalog.py # Medicine dataclass + MedicineRepository protocol
-│   │   └── errors.py           # Typed domain errors
-│   └── follow_up.py            # Infers today's workflow (initial/lifestyle/medication follow-up)
-│                                # from a replayed previous-visit traversal
-├── infrastructure/db/          # SQLAlchemy models and repository implementations
-│   ├── models.py                    # ORM tables (see docs/database.md)
-│   ├── base.py                      # Declarative Base used by Alembic
-│   ├── decision_tree_repository.py  # SqlAlchemyTreeGraphRepository: loads a tree in 4 queries
-│   ├── caching_repository.py        # Optional in-memory TreeGraph cache (opt-in, off by default)
-│   ├── medicine_repository.py       # SqlAlchemyMedicineRepository
-│   ├── caching_medicine_repository.py # Optional in-memory medicine-catalog cache (opt-in)
-│   ├── tree_layout_repository.py    # Editor canvas layout persistence (separate, mutable, never cached)
-│   ├── dashboard_repository.py      # Read access to patients/visits for the statistics dashboard
-│   └── clinical_import.py           # FHIR bundle -> patients/visits importer
-└── api/
-    ├── routes/     # evaluation, tree_graph, tree_layout, fhir, dashboard, health
-    ├── schemas/    # Pydantic request/response models, incl. the FHIR Bundle <-> flat-input mapper
-    ├── dependencies.py  # FastAPI DI wiring (session -> repository, with/without caching)
-    └── errors.py         # Maps typed domain errors to HTTP status codes and JSON bodies
+|-- domain/decision_tree/       # Pure graph, validation, and traversal behavior
+|-- domain/follow_up.py         # Hypertension-specific evaluation orchestration
+|-- infrastructure/db/          # SQLAlchemy repositories, dashboard queries, FHIR import
+\-- api/                        # FastAPI routes, schemas, dependency wiring, error mapping
 ```
 
 ### 1. Domain layer - `cdss.domain.decision_tree`
 
-This is the generic engine. It knows the seven `NodeType` values (`START`,
-`CONDITION`, `INFERENCE`, `ACTION`, `END`, `LINK`, `GLOBAL`) and the JSON
-dialect for conditions and context patches, and nothing else about
-hypertension. Key pieces:
+The domain package has no FastAPI or SQLAlchemy imports. The refactor preserves
+the original public modules while extracting cohesive implementation concerns:
 
-- **`graph.py`**: `TreeGraph.build()` takes flat lists of node/edge/reference
-  rows and assembles an immutable, validated in-memory graph (`nodes_by_id`,
-  `nodes_by_key`, `outgoing_edges_by_node_id` sorted by `traversal_order`,
-  etc). All node JSON fields are frozen into `FrozenJsonObject` so a loaded
-  graph can never be mutated by a traversal.
-- **`walker.py`**: `walk_tree(graph, runtime_input, ...)` is the entire
-  execution engine. It is one Python class (`_InternalTraversal`) driving a
-  `while True` loop: enter a node, apply side effects for that node type,
-  record a trace entry, pick the next node by evaluating outgoing edges in
-  `traversal_order`, repeat. It also handles `LINK` nodes by loading another
-  tree from the injected `TreeGraphRepository` and tail-transferring into it
-  (no call stack, no automatic return - see the traversal contract).
-- **`conditions.py` / `patches.py` / `paths.py`**: the pure functions that
-  interpret `condition_definition` and `context_patch` JSON. These have zero
-  knowledge of any specific tree.
-- **`validator.py`**: runs once per tree per run (and again for any newly
-  linked tree) before traversal starts: exactly one `START`, no cycles, every
-  executable node reachable, every condition/patch well-formed.
-- **`actions.py` / `drug_classes.py` / `medicine_catalog.py`**: when an
-  `ACTION`/`END` node has a non-null `action_payload`, `collect_action()`
-  copies it into the result and, for a small set of known `action_type`
-  values, enriches it with resolved medicines from the `medicines` table
-  (via an injected `MedicineRepository`, not a hardcoded lookup).
-- **`follow_up.py`** (`cdss.domain.follow_up`, not under `decision_tree/`) -
-  not part of the generic engine. It is hypertension-specific orchestration
-  used only by the `/evaluate` route: given today's input plus a previous
-  visit's readings, it replays the previous visit through
-  `hypertension-diagnosis` to classify today's encounter as an initial visit,
-  a lifestyle follow-up, or a medication follow-up, and to recover the
-  active BP target from that replay.
+| Public module | Focused implementation modules |
+| --- | --- |
+| `graph.py` | `graph_builder.py`, `graph_freezing.py` |
+| `conditions.py` | `condition_evaluator.py`, `condition_operations.py`, `condition_types.py`, `condition_validation.py` |
+| `patches.py` | `patch_errors.py`, `patch_operations.py`, `patch_paths.py` |
+| `validator.py` | `validation_edges.py`, `validation_errors.py`, `validation_semantics.py`, `validation_topology.py`, `validation_types.py` |
+| `walker.py` | `walker_links.py`, `walker_trace.py`, `walker_transitions.py` |
+
+`TreeGraph.build()` still produces immutable indexed graphs, but delegates
+construction and recursive JSON freezing. `walk_tree()` remains the execution
+entry point and owns the node-entry loop; its internal traversal object composes
+link, trace, and transition mixins. Callers should import the public modules,
+not the implementation modules.
+
+`actions.py`, `drug_classes.py`, and `medicine_catalog.py` continue to collect
+and enrich action payloads. `paths.py` remains the runtime input/context path
+resolver. `follow_up.py` sits outside the generic engine because replaying a
+previous hypertension visit is application-specific orchestration.
 
 ### 2. Infrastructure layer - `cdss.infrastructure.db`
 
-Implements the domain's repository protocols against PostgreSQL via
-SQLAlchemy, and owns everything that is not part of the clinical engine but
-still needs the database: the statistics dashboard, FHIR clinical-data
-import, and the tree editor's saved canvas layout.
+The infrastructure package implements the domain repository protocols and owns
+database-backed features outside traversal:
 
-- **`SqlAlchemyTreeGraphRepository.get_tree()`** loads one tree in four bounded
-  queries (tree row, its nodes, its internal edges via a self-join, its
-  source references) and hands the rows to `TreeGraph.build()`. It never
-  touches SQLAlchemy relationship lazy-loading, so the query count is fixed
-  regardless of tree size.
-- **`CachingTreeGraphRepository`** / **`CachingMedicineRepository`** wrap the
-  SQL repositories with an in-memory cache. Both are **opt-in**
-  (`CDSS_GRAPH_CACHE_ENABLED` / `CDSS_MEDICINE_CACHE_ENABLED`, default off)
-  because a stale cached tree after a re-seed is a clinical correctness risk;
-  a deployment that enables caching owns invalidation.
-- **`TreeLayoutRepository`** is kept deliberately separate from the tree-graph
-  repositories: a layout (node x/y positions, connector style) is mutable and
-  written on every canvas edit, so it must never share the graph cache that
-  treats tree structure as immutable.
-- **`DashboardRepository`** / **`clinical_import.py`** are unrelated to
-  traversal - they back the statistics dashboard described in
-  [docs/frontend.md](frontend.md) and [docs/database.md](database.md).
+- `decision_tree_repository.py` loads a tree in four bounded queries and hands
+  plain rows to `TreeGraph.build()`.
+- `caching_repository.py` and `caching_medicine_repository.py` provide opt-in
+  caches. `tree_layout_repository.py` stays separate because layouts are
+  mutable and must not share the immutable graph cache.
+- `dashboard_repository.py` is the stable injected repository. It composes
+  focused query mixins from `dashboard_filters.py`, `dashboard_overview.py`,
+  `dashboard_outcomes.py`, and `dashboard_patients.py`; shared aggregate types
+  live in `dashboard_metrics.py`.
+- `clinical_import.import_bundle()` remains the transaction coordinator.
+  Parsing, patient/condition upserts, and observation/medication/visit writes
+  are delegated to `fhir_import_parsing.py`, `fhir_patient_import.py`, and
+  `fhir_resource_writer.py`.
 
 ### 3. API layer - `cdss.api`
 
-FastAPI routes and Pydantic schemas. `cdss.main.create_app()` builds the
-`FastAPI` app, registers CORS (wide open - no patient identifier ever crosses
-this API), registers the domain-error-to-HTTP-status mapping
-(`api/errors.py`), and mounts six routers: `health`, `evaluation`,
-`tree_graph`, `tree_layout`, `fhir`, `dashboard`.
+`cdss.main.create_app()` mounts the same six public routers: `health`,
+`evaluation`, `tree_graph`, `tree_layout`, `fhir`, and `dashboard`.
+`api/dependencies.py` remains the repository composition point, and
+`api/errors.py` maps typed domain errors centrally.
 
-`api/dependencies.py` is the only place that decides whether a request gets a
-caching or non-caching repository, based on `Settings`. Routes never
-instantiate a repository directly.
+Route URLs and response contracts did not change in the refactor:
 
-The public router imports remain stable. `routes/dashboard.py` now composes
-the seed, summary, and patient routers; response construction is grouped into
-status, metrics, usage, and summary modules. `routes/fhir.py` still owns the
-endpoint functions, while clinical-record serialization is isolated in
-`routes/fhir_export.py`. No URL or response contract changed in this split.
+- `routes/dashboard.py` is now a composition router over seed, summary, and
+  patient routers. Summary construction is further separated into status,
+  metrics, usage, and summary modules.
+- `routes/fhir.py` owns the endpoint functions; `routes/fhir_export.py` owns
+  persisted clinical-record serialization.
 
 ## Source-module size boundary
 
