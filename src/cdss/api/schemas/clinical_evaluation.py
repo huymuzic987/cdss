@@ -346,10 +346,9 @@ def _apply_conditions(
 ) -> None:
     for condition in conditions:
         _require_subject(condition, patient_ref)
+        code_concept = condition.get("code")
         codings = (
-            (condition.get("code") or {}).get("coding")
-            if isinstance(condition.get("code"), Mapping)
-            else []
+            (code_concept or {}).get("coding") if isinstance(code_concept, Mapping) else []
         )
         codings = codings if isinstance(codings, list) else []
         pairs = {(c.get("system"), c.get("code")) for c in codings if isinstance(c, Mapping)}
@@ -377,11 +376,7 @@ def _apply_conditions(
             runtime["has_ckd"] = runtime["has_ckd_stage_3_or_higher"] = active
         if any(code.startswith("I25") for code in codes) or "53741008" in codes:
             runtime["has_coronary_artery_disease"] = active
-        text = (
-            (condition.get("code") or {}).get("text")
-            if isinstance(condition.get("code"), Mapping)
-            else None
-        )
+        text = (code_concept or {}).get("text") if isinstance(code_concept, Mapping) else None
         details.append(
             {
                 "id": str(condition.get("id") or f"condition-{len(details)}"),

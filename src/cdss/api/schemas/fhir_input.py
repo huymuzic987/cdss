@@ -177,8 +177,8 @@ def _apply_patient(resource: Mapping[str, Any], flat: JsonObject) -> None:
 def _apply_observation(resource: Mapping[str, Any], flat: JsonObject) -> None:
     components = resource.get("component") or []
     has_bp_component = any(
-        _LOINC_SBP in _codings(component.get("code")).get(_LOINC, set())
-        or _LOINC_DBP in _codings(component.get("code")).get(_LOINC, set())
+        _LOINC_SBP in (codes := _codings(component.get("code")).get(_LOINC, set()))
+        or _LOINC_DBP in codes
         for component in components
         if isinstance(component, Mapping)
     )
