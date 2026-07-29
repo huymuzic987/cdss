@@ -1255,35 +1255,6 @@ INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, te
 VALUES ('455fcd4a-e8f2-4b03-b67a-71784b796683', (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension'), 'T13_C_LIMITED', 'CONDITION'::public.node_type, 'Essential standard', 'Tiêu chuẩn thiết yếu', '{"op": "eq", "path": "input.facility_capability", "value": "LIMITED_RESOURCES"}'::jsonb, NULL, NULL, NULL, NULL, NULL, 2, '2026-07-04 11:03:11.134834+00:00', '2026-07-04 11:03:11.134834+00:00')
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
-DELETE FROM public.node_source_references
-WHERE node_id IN (
-    SELECT n.id
-    FROM public.decision_nodes n
-    JOIN public.decision_trees t ON t.id = n.tree_id
-    WHERE t.tree_key = 'resistant-hypertension'
-      AND n.node_key IN ('T13_A_ESSENTIAL_TREATMENT', 'T13_A_OPTIMAL_TREATMENT', 'T13_A_ADD_D')
-);
-
-DELETE FROM public.decision_edges
-WHERE from_node_id IN (
-    SELECT n.id
-    FROM public.decision_nodes n
-    JOIN public.decision_trees t ON t.id = n.tree_id
-    WHERE t.tree_key = 'resistant-hypertension'
-      AND n.node_key IN ('T13_A_ESSENTIAL_TREATMENT', 'T13_A_OPTIMAL_TREATMENT', 'T13_A_ADD_D')
-)
-OR to_node_id IN (
-    SELECT n.id
-    FROM public.decision_nodes n
-    JOIN public.decision_trees t ON t.id = n.tree_id
-    WHERE t.tree_key = 'resistant-hypertension'
-      AND n.node_key IN ('T13_A_ESSENTIAL_TREATMENT', 'T13_A_OPTIMAL_TREATMENT', 'T13_A_ADD_D')
-);
-
-DELETE FROM public.decision_nodes
-WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension')
-  AND node_key IN ('T13_A_ESSENTIAL_TREATMENT', 'T13_A_OPTIMAL_TREATMENT', 'T13_A_ADD_D');
-
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
 VALUES ('d98b6c15-9c2b-4b7b-a6cb-f869f625f98a', (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension'), 'T13_GLOBAL_ENHANCE_LIFESTYLE', 'GLOBAL'::public.node_type, 'Enhance lifestyle, especially reduce salt', 'Tăng cường lối sống, đặc biệt giảm muối', NULL, NULL, NULL, '{"applies_to": ["T13_C_LIMITED", "T13_C_FULL"], "lifestyle_changes": {"salt_restriction": true}}'::jsonb, NULL, NULL, 3, '2026-07-04 11:03:11.134834+00:00', '2026-07-04 11:03:11.134834+00:00')
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
@@ -2978,10 +2949,6 @@ ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('7f580a2d-ba09-3510-aba8-e6af29a6ccd6', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'optimal-treatment-strategy' AND n.node_key = 'T5_START_BP_AND_AGE_INFORMATION'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'optimal-treatment-strategy' AND n.node_key = 'T5_C_INITIAL_TREATMENT_ENCOUNTER'), 2)
-ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
-
-INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-VALUES ('c1ae4e3d-3fa0-4320-b53f-9ab4db9734d9', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_C_SPIRONOLACTONE_NOT_TOLERATED'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'resistant-hypertension' AND n.node_key = 'T13_A_CHECK_SPIRONOLACTONE'), 1)
 ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
