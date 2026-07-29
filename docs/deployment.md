@@ -42,7 +42,7 @@ Also multi-stage:
    seconds after mount when served over HTTPS from a non-localhost domain.
 2. **`runtime`** (`nginx:1.27-alpine`): copies `frontend/nginx.conf` to
    `/etc/nginx/conf.d/default.conf` and the built `dist/` to nginx's web
-   root. `EXPOSE 80`, healthcheck `wget -qO- http://localhost/`.
+   root. `EXPOSE 80`, healthcheck `wget -qO- http://127.0.0.1/`.
 
 `frontend/nginx.conf` serves the built SPA and reverse-proxies API paths to
 the backend container (`http://backend:8000`): exact-match `/health`,
@@ -158,8 +158,9 @@ Builds only what changed. Hashes the backend's build inputs
 compares against a persisted state file (`deploy/.build_state`). If a
 service's hash is unchanged and its previous version's image still exists,
 it's retagged (`docker image tag`) instead of rebuilt; otherwise
-`$COMPOSE build <service>` runs. State is written atomically (temp file then
-`mv`).
+`$COMPOSE build <service>` runs. When both services changed they always build
+concurrently, capped at two Compose workers. State is written atomically
+(temp file then `mv`).
 
 ### `backup_current_db.sh`
 

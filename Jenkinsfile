@@ -57,7 +57,8 @@ pipeline {
                              deploy/backup_db.sh deploy/backup_current_db.sh \
                              deploy/build_images.sh deploy/seed_database.sh \
                              deploy/lib.sh deploy/provision_stack.sh \
-                             deploy/promote_stack.sh deploy/prune_old_stacks.sh; do
+                             deploy/promote_stack.sh deploy/prune_old_stacks.sh \
+                             deploy/cleanup_failed_stack.sh; do
                         if [ ! -f "$f" ]; then
                             echo "ERROR: required file missing: $f"
                             exit 1
@@ -222,12 +223,8 @@ pipeline {
                 sh '''
                     ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                         cd ${DEPLOY_PATH} 2>/dev/null || exit 0
-                        current_version=\$(cat deploy/.current_version 2>/dev/null || true)
-                        if [ \"\$current_version\" != \"${VERSION}\" ]; then
-                            docker compose -p cdss-${VERSION} -f docker-compose.prod.yml down -v --rmi all || true
-                        else
-                            echo \"Version ${VERSION} is already live; leaving it running despite a later pipeline failure.\"
-                        fi
+                        chmod +x deploy/cleanup_failed_stack.sh
+                        ./deploy/cleanup_failed_stack.sh ${VERSION}
                     "
                 '''
             }

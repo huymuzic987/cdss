@@ -94,14 +94,14 @@ echo "Starting backend and private frontend..."
 $COMPOSE up -d --no-build backend frontend
 
 echo "Waiting for backend and frontend to report healthy..."
-for i in $(seq 1 12); do
+for i in $(seq 1 30); do
     if $COMPOSE exec -T backend curl -s -f http://localhost:8000/health > /dev/null 2>&1 \
-        && $COMPOSE exec -T frontend wget -qO- http://localhost/ > /dev/null 2>&1; then
+        && $COMPOSE exec -T frontend wget -qO- http://127.0.0.1/ > /dev/null 2>&1; then
         echo "Backend and frontend healthy for ${PROJECT}."
         exit 0
     fi
-    echo "Attempt $i failed. Waiting 5s..."
-    sleep 5
+    echo "Attempt $i failed. Waiting 2s..."
+    sleep 2
 done
 
 echo "ERROR: backend or frontend never became healthy for ${PROJECT}"

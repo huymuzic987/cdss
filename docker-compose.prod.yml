@@ -68,7 +68,7 @@ services:
           # the selected release after an atomic nginx configuration reload.
           - cdss-frontend-${VERSION:-latest}
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
       interval: 10s
       timeout: 5s
       retries: 5

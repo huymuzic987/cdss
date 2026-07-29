@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Builds only application images whose build inputs changed. Unchanged images
 # are retagged from the last successful build without invoking a builder.
-# Builds run sequentially when both changed: on this single production host,
-# forced concurrency makes the CPU/disk-heavy dependency stages contend and
-# has proven slower than letting BuildKit use all resources for one at a time.
+# When both images changed, Compose schedules both builds together so their
+# independent dependency and compilation stages can use otherwise-idle CPU and
+# I/O.
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
@@ -83,14 +83,28 @@ if [ -n "$previous_version" ] \
     frontend_needs_build=false
 fi
 
-if [ "$backend_needs_build" = "true" ]; then
-    echo "Backend inputs changed; building cdss-backend:${VERSION}..."
-    COMPOSE_PARALLEL_LIMIT=-1 DOCKER_BUILDKIT=1 $COMPOSE build backend
-fi
+if [ "$backend_needs_build" = "true" ] \
+    && [ "$frontend_needs_build" = "true" ]; then
+    echo "Backend and frontend inputs changed; building both concurrently..."
+    if $COMPOSE build --help 2>&1 | grep -q -- '--parallel'; then
+        COMPOSE_PARALLEL_LIMIT=2 DOCKER_BUILDKIT=1 \
+            $COMPOSE build --parallel backend frontend
+    else
+        # Compose v2 schedules multiple requested services concurrently and
+        # uses COMPOSE_PARALLEL_LIMIT as its worker cap.
+        COMPOSE_PARALLEL_LIMIT=2 DOCKER_BUILDKIT=1 \
+            $COMPOSE build backend frontend
+    fi
+else
+    if [ "$backend_needs_build" = "true" ]; then
+        echo "Backend inputs changed; building cdss-backend:${VERSION}..."
+        COMPOSE_PARALLEL_LIMIT=-1 DOCKER_BUILDKIT=1 $COMPOSE build backend
+    fi
 
-if [ "$frontend_needs_build" = "true" ]; then
-    echo "Frontend inputs changed; building cdss-frontend:${VERSION}..."
-    COMPOSE_PARALLEL_LIMIT=-1 DOCKER_BUILDKIT=1 $COMPOSE build frontend
+    if [ "$frontend_needs_build" = "true" ]; then
+        echo "Frontend inputs changed; building cdss-frontend:${VERSION}..."
+        COMPOSE_PARALLEL_LIMIT=-1 DOCKER_BUILDKIT=1 $COMPOSE build frontend
+    fi
 fi
 
 temporary_state="${STATE_FILE}.tmp.$$"
