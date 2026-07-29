@@ -1,0 +1,48 @@
+﻿/* =========================================================================
+   Left panel â€” navigator + patient sim stacked
+   ========================================================================= */
+
+.left-panel {
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 2px 0 8px var(--shadow-color);
+  transition: width 0.2s ease;
+  min-width: 0;
+}
+
+/* =========================================================================
+   Panel collapse toggle buttons
+   ========================================================================= */
+
+.panel-toggle-btn {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-panel-translucent);
+  color: var(--text-secondary);
+  box-shadow: 0 2px 8px var(--shadow-color);
+  cursor: pointer;
+  transition: left 0.2s ease, right 0.2s ease, background 0.15s ease, color 0.15s ease;
+  z-index: 60;
+}
+
+.panel-toggle-right {
+  transform: translate(50%, -50%);
+}
+
+.panel-toggle-btn:hover {
+  background: var(--bg-panel-hover);
+  color: var(--accent-text);
+}
+

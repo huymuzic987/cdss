@@ -1,0 +1,86 @@
+﻿/* ============================================================================
+   DrugToleranceCheckbox
+   ============================================================================ */
+
+.dtc-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(5px);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: dtc-fade-in 0.2s ease;
+}
+
+@keyframes dtc-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dtc-box {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 240, 255, 0.15);
+  overflow: hidden;
+  animation: dtc-slide-up 0.25s ease;
+}
+
+@keyframes dtc-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dtc-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08));
+}
+
+.dtc-header-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.dtc-header-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.dtc-header-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 3px;
+}
+
+.dtc-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dtc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  background: var(--bg-card, var(--bg-panel));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+

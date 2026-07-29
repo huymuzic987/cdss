@@ -1,0 +1,125 @@
+﻿/* =========================================================================
+   Sidebar Resizer
+   ========================================================================= */
+
+.sidebar-resizer {
+  width: 8px;
+  margin-left: -4px;
+  margin-right: -4px;
+  z-index: 50;
+  cursor: col-resize;
+  position: relative;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.sidebar-resizer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  background-color: var(--border);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sidebar-resizer:hover::after,
+.sidebar-resizer.resizing::after {
+  background-color: var(--accent-border);
+  box-shadow: 0 0 8px var(--accent-border), 0 0 16px var(--accent-border);
+}
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+}
+
+.panel-empty {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  display: inline-block;
+  border: 1px solid var(--border-soft);
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.detail-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  border: 1px solid var(--border-soft-strong);
+}
+
+.detail-key {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.detail-field {
+  margin-bottom: 10px;
+}
+
+.detail-field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.detail-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-text);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 0; /* Align with copy button */
+}
+
+.detail-text {
+  color: var(--text-bright);
+  line-height: 1.4;
+}
+
+.detail-json {
+  background: var(--bg-inset);
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 12px;
+  overflow-x: auto;
+  margin: 0;
+  color: var(--accent-text);
+  border: 1px solid var(--border);
+}
+
