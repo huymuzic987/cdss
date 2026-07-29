@@ -413,6 +413,10 @@ objects, not SQLAlchemy models. The infrastructure repository should translate
 ORM rows into those domain objects. FastAPI schemas/routes belong under
 `cdss.api` only when API integration is requested.
 
+Production backend behavior modules are limited to 200 non-empty, non-comment
+lines by `tests/architecture/test_source_module_size.py`. Preserve the public
+facades when extracting another cohesive responsibility.
+
 ## 16. Current application and test conventions
 
 - FastAPI is created by `cdss.main.create_app()`.

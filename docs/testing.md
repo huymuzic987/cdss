@@ -110,6 +110,23 @@ uv run ruff format --check .
 uv run pyright
 ```
 
+## Architecture tests
+
+`tests/architecture/test_source_module_size.py` enforces the module boundary
+introduced by the refactor. Production Python behavior modules under
+`src/cdss` may contain at most 200 non-empty, non-comment lines. API schemas,
+test helpers, and the declarative ORM model module are excluded because their
+size primarily describes data shape.
+
+Run the guard alone with:
+
+```bash
+uv run pytest tests/architecture/test_source_module_size.py
+```
+
+If the guard fails, extract a cohesive responsibility behind the existing
+public module instead of changing imports throughout the codebase.
+
 ## Intentional External Dependencies
 
 This link target remains intentionally unseeded and produces a typed
