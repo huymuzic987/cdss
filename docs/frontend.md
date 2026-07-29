@@ -23,6 +23,28 @@ patient simulator, traversal results, and dashboard.
 Global state should remain orchestration state. Feature-specific rendering and
 data transformation belong with the feature that owns them.
 
+## Refactored composition boundaries
+
+The main compatibility and composition points are:
+
+- `App.tsx` composes `app/TreeTabs.tsx`, `app/TreeWorkspace.tsx`, and
+  `app/useTheme.ts`.
+- `hooks/useTraversal.ts` composes the store, evaluation runner, standard run,
+  and manual run modules under `hooks/traversal/`.
+- `panels/patientPresets.ts` combines category modules under
+  `panels/patientPresets/`.
+- `mockPatientForm/fhirBundle.ts` exposes conversion functions while
+  `fhirBundleSupport.ts` owns reusable FHIR resource and extension helpers.
+- `clinicalDecisionSupportAdapter.ts` normalizes payloads using
+  `clinicalPresentation/`; `TraversalResultModal.tsx` renders components from
+  `clinicalResult/`.
+- `DashboardPage.tsx` owns page state, while `DashboardKpis.tsx` and
+  `dashboard/sections/` own reporting groups.
+- `App.css` and `dashboard.css` are import facades over focused stylesheets.
+
+Keep imports pointed at these facades and place new behavior with the focused
+feature module that owns it.
+
 ## Decision-tree visualizer
 
 The visualizer combines:
