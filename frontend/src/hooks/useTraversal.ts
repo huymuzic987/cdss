@@ -12,6 +12,8 @@ import type { DrugToleranceResult } from '../panels/DrugToleranceCheckbox'
 type TraversalState = 'idle' | 'running' | 'done'
 
 const DRUG_TOLERANCE_NODE_KEYS = new Set(['T13_A_CHECK_MRA'])
+const PREGNANCY_TREE_KEY = 'hypertension-in-pregnancy'
+const PREGNANCY_MONITOR_NODE_KEY = 'T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM'
 
 interface UseTraversalOptions {
   ensureGraph: (treeKey: string) => Promise<TreeGraphResponse | null>
@@ -59,6 +61,38 @@ function updateBundleClinicalFlag(bundle: JsonObject, key: string, value: boolea
   return { ...bundle, entry: updatedEntries }
 }
 
+function buildHighlights(trace: TraversalTraceEntry[]): Record<string, ReadonlySet<string>> {
+  const enteredByTree: Record<string, Set<string>> = {}
+  for (const entry of trace) {
+    if (entry.event !== 'node_entered') continue
+    if (!enteredByTree[entry.tree_key]) enteredByTree[entry.tree_key] = new Set()
+    enteredByTree[entry.tree_key].add(entry.node_key)
+  }
+  return enteredByTree
+}
+
+function pregnancyMonitorIndex(trace: TraversalTraceEntry[]): number {
+  return trace.findIndex((entry) =>
+    entry.event === 'node_entered'
+    && entry.tree_key === PREGNANCY_TREE_KEY
+    && entry.node_key === PREGNANCY_MONITOR_NODE_KEY)
+}
+
+function pregnancyCheckpointResult(
+  result: EvaluationResponse | null,
+  trace: TraversalTraceEntry[],
+  monitorIndex: number,
+): EvaluationResponse | null {
+  if (!result) return null
+  return {
+    ...result,
+    traversal_log: trace.slice(0, monitorIndex + 1),
+    actions: result.actions.filter((action) =>
+      action.tree_key === PREGNANCY_TREE_KEY
+      && action.node_key === PREGNANCY_MONITOR_NODE_KEY),
+  }
+}
+
 export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, setError }: UseTraversalOptions) {
   const [traversalState, setTraversalState] = useState<TraversalState>('idle')
   const [highlightedNodeKeys, setHighlightedNodeKeys] = useState<Record<string, ReadonlySet<string>>>({})
@@ -71,6 +105,14 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
 
   // Drug tolerance popup — shown when manual step reaches T13_A_CHECK_MRA
   const [showDrugTolerancePopup, setShowDrugTolerancePopup] = useState(false)
+  const [showPregnancyPopup, setShowPregnancyPopup] = useState(false)
+  const [pregnancyPopupResult, setPregnancyPopupResult] = useState<EvaluationResponse | null>(null)
+  const pregnancyResumeRef = useRef<{
+    result: EvaluationResponse | null
+    partial: ApiErrorResponse | null
+    trace: TraversalTraceEntry[]
+    fullTraversal: boolean
+  } | null>(null)
 
   // Manual step-through mode: the full trace is fetched up front, but only
   // revealed one node_entered entry at a time, on each canvas click.
@@ -143,6 +185,7 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
       setActiveTraversalTreeKey(startTreeKey)
       setError(null)
       setShowModal(false)
+      setShowPregnancyPopup(false)
       setManualMode(false)
 
       const evaluation = await runEvaluation(runId, startTreeKey, input)
@@ -162,18 +205,7 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
         manualInputRef.current = { ...input }
 
         const pausedTrace = traceLog.slice(0, mraIdx + 1)
-        const enteredByTree: Record<string, Set<string>> = {}
-        for (const entry of pausedTrace) {
-          if (entry.event === 'node_entered') {
-            if (!enteredByTree[entry.tree_key]) enteredByTree[entry.tree_key] = new Set()
-            enteredByTree[entry.tree_key].add(entry.node_key)
-          }
-        }
-        const newHighlights: Record<string, ReadonlySet<string>> = {}
-        for (const [treeKey, nodeSet] of Object.entries(enteredByTree)) {
-          newHighlights[treeKey] = nodeSet
-        }
-        setHighlightedNodeKeys(newHighlights)
+        setHighlightedNodeKeys(buildHighlights(pausedTrace))
 
         const mraEntry = traceLog[mraIdx]
         setActiveTraversalTreeKey(mraEntry.tree_key)
@@ -185,23 +217,22 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
         return
       }
 
-      // Group all entered nodes by tree key
-      const enteredByTree: Record<string, Set<string>> = {}
-      for (const entry of traceLog) {
-        if (entry.event === 'node_entered') {
-          if (!enteredByTree[entry.tree_key]) {
-            enteredByTree[entry.tree_key] = new Set()
-          }
-          enteredByTree[entry.tree_key].add(entry.node_key)
-        }
+      const pregnancyIdx = pregnancyMonitorIndex(traceLog)
+      if (pregnancyIdx !== -1) {
+        const monitorEntry = traceLog[pregnancyIdx]
+        setHighlightedNodeKeys(buildHighlights(traceLog.slice(0, pregnancyIdx + 1)))
+        setActiveTraversalTreeKey(monitorEntry.tree_key)
+        setActiveTreeKey(monitorEntry.tree_key)
+        setActiveNodeKey(monitorEntry.node_key)
+        setFocusNodeKey(monitorEntry.node_key)
+        pregnancyResumeRef.current = { result, partial, trace: traceLog, fullTraversal: true }
+        setPregnancyPopupResult(pregnancyCheckpointResult(result, traceLog, pregnancyIdx))
+        setShowPregnancyPopup(true)
+        return
       }
 
-      // Update the full highlighted set for all trees
-      const newHighlights: Record<string, ReadonlySet<string>> = {}
-      for (const [treeKey, nodeSet] of Object.entries(enteredByTree)) {
-        newHighlights[treeKey] = nodeSet
-      }
-      setHighlightedNodeKeys(newHighlights)
+      // Group all entered nodes by tree key
+      setHighlightedNodeKeys(buildHighlights(traceLog))
 
       // Find the last entered node (walk backwards, no array copy)
       let lastEntry: TraversalTraceEntry | undefined
@@ -234,6 +265,7 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
       setActiveTraversalTreeKey(startTreeKey)
       setError(null)
       setShowModal(false)
+      setShowPregnancyPopup(false)
       setManualMode(false)
       setManualStepIndex(0)
 
@@ -260,7 +292,7 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
   )
 
   const handleManualStep = useCallback(() => {
-    if (!manualMode || showDrugTolerancePopup) return
+    if (!manualMode || showDrugTolerancePopup || showPregnancyPopup) return
     const entries = manualEntriesRef.current
     if (manualStepIndex >= entries.length) return
 
@@ -288,11 +320,26 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
       return
     }
 
+    if (entry.tree_key === PREGNANCY_TREE_KEY && entry.node_key === PREGNANCY_MONITOR_NODE_KEY) {
+      const finalResult = manualFinalRef.current.result
+      const trace = finalResult?.traversal_log ?? []
+      const monitorIndex = pregnancyMonitorIndex(trace)
+      pregnancyResumeRef.current = {
+        result: finalResult,
+        partial: manualFinalRef.current.partial,
+        trace,
+        fullTraversal: false,
+      }
+      setPregnancyPopupResult(pregnancyCheckpointResult(finalResult, trace, monitorIndex))
+      setShowPregnancyPopup(true)
+      return
+    }
+
     if (nextIndex >= entries.length) {
       setManualMode(false)
       finish(manualFinalRef.current.result, manualFinalRef.current.partial)
     }
-  }, [manualMode, manualStepIndex, showDrugTolerancePopup, setActiveTreeKey, setFocusNodeKey, finish])
+  }, [manualMode, manualStepIndex, showDrugTolerancePopup, showPregnancyPopup, setActiveTreeKey, setFocusNodeKey, finish])
 
   const handleDrugToleranceChange = useCallback((fieldKey: 'tolerates_mra' | 'tolerates_spironolactone', value: boolean) => {
     manualInputRef.current = updateBundleClinicalFlag(manualInputRef.current, fieldKey, value)
@@ -322,19 +369,22 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
     }
 
     if (!manualMode) {
+      const pregnancyIdx = pregnancyMonitorIndex(traceLog)
+      if (pregnancyIdx !== -1) {
+        const monitorEntry = traceLog[pregnancyIdx]
+        setHighlightedNodeKeys(buildHighlights(traceLog.slice(0, pregnancyIdx + 1)))
+        setActiveTraversalTreeKey(monitorEntry.tree_key)
+        setActiveTreeKey(monitorEntry.tree_key)
+        setActiveNodeKey(monitorEntry.node_key)
+        setFocusNodeKey(monitorEntry.node_key)
+        pregnancyResumeRef.current = { result, partial, trace: traceLog, fullTraversal: true }
+        setPregnancyPopupResult(pregnancyCheckpointResult(result, traceLog, pregnancyIdx))
+        setShowPregnancyPopup(true)
+        return
+      }
+
       // Complete full traverse mode normally with the re-evaluated trace
-      const enteredByTree: Record<string, Set<string>> = {}
-      for (const entry of traceLog) {
-        if (entry.event === 'node_entered') {
-          if (!enteredByTree[entry.tree_key]) enteredByTree[entry.tree_key] = new Set()
-          enteredByTree[entry.tree_key].add(entry.node_key)
-        }
-      }
-      const newHighlights: Record<string, ReadonlySet<string>> = {}
-      for (const [treeKey, nodeSet] of Object.entries(enteredByTree)) {
-        newHighlights[treeKey] = nodeSet
-      }
-      setHighlightedNodeKeys(newHighlights)
+      setHighlightedNodeKeys(buildHighlights(traceLog))
 
       let lastEntry: TraversalTraceEntry | undefined
       for (let i = traceLog.length - 1; i >= 0; i--) {
@@ -379,6 +429,24 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
     setShowDrugTolerancePopup(false)
   }, [])
 
+  const handlePregnancyPopupClose = useCallback(() => {
+    setShowPregnancyPopup(false)
+    setPregnancyPopupResult(null)
+    const resume = pregnancyResumeRef.current
+    pregnancyResumeRef.current = null
+    if (!resume?.fullTraversal) return
+
+    setHighlightedNodeKeys(buildHighlights(resume.trace))
+    const lastEntry = [...resume.trace].reverse().find((entry) => entry.event === 'node_entered')
+    if (lastEntry) {
+      setActiveTraversalTreeKey(lastEntry.tree_key)
+      setActiveTreeKey(lastEntry.tree_key)
+      setActiveNodeKey(lastEntry.node_key)
+      setFocusNodeKey(lastEntry.node_key)
+    }
+    finish(resume.result, resume.partial)
+  }, [finish, setActiveTreeKey, setFocusNodeKey])
+
   const handleReset = () => {
     runIdRef.current++
     setTraversalState('idle')
@@ -387,6 +455,9 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
     setActiveTraversalTreeKey(null)
     setShowModal(false)
     setShowDrugTolerancePopup(false)
+    setShowPregnancyPopup(false)
+    setPregnancyPopupResult(null)
+    pregnancyResumeRef.current = null
     setFocusNodeKey(null)
     setManualMode(false)
     setManualStepIndex(0)
@@ -406,6 +477,9 @@ export function useTraversal({ ensureGraph, setActiveTreeKey, setFocusNodeKey, s
     showModal,
     setShowModal,
     showDrugTolerancePopup,
+    showPregnancyPopup,
+    pregnancyPopupResult,
+    handlePregnancyPopupClose,
     handleDrugToleranceConfirm,
     handleDrugToleranceCancel,
     handleDrugToleranceChange,

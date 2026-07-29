@@ -54,6 +54,9 @@ function App() {
     showModal,
     setShowModal,
     showDrugTolerancePopup,
+    showPregnancyPopup,
+    pregnancyPopupResult,
+    handlePregnancyPopupClose,
     handleDrugToleranceConfirm,
     handleDrugToleranceCancel,
     handleDrugToleranceChange,
@@ -288,6 +291,14 @@ function App() {
           result={modalResult}
           partial={modalPartial}
           onClose={() => setShowModal(false)}
+        />
+      )}
+
+      {showPregnancyPopup && (
+        <TraversalResultModal
+          result={pregnancyPopupResult}
+          partial={null}
+          onClose={handlePregnancyPopupClose}
         />
       )}
 

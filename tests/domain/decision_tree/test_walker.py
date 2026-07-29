@@ -243,6 +243,50 @@ def test_treatment_strategy_action_with_outgoing_link_continues(tree_key: str) -
     assert _entered_node_keys(partial.trace) == ["start", "action", "link"]
 
 
+def test_pregnancy_monitor_action_continues_to_terminal_condition() -> None:
+    start = _node(1, "start", NodeType.START)
+    monitor = _node(
+        2,
+        "T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM",
+        NodeType.ACTION,
+        action_payload={"action_type": "MONITOR_PREGNANCY_AND_POSTPARTUM"},
+    )
+    postpartum = _node(
+        3,
+        "postpartum",
+        NodeType.CONDITION,
+        condition_definition={"path": "input.is_postpartum", "op": "eq", "value": True},
+    )
+    end = _node(
+        4,
+        "end",
+        NodeType.END,
+        action_payload={"action_type": "MAINTAIN_CURRENT_REGIMEN"},
+    )
+    graph = _graph(
+        [start, monitor, postpartum, end],
+        [
+            _edge(10, start, monitor),
+            _edge(11, monitor, postpartum),
+            _edge(12, postpartum, end),
+        ],
+        tree_key="hypertension-in-pregnancy",
+    )
+
+    result = walk_tree(graph, {"is_postpartum": True})
+
+    assert _entered_node_keys(result.trace) == [
+        "start",
+        "T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM",
+        "postpartum",
+        "end",
+    ]
+    assert [action.node_key for action in result.actions] == [
+        "T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM",
+        "end",
+    ]
+
+
 @pytest.mark.parametrize(
     "tree_key",
     ["walker-test-tree", "essential-treatment-strategy"],

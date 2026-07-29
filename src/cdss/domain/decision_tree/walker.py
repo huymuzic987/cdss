@@ -48,6 +48,14 @@ DEFAULT_MAX_STEPS = 300
 _ACTION_CONTINUATION_TREE_KEYS = frozenset(
     {"essential-treatment-strategy", "optimal-treatment-strategy"}
 )
+_ACTION_CONTINUATION_NODES = frozenset(
+    {
+        (
+            "hypertension-in-pregnancy",
+            "T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM",
+        )
+    }
+)
 
 
 def walk_tree(
@@ -176,13 +184,19 @@ class _InternalTraversal:
                 self.graph, current = self._follow_link(current)
                 continue
             if current.node_type is NodeType.ACTION:
-                may_continue = (
-                    self.graph.tree.tree_key in _ACTION_CONTINUATION_TREE_KEYS
-                    and bool(outgoing_edges)
-                    and all(
-                        self.graph.nodes_by_id[edge.to_node_id].node_type is NodeType.LINK
-                        for edge in outgoing_edges
+                may_continue = bool(outgoing_edges) and (
+                    (
+                        self.graph.tree.tree_key in _ACTION_CONTINUATION_TREE_KEYS
+                        and all(
+                            self.graph.nodes_by_id[edge.to_node_id].node_type is NodeType.LINK
+                            for edge in outgoing_edges
+                        )
                     )
+                    or (
+                        self.graph.tree.tree_key,
+                        current.node_key,
+                    )
+                    in _ACTION_CONTINUATION_NODES
                 )
                 if not may_continue:
                     return
