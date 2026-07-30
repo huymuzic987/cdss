@@ -126,4 +126,3 @@ export function useTreeCanvasControls({
 
   return { searchQuery, handleSearch, handleChangeArrowKind, handleResetLayout }
 }
-

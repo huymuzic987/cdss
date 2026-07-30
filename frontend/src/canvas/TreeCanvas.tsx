@@ -76,7 +76,6 @@ export function TreeCanvas({
     setArrowKind,
   })
 
-
   const { handlePointerDownCapture, handlePointerUpCapture, handleClickCapture } = useManualModeClicks(manualMode, onCanvasClick)
 
   return (

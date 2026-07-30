@@ -34,6 +34,19 @@ router.include_router(evaluation_follow_up.router)
 _MEDICATION_FOLLOW_UP_TREE_KEY = "treatment-threshold-and-bp-target"
 _INITIAL_VISIT_TREE_KEY = "hypertension-diagnosis"
 
+# Tree 3 owns follow-up routing: given an already-known active_bp_target, it
+# restores that target into context and links onward to the facility's
+# treatment-strategy tree (essential or optimal) based on input.facility_capability.
+_MEDICATION_FOLLOW_UP_TREE_KEY = "treatment-threshold-and-bp-target"
+
+_FOLLOW_UP_REQUIRED_KEYS = (
+    "facility_capability",
+    "medication_follow_up_stage",
+    "active_bp_target",
+    "current_clinic_sbp",
+    "current_clinic_dbp",
+)
+
 
 @router.post(
     "/evaluate",

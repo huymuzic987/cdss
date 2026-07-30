@@ -12,6 +12,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from cdss.api.dependencies import get_tree_graph_repository
+from cdss.api.schemas.fhir_input import input_to_bundle
 from cdss.core.config import Settings, get_settings
 from cdss.infrastructure.db.decision_tree_repository import SqlAlchemyTreeGraphRepository
 from cdss.infrastructure.db.models import (
@@ -105,6 +106,11 @@ def test_seeded_tree_5_target_reached_is_read_only(
 def test_seeded_drug_combination_uses_closed_world_clinical_defaults(
     seeded_api_context: SeededApiContext,
 ) -> None:
+    """drug-combination is now seeded (backups/cdss_merged.sql), so the LINK resolves
+    and traversal continues into it, executing several of its own ACTION nodes, until
+    it fails on a required field (`has_heart_failure`) this fixture never had to
+    supply for Trees 1-5, instead of raising LinkTargetNotFound.
+    """
     response = _post_read_only(
         seeded_api_context,
         bundle=_medication_bundle(current_sbp=130, current_dbp=80),

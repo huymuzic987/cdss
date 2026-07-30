@@ -71,6 +71,20 @@ class EvaluationResponse(ApiModel):
         )
 
 
+class FollowUpEvaluationRequest(ApiModel):
+    input: Annotated[
+        JsonObject,
+        Field(
+            description=(
+                "An HL7 FHIR R4 Bundle (resourceType == 'Bundle') carrying "
+                "facility_capability, medication_follow_up_stage, "
+                "active_bp_target, current_clinic_sbp, and current_clinic_dbp; "
+                "see cdss.api.schemas.fhir_input for the resource-mapping contract."
+            )
+        ),
+    ]
+
+
 class PartialRunStateResponse(ApiModel):
     input_snapshot: JsonObject
     context: JsonObject

@@ -13,6 +13,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from cdss.api.dependencies import get_tree_graph_repository
+from cdss.api.schemas.fhir_input import input_to_bundle
 from cdss.core.config import Settings, get_settings
 from cdss.domain.decision_tree import (
     EdgeDefinition,
@@ -114,6 +115,18 @@ def test_non_bundle_input_returns_invalid_fhir_input(api_context: ApiTestContext
     response = api_context.client.post(
         "/evaluate",
         json={"foo": "bar"},
+    )
+
+    assert response.status_code == 422
+    body = response.json()
+    assert body["code"] == "invalid_fhir_input"
+    assert "traceback" not in body
+
+
+def test_non_bundle_input_returns_invalid_fhir_input(api_context: ApiTestContext) -> None:
+    response = api_context.client.post(
+        "/evaluate",
+        json={"start_tree_key": "hypertension-diagnosis", "input": {"foo": "bar"}},
     )
 
     assert response.status_code == 422

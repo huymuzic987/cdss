@@ -47,6 +47,8 @@ the optional frontend.
 Copy-Item .env.example .env
 uv sync
 docker compose up -d postgres
+
+# Run database schema migrations
 uv run alembic upgrade head
 docker compose exec -T postgres psql -U cdss -d cdss -f - < backups/seed.sql
 .\dev.ps1

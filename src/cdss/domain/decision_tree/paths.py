@@ -40,6 +40,12 @@ def resolve_runtime_path(
     root, *segments = parts
     if root == "input":
         current: Any = run_state.input_snapshot
+        # Fallback to context.diagnosis for current_clinic_sbp and current_clinic_dbp if missing from input
+        if len(segments) == 1 and segments[0] in ("current_clinic_sbp", "current_clinic_dbp"):
+            if segments[0] not in current:
+                diagnosis = run_state.context.get("diagnosis")
+                if isinstance(diagnosis, dict) and segments[0] in diagnosis:
+                    return diagnosis[segments[0]]
     elif root == "context":
         current = run_state.context
     else:

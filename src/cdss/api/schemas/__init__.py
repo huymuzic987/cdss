@@ -3,6 +3,7 @@
 from cdss.api.schemas.evaluation import (
     EvaluationErrorResponse,
     EvaluationResponse,
+    FollowUpEvaluationRequest,
     PartialRunStateResponse,
 )
 from cdss.api.schemas.fhir_input import bundle_to_input, input_to_bundle
