@@ -167,7 +167,7 @@ def test_alert_summary_includes_risk_classified_by_the_traversed_risk_tree() -> 
         (
             "T14_C_NO_ACUTE_TARGET_ORGAN_DAMAGE",
             "URGENCY_HTN",
-            "Urgency HTN",
+            "Urgency Hypertension",
             "Tăng huyết áp khẩn trương",
         ),
     ],

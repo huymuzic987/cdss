@@ -51,7 +51,6 @@ export interface EvidenceItem {
 export interface ClinicalPresentation {
   alert: string
   alertSummary: string
-  alertSeverity: 'warning' | 'critical'
   evidence: EvidenceItem[]
   recommendation: string
   recommendationStrength?: string
@@ -119,6 +118,67 @@ function formatValue(value: JsonValue, unit?: string): string | null {
   return result ? `${result}${unit ? ` ${unit}` : ''}` : null
 }
 
+function riskFactorCountFromInput(value: JsonValue): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value !== 'object' || value === null) return null
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const count = riskFactorCountFromInput(item)
+      if (count !== null) return count
+    }
+    return null
+  }
+
+  if (typeof value.risk_factor_count === 'number' && Number.isFinite(value.risk_factor_count)) {
+    return value.risk_factor_count
+  }
+  if (
+    typeof value.url === 'string'
+    && value.url.endsWith('/risk-factor-count')
+    && typeof value.valueInteger === 'number'
+    && Number.isFinite(value.valueInteger)
+  ) {
+    return value.valueInteger
+  }
+
+  for (const nested of Object.values(value)) {
+    const count = riskFactorCountFromInput(nested as JsonValue)
+    if (count !== null) return count
+  }
+  return null
+}
+
+function patientContextSentence(
+  conditions: string[],
+  riskFactorCount: number | null,
+  locale: ClinicalDecisionSupportLocale,
+): string {
+  const conditionCount = conditions.length
+  const hasConditions = conditionCount > 0
+  const hasRiskFactors = riskFactorCount !== null
+  if (!hasConditions && !hasRiskFactors) return ''
+
+  if (locale === 'vi') {
+    const conditionText = hasConditions ? `${conditionCount} bệnh lý/bệnh đồng mắc` : ''
+    const riskText = hasRiskFactors ? `${riskFactorCount} yếu tố nguy cơ` : ''
+    if (hasConditions && hasRiskFactors) {
+      return `Bệnh nhân có ${conditionText} và ${riskText}.`
+    }
+    return `Bệnh nhân có ${conditionText || riskText}.`
+  }
+
+  const conditionText = hasConditions
+    ? `${conditionCount} condition${conditionCount === 1 ? '' : 's'}/comorbidit${conditionCount === 1 ? 'y' : 'ies'}`
+    : ''
+  const riskText = hasRiskFactors
+    ? `${riskFactorCount} risk factor${riskFactorCount === 1 ? '' : 's'}`
+    : ''
+  if (hasConditions && hasRiskFactors) {
+    return `Patient has ${conditionText} and ${riskText}.`
+  }
+  return `Patient has ${conditionText || riskText}.`
+}
+
 function parseEvidence(values: JsonValue | undefined, locale: ClinicalDecisionSupportLocale): EvidenceItem[] {
   if (!Array.isArray(values)) return []
   return values.flatMap((entry, index) => {
@@ -132,6 +192,7 @@ function parseEvidence(values: JsonValue | undefined, locale: ClinicalDecisionSu
 
 function buildClinicalSummaryEvidence(
   presentation: JsonObject,
+  input: JsonObject,
   locale: ClinicalDecisionSupportLocale,
 ): EvidenceItem[] {
   const items: EvidenceItem[] = []
@@ -148,11 +209,12 @@ function buildClinicalSummaryEvidence(
   }
 
   const conditions = patientConditionLabels(presentation, locale)
-  if (conditions.length > 0) {
+  const patientContext = patientContextSentence(conditions, riskFactorCountFromInput(input), locale)
+  if (patientContext) {
     items.push({
-      id: 'clinical-conditions',
-      label: locale === 'vi' ? 'Bệnh lý' : 'Conditions',
-      value: conditions.join(', '),
+      id: 'clinical-patient-context',
+      label: locale === 'vi' ? 'Bối cảnh bệnh nhân' : 'Patient context',
+      value: patientContext,
     })
   }
   return items
@@ -355,25 +417,19 @@ function codedLabel(value: JsonValue | undefined, locale: ClinicalDecisionSuppor
 }
 
 export function buildClinicalPresentation(
-  actions: ExecutedAction[], _input: JsonObject, _context: JsonObject, locale: ClinicalDecisionSupportLocale,
+  actions: ExecutedAction[], input: JsonObject, _context: JsonObject, locale: ClinicalDecisionSupportLocale,
 ): ClinicalPresentation {
   const presentation = findPresentation(actions)
   if (!presentation || presentation.schema_version !== '1.0') {
     return {
       alert: locale === 'vi' ? 'Dữ liệu trình bày quyết định lâm sàng không hợp lệ.' : 'Invalid clinical presentation contract.',
       alertSummary: '',
-      alertSeverity: 'warning',
       evidence: [], recommendation: '', orders: [],
       contractError: 'missing_or_unsupported_presentation',
     }
   }
   const structuredOrders = parseStructuredOrders(presentation.recommended_orders, locale)
-  const evidence = buildClinicalSummaryEvidence(presentation, locale)
-  const alertSummaryPayload = objectValue(presentation.alert_summary)
-  const crisisClassification = objectValue(alertSummaryPayload?.hypertensive_crisis_classification)
-  const alertSeverity = stringValue(crisisClassification?.code) === 'EMERGENCY_HYPERTENSION'
-    ? 'critical'
-    : 'warning'
+  const evidence = buildClinicalSummaryEvidence(presentation, input, locale)
   const terminalAction = actions.findLast(
     (action) => action.node_type === 'ACTION' || action.node_type === 'END',
   )
@@ -385,7 +441,6 @@ export function buildClinicalPresentation(
   return {
     alert: localizedText(presentation.alert, locale),
     alertSummary: localizedText(presentation.alert_summary, locale),
-    alertSeverity,
     evidence,
     recommendation,
     recommendationStrength: codedLabel(presentation.evidence_strength, locale),

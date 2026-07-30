@@ -6,7 +6,6 @@ const messages = {
   en: {
     recommendationTitle: 'Clinical decision support recommendation',
     alertSummary: 'Alert summary',
-    critical: 'Critical',
     genericAlertSummary: 'Patient has clinical findings requiring review.',
     whyTitle: 'Why is this alert fired?', noEvidence: 'No structured trigger evidence was provided.',
     recommendedAction: 'Recommended action', noRecommendation: 'Review the available clinical findings.',
@@ -20,7 +19,6 @@ const messages = {
   vi: {
     recommendationTitle: 'Khuyến nghị hỗ trợ quyết định lâm sàng',
     alertSummary: 'Tóm tắt cảnh báo',
-    critical: 'Cấp cứu',
     genericAlertSummary: 'Bệnh nhân có các phát hiện lâm sàng cần được đánh giá.',
     whyTitle: 'Tại sao cảnh báo này xuất hiện?', noEvidence: 'Không có bằng chứng kích hoạt có cấu trúc.',
     recommendedAction: 'Hành động được khuyến nghị', noRecommendation: 'Đánh giá các phát hiện lâm sàng hiện có.',

@@ -12,7 +12,7 @@ const canonicalBundleModules = import.meta.glob('../../../data/fhir/test_case/*.
 const canonicalBundles = Object.entries(canonicalBundleModules)
 
 const result: EvaluationResponse = {
-  status: 'success', input_snapshot: { patient_marker: 'Rule-specific input' },
+  status: 'success', input_snapshot: { patient_marker: 'Rule-specific input', risk_factor_count: 4 },
   context: { diagnosis: { hypertension_class: 'GRADE_2_HYPERTENSION' }, risk: { level: 'HIGH' } },
   actions: [{
     tree_key: 'example-rule', node_key: 'EXAMPLE_END', node_type: 'END',
@@ -159,10 +159,11 @@ describe('TraversalResultModal', () => {
     expect(screen.getByText('150/92 mmHg')).toBeTruthy()
     expect(screen.queryByText('HTN risk level:')).toBeNull()
     expect(screen.queryByText('High risk')).toBeNull()
-    expect(screen.getByText('Conditions')).toBeTruthy()
     expect(screen.getByText(
-      'Target-organ damage, Transient ischemic attack, Stroke, Cardiovascular disease, Chronic kidney disease',
+      'Patient has 5 conditions/comorbidities and 4 risk factors.',
     )).toBeTruthy()
+    expect(screen.queryByText('Conditions')).toBeNull()
+    expect(screen.queryByText(/Target-organ damage, Transient ischemic attack, Stroke/)).toBeNull()
     expect(screen.queryByText(/has_cardiovascular_disease|has_stroke|has_tia/)).toBeNull()
     expect(screen.queryByText('Diabetes')).toBeNull()
     expect(screen.queryByText('Hypertension stage')).toBeNull()
@@ -181,7 +182,7 @@ describe('TraversalResultModal', () => {
     expect(screen.queryByText(/DBP ≥ 120/)).toBeNull()
   })
 
-  it('upgrades the alert summary to critical only for the traversed emergency branch', () => {
+  it('keeps the standard warning style for the traversed emergency branch', () => {
     const emergencyResult = structuredClone(result)
     const presentation = emergencyResult.actions[0].payload.presentation
     if (!presentation || typeof presentation !== 'object' || Array.isArray(presentation)) {
@@ -201,8 +202,8 @@ describe('TraversalResultModal', () => {
     renderModal(emergencyResult)
 
     const summary = screen.getByLabelText('Alert summary')
-    expect(summary.classList.contains('cds-alert-summary-critical')).toBe(true)
-    expect(screen.getByText('Critical')).toBeTruthy()
+    expect(summary.className).toBe('cds-alert-summary')
+    expect(screen.queryByText('Critical')).toBeNull()
     expect(screen.getByText('Patient has Emergency Hypertension')).toBeTruthy()
   })
 
@@ -261,11 +262,13 @@ describe('TraversalResultModal', () => {
     expect(screen.queryByText('Áp dụng các can thiệp được khuyến nghị và đánh giá lại.')).toBeNull()
   })
 
-  it('shows medicine names with only the action-selected low doses on class hover', async () => {
+  it('shows medicine names with only the action-selected low doses after a class click', async () => {
     const user = userEvent.setup()
     renderModal()
 
     await user.hover(screen.getByText('Drug Class A'))
+    expect(screen.queryByRole('tooltip')).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Drug Class A' }))
 
     const tooltip = screen.getByRole('tooltip')
     expect(tooltip.textContent).toContain('Drug Class A · Low dose')
@@ -276,6 +279,9 @@ describe('TraversalResultModal', () => {
     expect(tooltip.textContent).toContain('Section')
     expect(tooltip.textContent).toContain('Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc')
     expect(tooltip.textContent).not.toContain('50 - 100 mg')
+
+    await user.click(screen.getByRole('button', { name: 'Drug Class A' }))
+    expect(screen.queryByRole('tooltip')).toBeNull()
   })
 
   it('keeps drug-class reference details inside the medicine popover', async () => {
@@ -283,7 +289,7 @@ describe('TraversalResultModal', () => {
     renderModal()
 
     expect(screen.queryByRole('button', { name: 'Bảng 9' })).toBeNull()
-    await user.hover(screen.getByText('Drug Class A'))
+    await user.click(screen.getByRole('button', { name: 'Drug Class A' }))
 
     const tooltip = screen.getByRole('tooltip')
     expect(tooltip.textContent).toContain('Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc')

@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { TriangleAlert } from 'lucide-react'
+import { ChevronDown, TriangleAlert } from 'lucide-react'
 import type {
   ApiErrorResponse,
   EvaluationResponse,
@@ -85,24 +85,11 @@ function physicianReadableFinding(value: string): string {
   return words ? words.charAt(0).toUpperCase() + words.slice(1) : ''
 }
 
-function AlertSummary({ text, label, criticalLabel, severity }: {
-  text: string
-  label: string
-  criticalLabel: string
-  severity: 'warning' | 'critical'
-}) {
-  const isCritical = severity === 'critical'
+function AlertSummary({ text, label }: { text: string; label: string }) {
   return (
-    <section
-      className={`cds-alert-summary${isCritical ? ' cds-alert-summary-critical' : ''}`}
-      aria-label={label}
-      aria-live={isCritical ? 'assertive' : 'polite'}
-    >
+    <section className="cds-alert-summary" aria-label={label} aria-live="polite">
       <TriangleAlert className="cds-alert-summary-icon" size={20} strokeWidth={2.2} aria-hidden="true" />
-      <div className="cds-alert-summary-content">
-        {isCritical && <span className="cds-alert-critical-label">{criticalLabel}</span>}
-        <span className="cds-alert-summary-text">{text}</span>
-      </div>
+      <span className="cds-alert-summary-text">{text}</span>
     </section>
   )
 }
@@ -117,10 +104,12 @@ function TriggerEvidence({ items, title, emptyText }: {
         <dl className="cds-evidence-grid">
           {items.map((item) => (
             <div
-              className={`cds-evidence-item${item.id === 'clinical-conditions' ? ' cds-evidence-item-conditions' : ''}`}
+              className={`cds-evidence-item${item.id === 'clinical-patient-context' ? ' cds-evidence-item-context' : ''}`}
               key={item.id}
             >
-              <dt>{item.label}</dt><dd>{item.value}</dd>
+              {item.id === 'clinical-patient-context'
+                ? <><dt className="sr-only">{item.label}</dt><dd>{item.value}</dd></>
+                : <><dt>{item.label}</dt><dd>{item.value}</dd></>}
             </div>
           ))}
         </dl>
@@ -136,30 +125,13 @@ function DrugClassDetails({ drugClass, orderId, references, locale }: {
   locale: ClinicalDecisionSupportLocale
 }) {
   const messages = getClinicalDecisionSupportMessages(locale)
-  const anchorRef = useRef<HTMLDivElement>(null)
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const anchorRef = useRef<HTMLButtonElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
   const [position, setPosition] = useState<{
     top?: number; bottom?: number; left: number; width: number; maxHeight: number
   } | null>(null)
   const tooltipId = `cds-class-${orderId}-${drugClass.code}`.replace(/[^a-zA-Z0-9_-]/g, '-')
-
-  function cancelClose() {
-    if (closeTimerRef.current !== null) {
-      clearTimeout(closeTimerRef.current)
-      closeTimerRef.current = null
-    }
-  }
-
-  function show() {
-    cancelClose()
-    setOpen(true)
-  }
-
-  function scheduleClose() {
-    cancelClose()
-    closeTimerRef.current = setTimeout(() => setOpen(false), 180)
-  }
 
   useLayoutEffect(() => {
     if (!open) return
@@ -191,7 +163,27 @@ function DrugClassDetails({ drugClass, orderId, references, locale }: {
     }
   }, [open])
 
-  useEffect(() => () => cancelClose(), [])
+  useEffect(() => {
+    if (!open) return
+    function closeOnOutsidePointer(event: PointerEvent) {
+      const target = event.target
+      if (!(target instanceof Node)) return
+      if (anchorRef.current?.contains(target) || popoverRef.current?.contains(target)) return
+      setOpen(false)
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      event.stopPropagation()
+      setOpen(false)
+    }
+    document.addEventListener('pointerdown', closeOnOutsidePointer)
+    document.addEventListener('keydown', closeOnEscape, true)
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePointer)
+      document.removeEventListener('keydown', closeOnEscape, true)
+    }
+  }, [open])
   const guidelineSources = Array.from(new Set(
     references.map((reference) => reference.sourceTitle.trim()).filter(Boolean),
   ))
@@ -203,12 +195,11 @@ function DrugClassDetails({ drugClass, orderId, references, locale }: {
 
   const popover = open && position && createPortal(
     <div
+      ref={popoverRef}
       className="cds-drug-tooltip"
       id={tooltipId}
       role="tooltip"
       style={position}
-      onMouseEnter={cancelClose}
-      onMouseLeave={scheduleClose}
     >
       <div className="cds-drug-tooltip-title">{drugClass.label}{drugClass.doseLabel ? ` · ${drugClass.doseLabel}` : ''}</div>
       {drugClass.medicines.length === 0 ? <p className="cds-empty">{messages.noMedicines}</p> : (
@@ -236,19 +227,19 @@ function DrugClassDetails({ drugClass, orderId, references, locale }: {
 
   return (
     <>
-      <div
+      <button
         ref={anchorRef}
+        type="button"
         className="cds-drug-class"
-        tabIndex={0}
         aria-expanded={open}
         aria-describedby={open ? tooltipId : undefined}
-        onMouseEnter={show}
-        onMouseLeave={scheduleClose}
-        onFocus={show}
-        onBlur={scheduleClose}
+        onClick={() => setOpen((current) => !current)}
       >
-        <span className="cds-drug-class-label">{drugClass.label}</span>
-      </div>
+        <span className="cds-drug-class-label">
+          <span>{drugClass.label}</span>
+          <ChevronDown className="cds-drug-class-icon" size={14} aria-hidden="true" />
+        </span>
+      </button>
       {popover}
     </>
   )
@@ -328,12 +319,7 @@ function ResultDialog({ result, partial, onClose, locale }: Omit<TraversalResult
         </header>
 
         <div className="modal-body cds-modal-body">
-          <AlertSummary
-            text={alertSummary}
-            label={messages.alertSummary}
-            criticalLabel={messages.critical}
-            severity={presentation.alertSeverity}
-          />
+          <AlertSummary text={alertSummary} label={messages.alertSummary} />
 
           <TriggerEvidence items={presentation.evidence} title={messages.whyTitle} emptyText={messages.noEvidence} />
 

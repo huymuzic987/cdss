@@ -245,7 +245,7 @@ def _hypertensive_crisis_classification(
     if entered_nodes.intersection(_URGENCY_BRANCH_NODES):
         return {
             "code": "URGENCY_HTN",
-            "label_en": "Urgency HTN",
+            "label_en": "Urgency Hypertension",
             "label_vi": "Tăng huyết áp khẩn trương",
         }
     return None
