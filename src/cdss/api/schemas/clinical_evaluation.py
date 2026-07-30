@@ -389,6 +389,7 @@ def _apply_conditions(
                 "label_en": "Condition",
                 "label_vi": "Chẩn đoán",
                 "value": str(text or ", ".join(sorted(codes))),
+                "active": active,
                 "source_reference": f"Condition/{condition.get('id')}"
                 if condition.get("id")
                 else None,

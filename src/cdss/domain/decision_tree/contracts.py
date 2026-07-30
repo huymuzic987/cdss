@@ -135,7 +135,11 @@ class TraversalTraceEntry(RuntimeModel):
 
 class ExecutedReference(RuntimeModel):
     tree_key: str
+    tree_name_en: str
+    tree_name_vi: str
     node_key: str
+    node_text_en: str
+    node_text_vi: str
     reference_order: int
     source_title: str
     section_path: JsonValue
@@ -185,7 +189,10 @@ class RunState(RuntimeModel):
 
         if sbp is None or dbp is None:
             # Fallback to clinic_1
-            if runtime_input.get("clinic_1_sbp") is not None and runtime_input.get("clinic_1_dbp") is not None:
+            if (
+                runtime_input.get("clinic_1_sbp") is not None
+                and runtime_input.get("clinic_1_dbp") is not None
+            ):
                 sbp = runtime_input["clinic_1_sbp"]
                 dbp = runtime_input["clinic_1_dbp"]
 

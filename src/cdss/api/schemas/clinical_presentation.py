@@ -6,19 +6,105 @@ from copy import deepcopy
 from typing import Any
 
 from cdss.api.schemas.clinical_evaluation import ParsedClinicalBundle
-from cdss.domain.decision_tree import ExecutedAction, ExecutedReference, JsonObject
+from cdss.domain.decision_tree import (
+    ExecutedAction,
+    ExecutedReference,
+    JsonObject,
+    TraversalTraceEntry,
+)
+
+_CLINICAL_FINDING_LABELS: dict[str, tuple[str, str]] = {
+    "has_target_organ_damage": ("Target-organ damage", "Tổn thương cơ quan đích"),
+    "has_mi_acs": (
+        "Myocardial infarction / acute coronary syndrome",
+        "Nhồi máu cơ tim / hội chứng vành cấp",
+    ),
+    "has_acute_coronary_syndrome": (
+        "Acute coronary syndrome",
+        "Hội chứng vành cấp",
+    ),
+    "has_cardiovascular_disease": ("Cardiovascular disease", "Bệnh tim mạch"),
+    "has_coronary_artery_disease": ("Coronary artery disease", "Bệnh mạch vành"),
+    "has_stroke": ("Stroke", "Đột quỵ"),
+    "has_tia": ("Transient ischemic attack", "Cơn thiếu máu não thoáng qua"),
+    "has_type_2_diabetes": ("Type 2 diabetes", "Đái tháo đường type 2"),
+    "has_diabetes": ("Diabetes", "Đái tháo đường"),
+    "has_heart_failure": ("Heart failure", "Suy tim"),
+    "has_hfref": (
+        "Heart failure with reduced ejection fraction",
+        "Suy tim phân suất tống máu giảm",
+    ),
+    "has_hfmref": (
+        "Heart failure with mildly reduced ejection fraction",
+        "Suy tim phân suất tống máu giảm nhẹ",
+    ),
+    "has_hfpef": (
+        "Heart failure with preserved ejection fraction",
+        "Suy tim phân suất tống máu bảo tồn",
+    ),
+    "has_ckd": ("Chronic kidney disease", "Bệnh thận mạn"),
+    "has_ckd_stage_3_or_higher": (
+        "Chronic kidney disease stage 3 or higher",
+        "Bệnh thận mạn giai đoạn 3 trở lên",
+    ),
+    "has_kidney_transplant": ("Kidney transplant", "Ghép thận"),
+    "is_pregnant": ("Pregnancy", "Mang thai"),
+    "is_postpartum": ("Postpartum", "Sau sinh"),
+    "is_breastfeeding": ("Breastfeeding", "Đang cho con bú"),
+    "has_hypertensive_crisis": ("Hypertensive crisis", "Cơn tăng huyết áp"),
+    "has_acute_ischemic_stroke": ("Acute ischemic stroke", "Đột quỵ thiếu máu cấp"),
+    "has_acute_aortic_syndrome": ("Acute aortic syndrome", "Hội chứng động mạch chủ cấp"),
+    "has_hypertensive_encephalopathy": (
+        "Hypertensive encephalopathy",
+        "Bệnh não do tăng huyết áp",
+    ),
+    "has_acute_intracerebral_hemorrhage": (
+        "Acute intracerebral hemorrhage",
+        "Xuất huyết não cấp",
+    ),
+    "has_acute_cardiogenic_pulmonary_edema": (
+        "Acute cardiogenic pulmonary edema",
+        "Phù phổi cấp do tim",
+    ),
+    "has_eclampsia_severe_preeclampsia_or_hellp": (
+        "Eclampsia, severe preeclampsia, or HELLP syndrome",
+        "Sản giật, tiền sản giật nặng hoặc hội chứng HELLP",
+    ),
+}
+
+_RISK_LEVEL_LABELS: dict[str, tuple[str, str]] = {
+    "LOW": ("Low Hypertension Risk", "Nguy cơ tăng huyết áp thấp"),
+    "MEDIUM": ("Moderate Hypertension Risk", "Nguy cơ tăng huyết áp trung bình"),
+    "MODERATE": ("Moderate Hypertension Risk", "Nguy cơ tăng huyết áp trung bình"),
+    "HIGH": ("High Hypertension Risk", "Nguy cơ tăng huyết áp cao"),
+    "VERY_HIGH": ("Very High Hypertension Risk", "Nguy cơ tăng huyết áp rất cao"),
+}
+
+_EMERGENCY_BRANCH_NODE = "T14_C_HAS_ACUTE_TARGET_ORGAN_DAMAGE"
+_URGENCY_BRANCH_NODES = {
+    "T14_C_NO_ACUTE_TARGET_ORGAN_DAMAGE",
+    "T14_END_URGENT_HYPERTENSION",
+}
 
 
 def attach_terminal_presentation(
     actions: list[ExecutedAction],
     parsed: ParsedClinicalBundle,
     references: list[ExecutedReference],
+    trace: list[TraversalTraceEntry] | None = None,
+    context: JsonObject | None = None,
 ) -> list[ExecutedAction]:
     output = [action.model_copy(deep=True) for action in actions]
     if not output:
         return output
     terminal = output[-1]
-    terminal.payload["presentation"] = build_presentation(terminal, parsed, references)
+    terminal.payload["presentation"] = build_presentation(
+        terminal,
+        parsed,
+        references,
+        trace=trace,
+        context=context,
+    )
     return output
 
 
@@ -26,17 +112,22 @@ def build_presentation(
     action: ExecutedAction,
     parsed: ParsedClinicalBundle,
     references: list[ExecutedReference],
+    *,
+    trace: list[TraversalTraceEntry] | None = None,
+    context: JsonObject | None = None,
 ) -> JsonObject:
     payload = action.payload
+    strategy_references = _treatment_preference_references(references, trace or [])
     presentation: JsonObject = {
         "schema_version": "1.0",
         "alert": {
             "text_en": _string(payload.get("alert_en"), "Clinical decision support recommendation"),
             "text_vi": _string(payload.get("alert_vi"), "Khuyến nghị hỗ trợ quyết định lâm sàng"),
         },
+        "alert_summary": _alert_summary(parsed, trace or [], context or {}),
         "trigger_evidence": [deepcopy(item) for item in parsed.trigger_evidence],
         "recommendation": {"text_en": action.text_en, "text_vi": action.text_vi},
-        "recommended_orders": _recommended_orders(action),
+        "recommended_orders": _recommended_orders(action, strategy_references),
         "additional_actions": _additional_actions(payload),
         "acknowledgement_options": _acknowledgements(),
         "clinical_details": [deepcopy(item) for item in parsed.clinical_details],
@@ -49,7 +140,163 @@ def build_presentation(
     return presentation
 
 
-def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
+def _alert_summary(
+    parsed: ParsedClinicalBundle,
+    trace: list[TraversalTraceEntry],
+    context: JsonObject,
+) -> JsonObject:
+    crisis_classification = _hypertensive_crisis_classification(trace)
+    risk_level = _traversed_risk_level(trace, context)
+    findings: list[JsonObject] = []
+    seen_codes: set[str] = set()
+    for entry in trace:
+        if entry.event.value != "candidate_evaluated" or entry.condition_result is not True:
+            continue
+        for path in _condition_paths(entry.condition_definition):
+            if not path.startswith("input."):
+                continue
+            code = path.removeprefix("input.")
+            labels = _CLINICAL_FINDING_LABELS.get(code)
+            if (
+                labels is None
+                or (crisis_classification is not None and code == "has_hypertensive_crisis")
+                or parsed.runtime_input.get(code) is not True
+                or code in seen_codes
+            ):
+                continue
+            seen_codes.add(code)
+            findings.append(
+                {
+                    "code": code,
+                    "label_en": labels[0],
+                    "label_vi": labels[1],
+                    "tree_key": entry.tree_key,
+                    "node_key": entry.candidate_node_key or entry.node_key,
+                }
+            )
+
+    summary_items = [
+        item for item in (crisis_classification, risk_level) if item is not None
+    ]
+    labels_en = [str(item["label_en"]) for item in summary_items]
+    labels_vi = [str(item["label_vi"]) for item in summary_items]
+    summary: JsonObject = {
+        "text_en": (
+            f"Patient has {', '.join(labels_en)}"
+            if labels_en
+            else "Patient has clinical findings requiring review."
+        ),
+        "text_vi": (
+            f"Bệnh nhân có {', '.join(labels_vi)}"
+            if labels_vi
+            else "Bệnh nhân có các phát hiện lâm sàng cần được đánh giá."
+        ),
+        "findings": findings,
+    }
+    if crisis_classification is not None:
+        summary["hypertensive_crisis_classification"] = crisis_classification
+    if risk_level is not None:
+        summary["risk_level"] = risk_level
+    return summary
+
+
+def _traversed_risk_level(
+    trace: list[TraversalTraceEntry],
+    context: JsonObject,
+) -> JsonObject | None:
+    was_classified = any(
+        entry.event.value == "node_entered"
+        and entry.tree_key == "risk-classification"
+        and entry.node_type.value == "INFERENCE"
+        and any(
+            path == "context.risk.level" or path.startswith("context.risk.level.")
+            for path in entry.changed_context_paths
+        )
+        for entry in trace
+    )
+    risk = context.get("risk")
+    if not was_classified or not isinstance(risk, dict):
+        return None
+    value = risk.get("level")
+    if not isinstance(value, str):
+        return None
+    code = value.strip().upper()
+    labels = _RISK_LEVEL_LABELS.get(code)
+    if labels is None:
+        return None
+    return {"code": code, "label_en": labels[0], "label_vi": labels[1]}
+
+
+def _hypertensive_crisis_classification(
+    trace: list[TraversalTraceEntry],
+) -> JsonObject | None:
+    entered_nodes = {
+        entry.node_key
+        for entry in trace
+        if entry.event.value == "node_entered"
+        and entry.tree_key == "hypertensive-emergency"
+    }
+    if _EMERGENCY_BRANCH_NODE in entered_nodes:
+        return {
+            "code": "EMERGENCY_HYPERTENSION",
+            "label_en": "Emergency Hypertension",
+            "label_vi": "Tăng huyết áp cấp cứu",
+        }
+    if entered_nodes.intersection(_URGENCY_BRANCH_NODES):
+        return {
+            "code": "URGENCY_HTN",
+            "label_en": "Urgency HTN",
+            "label_vi": "Tăng huyết áp khẩn trương",
+        }
+    return None
+
+
+def _condition_paths(value: object) -> list[str]:
+    if not isinstance(value, dict):
+        return []
+    paths: list[str] = []
+    path = value.get("path")
+    if isinstance(path, str):
+        paths.append(path)
+    for key in ("all", "any"):
+        children = value.get(key)
+        if isinstance(children, list):
+            for child in children:
+                paths.extend(_condition_paths(child))
+    nested = value.get("not")
+    if isinstance(nested, dict):
+        paths.extend(_condition_paths(nested))
+    return paths
+
+
+def _treatment_preference_references(
+    references: list[ExecutedReference],
+    trace: list[TraversalTraceEntry],
+) -> list[ExecutedReference]:
+    provenance = {
+        (entry.tree_key, entry.node_key)
+        for entry in trace
+        if (
+            entry.event.value == "node_entered"
+            and entry.node_type.value == "INFERENCE"
+            and any(
+                path == "context.treatment_preferences"
+                or path.startswith("context.treatment_preferences.")
+                for path in entry.changed_context_paths
+            )
+        )
+    }
+    return [
+        reference
+        for reference in references
+        if (reference.tree_key, reference.node_key) in provenance
+    ]
+
+
+def _recommended_orders(
+    action: ExecutedAction,
+    strategy_references: list[ExecutedReference],
+) -> list[JsonObject]:
     payload = action.payload
     existing = payload.get("recommended_orders")
     if isinstance(existing, list):
@@ -106,6 +353,9 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
                     "class_label_vi": " + ".join(labels_vi),
                     "dose_strategy": dose_strategy,
                     "drug_classes": drug_classes,
+                    "strategy_references": [
+                        _guideline_reference(reference) for reference in strategy_references
+                    ],
                     "source_data": deepcopy(raw),
                 }
             )
@@ -234,6 +484,12 @@ def _acknowledgements() -> list[JsonObject]:
 def _guideline_reference(reference: ExecutedReference) -> JsonObject:
     return {
         "id": f"{reference.tree_key}:{reference.node_key}:{reference.reference_order}",
+        "tree_key": reference.tree_key,
+        "tree_name_en": reference.tree_name_en,
+        "tree_name_vi": reference.tree_name_vi,
+        "node_key": reference.node_key,
+        "node_text_en": reference.node_text_en,
+        "node_text_vi": reference.node_text_vi,
         "title_en": reference.source_title,
         "title_vi": reference.source_title,
         "section_path": deepcopy(reference.section_path),

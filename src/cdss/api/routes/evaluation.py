@@ -112,7 +112,11 @@ def evaluate(
                 )
             ]
     presented_actions = attach_terminal_presentation(
-        selected_actions, parsed, result.references
+        selected_actions,
+        parsed,
+        result.references,
+        trace=result.trace,
+        context=result.context,
     )
     return EvaluationResponse.from_result(
         result,

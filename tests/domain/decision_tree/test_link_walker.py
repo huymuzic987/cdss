@@ -562,7 +562,11 @@ def test_references_are_aggregated_in_execution_order_and_deduplicated() -> None
     end_result = result.references[-1]
     assert end_result.model_dump(mode="json") == {
         "tree_key": "target-tree",
+        "tree_name_en": "target-tree",
+        "tree_name_vi": "target-tree",
         "node_key": "target-end",
+        "node_text_en": "target-end",
+        "node_text_vi": "target-end",
         "reference_order": 1,
         "source_title": "End evidence",
         "section_path": ["section", "1"],

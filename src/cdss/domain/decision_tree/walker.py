@@ -442,7 +442,11 @@ def _executed_reference(
         ) from exc
     return ExecutedReference(
         tree_key=graph.tree.tree_key,
+        tree_name_en=graph.tree.name_en,
+        tree_name_vi=graph.tree.name_vi,
         node_key=node.node_key,
+        node_text_en=node.text_en,
+        node_text_vi=node.text_vi,
         reference_order=reference.reference_order,
         source_title=reference.source_title,
         section_path=section_path,

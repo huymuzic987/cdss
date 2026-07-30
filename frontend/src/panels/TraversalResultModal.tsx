@@ -1,7 +1,17 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import type { ApiErrorResponse, EvaluationResponse, TraversalTraceEntry } from '../api/types'
-import { buildClinicalPresentation, type RecommendedDrugClass, type RecommendedOrder } from './clinicalDecisionSupportAdapter'
+import { TriangleAlert } from 'lucide-react'
+import type {
+  ApiErrorResponse,
+  EvaluationResponse,
+  TraversalTraceEntry,
+} from '../api/types'
+import {
+  buildClinicalPresentation,
+  type GuidelineReference,
+  type RecommendedDrugClass,
+  type RecommendedOrder,
+} from './clinicalDecisionSupportAdapter'
 import { getClinicalDecisionSupportMessages, type ClinicalDecisionSupportLocale } from './clinicalDecisionSupportMessages'
 
 export type { RecommendedOrder } from './clinicalDecisionSupportAdapter'
@@ -43,6 +53,60 @@ function readablePathStep(
   return subject
 }
 
+function buildAlertSummary(
+  summary: string,
+  evidence: { id: string; value: string }[],
+  locale: ClinicalDecisionSupportLocale,
+  fallback: string,
+): string {
+  const patientPrefix = locale === 'vi' ? 'Bệnh nhân có' : 'Patient has'
+  const prefixPattern = /^(?:Patient\s+has|Bệnh\s+nhân\s+có)\s*/iu
+  const excludedClausePattern = /(?:\b(?:BP|SBP|DBP|HATT|HATTr|mmHg)\b|Huyết\s*áp|Grade\s*\d+\s+hypertension|Tăng\s+huyết\s+áp\s+độ|treatment|điều\s+trị)/iu
+  const findings = summary
+    .replace(prefixPattern, '')
+    .split(/\s*;\s*/)
+    .map((part) => physicianReadableFinding(part.trim().replace(/[.;]\s*$/, '')))
+    .filter((part) => part && !excludedClausePattern.test(part))
+  const uniqueFindings = Array.from(new Map(
+    findings.map((finding) => [finding.toLocaleLowerCase(), finding]),
+  ).values())
+  if (uniqueFindings.length > 0) return `${patientPrefix} ${uniqueFindings.join('; ')}`
+
+  const comorbidities = evidence.find((item) => item.id === 'clinical-comorbidities')?.value.trim()
+  return comorbidities
+    ? `${patientPrefix} ${physicianReadableFinding(comorbidities)}`
+    : fallback
+}
+
+function physicianReadableFinding(value: string): string {
+  const withoutTechnicalPrefix = value.replace(/^(?:has|is)_/i, '')
+  if (!withoutTechnicalPrefix.includes('_')) return withoutTechnicalPrefix
+  const words = withoutTechnicalPrefix.replaceAll('_', ' ').replace(/\s+/g, ' ').trim().toLowerCase()
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : ''
+}
+
+function AlertSummary({ text, label, criticalLabel, severity }: {
+  text: string
+  label: string
+  criticalLabel: string
+  severity: 'warning' | 'critical'
+}) {
+  const isCritical = severity === 'critical'
+  return (
+    <section
+      className={`cds-alert-summary${isCritical ? ' cds-alert-summary-critical' : ''}`}
+      aria-label={label}
+      aria-live={isCritical ? 'assertive' : 'polite'}
+    >
+      <TriangleAlert className="cds-alert-summary-icon" size={20} strokeWidth={2.2} aria-hidden="true" />
+      <div className="cds-alert-summary-content">
+        {isCritical && <span className="cds-alert-critical-label">{criticalLabel}</span>}
+        <span className="cds-alert-summary-text">{text}</span>
+      </div>
+    </section>
+  )
+}
+
 function TriggerEvidence({ items, title, emptyText }: {
   items: { id: string; label: string; value: string }[]; title: string; emptyText: string
 }) {
@@ -52,7 +116,12 @@ function TriggerEvidence({ items, title, emptyText }: {
       {items.length === 0 ? <p className="cds-empty">{emptyText}</p> : (
         <dl className="cds-evidence-grid">
           {items.map((item) => (
-            <div className="cds-evidence-row" key={item.id}><dt>{item.label}</dt><dd>{item.value}</dd></div>
+            <div
+              className={`cds-evidence-item${item.id === 'clinical-conditions' ? ' cds-evidence-item-conditions' : ''}`}
+              key={item.id}
+            >
+              <dt>{item.label}</dt><dd>{item.value}</dd>
+            </div>
           ))}
         </dl>
       )}
@@ -60,8 +129,11 @@ function TriggerEvidence({ items, title, emptyText }: {
   )
 }
 
-function DrugClassDetails({ drugClass, orderId, locale }: {
-  drugClass: RecommendedDrugClass; orderId: string; locale: ClinicalDecisionSupportLocale
+function DrugClassDetails({ drugClass, orderId, references, locale }: {
+  drugClass: RecommendedDrugClass
+  orderId: string
+  references: GuidelineReference[]
+  locale: ClinicalDecisionSupportLocale
 }) {
   const messages = getClinicalDecisionSupportMessages(locale)
   const anchorRef = useRef<HTMLDivElement>(null)
@@ -120,6 +192,14 @@ function DrugClassDetails({ drugClass, orderId, locale }: {
   }, [open])
 
   useEffect(() => () => cancelClose(), [])
+  const guidelineSources = Array.from(new Set(
+    references.map((reference) => reference.sourceTitle.trim()).filter(Boolean),
+  ))
+  const guidelineSections = Array.from(new Set(
+    references
+      .map((reference) => (reference.locator || reference.sectionPath).trim())
+      .filter(Boolean),
+  ))
 
   const popover = open && position && createPortal(
     <div
@@ -142,6 +222,14 @@ function DrugClassDetails({ drugClass, orderId, locale }: {
           ))}</tbody>
         </table>
       )}
+      {(guidelineSources.length > 0 || guidelineSections.length > 0) && <div className="cds-drug-guideline">
+        {guidelineSources.length > 0 && (
+          <div><span>{messages.guidelineSource}</span>{guidelineSources.join('; ')}</div>
+        )}
+        {guidelineSections.length > 0 && (
+          <div><span>{messages.section}</span>{guidelineSections.join('; ')}</div>
+        )}
+      </div>}
     </div>,
     document.body,
   )
@@ -152,6 +240,7 @@ function DrugClassDetails({ drugClass, orderId, locale }: {
         ref={anchorRef}
         className="cds-drug-class"
         tabIndex={0}
+        aria-expanded={open}
         aria-describedby={open ? tooltipId : undefined}
         onMouseEnter={show}
         onMouseLeave={scheduleClose}
@@ -179,7 +268,12 @@ function RecommendedOrderCard({ order, locale }: {
           <div className="cds-order-name cds-class-combination">
             {order.drugClasses.map((drugClass, index) => <div className="cds-class-part" key={drugClass.code}>
               {index > 0 && <span className="cds-class-separator"> + </span>}
-              <DrugClassDetails drugClass={drugClass} orderId={order.id} locale={locale} />
+              <DrugClassDetails
+                drugClass={drugClass}
+                orderId={order.id}
+                references={order.strategyReferences}
+                locale={locale}
+              />
             </div>)}
           </div>
         ) : <>
@@ -205,7 +299,14 @@ function ResultDialog({ result, partial, onClose, locale }: Omit<TraversalResult
     [result, partial, locale],
   )
   const orders = presentation.orders
+  const alertSummary = buildAlertSummary(
+    presentation.alertSummary,
+    presentation.evidence,
+    locale,
+    messages.genericAlertSummary,
+  )
   const dialogRef = useRef<HTMLDivElement>(null)
+  const actions = result?.actions ?? partial?.partial_run_state?.actions ?? []
   const enteredNodes = log.filter((entry) => entry.event === 'node_entered')
 
   useEffect(() => {
@@ -227,27 +328,25 @@ function ResultDialog({ result, partial, onClose, locale }: Omit<TraversalResult
         </header>
 
         <div className="modal-body cds-modal-body">
+          <AlertSummary
+            text={alertSummary}
+            label={messages.alertSummary}
+            criticalLabel={messages.critical}
+            severity={presentation.alertSeverity}
+          />
+
           <TriggerEvidence items={presentation.evidence} title={messages.whyTitle} emptyText={messages.noEvidence} />
 
           <section className="cds-section cds-recommendation" aria-labelledby="cds-recommendation-title">
             <h2 id="cds-recommendation-title">{messages.recommendedAction}</h2>
             <p className="cds-recommendation-copy">{presentation.recommendation}</p>
-            {presentation.recommendationSecondary && <p className="cds-bilingual-copy">{presentation.recommendationSecondary}</p>}
             <div className="cds-recommendation-meta">
               {presentation.recommendationStrength && <span>{messages.recommendationStrength}: {presentation.recommendationStrength}</span>}
               {presentation.evidenceLevel && <span>{messages.evidenceLevel}: {presentation.evidenceLevel}</span>}
             </div>
-          </section>
-
-          {orders.length > 0 && <section className="cds-section cds-orders" aria-label={messages.recommendedOrders}>
-            {orders.map((order) => <RecommendedOrderCard key={order.id} order={order} locale={locale} />)}
-          </section>}
-
-          <section className="cds-additional-actions" aria-labelledby="cds-additional-title">
-            <h2 id="cds-additional-title">{messages.additionalActions}</h2>
-            {presentation.additionalActions.length === 0 ? <p className="cds-empty">{messages.noAdditionalActions}</p> : (
-              <ul>{presentation.additionalActions.map((action) => <li key={action.id}>{action.label}</li>)}</ul>
-            )}
+            {orders.length > 0 && <div className="cds-orders" aria-label={messages.recommendedOrders}>
+              {orders.map((order) => <RecommendedOrderCard key={order.id} order={order} locale={locale} />)}
+            </div>}
           </section>
 
           <details className="modal-debug cds-decision-path">
@@ -260,7 +359,7 @@ function ResultDialog({ result, partial, onClose, locale }: Omit<TraversalResult
               return <div className="modal-path-step" key={`${entry.tree_key}-${entry.node_key}-${index}`}>
                 <span className="modal-path-num">{index + 1}</span>
                 <span className="modal-path-copy">
-                  <span className="modal-path-node">{readablePathStep(entry, result?.actions ?? partial?.partial_run_state?.actions ?? [], locale)}</span>
+                  <span className="modal-path-node">{readablePathStep(entry, actions, locale)}</span>
                   <span className="modal-path-tree">{treeName}</span>
                 </span>
               </div>

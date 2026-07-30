@@ -10,6 +10,7 @@ export interface RecommendedOrder {
   sourceData?: JsonObject
   medicineIds?: string[]
   drugClasses?: RecommendedDrugClass[]
+  strategyReferences: GuidelineReference[]
 }
 
 export interface RecommendedMedicine {
@@ -27,27 +28,59 @@ export interface RecommendedDrugClass {
   medicines: RecommendedMedicine[]
 }
 
+export interface GuidelineReference {
+  id: string
+  shortLabel: string
+  nodeText: string
+  treeName: string
+  sourceTitle: string
+  sectionPath: string
+  locator?: string
+  locatorDetail?: string
+  note?: string
+  printedPages: number[]
+  pdfPages: number[]
+}
+
 export interface EvidenceItem {
   id: string
   label: string
   value: string
 }
 
-export interface ActionOption {
-  id: string
-  label: string
-}
-
 export interface ClinicalPresentation {
   alert: string
+  alertSummary: string
+  alertSeverity: 'warning' | 'critical'
   evidence: EvidenceItem[]
   recommendation: string
-  recommendationSecondary?: string
   recommendationStrength?: string
   evidenceLevel?: string
   orders: RecommendedOrder[]
-  additionalActions: ActionOption[]
   contractError?: string
+}
+
+const CONDITION_CODE_LABELS: Record<string, [string, string]> = {
+  has_target_organ_damage: ['Target-organ damage', 'Tổn thương cơ quan đích'],
+  has_mi_acs: ['Myocardial infarction / acute coronary syndrome', 'Nhồi máu cơ tim / hội chứng vành cấp'],
+  has_acute_coronary_syndrome: ['Acute coronary syndrome', 'Hội chứng vành cấp'],
+  has_cardiovascular_disease: ['Cardiovascular disease', 'Bệnh tim mạch'],
+  has_coronary_artery_disease: ['Coronary artery disease', 'Bệnh mạch vành'],
+  has_stroke: ['Stroke', 'Đột quỵ'],
+  has_tia: ['Transient ischemic attack', 'Cơn thiếu máu não thoáng qua'],
+  has_type_2_diabetes: ['Type 2 diabetes', 'Đái tháo đường type 2'],
+  has_diabetes: ['Diabetes', 'Đái tháo đường'],
+  has_heart_failure: ['Heart failure', 'Suy tim'],
+  has_hfref: ['Heart failure with reduced ejection fraction', 'Suy tim phân suất tống máu giảm'],
+  has_hfmref: ['Heart failure with mildly reduced ejection fraction', 'Suy tim phân suất tống máu giảm nhẹ'],
+  has_hfpef: ['Heart failure with preserved ejection fraction', 'Suy tim phân suất tống máu bảo tồn'],
+  has_ckd: ['Chronic kidney disease', 'Bệnh thận mạn'],
+  has_ckd_stage_3_or_higher: ['Chronic kidney disease stage 3 or higher', 'Bệnh thận mạn giai đoạn 3 trở lên'],
+  has_kidney_transplant: ['Kidney transplant', 'Ghép thận'],
+  is_pregnant: ['Pregnancy', 'Mang thai'],
+  is_postpartum: ['Postpartum', 'Sau sinh'],
+  is_breastfeeding: ['Breastfeeding', 'Đang cho con bú'],
+  has_hypertensive_crisis: ['Hypertensive crisis', 'Cơn tăng huyết áp'],
 }
 
 interface Medicine {
@@ -97,86 +130,82 @@ function parseEvidence(values: JsonValue | undefined, locale: ClinicalDecisionSu
   })
 }
 
-function nestedObject(root: JsonObject, key: string): JsonObject | null {
-  return objectValue(root[key])
-}
-
-function localizedCode(code: string, labels: Record<string, [string, string]>, locale: ClinicalDecisionSupportLocale): string {
-  const pair = labels[code]
-  if (!pair) return humanize(code)
-  return locale === 'vi' ? pair[1] : pair[0]
-}
-
 function buildClinicalSummaryEvidence(
   presentation: JsonObject,
-  context: JsonObject,
-  hasMedicationOrder: boolean,
   locale: ClinicalDecisionSupportLocale,
 ): EvidenceItem[] {
   const items: EvidenceItem[] = []
-  const diagnosis = nestedObject(context, 'diagnosis')
-  const hypertensionClass = stringValue(diagnosis?.hypertension_class)
-  if (hypertensionClass) {
+  const triggerEvidence = parseEvidence(presentation.trigger_evidence, locale)
+  const systolic = triggerEvidence.find((item) => item.id === 'current-sbp')
+  const diastolic = triggerEvidence.find((item) => item.id === 'current-dbp')
+  if (systolic && diastolic) {
+    const withoutUnit = (value: string) => value.replace(/\s*mmHg\s*$/i, '')
     items.push({
-      id: 'clinical-hypertension-stage',
-      label: locale === 'vi' ? 'Phân độ tăng huyết áp' : 'Hypertension stage',
-      value: localizedCode(hypertensionClass, {
-        NORMAL_BP: ['Normal blood pressure', 'Huyết áp bình thường'],
-        HIGH_NORMAL_BP: ['High-normal blood pressure', 'Huyết áp bình thường cao'],
-        GRADE_1_HYPERTENSION: ['Grade 1 hypertension', 'Tăng huyết áp độ 1'],
-        GRADE_2_HYPERTENSION: ['Grade 2 hypertension', 'Tăng huyết áp độ 2'],
-        ISOLATED_SYSTOLIC_HYPERTENSION: ['Isolated systolic hypertension', 'Tăng huyết áp tâm thu đơn độc'],
-        MASKED_HYPERTENSION: ['Masked hypertension', 'Tăng huyết áp ẩn giấu'],
-        HYPERTENSIVE_EMERGENCY: ['Hypertensive emergency', 'Tăng huyết áp cấp cứu'],
-      }, locale),
+      id: 'clinical-current-bp',
+      label: locale === 'vi' ? 'Huyết áp' : 'Blood Pressure',
+      value: `${withoutUnit(systolic.value)}/${withoutUnit(diastolic.value)} mmHg`,
     })
   }
 
-  const details = Array.isArray(presentation.clinical_details) ? presentation.clinical_details : []
-  const conditions = Array.from(new Set(details.flatMap((entry) => {
-    const detail = objectValue(entry)
-    if (!detail || detail.category !== 'condition') return []
-    const value = formatValue(detail.value)
-    return value ? [value] : []
-  })))
+  const conditions = patientConditionLabels(presentation, locale)
   if (conditions.length > 0) {
     items.push({
-      id: 'clinical-comorbidities',
-      label: locale === 'vi' ? 'Chẩn đoán và bệnh đồng mắc' : 'Diagnoses and comorbidities',
+      id: 'clinical-conditions',
+      label: locale === 'vi' ? 'Bệnh lý' : 'Conditions',
       value: conditions.join(', '),
-    })
-  }
-
-  const risk = nestedObject(context, 'risk')
-  const riskLevel = stringValue(risk?.level)
-  if (riskLevel) {
-    items.push({
-      id: 'clinical-risk-level',
-      label: locale === 'vi' ? 'Mức nguy cơ tim mạch' : 'Cardiovascular risk level',
-      value: localizedCode(riskLevel, {
-        LOW: ['Low risk', 'Nguy cơ thấp'],
-        MODERATE: ['Moderate risk', 'Nguy cơ trung bình'],
-        HIGH: ['High risk', 'Nguy cơ cao'],
-        VERY_HIGH: ['Very high risk', 'Nguy cơ rất cao'],
-      }, locale),
-    })
-  }
-
-  if (hasMedicationOrder) {
-    items.push({
-      id: 'clinical-treatment-indication',
-      label: locale === 'vi' ? 'Chỉ định điều trị' : 'Treatment indication',
-      value: locale === 'vi'
-        ? 'Mức huyết áp và hồ sơ nguy cơ đáp ứng tiêu chí điều trị bằng thuốc.'
-        : 'Blood pressure and the clinical risk profile meet criteria for pharmacologic treatment.',
     })
   }
   return items
 }
 
-function mergeEvidence(...groups: EvidenceItem[][]): EvidenceItem[] {
-  return Array.from(new Map(groups.flat().map((item) => [item.id, item])).values())
+function patientConditionLabels(
+  presentation: JsonObject,
+  locale: ClinicalDecisionSupportLocale,
+): string[] {
+  const labels: string[] = []
+  const alertSummary = objectValue(presentation.alert_summary)
+  const findings = alertSummary?.findings
+  if (Array.isArray(findings)) {
+    for (const value of findings) {
+      const finding = objectValue(value)
+      if (!finding) continue
+      const label = localized(finding, 'label', locale)
+      if (label) labels.push(label)
+    }
+  }
+  const details = presentation.clinical_details
+  if (Array.isArray(details)) {
+    for (const value of details) {
+      const detail = objectValue(value)
+      if (
+        !detail
+        || stringValue(detail.category) !== 'condition'
+        || detail.active === false
+      ) continue
+      const label = formatValue(detail.value)
+      if (label) labels.push(physicianConditionLabel(label, locale))
+    }
+  }
+  return Array.from(new Map(
+    labels.map((label) => [label.trim().toLocaleLowerCase(), label.trim()]),
+  ).values())
 }
+
+function physicianConditionLabel(
+  value: string,
+  locale: ClinicalDecisionSupportLocale,
+): string {
+  const normalized = value.trim().toLowerCase()
+  const mapped = CONDITION_CODE_LABELS[normalized]
+  if (mapped) return locale === 'vi' ? mapped[1] : mapped[0]
+  if (!/^(?:has|is)_/.test(normalized)) return value.trim()
+  const readable = normalized
+    .replace(/^(?:has|is)_/, '')
+    .replaceAll('_', ' ')
+    .replace(/\s+/g, ' ')
+  return readable ? readable.charAt(0).toUpperCase() + readable.slice(1) : ''
+}
+
 function parseMedicine(value: JsonValue): Medicine | null {
   const medicine = objectValue(value)
   if (!medicine || medicine.available === false) return null
@@ -211,6 +240,7 @@ function parseStructuredOrders(value: JsonValue | undefined, locale: ClinicalDec
       orderType: stringValue(item.type, 'order'), sourceData: item,
       medicineIds: components.map((component) => component.drugId).filter(Boolean),
       drugClasses: drugClasses.length > 0 ? drugClasses : undefined,
+      strategyReferences: parseGuidelineReferences(item.strategy_references, locale),
     }]
   })
 }
@@ -249,15 +279,60 @@ function parseDrugClasses(
   })
 }
 
-function parseOptions(value: JsonValue | undefined, locale: ClinicalDecisionSupportLocale): ActionOption[] {
+function numberList(value: JsonValue | undefined): number[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is number => typeof item === 'number')
+    : []
+}
+
+function formatSectionPath(value: JsonValue | undefined): string {
+  if (!Array.isArray(value)) return ''
+  return value.flatMap((entry) => {
+    const section = objectValue(entry)
+    if (!section) return []
+    const number = stringValue(section.number)
+    const title = stringValue(section.title)
+    const text = [number, title].filter(Boolean).join(' ')
+    return text ? [text] : []
+  }).join(' > ')
+}
+
+function shortReferenceLabel(locator: string, sectionPath: string, locale: ClinicalDecisionSupportLocale): string {
+  const locatorMatch = locator.match(/\b(?:Bảng|Table)\s+\d+(?:\.\d+)?/iu)
+    ?? locator.match(/\b(?:Mục|Section)\s+\d+(?:\.\d+)*/iu)
+  if (locatorMatch) return locatorMatch[0]
+  const sectionNumber = sectionPath.match(/^\d+(?:\.\d+)*/)
+  if (sectionNumber) return `${locale === 'vi' ? 'Mục' : 'Section'} ${sectionNumber[0]}`
+  return locator || (locale === 'vi' ? 'Nguồn' : 'Source')
+}
+
+function parseGuidelineReferences(
+  value: JsonValue | undefined,
+  locale: ClinicalDecisionSupportLocale,
+): GuidelineReference[] {
   if (!Array.isArray(value)) return []
-  return value.flatMap((entry, index) => {
-    if (typeof entry === 'string') return [{ id: entry, label: humanize(entry) }]
-    const option = objectValue(entry)
-    if (!option) return []
-    const id = stringValue(option.id, `action-${index}`)
-    return [{ id, label: localized(option, 'label', locale) || humanize(id) }]
+  const references = value.flatMap((entry, index) => {
+    const reference = objectValue(entry)
+    if (!reference) return []
+    const locator = stringValue(reference.locator)
+    const sectionPath = formatSectionPath(reference.section_path)
+    return [{
+      id: stringValue(reference.id, `strategy-reference-${index}`),
+      shortLabel: shortReferenceLabel(locator, sectionPath, locale),
+      nodeText: localized(reference, 'node_text', locale),
+      treeName: localized(reference, 'tree_name', locale),
+      sourceTitle: localized(reference, 'title', locale),
+      sectionPath,
+      locator: locator || undefined,
+      locatorDetail: stringValue(reference.locator_detail) || undefined,
+      note: stringValue(reference.note) || undefined,
+      printedPages: numberList(reference.printed_page_numbers),
+      pdfPages: numberList(reference.pdf_page_numbers),
+    }]
   })
+  return Array.from(new Map(
+    references.map((reference) => [reference.id, reference]),
+  ).values())
 }
 
 function findPresentation(actions: ExecutedAction[]): JsonObject | null {
@@ -280,33 +355,41 @@ function codedLabel(value: JsonValue | undefined, locale: ClinicalDecisionSuppor
 }
 
 export function buildClinicalPresentation(
-  actions: ExecutedAction[], _input: JsonObject, context: JsonObject, locale: ClinicalDecisionSupportLocale,
+  actions: ExecutedAction[], _input: JsonObject, _context: JsonObject, locale: ClinicalDecisionSupportLocale,
 ): ClinicalPresentation {
   const presentation = findPresentation(actions)
   if (!presentation || presentation.schema_version !== '1.0') {
     return {
       alert: locale === 'vi' ? 'Dữ liệu trình bày quyết định lâm sàng không hợp lệ.' : 'Invalid clinical presentation contract.',
-      evidence: [], recommendation: '', orders: [], additionalActions: [],
+      alertSummary: '',
+      alertSeverity: 'warning',
+      evidence: [], recommendation: '', orders: [],
       contractError: 'missing_or_unsupported_presentation',
     }
   }
   const structuredOrders = parseStructuredOrders(presentation.recommended_orders, locale)
-  const evidence = mergeEvidence(
-    buildClinicalSummaryEvidence(
-      presentation, context, structuredOrders.some((order) => order.orderType === 'medication'), locale,
-    ),
-    parseEvidence(presentation.trigger_evidence, locale),
+  const evidence = buildClinicalSummaryEvidence(presentation, locale)
+  const alertSummaryPayload = objectValue(presentation.alert_summary)
+  const crisisClassification = objectValue(alertSummaryPayload?.hypertensive_crisis_classification)
+  const alertSeverity = stringValue(crisisClassification?.code) === 'EMERGENCY_HYPERTENSION'
+    ? 'critical'
+    : 'warning'
+  const terminalAction = actions.findLast(
+    (action) => action.node_type === 'ACTION' || action.node_type === 'END',
   )
-  const lastAction = actions.at(-1)
-  const recommendation = localizedText(presentation.recommendation, locale)
+  const terminalRecommendation = terminalAction
+    ? terminalAction.text_en || terminalAction.text_vi
+    : ''
+  const recommendation = terminalRecommendation
+    || localizedText(presentation.recommendation, 'en')
   return {
     alert: localizedText(presentation.alert, locale),
+    alertSummary: localizedText(presentation.alert_summary, locale),
+    alertSeverity,
     evidence,
     recommendation,
-    recommendationSecondary: localizedText(presentation.recommendation, locale === 'vi' ? 'en' : 'vi') || (lastAction ? (locale === 'vi' ? lastAction.text_en : lastAction.text_vi) : undefined),
     recommendationStrength: codedLabel(presentation.evidence_strength, locale),
     evidenceLevel: codedLabel(presentation.evidence_level, locale),
     orders: Array.from(new Map(structuredOrders.map((order) => [order.id, order])).values()),
-    additionalActions: parseOptions(presentation.additional_actions, locale),
   }
 }

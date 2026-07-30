@@ -135,7 +135,11 @@ export interface ExecutedAction {
 
 export interface ExecutedReference {
   tree_key: string
+  tree_name_en: string
+  tree_name_vi: string
   node_key: string
+  node_text_en: string
+  node_text_vi: string
   reference_order: number
   source_title: string
   section_path: JsonValue
