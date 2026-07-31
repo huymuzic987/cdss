@@ -28,336 +28,24 @@
       "T11_GLOBAL_ABBREVIATION_GLOSSARY"
     ],
     "nodes": {
-      "T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE": {
-        "id": "392b6a0b-7c8e-419b-8fb5-f14a90c3b2f8",
-        "node_key": "T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE",
-        "node_type": "ACTION",
-        "text_en": "Maintain regimen",
-        "text_vi": "Duy trì phác đồ",
+      "T11_START_BP_TARGET_STATUS": {
+        "id": "b091a990-61f9-47c6-bb4b-a0a34ac6e375",
+        "node_key": "T11_START_BP_TARGET_STATUS",
+        "node_type": "START",
+        "text_en": "Tree 3: Blood pressure threshold and treatment target",
+        "text_vi": "Cây 3: Ngưỡng huyết áp và đích điều trị",
         "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "MAINTAIN_CURRENT_REGIMEN",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": false
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 16,
-        "created_at": "2026-07-25 11:46:28.101935+00:00",
-        "updated_at": "2026-07-25 11:46:28.101935+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "f6f3c61f-0037-4a1c-a096-5164b4c801ca",
-            "traversal_order": 1,
-            "to_node_key": "T11_LINK_ESSENTIAL_TREATMENT_STRATEGY",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.facility_capability",
-              "value": "LIMITED_RESOURCES"
-            }
-          },
-          {
-            "edge_id": "422b1987-8145-40c7-835d-d2070263f3c3",
-            "traversal_order": 2,
-            "to_node_key": "T11_LINK_OPTIMAL_TREATMENT_STRATEGY",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.facility_capability",
-              "value": "FULL_RESOURCES"
-            }
-          }
-        ]
-      },
-      "T11_ACTION_MAINTAIN_REGIMEN_POST_TRANSPLANT": {
-        "id": "3eaff7e6-b016-4775-907e-d57b14316bf2",
-        "node_key": "T11_ACTION_MAINTAIN_REGIMEN_POST_TRANSPLANT",
-        "node_type": "ACTION",
-        "text_en": "Maintain regimen",
-        "text_vi": "Duy trì phác đồ",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "MAINTAIN_CURRENT_REGIMEN",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": false
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 20,
-        "created_at": "2026-07-25 11:46:28.101935+00:00",
-        "updated_at": "2026-07-25 11:46:28.101935+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "bc324331-9147-4d0d-9a09-6bd1a8f5f5ed",
-            "traversal_order": 1,
-            "to_node_key": "T11_LINK_ESSENTIAL_TREATMENT_STRATEGY",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.facility_capability",
-              "value": "LIMITED_RESOURCES"
-            }
-          },
-          {
-            "edge_id": "e222a5ab-5c7e-4ea1-8544-2f8cc8527f26",
-            "traversal_order": 2,
-            "to_node_key": "T11_LINK_OPTIMAL_TREATMENT_STRATEGY",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.facility_capability",
-              "value": "FULL_RESOURCES"
-            }
-          }
-        ]
-      },
-      "T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR": {
-        "id": "ecc9c7d9-6ed8-4add-b908-f4a36b29bdfa",
-        "node_key": "T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR",
-        "node_type": "ACTION",
-        "text_en": "Maintain regimen",
-        "text_vi": "Duy trì phác đồ",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "MAINTAIN_CURRENT_REGIMEN",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": false
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 18,
-        "created_at": "2026-07-25 11:46:28.101935+00:00",
-        "updated_at": "2026-07-25 11:46:28.101935+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "ffe76e1f-d26f-48c3-97ff-793a3064c128",
-            "traversal_order": 1,
-            "to_node_key": "T11_LINK_ESSENTIAL_TREATMENT_STRATEGY",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.facility_capability",
-              "value": "LIMITED_RESOURCES"
-            }
-          },
-          {
-            "edge_id": "0edfe696-a12c-43e1-aeef-89f1fc93fb7c",
-            "traversal_order": 2,
-            "to_node_key": "T11_LINK_OPTIMAL_TREATMENT_STRATEGY",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.facility_capability",
-              "value": "FULL_RESOURCES"
-            }
-          }
-        ]
-      },
-      "T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR": {
-        "id": "8943a52d-445d-4c5f-a33d-e7f71edcda20",
-        "node_key": "T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR",
-        "node_type": "ACTION",
-        "text_en": "Reduce dose or stop the RAS-inhibitor (class A) combination",
-        "text_vi": "Giảm liều hoặc ngừng phối hợp A",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "REDUCE_DOSE_OR_STOP_RAS_INHIBITOR",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": false,
-          "requires_clinician_review": true
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 17,
-        "created_at": "2026-07-25 11:46:28.101935+00:00",
-        "updated_at": "2026-07-25 11:46:28.101935+00:00",
-        "references": [
-          {
-            "id": "924e2e5d-4169-4009-9776-28cc4831fdbd",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Tăng huyết áp và Bệnh thận mạn",
-                "number": "3.7.4"
-              }
-            ],
-            "locator": "Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)",
-            "locator_detail": "If serum creatinine rises more than 30% within 4 weeks of starting/increasing a RAS-inhibitor, consider reducing the dose or stopping it (Class I).",
-            "printed_page_numbers": [
-              35
-            ],
-            "pdf_page_numbers": [
-              37
-            ],
-            "reference_note": "Nếu creatinin huyết thanh tăng hơn 30% trong vòng 4 tuần, xem xét giảm liều hoặc ngừng thuốc ức chế RAS.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "c22ad075-8e7a-45e4-8560-ff9ac3a65b41",
-            "traversal_order": 1,
-            "to_node_key": "T11_LINK_ESSENTIAL_TREATMENT_STRATEGY",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.facility_capability",
-              "value": "LIMITED_RESOURCES"
-            }
-          },
-          {
-            "edge_id": "5fc8fadb-55d1-46dd-977f-958c7f850a75",
-            "traversal_order": 2,
-            "to_node_key": "T11_LINK_OPTIMAL_TREATMENT_STRATEGY",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.facility_capability",
-              "value": "FULL_RESOURCES"
-            }
-          }
-        ]
-      },
-      "T11_ACTION_TEST_CREATININE_AND_MONITOR": {
-        "id": "c3e81015-fa4a-462e-ba74-369fb405da78",
-        "node_key": "T11_ACTION_TEST_CREATININE_AND_MONITOR",
-        "node_type": "ACTION",
-        "text_en": "Test creatinine and monitor after 2-4 weeks",
-        "text_vi": "Xét nghiệm chỉ số creatinine và theo dõi sau 2-4 tuần",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "TEST_CREATININE_AND_MONITOR",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": true
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 8,
-        "created_at": "2026-07-25 11:46:28.101935+00:00",
-        "updated_at": "2026-07-25 11:46:28.101935+00:00",
-        "references": [
-          {
-            "id": "ac6fdadc-b172-458c-845a-64b76787e49d",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Tăng huyết áp và Bệnh thận mạn",
-                "number": "3.7.4"
-              }
-            ],
-            "locator": "Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)",
-            "locator_detail": "Monitor BP, creatinine, and potassium every 2-4 weeks after starting or increasing a RAS-inhibitor (Class I, Level A).",
-            "printed_page_numbers": [
-              35
-            ],
-            "pdf_page_numbers": [
-              37
-            ],
-            "reference_note": "Theo dõi HA, nồng độ creatinin và kali máu mỗi 2-4 tuần sau khi bắt đầu hoặc tăng liều thuốc ức chế RAS.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "55ee9a33-2bef-45ba-8031-ce233e886066",
-            "traversal_order": 1,
-            "to_node_key": "T11_LINK_ESSENTIAL_TREATMENT_STRATEGY",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.facility_capability",
-              "value": "LIMITED_RESOURCES"
-            }
-          },
-          {
-            "edge_id": "01fee17a-e123-484e-8720-1429a6ad1d4d",
-            "traversal_order": 2,
-            "to_node_key": "T11_LINK_OPTIMAL_TREATMENT_STRATEGY",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.facility_capability",
-              "value": "FULL_RESOURCES"
-            }
-          }
-        ]
-      },
-      "T11_ACTION_TEST_CREATININE_COMPARE_PRIOR": {
-        "id": "c82a074a-7873-40a8-9874-29f2f9a627a4",
-        "node_key": "T11_ACTION_TEST_CREATININE_COMPARE_PRIOR",
-        "node_type": "ACTION",
-        "text_en": "Test creatinine and compare with the prior measurement",
-        "text_vi": "Xét nghiệm chỉ số creatinine và đối chiếu với lần đo trước",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "TEST_CREATININE_COMPARE_PRIOR",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": true
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 12,
-        "created_at": "2026-07-25 11:46:28.101935+00:00",
-        "updated_at": "2026-07-25 11:46:28.101935+00:00",
-        "references": [
-          {
-            "id": "6d732a12-3d04-470b-acc6-690bd0197f63",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Tăng huyết áp và Bệnh thận mạn",
-                "number": "3.7.4"
-              }
-            ],
-            "locator": "Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)",
-            "locator_detail": "Monitor BP, creatinine, and potassium every 2-4 weeks after starting or increasing a RAS-inhibitor (Class I, Level A).",
-            "printed_page_numbers": [
-              35
-            ],
-            "pdf_page_numbers": [
-              37
-            ],
-            "reference_note": "Theo dõi HA, nồng độ creatinin và kali máu mỗi 2-4 tuần sau khi bắt đầu hoặc tăng liều thuốc ức chế RAS.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "59b4b88a-2752-43f6-b4c7-a58349d3fc1d",
-            "traversal_order": 1,
-            "to_node_key": "T11_INF_DETERMINE_CREATININE_INCREASE_STATUS",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T11_C_CREATININE_INCREASED_OVER_30_PERCENT": {
-        "id": "29a1413a-e96e-45ec-b43c-db26c11789bb",
-        "node_key": "T11_C_CREATININE_INCREASED_OVER_30_PERCENT",
-        "node_type": "CONDITION",
-        "text_en": "Creatinine increased by more than 30%",
-        "text_vi": "Creatinine tăng >30%",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.creatinine_increased_over_30_percent",
-          "value": true
-        },
         "context_patch": null,
         "action_payload": null,
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 15,
+        "display_order": 0,
         "created_at": "2026-07-25 11:46:28.101935+00:00",
         "updated_at": "2026-07-25 11:46:28.101935+00:00",
         "references": [
           {
-            "id": "e0bde7ba-1572-4011-8fb0-849f5fe0be6d",
+            "id": "09edda0d-47eb-45ff-9f1b-6e0e146171c8",
             "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
             "section_path": [
               {
@@ -365,82 +53,75 @@
                 "number": "3.7.4"
               }
             ],
-            "locator": "Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)",
-            "locator_detail": "If serum creatinine rises more than 30% within 4 weeks of starting/increasing a RAS-inhibitor, consider reducing the dose or stopping it (Class I).",
+            "locator": "Bảng 21. Ngưỡng điều trị và mục tiêu huyết áp ở bệnh nhân tăng huyết áp có bệnh thận mạn (4, 5)",
+            "locator_detail": "Entry point of the CKD tree; BP should be lowered to <130/80 mmHg in CKD per SPRINT evidence.",
             "printed_page_numbers": [
-              35
+              34
             ],
             "pdf_page_numbers": [
-              37
+              36
             ],
-            "reference_note": "Nếu creatinin huyết thanh tăng hơn 30% trong vòng 4 tuần, xem xét giảm liều hoặc ngừng thuốc ức chế RAS.",
+            "reference_note": "Điểm vào của Cây 11; HA cần được hạ xuống <130/80mmHg ở bệnh nhân bệnh thận mạn.",
             "reference_order": 1
           }
         ],
         "transitions": [
           {
-            "edge_id": "7ec23be2-ad42-4e72-aa99-fbb1a76b2b6d",
+            "edge_id": "1de61262-4c5c-49cc-a11c-4d4478ff38ff",
             "traversal_order": 1,
-            "to_node_key": "T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR",
+            "to_node_key": "T11_INF_DETERMINE_TRANSPLANT_STATUS",
             "candidate_condition": null
           }
         ]
       },
-      "T11_C_CREATININE_NOT_INCREASED": {
-        "id": "5c4039b9-84d2-4187-bf8c-b02fe2350063",
-        "node_key": "T11_C_CREATININE_NOT_INCREASED",
-        "node_type": "CONDITION",
-        "text_en": "Creatinine has not increased by more than 30%",
-        "text_vi": "Creatinine không tăng >30%",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.creatinine_increased_over_30_percent",
-          "value": false
+      "T11_INF_DETERMINE_TRANSPLANT_STATUS": {
+        "id": "2284cf0e-04f3-4f9e-9d37-22559644355b",
+        "node_key": "T11_INF_DETERMINE_TRANSPLANT_STATUS",
+        "node_type": "INFERENCE",
+        "text_en": "Determine kidney transplant status",
+        "text_vi": "Xác định tình trạng ghép thận",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment": {
+            "has_kidney_transplant": false
+          },
+          "operations": [
+            {
+              "op": "COPY_PATH",
+              "to_path": "context.treatment.has_kidney_transplant",
+              "required": false,
+              "from_path": "input.has_kidney_transplant"
+            }
+          ]
         },
-        "context_patch": null,
         "action_payload": null,
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 14,
+        "display_order": 1,
         "created_at": "2026-07-25 11:46:28.101935+00:00",
         "updated_at": "2026-07-25 11:46:28.101935+00:00",
         "references": [],
         "transitions": [
           {
-            "edge_id": "fbc42b77-88b0-4ff1-9f38-02971463d0e8",
+            "edge_id": "944c5af8-b9e5-4b1e-9c76-c031ccf53d66",
             "traversal_order": 1,
-            "to_node_key": "T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T11_C_HAS_PRIOR_CREATININE_TEST": {
-        "id": "02ab528c-3f90-46e7-a135-db9778870b64",
-        "node_key": "T11_C_HAS_PRIOR_CREATININE_TEST",
-        "node_type": "CONDITION",
-        "text_en": "Creatinine tested 2-4 weeks prior",
-        "text_vi": "Từng xét nghiệm chỉ số creatinine trước đó 2-4 tuần",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.has_prior_creatinine_test",
-          "value": true
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 7,
-        "created_at": "2026-07-25 11:46:28.101935+00:00",
-        "updated_at": "2026-07-25 11:46:28.101935+00:00",
-        "references": [],
-        "transitions": [
+            "to_node_key": "T11_C_NOT_TRANSPLANTED",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "context.treatment.has_kidney_transplant",
+              "value": false
+            }
+          },
           {
-            "edge_id": "18d3547f-f6f7-4182-8130-e3d544c81780",
-            "traversal_order": 1,
-            "to_node_key": "T11_INF_DETERMINE_RAS_INHIBITOR_USE_STATUS",
-            "candidate_condition": null
+            "edge_id": "2dc3c18b-8920-4928-9c53-0b699cb293f3",
+            "traversal_order": 2,
+            "to_node_key": "T11_C_TRANSPLANTED",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "context.treatment.has_kidney_transplant",
+              "value": true
+            }
           }
         ]
       },
@@ -469,93 +150,6 @@
             "edge_id": "64bd5138-5a0b-4d57-b1ed-3cfc4e5e4cbc",
             "traversal_order": 1,
             "to_node_key": "T11_INF_REGIMEN_OPTIONS",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T11_C_NOT_USING_RAS_INHIBITOR": {
-        "id": "7b695edb-dd31-4e32-af13-3feb66c48e66",
-        "node_key": "T11_C_NOT_USING_RAS_INHIBITOR",
-        "node_type": "CONDITION",
-        "text_en": "Has stopped or is not using the RAS-inhibitor (class A)",
-        "text_vi": "Đã ngừng A hoặc không dùng A",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.still_using_ras_inhibitor",
-          "value": false
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 11,
-        "created_at": "2026-07-25 11:46:28.101935+00:00",
-        "updated_at": "2026-07-25 11:46:28.101935+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "e1a435c7-174d-4639-ace0-011c073dadbe",
-            "traversal_order": 1,
-            "to_node_key": "T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T11_C_NO_PRIOR_CREATININE_TEST": {
-        "id": "8e360d41-4cb5-48bf-a6b2-5cd1f5796d5f",
-        "node_key": "T11_C_NO_PRIOR_CREATININE_TEST",
-        "node_type": "CONDITION",
-        "text_en": "No prior creatinine test",
-        "text_vi": "Chưa xét nghiệm chỉ số creatinine trước đó",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.has_prior_creatinine_test",
-          "value": false
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 6,
-        "created_at": "2026-07-25 11:46:28.101935+00:00",
-        "updated_at": "2026-07-25 11:46:28.101935+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "8e732f42-09e4-4441-9945-c149cfbc6d9b",
-            "traversal_order": 1,
-            "to_node_key": "T11_ACTION_TEST_CREATININE_AND_MONITOR",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T11_C_STILL_USING_RAS_INHIBITOR": {
-        "id": "bbf8316d-9146-4b49-87c0-0af67392130b",
-        "node_key": "T11_C_STILL_USING_RAS_INHIBITOR",
-        "node_type": "CONDITION",
-        "text_en": "Still using the RAS-inhibitor (class A)",
-        "text_vi": "Có còn dùng thuốc nhóm A (ức chế RAS)",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.still_using_ras_inhibitor",
-          "value": true
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 10,
-        "created_at": "2026-07-25 11:46:28.101935+00:00",
-        "updated_at": "2026-07-25 11:46:28.101935+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "5601d1ee-a006-482d-b4a6-394bb8b5fba9",
-            "traversal_order": 1,
-            "to_node_key": "T11_ACTION_TEST_CREATININE_COMPARE_PRIOR",
             "candidate_condition": null
           }
         ]
@@ -589,53 +183,37 @@
           }
         ]
       },
-      "T11_GLOBAL_ABBREVIATION_GLOSSARY": {
-        "id": "5a4f65a4-1bfd-495f-9b54-9b2413b925ce",
-        "node_key": "T11_GLOBAL_ABBREVIATION_GLOSSARY",
-        "node_type": "GLOBAL",
-        "text_en": "Abbreviation glossary",
-        "text_vi": "Chú giải viết tắt",
+      "T11_INF_REGIMEN_OPTIONS": {
+        "id": "8a867ec1-5ea6-4ce3-8e0c-840f333a5aa4",
+        "node_key": "T11_INF_REGIMEN_OPTIONS",
+        "node_type": "INFERENCE",
+        "text_en": "A + C, or A + D (ACE inhibitor/ARB + calcium-channel blocker, or ACE inhibitor/ARB + thiazide-like diuretic)",
+        "text_vi": "A + C, hoặc A + D (ƯCMC/CTTA + CKCa, hoặc ƯCMC/CTTA + LT Thiazide-like)",
         "condition_definition": null,
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": {
-          "kind": "ABBREVIATION_GLOSSARY",
-          "entries": {
-            "6_MRA": {
-              "label": "MRA: thuốc đối kháng thụ thể mineralocorticoid"
-            },
-            "5_SGLT2i": {
-              "label": "SGLT2i: thuốc ức chế đồng vận chuyển Natri-glucose 2"
-            },
-            "2_D_loi_tieu": {
-              "LT": "lợi tiểu",
-              "label": "D: lợi tiểu"
-            },
-            "4_B_chen_Beta": {
-              "CB": "chẹn Beta",
-              "label": "B: chẹn Beta"
-            },
-            "1_A_uc_che_he_RAS": {
-              "ARNI": "chẹn thụ thể Angiotensine-neprisyline",
-              "CTTA": "chẹn thụ thể angiotensin II",
-              "UCMC": "ức chế men chuyển",
-              "label": "A: ức chế hệ RAS"
-            },
-            "3_C_chen_kenh_Canxi": {
-              "CKCa": "chẹn kênh Canxi",
-              "label": "C: chẹn kênh Canxi"
-            }
-          },
-          "purpose": "Chú giải các chữ viết tắt nhóm thuốc dùng trong Cây 11 (hệ thống A/B/C/D), theo chú thích Bảng 22."
+        "context_patch": {
+          "treatment_preferences": {
+            "combination_options": [
+              [
+                "A",
+                "C"
+              ],
+              [
+                "A",
+                "D"
+              ]
+            ]
+          }
         },
+        "action_payload": null,
+        "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 99,
+        "display_order": 4,
         "created_at": "2026-07-25 11:46:28.101935+00:00",
         "updated_at": "2026-07-25 11:46:28.101935+00:00",
         "references": [
           {
-            "id": "dc7b89bd-cbbc-42ba-b1fa-78ed9fb6468b",
+            "id": "eab64d8a-6722-4c55-a5c2-06074f24d4ec",
             "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
             "section_path": [
               {
@@ -643,68 +221,24 @@
                 "number": "3.7.4"
               }
             ],
-            "locator": "Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5), chú thích",
-            "locator_detail": "Footnote abbreviation glossary for the drug classes named in Bảng 22.",
+            "locator": "Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)",
+            "locator_detail": "Initial therapy should combine a RAS-inhibitor with a CCB or a diuretic (Class I, Level A).",
             "printed_page_numbers": [
               35
             ],
             "pdf_page_numbers": [
               37
             ],
-            "reference_note": "Chú thích Bảng 22: RAS, CKCa, CTTA, MLCT.",
+            "reference_note": "Liệu pháp ban đầu nên kết hợp thuốc ức chế RAS với CKCa hoặc thuốc lợi tiểu.",
             "reference_order": 1
           }
         ],
-        "transitions": []
-      },
-      "T11_INF_DETERMINE_CREATININE_INCREASE_STATUS": {
-        "id": "6e9613bd-09ce-484f-858c-0dfc5d120cce",
-        "node_key": "T11_INF_DETERMINE_CREATININE_INCREASE_STATUS",
-        "node_type": "INFERENCE",
-        "text_en": "Determine whether creatinine increased by more than 30%",
-        "text_vi": "Xác định creatinine có tăng >30% hay không",
-        "condition_definition": null,
-        "context_patch": {
-          "treatment": {
-            "creatinine_increased_over_30_percent": false
-          },
-          "operations": [
-            {
-              "op": "COPY_PATH",
-              "to_path": "context.treatment.creatinine_increased_over_30_percent",
-              "required": false,
-              "from_path": "input.creatinine_increased_over_30_percent"
-            }
-          ]
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 13,
-        "created_at": "2026-07-25 11:46:28.101935+00:00",
-        "updated_at": "2026-07-25 11:46:28.101935+00:00",
-        "references": [],
         "transitions": [
           {
-            "edge_id": "ba5e044b-d6b8-47d5-a435-f44f4951206d",
+            "edge_id": "e5545262-c543-4ba6-8dfe-829de11de0a8",
             "traversal_order": 1,
-            "to_node_key": "T11_C_CREATININE_NOT_INCREASED",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "context.treatment.creatinine_increased_over_30_percent",
-              "value": false
-            }
-          },
-          {
-            "edge_id": "bb2ad36f-4e30-4093-8ca1-5e133759bff2",
-            "traversal_order": 2,
-            "to_node_key": "T11_C_CREATININE_INCREASED_OVER_30_PERCENT",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "context.treatment.creatinine_increased_over_30_percent",
-              "value": true
-            }
+            "to_node_key": "T11_INF_DETERMINE_CREATININE_TEST_STATUS",
+            "candidate_condition": null
           }
         ]
       },
@@ -755,6 +289,124 @@
               "op": "eq",
               "path": "context.treatment.has_prior_creatinine_test",
               "value": true
+            }
+          }
+        ]
+      },
+      "T11_C_NO_PRIOR_CREATININE_TEST": {
+        "id": "8e360d41-4cb5-48bf-a6b2-5cd1f5796d5f",
+        "node_key": "T11_C_NO_PRIOR_CREATININE_TEST",
+        "node_type": "CONDITION",
+        "text_en": "No prior creatinine test",
+        "text_vi": "Chưa xét nghiệm chỉ số creatinine trước đó",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.has_prior_creatinine_test",
+          "value": false
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 6,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "8e732f42-09e4-4441-9945-c149cfbc6d9b",
+            "traversal_order": 1,
+            "to_node_key": "T11_ACTION_TEST_CREATININE_AND_MONITOR",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T11_C_HAS_PRIOR_CREATININE_TEST": {
+        "id": "02ab528c-3f90-46e7-a135-db9778870b64",
+        "node_key": "T11_C_HAS_PRIOR_CREATININE_TEST",
+        "node_type": "CONDITION",
+        "text_en": "Creatinine tested 2-4 weeks prior",
+        "text_vi": "Từng xét nghiệm chỉ số creatinine trước đó 2-4 tuần",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.has_prior_creatinine_test",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 7,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "18d3547f-f6f7-4182-8130-e3d544c81780",
+            "traversal_order": 1,
+            "to_node_key": "T11_INF_DETERMINE_RAS_INHIBITOR_USE_STATUS",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T11_ACTION_TEST_CREATININE_AND_MONITOR": {
+        "id": "c3e81015-fa4a-462e-ba74-369fb405da78",
+        "node_key": "T11_ACTION_TEST_CREATININE_AND_MONITOR",
+        "node_type": "INFERENCE",
+        "text_en": "Test creatinine and monitor after 2-4 weeks",
+        "text_vi": "Xét nghiệm chỉ số creatinine và theo dõi sau 2-4 tuần",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 8,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "ac6fdadc-b172-458c-845a-64b76787e49d",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Bệnh thận mạn",
+                "number": "3.7.4"
+              }
+            ],
+            "locator": "Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)",
+            "locator_detail": "Monitor BP, creatinine, and potassium every 2-4 weeks after starting or increasing a RAS-inhibitor (Class I, Level A).",
+            "printed_page_numbers": [
+              35
+            ],
+            "pdf_page_numbers": [
+              37
+            ],
+            "reference_note": "Theo dõi HA, nồng độ creatinin và kali máu mỗi 2-4 tuần sau khi bắt đầu hoặc tăng liều thuốc ức chế RAS.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "55ee9a33-2bef-45ba-8031-ce233e886066",
+            "traversal_order": 1,
+            "to_node_key": "T11_LINK_ESSENTIAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "LIMITED_RESOURCES"
+            }
+          },
+          {
+            "edge_id": "01fee17a-e123-484e-8720-1429a6ad1d4d",
+            "traversal_order": 2,
+            "to_node_key": "T11_LINK_OPTIMAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "FULL_RESOURCES"
             }
           }
         ]
@@ -810,23 +462,81 @@
           }
         ]
       },
-      "T11_INF_DETERMINE_TRANSPLANT_STATUS": {
-        "id": "2284cf0e-04f3-4f9e-9d37-22559644355b",
-        "node_key": "T11_INF_DETERMINE_TRANSPLANT_STATUS",
+      "T11_C_STILL_USING_RAS_INHIBITOR": {
+        "id": "bbf8316d-9146-4b49-87c0-0af67392130b",
+        "node_key": "T11_C_STILL_USING_RAS_INHIBITOR",
+        "node_type": "CONDITION",
+        "text_en": "Still using the RAS-inhibitor (class A)",
+        "text_vi": "Có còn dùng thuốc nhóm A (ức chế RAS)",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.still_using_ras_inhibitor",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 10,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "5601d1ee-a006-482d-b4a6-394bb8b5fba9",
+            "traversal_order": 1,
+            "to_node_key": "T11_INF_DETERMINE_CREATININE_INCREASE_STATUS",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T11_C_NOT_USING_RAS_INHIBITOR": {
+        "id": "7b695edb-dd31-4e32-af13-3feb66c48e66",
+        "node_key": "T11_C_NOT_USING_RAS_INHIBITOR",
+        "node_type": "CONDITION",
+        "text_en": "Has stopped or is not using the RAS-inhibitor (class A)",
+        "text_vi": "Đã ngừng A hoặc không dùng A",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.still_using_ras_inhibitor",
+          "value": false
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 11,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "e1a435c7-174d-4639-ace0-011c073dadbe",
+            "traversal_order": 1,
+            "to_node_key": "T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T11_INF_DETERMINE_CREATININE_INCREASE_STATUS": {
+        "id": "6e9613bd-09ce-484f-858c-0dfc5d120cce",
+        "node_key": "T11_INF_DETERMINE_CREATININE_INCREASE_STATUS",
         "node_type": "INFERENCE",
-        "text_en": "Determine kidney transplant status",
-        "text_vi": "Xác định tình trạng ghép thận",
+        "text_en": "Test creatinine, compare with the prior measurement, and determine whether creatinine increased by more than 30%",
+        "text_vi": "Xét nghiệm creatinine, đối chiếu với lần đo trước và xác định creatinine có tăng >30% hay không",
         "condition_definition": null,
         "context_patch": {
           "treatment": {
-            "has_kidney_transplant": false
+            "creatinine_increased_over_30_percent": false
           },
           "operations": [
             {
               "op": "COPY_PATH",
-              "to_path": "context.treatment.has_kidney_transplant",
+              "to_path": "context.treatment.creatinine_increased_over_30_percent",
               "required": false,
-              "from_path": "input.has_kidney_transplant"
+              "from_path": "input.creatinine_increased_over_30_percent"
             }
           ]
         },
@@ -834,29 +544,267 @@
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 1,
+        "display_order": 13,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "6d732a12-3d04-470b-acc6-690bd0197f63",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Bệnh thận mạn",
+                "number": "3.7.4"
+              }
+            ],
+            "locator": "Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)",
+            "locator_detail": "Monitor BP, creatinine, and potassium every 2-4 weeks after starting or increasing a RAS-inhibitor (Class I, Level A).",
+            "printed_page_numbers": [
+              35
+            ],
+            "pdf_page_numbers": [
+              37
+            ],
+            "reference_note": "Theo dõi HA, nồng độ creatinin và kali máu mỗi 2-4 tuần sau khi bắt đầu hoặc tăng liều thuốc ức chế RAS.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "ba5e044b-d6b8-47d5-a435-f44f4951206d",
+            "traversal_order": 1,
+            "to_node_key": "T11_C_CREATININE_NOT_INCREASED",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "context.treatment.creatinine_increased_over_30_percent",
+              "value": false
+            }
+          },
+          {
+            "edge_id": "bb2ad36f-4e30-4093-8ca1-5e133759bff2",
+            "traversal_order": 2,
+            "to_node_key": "T11_C_CREATININE_INCREASED_OVER_30_PERCENT",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "context.treatment.creatinine_increased_over_30_percent",
+              "value": true
+            }
+          }
+        ]
+      },
+      "T11_C_CREATININE_NOT_INCREASED": {
+        "id": "5c4039b9-84d2-4187-bf8c-b02fe2350063",
+        "node_key": "T11_C_CREATININE_NOT_INCREASED",
+        "node_type": "CONDITION",
+        "text_en": "Creatinine has not increased by more than 30%",
+        "text_vi": "Creatinine không tăng >30%",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.creatinine_increased_over_30_percent",
+          "value": false
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 14,
         "created_at": "2026-07-25 11:46:28.101935+00:00",
         "updated_at": "2026-07-25 11:46:28.101935+00:00",
         "references": [],
         "transitions": [
           {
-            "edge_id": "944c5af8-b9e5-4b1e-9c76-c031ccf53d66",
+            "edge_id": "fbc42b77-88b0-4ff1-9f38-02971463d0e8",
             "traversal_order": 1,
-            "to_node_key": "T11_C_NOT_TRANSPLANTED",
+            "to_node_key": "T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T11_C_CREATININE_INCREASED_OVER_30_PERCENT": {
+        "id": "29a1413a-e96e-45ec-b43c-db26c11789bb",
+        "node_key": "T11_C_CREATININE_INCREASED_OVER_30_PERCENT",
+        "node_type": "CONDITION",
+        "text_en": "Creatinine increased by more than 30%",
+        "text_vi": "Creatinine tăng >30%",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.creatinine_increased_over_30_percent",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 15,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "e0bde7ba-1572-4011-8fb0-849f5fe0be6d",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Bệnh thận mạn",
+                "number": "3.7.4"
+              }
+            ],
+            "locator": "Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)",
+            "locator_detail": "If serum creatinine rises more than 30% within 4 weeks of starting/increasing a RAS-inhibitor, consider reducing the dose or stopping it (Class I).",
+            "printed_page_numbers": [
+              35
+            ],
+            "pdf_page_numbers": [
+              37
+            ],
+            "reference_note": "Nếu creatinin huyết thanh tăng hơn 30% trong vòng 4 tuần, xem xét giảm liều hoặc ngừng thuốc ức chế RAS.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "7ec23be2-ad42-4e72-aa99-fbb1a76b2b6d",
+            "traversal_order": 1,
+            "to_node_key": "T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE": {
+        "id": "392b6a0b-7c8e-419b-8fb5-f14a90c3b2f8",
+        "node_key": "T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE",
+        "node_type": "INFERENCE",
+        "text_en": "Maintain regimen",
+        "text_vi": "Duy trì phác đồ",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 16,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "f6f3c61f-0037-4a1c-a096-5164b4c801ca",
+            "traversal_order": 1,
+            "to_node_key": "T11_LINK_ESSENTIAL_TREATMENT_STRATEGY",
             "candidate_condition": {
               "op": "eq",
-              "path": "context.treatment.has_kidney_transplant",
-              "value": false
+              "path": "input.facility_capability",
+              "value": "LIMITED_RESOURCES"
             }
           },
           {
-            "edge_id": "2dc3c18b-8920-4928-9c53-0b699cb293f3",
+            "edge_id": "422b1987-8145-40c7-835d-d2070263f3c3",
             "traversal_order": 2,
-            "to_node_key": "T11_C_TRANSPLANTED",
+            "to_node_key": "T11_LINK_OPTIMAL_TREATMENT_STRATEGY",
             "candidate_condition": {
               "op": "eq",
-              "path": "context.treatment.has_kidney_transplant",
-              "value": true
+              "path": "input.facility_capability",
+              "value": "FULL_RESOURCES"
+            }
+          }
+        ]
+      },
+      "T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR": {
+        "id": "8943a52d-445d-4c5f-a33d-e7f71edcda20",
+        "node_key": "T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR",
+        "node_type": "INFERENCE",
+        "text_en": "Reduce dose or stop the RAS-inhibitor (class A) combination",
+        "text_vi": "Giảm liều hoặc ngừng phối hợp A",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 17,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "924e2e5d-4169-4009-9776-28cc4831fdbd",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Bệnh thận mạn",
+                "number": "3.7.4"
+              }
+            ],
+            "locator": "Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)",
+            "locator_detail": "If serum creatinine rises more than 30% within 4 weeks of starting/increasing a RAS-inhibitor, consider reducing the dose or stopping it (Class I).",
+            "printed_page_numbers": [
+              35
+            ],
+            "pdf_page_numbers": [
+              37
+            ],
+            "reference_note": "Nếu creatinin huyết thanh tăng hơn 30% trong vòng 4 tuần, xem xét giảm liều hoặc ngừng thuốc ức chế RAS.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "c22ad075-8e7a-45e4-8560-ff9ac3a65b41",
+            "traversal_order": 1,
+            "to_node_key": "T11_LINK_ESSENTIAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "LIMITED_RESOURCES"
+            }
+          },
+          {
+            "edge_id": "5fc8fadb-55d1-46dd-977f-958c7f850a75",
+            "traversal_order": 2,
+            "to_node_key": "T11_LINK_OPTIMAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "FULL_RESOURCES"
+            }
+          }
+        ]
+      },
+      "T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR": {
+        "id": "ecc9c7d9-6ed8-4add-b908-f4a36b29bdfa",
+        "node_key": "T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR",
+        "node_type": "INFERENCE",
+        "text_en": "Maintain regimen",
+        "text_vi": "Duy trì phác đồ",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 18,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "ffe76e1f-d26f-48c3-97ff-793a3064c128",
+            "traversal_order": 1,
+            "to_node_key": "T11_LINK_ESSENTIAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "LIMITED_RESOURCES"
+            }
+          },
+          {
+            "edge_id": "0edfe696-a12c-43e1-aeef-89f1fc93fb7c",
+            "traversal_order": 2,
+            "to_node_key": "T11_LINK_OPTIMAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "FULL_RESOURCES"
             }
           }
         ]
@@ -929,62 +877,42 @@
           }
         ]
       },
-      "T11_INF_REGIMEN_OPTIONS": {
-        "id": "8a867ec1-5ea6-4ce3-8e0c-840f333a5aa4",
-        "node_key": "T11_INF_REGIMEN_OPTIONS",
+      "T11_ACTION_MAINTAIN_REGIMEN_POST_TRANSPLANT": {
+        "id": "3eaff7e6-b016-4775-907e-d57b14316bf2",
+        "node_key": "T11_ACTION_MAINTAIN_REGIMEN_POST_TRANSPLANT",
         "node_type": "INFERENCE",
-        "text_en": "A + C, or A + D (ACE inhibitor/ARB + calcium-channel blocker, or ACE inhibitor/ARB + thiazide-like diuretic)",
-        "text_vi": "A + C, hoặc A + D (ƯCMC/CTTA + CKCa, hoặc ƯCMC/CTTA + LT Thiazide-like)",
+        "text_en": "Maintain regimen",
+        "text_vi": "Duy trì phác đồ",
         "condition_definition": null,
-        "context_patch": {
-          "treatment_preferences": {
-            "combination_options": [
-              [
-                "A",
-                "C"
-              ],
-              [
-                "A",
-                "D"
-              ]
-            ]
-          }
-        },
+        "context_patch": null,
         "action_payload": null,
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 4,
+        "display_order": 20,
         "created_at": "2026-07-25 11:46:28.101935+00:00",
         "updated_at": "2026-07-25 11:46:28.101935+00:00",
-        "references": [
-          {
-            "id": "eab64d8a-6722-4c55-a5c2-06074f24d4ec",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Tăng huyết áp và Bệnh thận mạn",
-                "number": "3.7.4"
-              }
-            ],
-            "locator": "Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5)",
-            "locator_detail": "Initial therapy should combine a RAS-inhibitor with a CCB or a diuretic (Class I, Level A).",
-            "printed_page_numbers": [
-              35
-            ],
-            "pdf_page_numbers": [
-              37
-            ],
-            "reference_note": "Liệu pháp ban đầu nên kết hợp thuốc ức chế RAS với CKCa hoặc thuốc lợi tiểu.",
-            "reference_order": 1
-          }
-        ],
+        "references": [],
         "transitions": [
           {
-            "edge_id": "e5545262-c543-4ba6-8dfe-829de11de0a8",
+            "edge_id": "bc324331-9147-4d0d-9a09-6bd1a8f5f5ed",
             "traversal_order": 1,
-            "to_node_key": "T11_INF_DETERMINE_CREATININE_TEST_STATUS",
-            "candidate_condition": null
+            "to_node_key": "T11_LINK_ESSENTIAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "LIMITED_RESOURCES"
+            }
+          },
+          {
+            "edge_id": "e222a5ab-5c7e-4ea1-8544-2f8cc8527f26",
+            "traversal_order": 2,
+            "to_node_key": "T11_LINK_OPTIMAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "FULL_RESOURCES"
+            }
           }
         ]
       },
@@ -1032,24 +960,53 @@
         "references": [],
         "transitions": []
       },
-      "T11_START_BP_TARGET_STATUS": {
-        "id": "b091a990-61f9-47c6-bb4b-a0a34ac6e375",
-        "node_key": "T11_START_BP_TARGET_STATUS",
-        "node_type": "START",
-        "text_en": "Tree 3: Blood pressure threshold and treatment target",
-        "text_vi": "Cây 3: Ngưỡng huyết áp và đích điều trị",
+      "T11_GLOBAL_ABBREVIATION_GLOSSARY": {
+        "id": "5a4f65a4-1bfd-495f-9b54-9b2413b925ce",
+        "node_key": "T11_GLOBAL_ABBREVIATION_GLOSSARY",
+        "node_type": "GLOBAL",
+        "text_en": "Abbreviation glossary",
+        "text_vi": "Chú giải viết tắt",
         "condition_definition": null,
         "context_patch": null,
         "action_payload": null,
-        "global_config": null,
+        "global_config": {
+          "kind": "ABBREVIATION_GLOSSARY",
+          "entries": {
+            "6_MRA": {
+              "label": "MRA: thuốc đối kháng thụ thể mineralocorticoid"
+            },
+            "5_SGLT2i": {
+              "label": "SGLT2i: thuốc ức chế đồng vận chuyển Natri-glucose 2"
+            },
+            "2_D_loi_tieu": {
+              "LT": "lợi tiểu",
+              "label": "D: lợi tiểu"
+            },
+            "4_B_chen_Beta": {
+              "CB": "chẹn Beta",
+              "label": "B: chẹn Beta"
+            },
+            "1_A_uc_che_he_RAS": {
+              "ARNI": "chẹn thụ thể Angiotensine-neprisyline",
+              "CTTA": "chẹn thụ thể angiotensin II",
+              "UCMC": "ức chế men chuyển",
+              "label": "A: ức chế hệ RAS"
+            },
+            "3_C_chen_kenh_Canxi": {
+              "CKCa": "chẹn kênh Canxi",
+              "label": "C: chẹn kênh Canxi"
+            }
+          },
+          "purpose": "Chú giải các chữ viết tắt nhóm thuốc dùng trong Cây 11 (hệ thống A/B/C/D), theo chú thích Bảng 22."
+        },
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 0,
+        "display_order": 99,
         "created_at": "2026-07-25 11:46:28.101935+00:00",
         "updated_at": "2026-07-25 11:46:28.101935+00:00",
         "references": [
           {
-            "id": "09edda0d-47eb-45ff-9f1b-6e0e146171c8",
+            "id": "dc7b89bd-cbbc-42ba-b1fa-78ed9fb6468b",
             "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
             "section_path": [
               {
@@ -1057,216 +1014,20 @@
                 "number": "3.7.4"
               }
             ],
-            "locator": "Bảng 21. Ngưỡng điều trị và mục tiêu huyết áp ở bệnh nhân tăng huyết áp có bệnh thận mạn (4, 5)",
-            "locator_detail": "Entry point of the CKD tree; BP should be lowered to <130/80 mmHg in CKD per SPRINT evidence.",
+            "locator": "Bảng 22. Chiến lược điều trị tăng huyết áp có kèm bệnh thận mạn (4, 5), chú thích",
+            "locator_detail": "Footnote abbreviation glossary for the drug classes named in Bảng 22.",
             "printed_page_numbers": [
-              34
+              35
             ],
             "pdf_page_numbers": [
-              36
+              37
             ],
-            "reference_note": "Điểm vào của Cây 11; HA cần được hạ xuống <130/80mmHg ở bệnh nhân bệnh thận mạn.",
+            "reference_note": "Chú thích Bảng 22: RAS, CKCa, CTTA, MLCT.",
             "reference_order": 1
           }
         ],
-        "transitions": [
-          {
-            "edge_id": "1de61262-4c5c-49cc-a11c-4d4478ff38ff",
-            "traversal_order": 1,
-            "to_node_key": "T11_INF_DETERMINE_TRANSPLANT_STATUS",
-            "candidate_condition": null
-          }
-        ]
+        "transitions": []
       }
-    },
-    "edges": [
-      {
-        "id": "f6f3c61f-0037-4a1c-a096-5164b4c801ca",
-        "from_node_key": "T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE",
-        "to_node_key": "T11_LINK_ESSENTIAL_TREATMENT_STRATEGY",
-        "traversal_order": 1
-      },
-      {
-        "id": "422b1987-8145-40c7-835d-d2070263f3c3",
-        "from_node_key": "T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE",
-        "to_node_key": "T11_LINK_OPTIMAL_TREATMENT_STRATEGY",
-        "traversal_order": 2
-      },
-      {
-        "id": "bc324331-9147-4d0d-9a09-6bd1a8f5f5ed",
-        "from_node_key": "T11_ACTION_MAINTAIN_REGIMEN_POST_TRANSPLANT",
-        "to_node_key": "T11_LINK_ESSENTIAL_TREATMENT_STRATEGY",
-        "traversal_order": 1
-      },
-      {
-        "id": "e222a5ab-5c7e-4ea1-8544-2f8cc8527f26",
-        "from_node_key": "T11_ACTION_MAINTAIN_REGIMEN_POST_TRANSPLANT",
-        "to_node_key": "T11_LINK_OPTIMAL_TREATMENT_STRATEGY",
-        "traversal_order": 2
-      },
-      {
-        "id": "ffe76e1f-d26f-48c3-97ff-793a3064c128",
-        "from_node_key": "T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR",
-        "to_node_key": "T11_LINK_ESSENTIAL_TREATMENT_STRATEGY",
-        "traversal_order": 1
-      },
-      {
-        "id": "0edfe696-a12c-43e1-aeef-89f1fc93fb7c",
-        "from_node_key": "T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR",
-        "to_node_key": "T11_LINK_OPTIMAL_TREATMENT_STRATEGY",
-        "traversal_order": 2
-      },
-      {
-        "id": "c22ad075-8e7a-45e4-8560-ff9ac3a65b41",
-        "from_node_key": "T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR",
-        "to_node_key": "T11_LINK_ESSENTIAL_TREATMENT_STRATEGY",
-        "traversal_order": 1
-      },
-      {
-        "id": "5fc8fadb-55d1-46dd-977f-958c7f850a75",
-        "from_node_key": "T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR",
-        "to_node_key": "T11_LINK_OPTIMAL_TREATMENT_STRATEGY",
-        "traversal_order": 2
-      },
-      {
-        "id": "55ee9a33-2bef-45ba-8031-ce233e886066",
-        "from_node_key": "T11_ACTION_TEST_CREATININE_AND_MONITOR",
-        "to_node_key": "T11_LINK_ESSENTIAL_TREATMENT_STRATEGY",
-        "traversal_order": 1
-      },
-      {
-        "id": "01fee17a-e123-484e-8720-1429a6ad1d4d",
-        "from_node_key": "T11_ACTION_TEST_CREATININE_AND_MONITOR",
-        "to_node_key": "T11_LINK_OPTIMAL_TREATMENT_STRATEGY",
-        "traversal_order": 2
-      },
-      {
-        "id": "59b4b88a-2752-43f6-b4c7-a58349d3fc1d",
-        "from_node_key": "T11_ACTION_TEST_CREATININE_COMPARE_PRIOR",
-        "to_node_key": "T11_INF_DETERMINE_CREATININE_INCREASE_STATUS",
-        "traversal_order": 1
-      },
-      {
-        "id": "7ec23be2-ad42-4e72-aa99-fbb1a76b2b6d",
-        "from_node_key": "T11_C_CREATININE_INCREASED_OVER_30_PERCENT",
-        "to_node_key": "T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR",
-        "traversal_order": 1
-      },
-      {
-        "id": "fbc42b77-88b0-4ff1-9f38-02971463d0e8",
-        "from_node_key": "T11_C_CREATININE_NOT_INCREASED",
-        "to_node_key": "T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE",
-        "traversal_order": 1
-      },
-      {
-        "id": "18d3547f-f6f7-4182-8130-e3d544c81780",
-        "from_node_key": "T11_C_HAS_PRIOR_CREATININE_TEST",
-        "to_node_key": "T11_INF_DETERMINE_RAS_INHIBITOR_USE_STATUS",
-        "traversal_order": 1
-      },
-      {
-        "id": "64bd5138-5a0b-4d57-b1ed-3cfc4e5e4cbc",
-        "from_node_key": "T11_C_NOT_TRANSPLANTED",
-        "to_node_key": "T11_INF_REGIMEN_OPTIONS",
-        "traversal_order": 1
-      },
-      {
-        "id": "e1a435c7-174d-4639-ace0-011c073dadbe",
-        "from_node_key": "T11_C_NOT_USING_RAS_INHIBITOR",
-        "to_node_key": "T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR",
-        "traversal_order": 1
-      },
-      {
-        "id": "8e732f42-09e4-4441-9945-c149cfbc6d9b",
-        "from_node_key": "T11_C_NO_PRIOR_CREATININE_TEST",
-        "to_node_key": "T11_ACTION_TEST_CREATININE_AND_MONITOR",
-        "traversal_order": 1
-      },
-      {
-        "id": "5601d1ee-a006-482d-b4a6-394bb8b5fba9",
-        "from_node_key": "T11_C_STILL_USING_RAS_INHIBITOR",
-        "to_node_key": "T11_ACTION_TEST_CREATININE_COMPARE_PRIOR",
-        "traversal_order": 1
-      },
-      {
-        "id": "511bd4db-9191-4462-850f-fec12b68eb16",
-        "from_node_key": "T11_C_TRANSPLANTED",
-        "to_node_key": "T11_INF_POST_TRANSPLANT_REGIMEN_OPTIONS",
-        "traversal_order": 1
-      },
-      {
-        "id": "ba5e044b-d6b8-47d5-a435-f44f4951206d",
-        "from_node_key": "T11_INF_DETERMINE_CREATININE_INCREASE_STATUS",
-        "to_node_key": "T11_C_CREATININE_NOT_INCREASED",
-        "traversal_order": 1
-      },
-      {
-        "id": "bb2ad36f-4e30-4093-8ca1-5e133759bff2",
-        "from_node_key": "T11_INF_DETERMINE_CREATININE_INCREASE_STATUS",
-        "to_node_key": "T11_C_CREATININE_INCREASED_OVER_30_PERCENT",
-        "traversal_order": 2
-      },
-      {
-        "id": "86533ef2-ebd1-41fa-a3b5-bb43255d51d4",
-        "from_node_key": "T11_INF_DETERMINE_CREATININE_TEST_STATUS",
-        "to_node_key": "T11_C_NO_PRIOR_CREATININE_TEST",
-        "traversal_order": 1
-      },
-      {
-        "id": "c66bf3da-75bd-46df-8559-d3e3afc3d8f5",
-        "from_node_key": "T11_INF_DETERMINE_CREATININE_TEST_STATUS",
-        "to_node_key": "T11_C_HAS_PRIOR_CREATININE_TEST",
-        "traversal_order": 2
-      },
-      {
-        "id": "562a28cc-a107-40be-abfb-9feedee11938",
-        "from_node_key": "T11_INF_DETERMINE_RAS_INHIBITOR_USE_STATUS",
-        "to_node_key": "T11_C_STILL_USING_RAS_INHIBITOR",
-        "traversal_order": 1
-      },
-      {
-        "id": "09bc6707-5ef3-472b-ae1a-1341687b6550",
-        "from_node_key": "T11_INF_DETERMINE_RAS_INHIBITOR_USE_STATUS",
-        "to_node_key": "T11_C_NOT_USING_RAS_INHIBITOR",
-        "traversal_order": 2
-      },
-      {
-        "id": "944c5af8-b9e5-4b1e-9c76-c031ccf53d66",
-        "from_node_key": "T11_INF_DETERMINE_TRANSPLANT_STATUS",
-        "to_node_key": "T11_C_NOT_TRANSPLANTED",
-        "traversal_order": 1
-      },
-      {
-        "id": "2dc3c18b-8920-4928-9c53-0b699cb293f3",
-        "from_node_key": "T11_INF_DETERMINE_TRANSPLANT_STATUS",
-        "to_node_key": "T11_C_TRANSPLANTED",
-        "traversal_order": 2
-      },
-      {
-        "id": "51717c50-7d45-44f8-94b3-ea71d76d9784",
-        "from_node_key": "T11_INF_POST_TRANSPLANT_REGIMEN_OPTIONS",
-        "to_node_key": "T11_ACTION_MAINTAIN_REGIMEN_POST_TRANSPLANT",
-        "traversal_order": 1
-      },
-      {
-        "id": "e5545262-c543-4ba6-8dfe-829de11de0a8",
-        "from_node_key": "T11_INF_REGIMEN_OPTIONS",
-        "to_node_key": "T11_INF_DETERMINE_CREATININE_TEST_STATUS",
-        "traversal_order": 1
-      },
-      {
-        "id": "1de61262-4c5c-49cc-a11c-4d4478ff38ff",
-        "from_node_key": "T11_START_BP_TARGET_STATUS",
-        "to_node_key": "T11_INF_DETERMINE_TRANSPLANT_STATUS",
-        "traversal_order": 1
-      }
-    ],
-    "layout": null
-  },
-  "counts": {
-    "nodes": 24,
-    "edges": 30,
-    "references": 8,
-    "layouts": 0
+    }
   }
 }

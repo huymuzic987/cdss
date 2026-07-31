@@ -20,6 +20,10 @@ export function useTreeGraphs() {
 
   // ---- Initial load ----
   useEffect(() => {
+    setGraphCache({})
+    setTrees([])
+    setActiveTreeKey(null)
+    setError(null)
     fetchTrees()
       .then((summaries) => {
         const ordered = [...summaries].sort((a, b) => {

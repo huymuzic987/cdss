@@ -28,378 +28,24 @@
       "T14_GLOBAL_ABBREVIATION_GLOSSARY"
     ],
     "nodes": {
-      "T14_ACTION_ACS": {
-        "id": "f57f80db-de51-40ad-a751-626056ee90ec",
-        "node_key": "T14_ACTION_ACS",
-        "node_type": "ACTION",
-        "text_en": "ACS: primary Nitroprusside or Nitroglycerine (with a loop diuretic); alternative Urapidil (with a loop diuretic); target SBP <140 mmHg, immediate",
-        "text_vi": "Hội chứng vành cấp: ưu tiên Nitroprusside hoặc Nitroglycerine (kèm lợi tiểu quai); thay thế Urapidil (kèm lợi tiểu quai); mục tiêu HATT <140 mmHg, ngay lập tức",
+      "T14_START_SEVERE_HYPERTENSION": {
+        "id": "166ba4ee-6c47-441b-8ad6-17d2fc69073e",
+        "node_key": "T14_START_SEVERE_HYPERTENSION",
+        "node_type": "START",
+        "text_en": "Severe hypertension (SBP >=180 and/or DBP >=120 mmHg)",
+        "text_vi": "Bệnh nhân tăng huyết áp nặng (HATT >= 180 và/hoặc HATTr >= 120 mmHg)",
         "condition_definition": null,
         "context_patch": null,
-        "action_payload": {
-          "action_type": "ACUTE_CORONARY_SYNDROME_THERAPY",
-          "target_timing": "IMMEDIATE",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": false,
-          "target_sbp_upper_mmhg": 140
-        },
+        "action_payload": null,
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 16,
+        "display_order": 0,
         "created_at": "2026-07-25 11:46:28.205822+00:00",
         "updated_at": "2026-07-25 11:46:28.205822+00:00",
         "references": [
           {
-            "id": "71acc1c7-0102-4d88-a89a-8b8a10e60a03",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Tăng huyết áp và Bệnh mạch vành",
-                "number": "3.7.2"
-              }
-            ],
-            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 19, Mục 3.7.2",
-            "locator_detail": "ACS: target SBP<140 mmHg immediately; see Bảng 19 for hypertension-with-CAD strategy.",
-            "printed_page_numbers": [
-              28
-            ],
-            "pdf_page_numbers": [
-              30
-            ],
-            "reference_note": "Trích Bảng 14; đối chiếu bổ sung Bảng 19, Mục 3.7.2.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "bf32d3c0-b148-453a-83db-8a52387bf926",
-            "traversal_order": 1,
-            "to_node_key": "T14_LINK_CORONARY_ARTERY_DISEASE",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA": {
-        "id": "4ce0d75e-7416-4381-b4eb-18e83f1df2c1",
-        "node_key": "T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
-        "node_type": "ACTION",
-        "text_en": "Acute cardiogenic pulmonary edema: Labetalol or Metoprolol; target SBP <140 mmHg, immediate",
-        "text_vi": "Phù phổi cấp do tim: Labetalol hoặc Metoprolol; mục tiêu HATT <140 mmHg, ngay lập tức",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "ACUTE_CARDIOGENIC_PULMONARY_EDEMA_THERAPY",
-          "target_timing": "IMMEDIATE",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": false,
-          "target_sbp_upper_mmhg": 140
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 19,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [
-          {
-            "id": "6faf0a09-19c8-403c-a467-d5cb99bcda4e",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Tăng huyết áp và Suy tim",
-                "number": "3.7.3"
-              }
-            ],
-            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 20, Mục 3.7.3",
-            "locator_detail": "Acute cardiogenic pulmonary edema: target SBP<140 mmHg immediately; see Bảng 20 for heart-failure strategy.",
-            "printed_page_numbers": [
-              28
-            ],
-            "pdf_page_numbers": [
-              30
-            ],
-            "reference_note": "Trích Bảng 14; đối chiếu bổ sung Bảng 20, Mục 3.7.3.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "57e60c63-253d-4a73-a989-2e9cc2a5f219",
-            "traversal_order": 1,
-            "to_node_key": "T14_LINK_HEART_FAILURE",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T14_ACTION_ACUTE_ICH": {
-        "id": "2ae327a8-8199-4851-b979-000fadf9edb1",
-        "node_key": "T14_ACTION_ACUTE_ICH",
-        "node_type": "ACTION",
-        "text_en": "Acute ICH: primary Nitroglycerine/Labetalol; alternative Urapidil; target 130<SBP<180 mmHg",
-        "text_vi": "Xuất huyết não cấp: ưu tiên Nitroglycerine/Labetalol; thay thế Urapidil; mục tiêu 130<HATT<180 mmHg",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "ACUTE_INTRACEREBRAL_HEMORRHAGE_THERAPY",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": false,
-          "target_sbp_lower_mmhg": 130,
-          "target_sbp_upper_mmhg": 180
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 13,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [
-          {
-            "id": "5b3730ac-a68d-4669-8687-34792a16dcef",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Tăng huyết áp và Đột quỵ",
-                "number": "3.7.5"
-              }
-            ],
-            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 23, Mục 3.7.5",
-            "locator_detail": "Acute ICH: target 130<SBP<180 mmHg; see Bảng 23 for detailed ICH management (>220 consider IV infusion; 150-220 lowering to <140 within 6h shows no benefit and may be harmful; start within 2h, max reduction 90 mmHg from baseline).",
-            "printed_page_numbers": [
-              28
-            ],
-            "pdf_page_numbers": [
-              30
-            ],
-            "reference_note": "Trích Bảng 14; đối chiếu bổ sung Bảng 23, Mục 3.7.5 về xử trí HA trong xuất huyết não cấp.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "ce6d2c2e-7dc8-490d-a51c-c931a5865a7a",
-            "traversal_order": 1,
-            "to_node_key": "T14_END_REFER_STROKE_MANAGEMENT",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T14_ACTION_ADMIT_AND_DETERMINE_TARGET_ORGAN": {
-        "id": "bc430b73-8c5f-4d47-a3a7-9f6eef544edc",
-        "node_key": "T14_ACTION_ADMIT_AND_DETERMINE_TARGET_ORGAN",
-        "node_type": "ACTION",
-        "text_en": "Emergency hypertension: admit to hospital, apply IV antihypertensive therapy, determine target organ",
-        "text_vi": "Tăng huyết áp cấp cứu: Nhập viện. Áp dụng thuốc hạ áp đường tĩnh mạch. Xác định cơ quan đích",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "route": "IV_INFUSION",
-          "action_type": "ADMIT_AND_DETERMINE_TARGET_ORGAN",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": false
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 4,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "5026ca45-6bc9-4df8-a734-bf71dfbf41c3",
-            "traversal_order": 1,
-            "to_node_key": "T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T14_ACTION_AIS_SEVERE": {
-        "id": "5f03a0ba-fc0d-4ac1-9e06-f40641921048",
-        "node_key": "T14_ACTION_AIS_SEVERE",
-        "node_type": "ACTION",
-        "text_en": "AIS: primary Labetalol/Nicardipine; alternative Nitroprusside; target MAP -15%, within 1 hour",
-        "text_vi": "Nhồi máu não cấp: ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside; mục tiêu MAP giảm 15%, trong 1 giờ",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "ACUTE_ISCHEMIC_STROKE_THERAPY",
-          "target_timing": "WITHIN_1_HOUR",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": false,
-          "bp_threshold_dbp_mmhg": 120,
-          "bp_threshold_sbp_mmhg": 220,
-          "target_map_reduction_percent": 15
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 11,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [
-          {
-            "id": "1699d4fe-3c84-4fc4-a69f-f239dcb34ddf",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Tăng huyết áp và Đột quỵ",
-                "number": "3.7.5"
-              }
-            ],
-            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 24, Mục 3.7.5",
-            "locator_detail": "AIS: MAP -15% within 1 hour if SBP>220 or DBP>120 mmHg; see Bảng 24 for more detailed AIS management.",
-            "printed_page_numbers": [
-              28
-            ],
-            "pdf_page_numbers": [
-              30
-            ],
-            "reference_note": "Trích Bảng 14; đối chiếu bổ sung Bảng 24, Mục 3.7.5.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "00617851-dde0-4aa9-a7ee-a46cc340cb70",
-            "traversal_order": 1,
-            "to_node_key": "T14_END_REFER_STROKE_MANAGEMENT",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE": {
-        "id": "61f81d80-845e-452c-b80f-02a0bae3e88d",
-        "node_key": "T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE",
-        "node_type": "ACTION",
-        "text_en": "AIS, thrombolysis candidate: primary Labetalol/Nicardipine; alternative Urapidil; target MAP -15%, within 1 hour",
-        "text_vi": "Nhồi máu não cấp có chỉ định tiêu sợi huyết: ưu tiên Labetalol/Nicardipine; thay thế Urapidil; mục tiêu MAP giảm 15%, trong 1 giờ",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "ACUTE_ISCHEMIC_STROKE_THROMBOLYSIS_CANDIDATE_THERAPY",
-          "target_timing": "WITHIN_1_HOUR",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": false,
-          "bp_threshold_dbp_mmhg": 110,
-          "bp_threshold_sbp_mmhg": 185,
-          "target_map_reduction_percent": 15
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 9,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [
-          {
-            "id": "13ad3dd7-be05-42f5-9ace-1b62667e2e3a",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Tăng huyết áp và Đột quỵ",
-                "number": "3.7.5"
-              }
-            ],
-            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 24, Mục 3.7.5",
-            "locator_detail": "AIS with thrombolysis indication: MAP -15% within 1 hour if SBP>185 or DBP>110 mmHg; see Bảng 24 for more detailed AIS management including thrombolysis/thrombectomy.",
-            "printed_page_numbers": [
-              28
-            ],
-            "pdf_page_numbers": [
-              30
-            ],
-            "reference_note": "Trích Bảng 14; đối chiếu bổ sung Bảng 24, Mục 3.7.5 về xử trí HA trong đột quỵ thiếu máu não cấp.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "c2b1509d-a3d1-4ef6-833e-94f458e9eac0",
-            "traversal_order": 1,
-            "to_node_key": "T14_END_REFER_STROKE_MANAGEMENT",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP": {
-        "id": "c684b8bb-1b9e-4742-8c55-d17ebd14ce36",
-        "node_key": "T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP",
-        "node_type": "ACTION",
-        "text_en": "Eclampsia/severe preeclampsia/HELLP: Labetalol or Nicardipine plus magnesium sulfate; target SBP <160 mmHg and DBP <105 mmHg, immediate",
-        "text_vi": "Sản giật/tiền sản giật nặng/HELLP: Labetalol hoặc Nicardipine phối hợp Magnesium sulfate; mục tiêu HATT <160 mmHg và HATTr <105 mmHg, ngay lập tức",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP_THERAPY",
-          "target_timing": "IMMEDIATE",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": false,
-          "target_dbp_upper_mmhg": 105,
-          "target_sbp_upper_mmhg": 160
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 24,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [
-          {
-            "id": "6e7e7271-a499-4258-8831-e54afcee3ec3",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Tăng huyết áp trong thai kỳ",
-                "number": "3.6.6"
-              }
-            ],
-            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 15, 16, Mục 3.6.6",
-            "locator_detail": "Eclampsia/severe preeclampsia/HELLP: target SBP<160 and DBP<105 mmHg immediately; RAS-inhibitors contraindicated and sodium nitroprusside avoided in pregnancy (fetal cyanide toxicity risk).",
-            "printed_page_numbers": [
-              28
-            ],
-            "pdf_page_numbers": [
-              30
-            ],
-            "reference_note": "Trích Bảng 14; đối chiếu bổ sung Bảng 15, 16, Mục 3.6.6.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "bd1079ee-fd78-4366-8a55-8a12e84ed768",
-            "traversal_order": 1,
-            "to_node_key": "T14_LINK_PREGNANCY",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY": {
-        "id": "b15c9c78-c837-4451-af49-19c97d368b36",
-        "node_key": "T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY",
-        "node_type": "ACTION",
-        "text_en": "Hypertensive encephalopathy: primary Labetalol/Nicardipine; alternative Nitroprusside; target MAP -20% to -25%, immediate",
-        "text_vi": "Bệnh não do THA: ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside; mục tiêu MAP giảm 20-25%, ngay lập tức",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "HYPERTENSIVE_ENCEPHALOPATHY_ACUTE_THERAPY",
-          "target_timing": "IMMEDIATE",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": false,
-          "target_map_reduction_percent_max": 25,
-          "target_map_reduction_percent_min": 20
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 7,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [
-          {
-            "id": "671766f4-fa37-4d21-a9c4-783862f35ea1",
+            "id": "b73bcf97-1a9c-423e-a8d2-2903db1ef84b",
             "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
             "section_path": [
               {
@@ -407,52 +53,63 @@
                 "number": "3.6.5"
               }
             ],
-            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51)",
-            "locator_detail": "Hypertensive encephalopathy: immediate MAP reduction 20-25%.",
+            "locator": "Mục 3.6.5. Tăng huyết áp cấp cứu",
+            "locator_detail": "Entry point of the hypertensive-emergency tree; emergency vs. urgent hypertension distinction.",
             "printed_page_numbers": [
-              28
+              27
             ],
             "pdf_page_numbers": [
-              30
+              29
             ],
-            "reference_note": "Trích Bảng 14, theo Van den Born và cộng sự (51).",
+            "reference_note": "Điểm vào của Cây 14; phân biệt THA cấp cứu và THA khẩn trương.",
             "reference_order": 1
           }
         ],
         "transitions": [
           {
-            "edge_id": "49078b31-0fab-4d1b-9fc7-48cf0a5d907f",
+            "edge_id": "be4b90a2-c18f-4e86-bc7f-52f24da2d6cb",
             "traversal_order": 1,
-            "to_node_key": "T14_END_REFER_STROKE_MANAGEMENT",
-            "candidate_condition": null
+            "to_node_key": "T14_C_NO_ACUTE_TARGET_ORGAN_DAMAGE",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.has_target_organ_damage",
+              "value": false
+            }
+          },
+          {
+            "edge_id": "7cb197b5-8ad4-4423-afd0-0bdefdf9ad5c",
+            "traversal_order": 2,
+            "to_node_key": "T14_C_HAS_ACUTE_TARGET_ORGAN_DAMAGE",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.has_target_organ_damage",
+              "value": true
+            }
           }
         ]
       },
-      "T14_ACTION_MALIGNANT_HTN_TMA_AKI": {
-        "id": "961295af-8239-437a-8106-a6fb9da5d24c",
-        "node_key": "T14_ACTION_MALIGNANT_HTN_TMA_AKI",
-        "node_type": "ACTION",
-        "text_en": "Hypertensive emergency with or without TMA/acute kidney injury: primary Labetalol/Nicardipine; alternative Nitroprusside/Urapidil; target MAP -20% to -25%, within hours",
-        "text_vi": "THA cấp cứu có hoặc không có TMA/Suy thận cấp: ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside/Urapidil; mục tiêu MAP giảm 20-25%, trong vài giờ",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "MALIGNANT_HYPERTENSION_TMA_AKI_THERAPY",
-          "target_timing": "WITHIN_HOURS",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": false,
-          "target_map_reduction_percent_max": 25,
-          "target_map_reduction_percent_min": 20
+      "T14_C_NO_ACUTE_TARGET_ORGAN_DAMAGE": {
+        "id": "251b8883-c8d8-4e89-b918-09a70b97bdb8",
+        "node_key": "T14_C_NO_ACUTE_TARGET_ORGAN_DAMAGE",
+        "node_type": "CONDITION",
+        "text_en": "No acute target organ damage",
+        "text_vi": "Không tổn thương cơ quan đích cấp tính",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.has_target_organ_damage",
+          "value": false
         },
+        "context_patch": null,
+        "action_payload": null,
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 26,
+        "display_order": 1,
         "created_at": "2026-07-25 11:46:28.205822+00:00",
         "updated_at": "2026-07-25 11:46:28.205822+00:00",
         "references": [
           {
-            "id": "e8975db5-9250-4de5-a09f-c61254ddb78e",
+            "id": "71669926-1b33-4b48-ac41-b7ee5319fd00",
             "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
             "section_path": [
               {
@@ -460,276 +117,23 @@
                 "number": "3.6.5"
               }
             ],
-            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51)",
-            "locator_detail": "General/malignant hypertensive emergency with or without TMA/AKI: MAP reduction 20-25% over several hours.",
+            "locator": "Mục 3.6.5. Tăng huyết áp cấp cứu",
+            "locator_detail": "Without acute target-organ damage, this is urgent hypertension, usually treatable with oral therapy.",
             "printed_page_numbers": [
-              28
+              27
             ],
             "pdf_page_numbers": [
-              30
+              29
             ],
-            "reference_note": "Trích Bảng 14, theo Van den Born và cộng sự (51).",
+            "reference_note": "Bệnh nhân tăng HA đáng kể nhưng không có tổn thương cơ quan đích cấp tính được gọi là tăng huyết áp khẩn trương.",
             "reference_order": 1
           }
         ],
         "transitions": [
           {
-            "edge_id": "0a1bef3f-d516-4ce1-9835-17af563a176f",
+            "edge_id": "b6e90d2a-fdca-4441-9580-7b30706d15f9",
             "traversal_order": 1,
             "to_node_key": "T14_END_URGENT_HYPERTENSION",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T14_C_ACS": {
-        "id": "e0e3257a-6ea7-4eba-8ec2-6e34688c6331",
-        "node_key": "T14_C_ACS",
-        "node_type": "CONDITION",
-        "text_en": "Acute coronary syndrome",
-        "text_vi": "Hội chứng vành cấp",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.has_acute_coronary_syndrome",
-          "value": true
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 15,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "1e7a271d-f69d-4197-9108-91958b67cb40",
-            "traversal_order": 1,
-            "to_node_key": "T14_ACTION_ACS",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T14_C_ACUTE_AORTIC_SYNDROME": {
-        "id": "2302e8ed-f322-40b0-872a-c9d8b863d984",
-        "node_key": "T14_C_ACUTE_AORTIC_SYNDROME",
-        "node_type": "CONDITION",
-        "text_en": "Acute aortic syndrome",
-        "text_vi": "Bệnh động mạch chủ cấp",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.has_acute_aortic_syndrome",
-          "value": true
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 21,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "0b31264d-2c4f-43ee-aad9-b4a8e87518b7",
-            "traversal_order": 1,
-            "to_node_key": "T14_END_ACUTE_AORTIC_SYNDROME",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T14_C_ACUTE_CARDIOGENIC_PULMONARY_EDEMA": {
-        "id": "247dbdb6-5338-4a9c-8138-10b7578bc149",
-        "node_key": "T14_C_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
-        "node_type": "CONDITION",
-        "text_en": "Acute cardiogenic pulmonary edema",
-        "text_vi": "Phù phổi cấp do tim",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.has_acute_cardiogenic_pulmonary_edema",
-          "value": true
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 18,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "d0f1f6ad-b6d5-4f35-a871-c9f92eebe479",
-            "traversal_order": 1,
-            "to_node_key": "T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T14_C_ACUTE_ICH": {
-        "id": "38207a6c-91d3-425d-a512-79014c6b1b23",
-        "node_key": "T14_C_ACUTE_ICH",
-        "node_type": "CONDITION",
-        "text_en": "Acute intracerebral hemorrhage, SBP >180 mmHg",
-        "text_vi": "Xuất huyết não cấp, HATT >180 mmHg",
-        "condition_definition": {
-          "all": [
-            {
-              "op": "eq",
-              "path": "context.treatment.has_acute_intracerebral_hemorrhage",
-              "value": true
-            },
-            {
-              "op": "gt",
-              "path": "input.clinic_1_sbp",
-              "value": 180
-            }
-          ]
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 12,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "a4ecca27-fab0-475d-afb7-1e2d092cb8da",
-            "traversal_order": 1,
-            "to_node_key": "T14_ACTION_ACUTE_ICH",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T14_C_AIS_SEVERE": {
-        "id": "85899c37-f375-4798-95be-5ea4d3bcce47",
-        "node_key": "T14_C_AIS_SEVERE",
-        "node_type": "CONDITION",
-        "text_en": "Acute ischemic stroke, SBP >220 or DBP >120 mmHg",
-        "text_vi": "Nhồi máu não cấp, HATT >220 hoặc HATTr >120 mmHg",
-        "condition_definition": {
-          "all": [
-            {
-              "op": "eq",
-              "path": "context.treatment.has_acute_ischemic_stroke",
-              "value": true
-            },
-            {
-              "any": [
-                {
-                  "op": "gt",
-                  "path": "input.clinic_1_sbp",
-                  "value": 220
-                },
-                {
-                  "op": "gt",
-                  "path": "input.clinic_1_dbp",
-                  "value": 120
-                }
-              ]
-            }
-          ]
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 10,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "54979b4c-880b-48b1-9906-cea354d29dcd",
-            "traversal_order": 1,
-            "to_node_key": "T14_ACTION_AIS_SEVERE",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T14_C_AIS_THROMBOLYSIS_CANDIDATE": {
-        "id": "d8769fb4-d8e4-42f5-ad62-eb0df756145c",
-        "node_key": "T14_C_AIS_THROMBOLYSIS_CANDIDATE",
-        "node_type": "CONDITION",
-        "text_en": "Acute ischemic stroke, thrombolysis candidate, SBP >185 or DBP >110 mmHg",
-        "text_vi": "Nhồi máu não cấp có chỉ định tiêu sợi huyết, HATT >185 hoặc HATTr >110 mmHg",
-        "condition_definition": {
-          "all": [
-            {
-              "op": "eq",
-              "path": "context.treatment.has_acute_ischemic_stroke",
-              "value": true
-            },
-            {
-              "op": "eq",
-              "path": "context.treatment.is_thrombolysis_candidate",
-              "value": true
-            },
-            {
-              "any": [
-                {
-                  "op": "gt",
-                  "path": "input.clinic_1_sbp",
-                  "value": 185
-                },
-                {
-                  "op": "gt",
-                  "path": "input.clinic_1_dbp",
-                  "value": 110
-                }
-              ]
-            }
-          ]
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 8,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "d71a1ccf-95e8-41b4-b9a5-27b092276c5f",
-            "traversal_order": 1,
-            "to_node_key": "T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T14_C_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP": {
-        "id": "a2fdc976-e5d7-4cc8-a4ec-83a1098ffd36",
-        "node_key": "T14_C_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP",
-        "node_type": "CONDITION",
-        "text_en": "Eclampsia, severe preeclampsia, or HELLP syndrome",
-        "text_vi": "Sản giật, tiền sản giật nặng, hoặc hội chứng HELLP",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.has_eclampsia_severe_preeclampsia_or_hellp",
-          "value": true
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 23,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "15a6e5d3-cee6-4f7e-9f2b-d2fbc88b1472",
-            "traversal_order": 1,
-            "to_node_key": "T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP",
             "candidate_condition": null
           }
         ]
@@ -784,155 +188,6 @@
           }
         ]
       },
-      "T14_C_HYPERTENSIVE_ENCEPHALOPATHY": {
-        "id": "fb9b6b61-9c8b-40d0-bd35-d1f6f7639a4a",
-        "node_key": "T14_C_HYPERTENSIVE_ENCEPHALOPATHY",
-        "node_type": "CONDITION",
-        "text_en": "Hypertensive encephalopathy (coma, seizures, cortical blindness)",
-        "text_vi": "Bệnh não do THA (hôn mê, co giật, mù vỏ não)",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.has_hypertensive_encephalopathy",
-          "value": true
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 6,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "ea212dbb-a16b-4ef9-9fd8-8b2819d1fdc7",
-            "traversal_order": 1,
-            "to_node_key": "T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T14_C_NO_ACUTE_TARGET_ORGAN_DAMAGE": {
-        "id": "251b8883-c8d8-4e89-b918-09a70b97bdb8",
-        "node_key": "T14_C_NO_ACUTE_TARGET_ORGAN_DAMAGE",
-        "node_type": "CONDITION",
-        "text_en": "No acute target organ damage",
-        "text_vi": "Không tổn thương cơ quan đích cấp tính",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.has_target_organ_damage",
-          "value": false
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 1,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [
-          {
-            "id": "71669926-1b33-4b48-ac41-b7ee5319fd00",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Tăng huyết áp cấp cứu",
-                "number": "3.6.5"
-              }
-            ],
-            "locator": "Mục 3.6.5. Tăng huyết áp cấp cứu",
-            "locator_detail": "Without acute target-organ damage, this is urgent hypertension, usually treatable with oral therapy.",
-            "printed_page_numbers": [
-              27
-            ],
-            "pdf_page_numbers": [
-              29
-            ],
-            "reference_note": "Bệnh nhân tăng HA đáng kể nhưng không có tổn thương cơ quan đích cấp tính được gọi là tăng huyết áp khẩn trương.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "b6e90d2a-fdca-4441-9580-7b30706d15f9",
-            "traversal_order": 1,
-            "to_node_key": "T14_END_URGENT_HYPERTENSION",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T14_END_ACUTE_AORTIC_SYNDROME": {
-        "id": "02e181de-de5e-42fd-af3a-b71095aadab0",
-        "node_key": "T14_END_ACUTE_AORTIC_SYNDROME",
-        "node_type": "END",
-        "text_en": "Acute aortic syndrome: Esmolol plus Nitroprusside, Nitroglycerine, or Nicardipine; target SBP <120 mmHg and heart rate <60 bpm, immediate",
-        "text_vi": "Bệnh động mạch chủ cấp: Esmolol phối hợp Nitroprusside, Nitroglycerine, hoặc Nicardipine; mục tiêu HATT <120 mmHg và nhịp tim <60 lần/phút, ngay lập tức",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "ACUTE_AORTIC_SYNDROME_THERAPY",
-          "target_timing": "IMMEDIATE",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": true,
-          "target_sbp_upper_mmhg": 120,
-          "requires_clinician_review": true,
-          "target_heart_rate_upper_bpm": 60
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 22,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [
-          {
-            "id": "23154fc0-78d5-42a4-8072-754bccdd7690",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Tăng huyết áp cấp cứu",
-                "number": "3.6.5"
-              }
-            ],
-            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51)",
-            "locator_detail": "Acute aortic syndrome: target SBP<120 mmHg and heart rate <60 bpm immediately. No onward tree link (see header note on the flagged Cây 10 discrepancy).",
-            "printed_page_numbers": [
-              28
-            ],
-            "pdf_page_numbers": [
-              30
-            ],
-            "reference_note": "Trích Bảng 14, theo Van den Born và cộng sự (51).",
-            "reference_order": 1
-          }
-        ],
-        "transitions": []
-      },
-      "T14_END_REFER_STROKE_MANAGEMENT": {
-        "id": "4ecdbf64-7473-438a-ab27-9de45aa83eb2",
-        "node_key": "T14_END_REFER_STROKE_MANAGEMENT",
-        "node_type": "END",
-        "text_en": "Refer to stroke management",
-        "text_vi": "Điều trị đột quỵ",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "REFER_STROKE_MANAGEMENT",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": true,
-          "requires_clinician_review": true
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 14,
-        "created_at": "2026-07-25 11:46:28.205822+00:00",
-        "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [],
-        "transitions": []
-      },
       "T14_END_URGENT_HYPERTENSION": {
         "id": "9687ecd1-fc18-40e2-affd-f28fd287fad2",
         "node_key": "T14_END_URGENT_HYPERTENSION",
@@ -956,59 +211,35 @@
         "references": [],
         "transitions": []
       },
-      "T14_GLOBAL_ABBREVIATION_GLOSSARY": {
-        "id": "8e4b0979-c291-4f98-9032-4293a2bfc8fd",
-        "node_key": "T14_GLOBAL_ABBREVIATION_GLOSSARY",
-        "node_type": "GLOBAL",
-        "text_en": "Abbreviation glossary",
-        "text_vi": "Chú giải viết tắt",
+      "T14_ACTION_ADMIT_AND_DETERMINE_TARGET_ORGAN": {
+        "id": "bc430b73-8c5f-4d47-a3a7-9f6eef544edc",
+        "node_key": "T14_ACTION_ADMIT_AND_DETERMINE_TARGET_ORGAN",
+        "node_type": "ACTION",
+        "text_en": "Emergency hypertension: admit to hospital, apply IV antihypertensive therapy, determine target organ",
+        "text_vi": "Tăng huyết áp cấp cứu: Nhập viện. Áp dụng thuốc hạ áp đường tĩnh mạch. Xác định cơ quan đích",
         "condition_definition": null,
         "context_patch": null,
-        "action_payload": null,
-        "global_config": {
-          "kind": "ABBREVIATION_GLOSSARY",
-          "entries": {
-            "MAP": {
-              "label": "MAP: Mean arterial pressure - Huyết áp trung bình"
-            },
-            "TMA": {
-              "label": "TMA: Thrombotic microangiopathy - Bệnh vi mạch huyết khối"
-            },
-            "HELLP": {
-              "label": "HELLP: Hemolysis, Elevated Liver Enzymes and Low Platelets - Hội chứng liên quan tiền sản giật nặng"
-            }
-          },
-          "purpose": "Chú giải các chữ viết tắt dùng trong Cây 14, theo chú thích Bảng 14.",
-          "source_permission_note": "Bảng 14 được trích dẫn theo Van den Born và cộng sự, với sự cho phép của Tạp chí European Heart Journal - Cardiovascular Pharmacotherapy, Oxford University Press."
+        "action_payload": {
+          "route": "IV_INFUSION",
+          "action_type": "ADMIT_AND_DETERMINE_TARGET_ORGAN",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": false
         },
+        "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 99,
+        "display_order": 4,
         "created_at": "2026-07-25 11:46:28.205822+00:00",
         "updated_at": "2026-07-25 11:46:28.205822+00:00",
-        "references": [
+        "references": [],
+        "transitions": [
           {
-            "id": "140a9ab8-081f-4b11-8616-2fc929bdf173",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Tăng huyết áp cấp cứu",
-                "number": "3.6.5"
-              }
-            ],
-            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51), chú thích",
-            "locator_detail": "Footnote abbreviation glossary (MAP, TMA, HELLP) and source citation/permission note.",
-            "printed_page_numbers": [
-              28
-            ],
-            "pdf_page_numbers": [
-              30
-            ],
-            "reference_note": "Chú thích Bảng 14: MAP, TMA, HELLP; trích dẫn theo Van den Born và cộng sự, với sự cho phép của European Heart Journal - Cardiovascular Pharmacotherapy, Oxford University Press.",
-            "reference_order": 1
+            "edge_id": "5026ca45-6bc9-4df8-a734-bf71dfbf41c3",
+            "traversal_order": 1,
+            "to_node_key": "T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS",
+            "candidate_condition": null
           }
-        ],
-        "transitions": []
+        ]
       },
       "T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS": {
         "id": "5f9327f7-08f3-433b-b6cf-4f8d989ed0d1",
@@ -1118,12 +349,12 @@
                   "any": [
                     {
                       "op": "gt",
-                      "path": "input.clinic_1_sbp",
+                      "path": "input.current_clinic_sbp",
                       "value": 185
                     },
                     {
                       "op": "gt",
-                      "path": "input.clinic_1_dbp",
+                      "path": "input.current_clinic_dbp",
                       "value": 110
                     }
                   ]
@@ -1146,12 +377,12 @@
                   "any": [
                     {
                       "op": "gt",
-                      "path": "input.clinic_1_sbp",
+                      "path": "input.current_clinic_sbp",
                       "value": 220
                     },
                     {
                       "op": "gt",
-                      "path": "input.clinic_1_dbp",
+                      "path": "input.current_clinic_dbp",
                       "value": 120
                     }
                   ]
@@ -1172,7 +403,7 @@
                 },
                 {
                   "op": "gt",
-                  "path": "input.clinic_1_sbp",
+                  "path": "input.current_clinic_sbp",
                   "value": 180
                 }
               ]
@@ -1226,6 +457,482 @@
           }
         ]
       },
+      "T14_C_HYPERTENSIVE_ENCEPHALOPATHY": {
+        "id": "fb9b6b61-9c8b-40d0-bd35-d1f6f7639a4a",
+        "node_key": "T14_C_HYPERTENSIVE_ENCEPHALOPATHY",
+        "node_type": "CONDITION",
+        "text_en": "Hypertensive encephalopathy (coma, seizures, cortical blindness)",
+        "text_vi": "Bệnh não do THA (hôn mê, co giật, mù vỏ não)",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.has_hypertensive_encephalopathy",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 6,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "ea212dbb-a16b-4ef9-9fd8-8b2819d1fdc7",
+            "traversal_order": 1,
+            "to_node_key": "T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY": {
+        "id": "b15c9c78-c837-4451-af49-19c97d368b36",
+        "node_key": "T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY",
+        "node_type": "ACTION",
+        "text_en": "Hypertensive encephalopathy: primary Labetalol/Nicardipine; alternative Nitroprusside; target MAP -20% to -25%, immediate",
+        "text_vi": "Bệnh não do THA: ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside; mục tiêu MAP giảm 20-25%, ngay lập tức",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "HYPERTENSIVE_ENCEPHALOPATHY_ACUTE_THERAPY",
+          "target_timing": "IMMEDIATE",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": false,
+          "target_map_reduction_percent_max": 25,
+          "target_map_reduction_percent_min": 20
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 7,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "671766f4-fa37-4d21-a9c4-783862f35ea1",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp cấp cứu",
+                "number": "3.6.5"
+              }
+            ],
+            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51)",
+            "locator_detail": "Hypertensive encephalopathy: immediate MAP reduction 20-25%.",
+            "printed_page_numbers": [
+              28
+            ],
+            "pdf_page_numbers": [
+              30
+            ],
+            "reference_note": "Trích Bảng 14, theo Van den Born và cộng sự (51).",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "49078b31-0fab-4d1b-9fc7-48cf0a5d907f",
+            "traversal_order": 1,
+            "to_node_key": "T14_END_REFER_STROKE_MANAGEMENT",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T14_C_AIS_THROMBOLYSIS_CANDIDATE": {
+        "id": "d8769fb4-d8e4-42f5-ad62-eb0df756145c",
+        "node_key": "T14_C_AIS_THROMBOLYSIS_CANDIDATE",
+        "node_type": "CONDITION",
+        "text_en": "Acute ischemic stroke, thrombolysis candidate, SBP >185 or DBP >110 mmHg",
+        "text_vi": "Nhồi máu não cấp có chỉ định tiêu sợi huyết, HATT >185 hoặc HATTr >110 mmHg",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "eq",
+              "path": "context.treatment.has_acute_ischemic_stroke",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.treatment.is_thrombolysis_candidate",
+              "value": true
+            },
+            {
+              "any": [
+                {
+                  "op": "gt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 185
+                },
+                {
+                  "op": "gt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 110
+                }
+              ]
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 8,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "d71a1ccf-95e8-41b4-b9a5-27b092276c5f",
+            "traversal_order": 1,
+            "to_node_key": "T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE": {
+        "id": "61f81d80-845e-452c-b80f-02a0bae3e88d",
+        "node_key": "T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE",
+        "node_type": "ACTION",
+        "text_en": "AIS, thrombolysis candidate: primary Labetalol/Nicardipine; alternative Urapidil; target MAP -15%, within 1 hour",
+        "text_vi": "Nhồi máu não cấp có chỉ định tiêu sợi huyết: ưu tiên Labetalol/Nicardipine; thay thế Urapidil; mục tiêu MAP giảm 15%, trong 1 giờ",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "ACUTE_ISCHEMIC_STROKE_THROMBOLYSIS_CANDIDATE_THERAPY",
+          "target_timing": "WITHIN_1_HOUR",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": false,
+          "bp_threshold_dbp_mmhg": 110,
+          "bp_threshold_sbp_mmhg": 185,
+          "target_map_reduction_percent": 15
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 9,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "13ad3dd7-be05-42f5-9ace-1b62667e2e3a",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Đột quỵ",
+                "number": "3.7.5"
+              }
+            ],
+            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 24, Mục 3.7.5",
+            "locator_detail": "AIS with thrombolysis indication: MAP -15% within 1 hour if SBP>185 or DBP>110 mmHg; see Bảng 24 for more detailed AIS management including thrombolysis/thrombectomy.",
+            "printed_page_numbers": [
+              28
+            ],
+            "pdf_page_numbers": [
+              30
+            ],
+            "reference_note": "Trích Bảng 14; đối chiếu bổ sung Bảng 24, Mục 3.7.5 về xử trí HA trong đột quỵ thiếu máu não cấp.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "c2b1509d-a3d1-4ef6-833e-94f458e9eac0",
+            "traversal_order": 1,
+            "to_node_key": "T14_END_REFER_STROKE_MANAGEMENT",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T14_C_AIS_SEVERE": {
+        "id": "85899c37-f375-4798-95be-5ea4d3bcce47",
+        "node_key": "T14_C_AIS_SEVERE",
+        "node_type": "CONDITION",
+        "text_en": "Acute ischemic stroke, SBP >220 or DBP >120 mmHg",
+        "text_vi": "Nhồi máu não cấp, HATT >220 hoặc HATTr >120 mmHg",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "eq",
+              "path": "context.treatment.has_acute_ischemic_stroke",
+              "value": true
+            },
+            {
+              "any": [
+                {
+                  "op": "gt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 220
+                },
+                {
+                  "op": "gt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 120
+                }
+              ]
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 10,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "54979b4c-880b-48b1-9906-cea354d29dcd",
+            "traversal_order": 1,
+            "to_node_key": "T14_ACTION_AIS_SEVERE",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T14_ACTION_AIS_SEVERE": {
+        "id": "5f03a0ba-fc0d-4ac1-9e06-f40641921048",
+        "node_key": "T14_ACTION_AIS_SEVERE",
+        "node_type": "ACTION",
+        "text_en": "AIS: primary Labetalol/Nicardipine; alternative Nitroprusside; target MAP -15%, within 1 hour",
+        "text_vi": "Nhồi máu não cấp: ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside; mục tiêu MAP giảm 15%, trong 1 giờ",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "ACUTE_ISCHEMIC_STROKE_THERAPY",
+          "target_timing": "WITHIN_1_HOUR",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": false,
+          "bp_threshold_dbp_mmhg": 120,
+          "bp_threshold_sbp_mmhg": 220,
+          "target_map_reduction_percent": 15
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 11,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "1699d4fe-3c84-4fc4-a69f-f239dcb34ddf",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Đột quỵ",
+                "number": "3.7.5"
+              }
+            ],
+            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 24, Mục 3.7.5",
+            "locator_detail": "AIS: MAP -15% within 1 hour if SBP>220 or DBP>120 mmHg; see Bảng 24 for more detailed AIS management.",
+            "printed_page_numbers": [
+              28
+            ],
+            "pdf_page_numbers": [
+              30
+            ],
+            "reference_note": "Trích Bảng 14; đối chiếu bổ sung Bảng 24, Mục 3.7.5.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "00617851-dde0-4aa9-a7ee-a46cc340cb70",
+            "traversal_order": 1,
+            "to_node_key": "T14_END_REFER_STROKE_MANAGEMENT",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T14_C_ACUTE_ICH": {
+        "id": "38207a6c-91d3-425d-a512-79014c6b1b23",
+        "node_key": "T14_C_ACUTE_ICH",
+        "node_type": "CONDITION",
+        "text_en": "Acute intracerebral hemorrhage, SBP >180 mmHg",
+        "text_vi": "Xuất huyết não cấp, HATT >180 mmHg",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "eq",
+              "path": "context.treatment.has_acute_intracerebral_hemorrhage",
+              "value": true
+            },
+            {
+              "op": "gt",
+              "path": "input.current_clinic_sbp",
+              "value": 180
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 12,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "a4ecca27-fab0-475d-afb7-1e2d092cb8da",
+            "traversal_order": 1,
+            "to_node_key": "T14_ACTION_ACUTE_ICH",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T14_ACTION_ACUTE_ICH": {
+        "id": "2ae327a8-8199-4851-b979-000fadf9edb1",
+        "node_key": "T14_ACTION_ACUTE_ICH",
+        "node_type": "ACTION",
+        "text_en": "Acute ICH: primary Nitroglycerine/Labetalol; alternative Urapidil; target 130<SBP<180 mmHg",
+        "text_vi": "Xuất huyết não cấp: ưu tiên Nitroglycerine/Labetalol; thay thế Urapidil; mục tiêu 130<HATT<180 mmHg",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "ACUTE_INTRACEREBRAL_HEMORRHAGE_THERAPY",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": false,
+          "target_sbp_lower_mmhg": 130,
+          "target_sbp_upper_mmhg": 180
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 13,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "5b3730ac-a68d-4669-8687-34792a16dcef",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Đột quỵ",
+                "number": "3.7.5"
+              }
+            ],
+            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 23, Mục 3.7.5",
+            "locator_detail": "Acute ICH: target 130<SBP<180 mmHg; see Bảng 23 for detailed ICH management (>220 consider IV infusion; 150-220 lowering to <140 within 6h shows no benefit and may be harmful; start within 2h, max reduction 90 mmHg from baseline).",
+            "printed_page_numbers": [
+              28
+            ],
+            "pdf_page_numbers": [
+              30
+            ],
+            "reference_note": "Trích Bảng 14; đối chiếu bổ sung Bảng 23, Mục 3.7.5 về xử trí HA trong xuất huyết não cấp.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "ce6d2c2e-7dc8-490d-a51c-c931a5865a7a",
+            "traversal_order": 1,
+            "to_node_key": "T14_END_REFER_STROKE_MANAGEMENT",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T14_END_REFER_STROKE_MANAGEMENT": {
+        "id": "4ecdbf64-7473-438a-ab27-9de45aa83eb2",
+        "node_key": "T14_END_REFER_STROKE_MANAGEMENT",
+        "node_type": "END",
+        "text_en": "Refer to stroke management",
+        "text_vi": "Điều trị đột quỵ",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "REFER_STROKE_MANAGEMENT",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true,
+          "requires_clinician_review": true
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 14,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T14_C_ACS": {
+        "id": "e0e3257a-6ea7-4eba-8ec2-6e34688c6331",
+        "node_key": "T14_C_ACS",
+        "node_type": "CONDITION",
+        "text_en": "Acute coronary syndrome",
+        "text_vi": "Hội chứng vành cấp",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.has_acute_coronary_syndrome",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 15,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "1e7a271d-f69d-4197-9108-91958b67cb40",
+            "traversal_order": 1,
+            "to_node_key": "T14_ACTION_ACS",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T14_ACTION_ACS": {
+        "id": "f57f80db-de51-40ad-a751-626056ee90ec",
+        "node_key": "T14_ACTION_ACS",
+        "node_type": "ACTION",
+        "text_en": "ACS: primary Nitroprusside or Nitroglycerine (with a loop diuretic); alternative Urapidil (with a loop diuretic); target SBP <140 mmHg, immediate",
+        "text_vi": "Hội chứng vành cấp: ưu tiên Nitroprusside hoặc Nitroglycerine (kèm lợi tiểu quai); thay thế Urapidil (kèm lợi tiểu quai); mục tiêu HATT <140 mmHg, ngay lập tức",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "ACUTE_CORONARY_SYNDROME_THERAPY",
+          "target_timing": "IMMEDIATE",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": false,
+          "target_sbp_upper_mmhg": 140
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 16,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "71acc1c7-0102-4d88-a89a-8b8a10e60a03",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Bệnh mạch vành",
+                "number": "3.7.2"
+              }
+            ],
+            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 19, Mục 3.7.2",
+            "locator_detail": "ACS: target SBP<140 mmHg immediately; see Bảng 19 for hypertension-with-CAD strategy.",
+            "printed_page_numbers": [
+              28
+            ],
+            "pdf_page_numbers": [
+              30
+            ],
+            "reference_note": "Trích Bảng 14; đối chiếu bổ sung Bảng 19, Mục 3.7.2.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
       "T14_LINK_CORONARY_ARTERY_DISEASE": {
         "id": "1e51a517-fe6e-456d-ac5d-c6e58deb5454",
         "node_key": "T14_LINK_CORONARY_ARTERY_DISEASE",
@@ -1243,6 +950,87 @@
         "updated_at": "2026-07-25 11:46:28.205822+00:00",
         "references": [],
         "transitions": []
+      },
+      "T14_C_ACUTE_CARDIOGENIC_PULMONARY_EDEMA": {
+        "id": "247dbdb6-5338-4a9c-8138-10b7578bc149",
+        "node_key": "T14_C_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
+        "node_type": "CONDITION",
+        "text_en": "Acute cardiogenic pulmonary edema",
+        "text_vi": "Phù phổi cấp do tim",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.has_acute_cardiogenic_pulmonary_edema",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 18,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "d0f1f6ad-b6d5-4f35-a871-c9f92eebe479",
+            "traversal_order": 1,
+            "to_node_key": "T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA": {
+        "id": "4ce0d75e-7416-4381-b4eb-18e83f1df2c1",
+        "node_key": "T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
+        "node_type": "ACTION",
+        "text_en": "Acute cardiogenic pulmonary edema: Labetalol or Metoprolol; target SBP <140 mmHg, immediate",
+        "text_vi": "Phù phổi cấp do tim: Labetalol hoặc Metoprolol; mục tiêu HATT <140 mmHg, ngay lập tức",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "ACUTE_CARDIOGENIC_PULMONARY_EDEMA_THERAPY",
+          "target_timing": "IMMEDIATE",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": false,
+          "target_sbp_upper_mmhg": 140
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 19,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "6faf0a09-19c8-403c-a467-d5cb99bcda4e",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Suy tim",
+                "number": "3.7.3"
+              }
+            ],
+            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 20, Mục 3.7.3",
+            "locator_detail": "Acute cardiogenic pulmonary edema: target SBP<140 mmHg immediately; see Bảng 20 for heart-failure strategy.",
+            "printed_page_numbers": [
+              28
+            ],
+            "pdf_page_numbers": [
+              30
+            ],
+            "reference_note": "Trích Bảng 14; đối chiếu bổ sung Bảng 20, Mục 3.7.3.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "57e60c63-253d-4a73-a989-2e9cc2a5f219",
+            "traversal_order": 1,
+            "to_node_key": "T14_LINK_HEART_FAILURE",
+            "candidate_condition": null
+          }
+        ]
       },
       "T14_LINK_HEART_FAILURE": {
         "id": "f7121ea4-d4ab-45aa-9995-9b8c9416656f",
@@ -1262,6 +1050,164 @@
         "references": [],
         "transitions": []
       },
+      "T14_C_ACUTE_AORTIC_SYNDROME": {
+        "id": "2302e8ed-f322-40b0-872a-c9d8b863d984",
+        "node_key": "T14_C_ACUTE_AORTIC_SYNDROME",
+        "node_type": "CONDITION",
+        "text_en": "Acute aortic syndrome",
+        "text_vi": "Bệnh động mạch chủ cấp",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.has_acute_aortic_syndrome",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 21,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "0b31264d-2c4f-43ee-aad9-b4a8e87518b7",
+            "traversal_order": 1,
+            "to_node_key": "T14_END_ACUTE_AORTIC_SYNDROME",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T14_END_ACUTE_AORTIC_SYNDROME": {
+        "id": "02e181de-de5e-42fd-af3a-b71095aadab0",
+        "node_key": "T14_END_ACUTE_AORTIC_SYNDROME",
+        "node_type": "END",
+        "text_en": "Acute aortic syndrome: Esmolol plus Nitroprusside, Nitroglycerine, or Nicardipine; target SBP <120 mmHg and heart rate <60 bpm, immediate",
+        "text_vi": "Bệnh động mạch chủ cấp: Esmolol phối hợp Nitroprusside, Nitroglycerine, hoặc Nicardipine; mục tiêu HATT <120 mmHg và nhịp tim <60 lần/phút, ngay lập tức",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "ACUTE_AORTIC_SYNDROME_THERAPY",
+          "target_timing": "IMMEDIATE",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true,
+          "target_sbp_upper_mmhg": 120,
+          "requires_clinician_review": true,
+          "target_heart_rate_upper_bpm": 60
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 22,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "23154fc0-78d5-42a4-8072-754bccdd7690",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp cấp cứu",
+                "number": "3.6.5"
+              }
+            ],
+            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51)",
+            "locator_detail": "Acute aortic syndrome: target SBP<120 mmHg and heart rate <60 bpm immediately. No onward tree link (see header note on the flagged Cây 10 discrepancy).",
+            "printed_page_numbers": [
+              28
+            ],
+            "pdf_page_numbers": [
+              30
+            ],
+            "reference_note": "Trích Bảng 14, theo Van den Born và cộng sự (51).",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T14_C_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP": {
+        "id": "a2fdc976-e5d7-4cc8-a4ec-83a1098ffd36",
+        "node_key": "T14_C_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP",
+        "node_type": "CONDITION",
+        "text_en": "Eclampsia, severe preeclampsia, or HELLP syndrome",
+        "text_vi": "Sản giật, tiền sản giật nặng, hoặc hội chứng HELLP",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.has_eclampsia_severe_preeclampsia_or_hellp",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 23,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "15a6e5d3-cee6-4f7e-9f2b-d2fbc88b1472",
+            "traversal_order": 1,
+            "to_node_key": "T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP": {
+        "id": "c684b8bb-1b9e-4742-8c55-d17ebd14ce36",
+        "node_key": "T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP",
+        "node_type": "ACTION",
+        "text_en": "Eclampsia/severe preeclampsia/HELLP: Labetalol or Nicardipine plus magnesium sulfate; target SBP <160 mmHg and DBP <105 mmHg, immediate",
+        "text_vi": "Sản giật/tiền sản giật nặng/HELLP: Labetalol hoặc Nicardipine phối hợp Magnesium sulfate; mục tiêu HATT <160 mmHg và HATTr <105 mmHg, ngay lập tức",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP_THERAPY",
+          "target_timing": "IMMEDIATE",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": false,
+          "target_dbp_upper_mmhg": 105,
+          "target_sbp_upper_mmhg": 160
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 24,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "6e7e7271-a499-4258-8831-e54afcee3ec3",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51); xem thêm Bảng 15, 16, Mục 3.6.6",
+            "locator_detail": "Eclampsia/severe preeclampsia/HELLP: target SBP<160 and DBP<105 mmHg immediately; RAS-inhibitors contraindicated and sodium nitroprusside avoided in pregnancy (fetal cyanide toxicity risk).",
+            "printed_page_numbers": [
+              28
+            ],
+            "pdf_page_numbers": [
+              30
+            ],
+            "reference_note": "Trích Bảng 14; đối chiếu bổ sung Bảng 15, 16, Mục 3.6.6.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "bd1079ee-fd78-4366-8a55-8a12e84ed768",
+            "traversal_order": 1,
+            "to_node_key": "T14_LINK_PREGNANCY",
+            "candidate_condition": null
+          }
+        ]
+      },
       "T14_LINK_PREGNANCY": {
         "id": "291548d1-0a58-4d93-88ae-e488665970c3",
         "node_key": "T14_LINK_PREGNANCY",
@@ -1280,24 +1226,31 @@
         "references": [],
         "transitions": []
       },
-      "T14_START_SEVERE_HYPERTENSION": {
-        "id": "166ba4ee-6c47-441b-8ad6-17d2fc69073e",
-        "node_key": "T14_START_SEVERE_HYPERTENSION",
-        "node_type": "START",
-        "text_en": "Severe hypertension (SBP >=180 and/or DBP >=120 mmHg)",
-        "text_vi": "Bệnh nhân tăng huyết áp nặng (HATT >= 180 và/hoặc HATTr >= 120 mmHg)",
+      "T14_ACTION_MALIGNANT_HTN_TMA_AKI": {
+        "id": "961295af-8239-437a-8106-a6fb9da5d24c",
+        "node_key": "T14_ACTION_MALIGNANT_HTN_TMA_AKI",
+        "node_type": "ACTION",
+        "text_en": "Hypertensive emergency with or without TMA/acute kidney injury: primary Labetalol/Nicardipine; alternative Nitroprusside/Urapidil; target MAP -20% to -25%, within hours",
+        "text_vi": "THA cấp cứu có hoặc không có TMA/Suy thận cấp: ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside/Urapidil; mục tiêu MAP giảm 20-25%, trong vài giờ",
         "condition_definition": null,
         "context_patch": null,
-        "action_payload": null,
+        "action_payload": {
+          "action_type": "MALIGNANT_HYPERTENSION_TMA_AKI_THERAPY",
+          "target_timing": "WITHIN_HOURS",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": false,
+          "target_map_reduction_percent_max": 25,
+          "target_map_reduction_percent_min": 20
+        },
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 0,
+        "display_order": 26,
         "created_at": "2026-07-25 11:46:28.205822+00:00",
         "updated_at": "2026-07-25 11:46:28.205822+00:00",
         "references": [
           {
-            "id": "b73bcf97-1a9c-423e-a8d2-2903db1ef84b",
+            "id": "e8975db5-9250-4de5-a09f-c61254ddb78e",
             "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
             "section_path": [
               {
@@ -1305,230 +1258,81 @@
                 "number": "3.6.5"
               }
             ],
-            "locator": "Mục 3.6.5. Tăng huyết áp cấp cứu",
-            "locator_detail": "Entry point of the hypertensive-emergency tree; emergency vs. urgent hypertension distinction.",
+            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51)",
+            "locator_detail": "General/malignant hypertensive emergency with or without TMA/AKI: MAP reduction 20-25% over several hours.",
             "printed_page_numbers": [
-              27
+              28
             ],
             "pdf_page_numbers": [
-              29
+              30
             ],
-            "reference_note": "Điểm vào của Cây 14; phân biệt THA cấp cứu và THA khẩn trương.",
+            "reference_note": "Trích Bảng 14, theo Van den Born và cộng sự (51).",
             "reference_order": 1
           }
         ],
         "transitions": [
           {
-            "edge_id": "be4b90a2-c18f-4e86-bc7f-52f24da2d6cb",
+            "edge_id": "0a1bef3f-d516-4ce1-9835-17af563a176f",
             "traversal_order": 1,
-            "to_node_key": "T14_C_NO_ACUTE_TARGET_ORGAN_DAMAGE",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.has_target_organ_damage",
-              "value": false
-            }
-          },
-          {
-            "edge_id": "7cb197b5-8ad4-4423-afd0-0bdefdf9ad5c",
-            "traversal_order": 2,
-            "to_node_key": "T14_C_HAS_ACUTE_TARGET_ORGAN_DAMAGE",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.has_target_organ_damage",
-              "value": true
-            }
+            "to_node_key": "T14_END_URGENT_HYPERTENSION",
+            "candidate_condition": null
           }
         ]
+      },
+      "T14_GLOBAL_ABBREVIATION_GLOSSARY": {
+        "id": "8e4b0979-c291-4f98-9032-4293a2bfc8fd",
+        "node_key": "T14_GLOBAL_ABBREVIATION_GLOSSARY",
+        "node_type": "GLOBAL",
+        "text_en": "Abbreviation glossary",
+        "text_vi": "Chú giải viết tắt",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": {
+          "kind": "ABBREVIATION_GLOSSARY",
+          "entries": {
+            "MAP": {
+              "label": "MAP: Mean arterial pressure - Huyết áp trung bình"
+            },
+            "TMA": {
+              "label": "TMA: Thrombotic microangiopathy - Bệnh vi mạch huyết khối"
+            },
+            "HELLP": {
+              "label": "HELLP: Hemolysis, Elevated Liver Enzymes and Low Platelets - Hội chứng liên quan tiền sản giật nặng"
+            }
+          },
+          "purpose": "Chú giải các chữ viết tắt dùng trong Cây 14, theo chú thích Bảng 14.",
+          "source_permission_note": "Bảng 14 được trích dẫn theo Van den Born và cộng sự, với sự cho phép của Tạp chí European Heart Journal - Cardiovascular Pharmacotherapy, Oxford University Press."
+        },
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 99,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "140a9ab8-081f-4b11-8616-2fc929bdf173",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp cấp cứu",
+                "number": "3.6.5"
+              }
+            ],
+            "locator": "Bảng 14. Khuyến cáo điều trị bằng thuốc cho các trường hợp tăng huyết áp cấp cứu cụ thể (51), chú thích",
+            "locator_detail": "Footnote abbreviation glossary (MAP, TMA, HELLP) and source citation/permission note.",
+            "printed_page_numbers": [
+              28
+            ],
+            "pdf_page_numbers": [
+              30
+            ],
+            "reference_note": "Chú thích Bảng 14: MAP, TMA, HELLP; trích dẫn theo Van den Born và cộng sự, với sự cho phép của European Heart Journal - Cardiovascular Pharmacotherapy, Oxford University Press.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
       }
-    },
-    "edges": [
-      {
-        "id": "bf32d3c0-b148-453a-83db-8a52387bf926",
-        "from_node_key": "T14_ACTION_ACS",
-        "to_node_key": "T14_LINK_CORONARY_ARTERY_DISEASE",
-        "traversal_order": 1
-      },
-      {
-        "id": "57e60c63-253d-4a73-a989-2e9cc2a5f219",
-        "from_node_key": "T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
-        "to_node_key": "T14_LINK_HEART_FAILURE",
-        "traversal_order": 1
-      },
-      {
-        "id": "ce6d2c2e-7dc8-490d-a51c-c931a5865a7a",
-        "from_node_key": "T14_ACTION_ACUTE_ICH",
-        "to_node_key": "T14_END_REFER_STROKE_MANAGEMENT",
-        "traversal_order": 1
-      },
-      {
-        "id": "5026ca45-6bc9-4df8-a734-bf71dfbf41c3",
-        "from_node_key": "T14_ACTION_ADMIT_AND_DETERMINE_TARGET_ORGAN",
-        "to_node_key": "T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS",
-        "traversal_order": 1
-      },
-      {
-        "id": "00617851-dde0-4aa9-a7ee-a46cc340cb70",
-        "from_node_key": "T14_ACTION_AIS_SEVERE",
-        "to_node_key": "T14_END_REFER_STROKE_MANAGEMENT",
-        "traversal_order": 1
-      },
-      {
-        "id": "c2b1509d-a3d1-4ef6-833e-94f458e9eac0",
-        "from_node_key": "T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE",
-        "to_node_key": "T14_END_REFER_STROKE_MANAGEMENT",
-        "traversal_order": 1
-      },
-      {
-        "id": "bd1079ee-fd78-4366-8a55-8a12e84ed768",
-        "from_node_key": "T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP",
-        "to_node_key": "T14_LINK_PREGNANCY",
-        "traversal_order": 1
-      },
-      {
-        "id": "49078b31-0fab-4d1b-9fc7-48cf0a5d907f",
-        "from_node_key": "T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY",
-        "to_node_key": "T14_END_REFER_STROKE_MANAGEMENT",
-        "traversal_order": 1
-      },
-      {
-        "id": "0a1bef3f-d516-4ce1-9835-17af563a176f",
-        "from_node_key": "T14_ACTION_MALIGNANT_HTN_TMA_AKI",
-        "to_node_key": "T14_END_URGENT_HYPERTENSION",
-        "traversal_order": 1
-      },
-      {
-        "id": "1e7a271d-f69d-4197-9108-91958b67cb40",
-        "from_node_key": "T14_C_ACS",
-        "to_node_key": "T14_ACTION_ACS",
-        "traversal_order": 1
-      },
-      {
-        "id": "0b31264d-2c4f-43ee-aad9-b4a8e87518b7",
-        "from_node_key": "T14_C_ACUTE_AORTIC_SYNDROME",
-        "to_node_key": "T14_END_ACUTE_AORTIC_SYNDROME",
-        "traversal_order": 1
-      },
-      {
-        "id": "d0f1f6ad-b6d5-4f35-a871-c9f92eebe479",
-        "from_node_key": "T14_C_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
-        "to_node_key": "T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
-        "traversal_order": 1
-      },
-      {
-        "id": "a4ecca27-fab0-475d-afb7-1e2d092cb8da",
-        "from_node_key": "T14_C_ACUTE_ICH",
-        "to_node_key": "T14_ACTION_ACUTE_ICH",
-        "traversal_order": 1
-      },
-      {
-        "id": "54979b4c-880b-48b1-9906-cea354d29dcd",
-        "from_node_key": "T14_C_AIS_SEVERE",
-        "to_node_key": "T14_ACTION_AIS_SEVERE",
-        "traversal_order": 1
-      },
-      {
-        "id": "d71a1ccf-95e8-41b4-b9a5-27b092276c5f",
-        "from_node_key": "T14_C_AIS_THROMBOLYSIS_CANDIDATE",
-        "to_node_key": "T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE",
-        "traversal_order": 1
-      },
-      {
-        "id": "15a6e5d3-cee6-4f7e-9f2b-d2fbc88b1472",
-        "from_node_key": "T14_C_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP",
-        "to_node_key": "T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP",
-        "traversal_order": 1
-      },
-      {
-        "id": "5ef71fc1-445f-4c2e-b113-f44e3927f424",
-        "from_node_key": "T14_C_HAS_ACUTE_TARGET_ORGAN_DAMAGE",
-        "to_node_key": "T14_ACTION_ADMIT_AND_DETERMINE_TARGET_ORGAN",
-        "traversal_order": 1
-      },
-      {
-        "id": "ea212dbb-a16b-4ef9-9fd8-8b2819d1fdc7",
-        "from_node_key": "T14_C_HYPERTENSIVE_ENCEPHALOPATHY",
-        "to_node_key": "T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY",
-        "traversal_order": 1
-      },
-      {
-        "id": "b6e90d2a-fdca-4441-9580-7b30706d15f9",
-        "from_node_key": "T14_C_NO_ACUTE_TARGET_ORGAN_DAMAGE",
-        "to_node_key": "T14_END_URGENT_HYPERTENSION",
-        "traversal_order": 1
-      },
-      {
-        "id": "92dc1833-0a75-41fd-b057-fe3fa88ab6c4",
-        "from_node_key": "T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS",
-        "to_node_key": "T14_C_HYPERTENSIVE_ENCEPHALOPATHY",
-        "traversal_order": 1
-      },
-      {
-        "id": "958a44cc-d07b-418d-8e2a-6d492d0231bf",
-        "from_node_key": "T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS",
-        "to_node_key": "T14_C_AIS_THROMBOLYSIS_CANDIDATE",
-        "traversal_order": 2
-      },
-      {
-        "id": "25487806-dc8c-49a8-9ec6-5da515c7d024",
-        "from_node_key": "T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS",
-        "to_node_key": "T14_C_AIS_SEVERE",
-        "traversal_order": 3
-      },
-      {
-        "id": "0814aa52-8cac-4296-ba9a-49f13b60fc4a",
-        "from_node_key": "T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS",
-        "to_node_key": "T14_C_ACUTE_ICH",
-        "traversal_order": 4
-      },
-      {
-        "id": "1f657e87-7a03-45dd-975e-7ade45897a00",
-        "from_node_key": "T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS",
-        "to_node_key": "T14_C_ACS",
-        "traversal_order": 5
-      },
-      {
-        "id": "0b43ecac-2179-4edb-a6cf-da3a250d7932",
-        "from_node_key": "T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS",
-        "to_node_key": "T14_C_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
-        "traversal_order": 6
-      },
-      {
-        "id": "428e6acc-dcd4-4238-823e-f758691fce03",
-        "from_node_key": "T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS",
-        "to_node_key": "T14_C_ACUTE_AORTIC_SYNDROME",
-        "traversal_order": 7
-      },
-      {
-        "id": "9f00263e-8a5a-43c0-80d1-7f5d5b3bf1ad",
-        "from_node_key": "T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS",
-        "to_node_key": "T14_C_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP",
-        "traversal_order": 8
-      },
-      {
-        "id": "b63e808c-6341-4516-9bd0-8f540f94a5f6",
-        "from_node_key": "T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS",
-        "to_node_key": "T14_ACTION_MALIGNANT_HTN_TMA_AKI",
-        "traversal_order": 9
-      },
-      {
-        "id": "be4b90a2-c18f-4e86-bc7f-52f24da2d6cb",
-        "from_node_key": "T14_START_SEVERE_HYPERTENSION",
-        "to_node_key": "T14_C_NO_ACUTE_TARGET_ORGAN_DAMAGE",
-        "traversal_order": 1
-      },
-      {
-        "id": "7cb197b5-8ad4-4423-afd0-0bdefdf9ad5c",
-        "from_node_key": "T14_START_SEVERE_HYPERTENSION",
-        "to_node_key": "T14_C_HAS_ACUTE_TARGET_ORGAN_DAMAGE",
-        "traversal_order": 2
-      }
-    ],
-    "layout": null
-  },
-  "counts": {
-    "nodes": 28,
-    "edges": 30,
-    "references": 13,
-    "layouts": 0
+    }
   }
 }

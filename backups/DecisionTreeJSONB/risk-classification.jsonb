@@ -26,2178 +26,10 @@
       "T2_START_RISK_AND_COMORBIDITY_INFORMATION"
     ],
     "global_node_keys": [
-      "T2_GLOBAL_RISK_FACTOR_COUNT_AT_LEAST_3_NOTE",
-      "T2_GLOBAL_RISK_FACTOR_LIST"
+      "T2_GLOBAL_RISK_FACTOR_LIST",
+      "T2_GLOBAL_RISK_FACTOR_COUNT_AT_LEAST_3_NOTE"
     ],
     "nodes": {
-      "T2_C_CONTEXT_GRADE_1_OR_MASKED_HYPERTENSION": {
-        "id": "8058aebe-6375-cafe-b718-d5df20ac85c9",
-        "node_key": "T2_C_CONTEXT_GRADE_1_OR_MASKED_HYPERTENSION",
-        "node_type": "CONDITION",
-        "text_en": "Grade 1 hypertension OR masked hypertension (equivalent to Grade 1)",
-        "text_vi": "THA độ 1 HOẶC THA ẩn giấu (Tương đương Độ 1)",
-        "condition_definition": {
-          "any": [
-            {
-              "op": "eq",
-              "path": "context.diagnosis.hypertension_class",
-              "value": "GRADE_1_HYPERTENSION"
-            },
-            {
-              "op": "eq",
-              "path": "context.diagnosis.hypertension_class",
-              "value": "MASKED_HYPERTENSION"
-            }
-          ]
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 12,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "f9a0aeb5-ed6c-4e8a-dd58-571160d99ccc",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "718cb933-e7dc-fec2-5096-716150f25a7e",
-            "traversal_order": 1,
-            "to_node_key": "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_0",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.risk_factor_count",
-              "value": 0
-            }
-          },
-          {
-            "edge_id": "7dea9443-6a0a-9ff1-2a51-d4fdbc68e2ab",
-            "traversal_order": 2,
-            "to_node_key": "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_1_OR_2",
-            "candidate_condition": {
-              "op": "in",
-              "path": "input.risk_factor_count",
-              "value": [
-                1,
-                2
-              ]
-            }
-          }
-        ]
-      },
-      "T2_C_CONTEXT_GRADE_2_HYPERTENSION": {
-        "id": "165c4ea4-8261-4117-9efb-83084a9b3e2a",
-        "node_key": "T2_C_CONTEXT_GRADE_2_HYPERTENSION",
-        "node_type": "CONDITION",
-        "text_en": "Grade 2 hypertension",
-        "text_vi": "THA độ 2",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.diagnosis.hypertension_class",
-          "value": "GRADE_2_HYPERTENSION"
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 13,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "3a2b9cb2-e219-44fe-067e-897835d7647c",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "7f0ec247-a428-3fcb-1eaf-624ab360c43a",
-            "traversal_order": 1,
-            "to_node_key": "T2_C_GRADE_2_RISK_FACTOR_COUNT_AT_LEAST_1",
-            "candidate_condition": {
-              "op": "gte",
-              "path": "input.risk_factor_count",
-              "value": 1
-            }
-          },
-          {
-            "edge_id": "535567c6-2d9a-df76-0dd9-0e09231723b6",
-            "traversal_order": 2,
-            "to_node_key": "T2_C_GRADE_2_RISK_FACTOR_COUNT_0",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.risk_factor_count",
-              "value": 0
-            }
-          }
-        ]
-      },
-      "T2_C_CONTEXT_HIGH_NORMAL_BP": {
-        "id": "98cee07d-28ca-dcc6-384c-02c30b0b50fe",
-        "node_key": "T2_C_CONTEXT_HIGH_NORMAL_BP",
-        "node_type": "CONDITION",
-        "text_en": "High-normal BP",
-        "text_vi": "HA bình thường cao",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.diagnosis.hypertension_class",
-          "value": "HIGH_NORMAL_BP"
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 11,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "08237b25-0cf2-860a-4eb7-2f224cf8b078",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "9132bc0b-fa63-0f8b-b465-9e2bff3251b0",
-            "traversal_order": 1,
-            "to_node_key": "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_AT_MOST_1",
-            "candidate_condition": {
-              "op": "lte",
-              "path": "input.risk_factor_count",
-              "value": 1
-            }
-          },
-          {
-            "edge_id": "097a699c-da3a-e936-6dd0-62d96ceeef62",
-            "traversal_order": 2,
-            "to_node_key": "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_2",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.risk_factor_count",
-              "value": 2
-            }
-          }
-        ]
-      },
-      "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_0": {
-        "id": "fb7c62d1-4d86-0013-e05e-4f862b4a4d8a",
-        "node_key": "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_0",
-        "node_type": "CONDITION",
-        "text_en": "0 risk factors",
-        "text_vi": "0 YTNC",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.risk_factor_count",
-          "value": 0
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 20,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "cd8ea5a0-f160-41bb-b4e9-c2e53a4e4584",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "44a2cb10-680e-db04-c115-9a0ec0bd8f96",
-            "traversal_order": 1,
-            "to_node_key": "T2_INF_GRADE_1_OR_MASKED_LOW_RISK",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_1_OR_2": {
-        "id": "20a7535d-1695-4d68-0048-c86dc1101221",
-        "node_key": "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_1_OR_2",
-        "node_type": "CONDITION",
-        "text_en": "1 or 2 risk factors",
-        "text_vi": "1 hoặc 2 YTNC",
-        "condition_definition": {
-          "op": "in",
-          "path": "input.risk_factor_count",
-          "value": [
-            1,
-            2
-          ]
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 23,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "c1c2302b-0d3a-5ab3-150b-45843e151216",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "9b96b74c-f961-de5c-5005-bc92f335ed33",
-            "traversal_order": 1,
-            "to_node_key": "T2_INF_GRADE_1_OR_MASKED_MEDIUM_RISK",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T2_C_GRADE_2_RISK_FACTOR_COUNT_0": {
-        "id": "4ef64653-acf3-b7b9-e6fc-8e594a02967a",
-        "node_key": "T2_C_GRADE_2_RISK_FACTOR_COUNT_0",
-        "node_type": "CONDITION",
-        "text_en": "0 risk factors",
-        "text_vi": "0 YTNC",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.risk_factor_count",
-          "value": 0
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 29,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "c406b519-5e7e-06d8-4dd7-9c3478a4c74f",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "7a595f93-e07c-4990-e493-35e652671be4",
-            "traversal_order": 1,
-            "to_node_key": "T2_INF_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T2_C_GRADE_2_RISK_FACTOR_COUNT_AT_LEAST_1": {
-        "id": "d77ec0d8-f756-6377-6f0a-e8cb2f5e8a15",
-        "node_key": "T2_C_GRADE_2_RISK_FACTOR_COUNT_AT_LEAST_1",
-        "node_type": "CONDITION",
-        "text_en": "At least 1 risk factor",
-        "text_vi": "≥1 YTNC",
-        "condition_definition": {
-          "op": "gte",
-          "path": "input.risk_factor_count",
-          "value": 1
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 26,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "ea77249b-d6b3-d92e-e796-068aa2e1cf1e",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "0281eecb-d94e-0002-88b2-baf80e4ba6ec",
-            "traversal_order": 1,
-            "to_node_key": "T2_INF_GRADE_2_HIGH_RISK",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_2": {
-        "id": "3ed68451-bfad-5d50-de50-7c968df606af",
-        "node_key": "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_2",
-        "node_type": "CONDITION",
-        "text_en": "2 risk factors",
-        "text_vi": "2 YTNC",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.risk_factor_count",
-          "value": 2
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 17,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "e87ff68c-328c-e11d-ff02-c1cd4d6bf043",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "4b7b2d3a-1dce-eb66-3187-ee4d5129e705",
-            "traversal_order": 1,
-            "to_node_key": "T2_INF_HIGH_NORMAL_MEDIUM_RISK",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_AT_MOST_1": {
-        "id": "ba1a1c44-b0fd-499d-144c-ac54731ba62d",
-        "node_key": "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_AT_MOST_1",
-        "node_type": "CONDITION",
-        "text_en": "≤1 risk factor",
-        "text_vi": "<=1 YTNC",
-        "condition_definition": {
-          "op": "lte",
-          "path": "input.risk_factor_count",
-          "value": 1
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 14,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "e881996e-eeb1-80db-c331-4f01329f14ce",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "8c0d33d1-69f8-3ffd-4a91-2b2dfb1ebeab",
-            "traversal_order": 1,
-            "to_node_key": "T2_INF_HIGH_NORMAL_LOW_RISK",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T2_C_HIGH_RISK_COMORBIDITY_PRESENT": {
-        "id": "7ba7c905-6d36-3414-e4c5-0116b03bcdbf",
-        "node_key": "T2_C_HIGH_RISK_COMORBIDITY_PRESENT",
-        "node_type": "CONDITION",
-        "text_en": "At least 3 of: target-organ damage, CKD stage 3 or higher, diabetes, TIA, stroke, or cardiovascular disease",
-        "text_vi": "Có ít nhất 3 trong các yếu tố: TTCQĐ, BTM giai đoạn ≥3, ĐTĐ, TIA, Stroke hoặc Bệnh tim mạch",
-        "condition_definition": {
-          "any": [
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_target_organ_damage",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_ckd_stage_3_or_higher",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_diabetes",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_target_organ_damage",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_ckd_stage_3_or_higher",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_tia",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_target_organ_damage",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_diabetes",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_tia",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_ckd_stage_3_or_higher",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_diabetes",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_tia",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_target_organ_damage",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_ckd_stage_3_or_higher",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_stroke",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_target_organ_damage",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_diabetes",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_stroke",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_target_organ_damage",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_tia",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_stroke",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_ckd_stage_3_or_higher",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_diabetes",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_stroke",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_ckd_stage_3_or_higher",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_tia",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_stroke",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_diabetes",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_tia",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_stroke",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_target_organ_damage",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_ckd_stage_3_or_higher",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_cardiovascular_disease",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_target_organ_damage",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_diabetes",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_cardiovascular_disease",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_target_organ_damage",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_tia",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_cardiovascular_disease",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_target_organ_damage",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_stroke",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_cardiovascular_disease",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_ckd_stage_3_or_higher",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_diabetes",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_cardiovascular_disease",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_ckd_stage_3_or_higher",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_tia",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_cardiovascular_disease",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_ckd_stage_3_or_higher",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_stroke",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_cardiovascular_disease",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_diabetes",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_tia",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_cardiovascular_disease",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_diabetes",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_stroke",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_cardiovascular_disease",
-                  "value": true
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "eq",
-                  "path": "input.has_tia",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_stroke",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "input.has_cardiovascular_disease",
-                  "value": true
-                }
-              ]
-            }
-          ]
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 4,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 14:43:43.947879+00:00",
-        "references": [
-          {
-            "id": "7d92526e-31e5-1877-4fae-31a76a463bd7",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "9513c8ad-8705-3e2c-1da7-ed614f3bb286",
-            "traversal_order": 1,
-            "to_node_key": "T2_INF_HIGH_RISK_COMORBIDITY_PRESENT",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T2_C_NO_HIGH_RISK_COMORBIDITY": {
-        "id": "8ceb98a6-3e3f-0fce-ab0d-6b746ac16f7a",
-        "node_key": "T2_C_NO_HIGH_RISK_COMORBIDITY",
-        "node_type": "CONDITION",
-        "text_en": "Fewer than 3 of: target-organ damage, CKD stage 3 or higher, diabetes, TIA, stroke, or cardiovascular disease",
-        "text_vi": "Có dưới 3 trong các yếu tố: TTCQĐ, BTM giai đoạn ≥3, ĐTĐ, TIA, Stroke hoặc Bệnh tim mạch",
-        "condition_definition": {
-          "not": {
-            "any": [
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_target_organ_damage",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_ckd_stage_3_or_higher",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_diabetes",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_target_organ_damage",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_ckd_stage_3_or_higher",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_tia",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_target_organ_damage",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_diabetes",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_tia",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_ckd_stage_3_or_higher",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_diabetes",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_tia",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_target_organ_damage",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_ckd_stage_3_or_higher",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_stroke",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_target_organ_damage",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_diabetes",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_stroke",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_target_organ_damage",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_tia",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_stroke",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_ckd_stage_3_or_higher",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_diabetes",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_stroke",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_ckd_stage_3_or_higher",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_tia",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_stroke",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_diabetes",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_tia",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_stroke",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_target_organ_damage",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_ckd_stage_3_or_higher",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_cardiovascular_disease",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_target_organ_damage",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_diabetes",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_cardiovascular_disease",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_target_organ_damage",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_tia",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_cardiovascular_disease",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_target_organ_damage",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_stroke",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_cardiovascular_disease",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_ckd_stage_3_or_higher",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_diabetes",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_cardiovascular_disease",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_ckd_stage_3_or_higher",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_tia",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_cardiovascular_disease",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_ckd_stage_3_or_higher",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_stroke",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_cardiovascular_disease",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_diabetes",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_tia",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_cardiovascular_disease",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_diabetes",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_stroke",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_cardiovascular_disease",
-                    "value": true
-                  }
-                ]
-              },
-              {
-                "all": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_tia",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_stroke",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "input.has_cardiovascular_disease",
-                    "value": true
-                  }
-                ]
-              }
-            ]
-          }
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 10,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 14:43:43.947879+00:00",
-        "references": [
-          {
-            "id": "291c9310-1d52-35bd-7238-1d871f229bc9",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "fc191456-bf3d-1e48-cd96-36731dfad782",
-            "traversal_order": 1,
-            "to_node_key": "T2_C_CONTEXT_HIGH_NORMAL_BP",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "context.diagnosis.hypertension_class",
-              "value": "HIGH_NORMAL_BP"
-            }
-          },
-          {
-            "edge_id": "c2cddbd9-5c3f-ed56-d3f9-9ad80925ba99",
-            "traversal_order": 2,
-            "to_node_key": "T2_C_CONTEXT_GRADE_1_OR_MASKED_HYPERTENSION",
-            "candidate_condition": {
-              "any": [
-                {
-                  "op": "eq",
-                  "path": "context.diagnosis.hypertension_class",
-                  "value": "GRADE_1_HYPERTENSION"
-                },
-                {
-                  "op": "eq",
-                  "path": "context.diagnosis.hypertension_class",
-                  "value": "MASKED_HYPERTENSION"
-                }
-              ]
-            }
-          },
-          {
-            "edge_id": "af8036f1-0ed2-7b13-a548-21f5ad89b582",
-            "traversal_order": 3,
-            "to_node_key": "T2_C_CONTEXT_GRADE_2_HYPERTENSION",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "context.diagnosis.hypertension_class",
-              "value": "GRADE_2_HYPERTENSION"
-            }
-          }
-        ]
-      },
-      "T2_C_RISK_FACTOR_COUNT_AT_LEAST_3": {
-        "id": "3f0e2f17-4775-0538-ce10-6f11dc621c84",
-        "node_key": "T2_C_RISK_FACTOR_COUNT_AT_LEAST_3",
-        "node_type": "CONDITION",
-        "text_en": "At least 3 risk factors",
-        "text_vi": "≥3 YTNC",
-        "condition_definition": {
-          "op": "gte",
-          "path": "input.risk_factor_count",
-          "value": 3
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 7,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "fc97fa1d-f292-08e4-bf2d-9e47d0be42fe",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "0ec9f145-3bf2-02b9-3525-ffc0938f6c0c",
-            "traversal_order": 1,
-            "to_node_key": "T2_INF_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T2_GLOBAL_RISK_FACTOR_COUNT_AT_LEAST_3_NOTE": {
-        "id": "15d21cbf-d095-e977-4b20-b71b993a7aad",
-        "node_key": "T2_GLOBAL_RISK_FACTOR_COUNT_AT_LEAST_3_NOTE",
-        "node_type": "GLOBAL",
-        "text_en": "For all BP categories (high-normal BP, Grade 1, Grade 2), ≥3 risk factors indicate high risk immediately.",
-        "text_vi": "Tất cả loại THA (Bình thường cao, độ 1, độ 2 nếu có >=3 thì nguy cơ cao ngay)",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": {
-          "kind": "OVERRIDE_NOTE",
-          "purpose": "Risk-factor count >=3 has immediate high-risk precedence.",
-          "implemented_by_condition": "T2_C_RISK_FACTOR_COUNT_AT_LEAST_3"
-        },
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 3,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "46a16dd3-2e02-461b-e9ba-6ba207a8043b",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": []
-      },
-      "T2_GLOBAL_RISK_FACTOR_LIST": {
-        "id": "677ced6a-83c9-f393-be9d-1f520be5bada",
-        "node_key": "T2_GLOBAL_RISK_FACTOR_LIST",
-        "node_type": "GLOBAL",
-        "text_en": "Risk Factors\nAge >65\nMale sex\nSmoking\nElevated LDL\nObesity\nHeart rate >80\nFamily history\nPremature menopause\nPrediabetes\nPhysical inactivity",
-        "text_vi": "Yếu Tố Nguy Cơ\nTuổi >65\nNam giới\nHút thuốc\nLDL tăng\nBéo phì\nNhịp tim >80\nTiền sử gia đình\nMãn kinh sớm\nTiền ĐTĐ\nÍt vận động",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": {
-          "kind": "REFERENCE_LIST",
-          "purpose": "Reference list for the supplied risk-factor count.",
-          "input_path": "input.risk_factor_count"
-        },
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 2,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "87efde60-6424-85bc-efd5-d3650c1e3850",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": []
-      },
-      "T2_INF_GRADE_1_OR_MASKED_LOW_RISK": {
-        "id": "27c4d74f-163b-4131-11d4-9597e6404738",
-        "node_key": "T2_INF_GRADE_1_OR_MASKED_LOW_RISK",
-        "node_type": "INFERENCE",
-        "text_en": "Low risk",
-        "text_vi": "NGUY CƠ THẤP",
-        "condition_definition": null,
-        "context_patch": {
-          "risk": {
-            "level": "LOW"
-          }
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 21,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "aada0213-b8a4-61de-a921-131821358e27",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "800a8f0c-5954-973f-0b8f-a25c783180bb",
-            "traversal_order": 1,
-            "to_node_key": "T2_LINK_GRADE_1_OR_MASKED_LOW_RISK_TO_TREE_3",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T2_INF_GRADE_1_OR_MASKED_MEDIUM_RISK": {
-        "id": "d186b9cc-2b53-3662-e66d-655fff3ba7c6",
-        "node_key": "T2_INF_GRADE_1_OR_MASKED_MEDIUM_RISK",
-        "node_type": "INFERENCE",
-        "text_en": "Medium risk",
-        "text_vi": "NGUY CƠ TRUNG BÌNH",
-        "condition_definition": null,
-        "context_patch": {
-          "risk": {
-            "level": "MEDIUM"
-          }
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 24,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "28d95fe6-493b-c58a-54ae-06c4e3c1df0a",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "450aa77b-b85b-982b-bb6a-53aa27ae8beb",
-            "traversal_order": 1,
-            "to_node_key": "T2_LINK_GRADE_1_OR_MASKED_MEDIUM_RISK_TO_TREE_3",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T2_INF_GRADE_2_HIGH_RISK": {
-        "id": "fc7fc2c0-c399-0786-26b1-836ef99c51c4",
-        "node_key": "T2_INF_GRADE_2_HIGH_RISK",
-        "node_type": "INFERENCE",
-        "text_en": "High risk",
-        "text_vi": "NGUY CƠ CAO",
-        "condition_definition": null,
-        "context_patch": {
-          "risk": {
-            "level": "HIGH"
-          }
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 27,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "f4f51b89-fc46-1b73-7eb6-ae2134465717",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "af4503ff-db60-5051-5705-3e366123f3ac",
-            "traversal_order": 1,
-            "to_node_key": "T2_LINK_GRADE_2_HIGH_RISK_TO_TREE_3",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T2_INF_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK": {
-        "id": "ebd2cf1d-a6d6-e606-f1b7-d83ae2028e4e",
-        "node_key": "T2_INF_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK",
-        "node_type": "INFERENCE",
-        "text_en": "High risk",
-        "text_vi": "NGUY CƠ CAO",
-        "condition_definition": null,
-        "context_patch": {
-          "risk": {
-            "level": "HIGH"
-          }
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 30,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 12:12:43.995138+00:00",
-        "references": [
-          {
-            "id": "af6bcb23-393f-6099-e149-08ad7b93ff7f",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "59404c46-a828-3626-69ed-742e6d29ac7e",
-            "traversal_order": 1,
-            "to_node_key": "T2_LINK_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK_TO_TREE_3",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T2_INF_HIGH_NORMAL_LOW_RISK": {
-        "id": "b492a11d-3566-318f-3269-e04bc11d09fa",
-        "node_key": "T2_INF_HIGH_NORMAL_LOW_RISK",
-        "node_type": "INFERENCE",
-        "text_en": "Low risk",
-        "text_vi": "NGUY CƠ THẤP",
-        "condition_definition": null,
-        "context_patch": {
-          "risk": {
-            "level": "LOW"
-          }
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 15,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "0be6b1eb-5f24-12e9-d397-bcde65a00867",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "488bbae7-24e3-3bad-c2be-2c286ece183e",
-            "traversal_order": 1,
-            "to_node_key": "T2_LINK_HIGH_NORMAL_LOW_RISK_TO_TREE_3",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T2_INF_HIGH_NORMAL_MEDIUM_RISK": {
-        "id": "03f895d0-ee99-19d6-58c3-35b49042dda3",
-        "node_key": "T2_INF_HIGH_NORMAL_MEDIUM_RISK",
-        "node_type": "INFERENCE",
-        "text_en": "Medium risk",
-        "text_vi": "NGUY CƠ TRUNG BÌNH",
-        "condition_definition": null,
-        "context_patch": {
-          "risk": {
-            "level": "MEDIUM"
-          }
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 18,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "c2548457-b9a3-fe2d-5ce0-e7a02ccd59e6",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "81a419d4-7f40-47be-b9fe-12c1fb81b194",
-            "traversal_order": 1,
-            "to_node_key": "T2_LINK_HIGH_NORMAL_MEDIUM_RISK_TO_TREE_3",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T2_INF_HIGH_RISK_COMORBIDITY_PRESENT": {
-        "id": "9dc9020e-d70e-1ebe-f2ea-b390b5346c33",
-        "node_key": "T2_INF_HIGH_RISK_COMORBIDITY_PRESENT",
-        "node_type": "INFERENCE",
-        "text_en": "High risk",
-        "text_vi": "NGUY CƠ CAO",
-        "condition_definition": null,
-        "context_patch": {
-          "risk": {
-            "level": "HIGH"
-          }
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 5,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "aabbecc7-5311-a444-8c6e-43adca6db8f8",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "a350d472-69f2-9a41-c648-f422ecdc3ed2",
-            "traversal_order": 1,
-            "to_node_key": "T2_LINK_HIGH_RISK_COMORBIDITY_TO_TREE_3",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T2_INF_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3": {
-        "id": "23276de5-636d-3312-1636-1dc4f4b6b969",
-        "node_key": "T2_INF_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3",
-        "node_type": "INFERENCE",
-        "text_en": "High risk",
-        "text_vi": "NGUY CƠ CAO",
-        "condition_definition": null,
-        "context_patch": {
-          "risk": {
-            "level": "HIGH"
-          }
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 8,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [
-          {
-            "id": "8dee95a5-d5cf-2d35-ffe5-a695a521fe5d",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
-                "number": "1.5"
-              }
-            ],
-            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
-            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
-            "printed_page_numbers": [
-              9
-            ],
-            "pdf_page_numbers": [
-              11
-            ],
-            "reference_note": "Digitized according to the approved Tree 2 diagram.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "cec99beb-0f35-65d0-ea93-7263cbb79cf2",
-            "traversal_order": 1,
-            "to_node_key": "T2_LINK_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3_TO_TREE_3",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T2_LINK_GRADE_1_OR_MASKED_LOW_RISK_TO_TREE_3": {
-        "id": "0365dd82-cd8a-5d80-5236-3ef0f7fe85ac",
-        "node_key": "T2_LINK_GRADE_1_OR_MASKED_LOW_RISK_TO_TREE_3",
-        "node_type": "LINK",
-        "text_en": "Treatment Threshold and BP Target Tree",
-        "text_vi": "Cây 3: Ngưỡng và đích điều trị",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": "treatment-threshold-and-bp-target",
-        "link_target_node_key": null,
-        "display_order": 22,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [],
-        "transitions": []
-      },
-      "T2_LINK_GRADE_1_OR_MASKED_MEDIUM_RISK_TO_TREE_3": {
-        "id": "bc18f0a9-5f31-749d-19b1-b65596d769f9",
-        "node_key": "T2_LINK_GRADE_1_OR_MASKED_MEDIUM_RISK_TO_TREE_3",
-        "node_type": "LINK",
-        "text_en": "Treatment Threshold and BP Target Tree",
-        "text_vi": "Cây 3: Ngưỡng và đích điều trị",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": "treatment-threshold-and-bp-target",
-        "link_target_node_key": null,
-        "display_order": 25,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [],
-        "transitions": []
-      },
-      "T2_LINK_GRADE_2_HIGH_RISK_TO_TREE_3": {
-        "id": "f568eca7-99d1-6a0a-db05-08b1ef7f342a",
-        "node_key": "T2_LINK_GRADE_2_HIGH_RISK_TO_TREE_3",
-        "node_type": "LINK",
-        "text_en": "Treatment Threshold and BP Target Tree",
-        "text_vi": "Cây 3: Ngưỡng và đích điều trị",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": "treatment-threshold-and-bp-target",
-        "link_target_node_key": null,
-        "display_order": 28,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [],
-        "transitions": []
-      },
-      "T2_LINK_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK_TO_TREE_3": {
-        "id": "16af59eb-1c84-0708-9259-f351eeb59ae5",
-        "node_key": "T2_LINK_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK_TO_TREE_3",
-        "node_type": "LINK",
-        "text_en": "Treatment Threshold and BP Target Tree",
-        "text_vi": "Cây 3: Ngưỡng và đích điều trị",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": "treatment-threshold-and-bp-target",
-        "link_target_node_key": null,
-        "display_order": 31,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 12:12:43.995138+00:00",
-        "references": [],
-        "transitions": []
-      },
-      "T2_LINK_HIGH_NORMAL_LOW_RISK_TO_TREE_3": {
-        "id": "ca8f6031-35f3-7851-80f9-dc274edf0f1d",
-        "node_key": "T2_LINK_HIGH_NORMAL_LOW_RISK_TO_TREE_3",
-        "node_type": "LINK",
-        "text_en": "Treatment Threshold and BP Target Tree",
-        "text_vi": "Cây 3: Ngưỡng và đích điều trị",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": "treatment-threshold-and-bp-target",
-        "link_target_node_key": null,
-        "display_order": 16,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [],
-        "transitions": []
-      },
-      "T2_LINK_HIGH_NORMAL_MEDIUM_RISK_TO_TREE_3": {
-        "id": "943686dd-9e22-48ef-9787-989530941b54",
-        "node_key": "T2_LINK_HIGH_NORMAL_MEDIUM_RISK_TO_TREE_3",
-        "node_type": "LINK",
-        "text_en": "Treatment Threshold and BP Target Tree",
-        "text_vi": "Cây 3: Ngưỡng và đích điều trị",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": "treatment-threshold-and-bp-target",
-        "link_target_node_key": null,
-        "display_order": 19,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [],
-        "transitions": []
-      },
-      "T2_LINK_HIGH_RISK_COMORBIDITY_TO_TREE_3": {
-        "id": "230600f6-0c3f-ca8c-4f84-7a449004be41",
-        "node_key": "T2_LINK_HIGH_RISK_COMORBIDITY_TO_TREE_3",
-        "node_type": "LINK",
-        "text_en": "Treatment Threshold and BP Target Tree",
-        "text_vi": "Cây 3: Ngưỡng và đích điều trị",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": "treatment-threshold-and-bp-target",
-        "link_target_node_key": null,
-        "display_order": 6,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [],
-        "transitions": []
-      },
-      "T2_LINK_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3_TO_TREE_3": {
-        "id": "48152ce5-628b-7448-66f0-833128715fc9",
-        "node_key": "T2_LINK_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3_TO_TREE_3",
-        "node_type": "LINK",
-        "text_en": "Treatment Threshold and BP Target Tree",
-        "text_vi": "Cây 3: Ngưỡng và đích điều trị",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": "treatment-threshold-and-bp-target",
-        "link_target_node_key": null,
-        "display_order": 9,
-        "created_at": "2026-06-27 08:31:00.446744+00:00",
-        "updated_at": "2026-06-27 08:31:00.446744+00:00",
-        "references": [],
-        "transitions": []
-      },
       "T2_START_RISK_AND_COMORBIDITY_INFORMATION": {
         "id": "ec404ee2-7221-4ad8-ca64-c9e9d5363d97",
         "node_key": "T2_START_RISK_AND_COMORBIDITY_INFORMATION",
@@ -3006,307 +838,2175 @@
             }
           }
         ]
+      },
+      "T2_GLOBAL_RISK_FACTOR_LIST": {
+        "id": "677ced6a-83c9-f393-be9d-1f520be5bada",
+        "node_key": "T2_GLOBAL_RISK_FACTOR_LIST",
+        "node_type": "GLOBAL",
+        "text_en": "Risk Factors\nAge >65\nMale sex\nSmoking\nElevated LDL\nObesity\nHeart rate >80\nFamily history\nPremature menopause\nPrediabetes\nPhysical inactivity",
+        "text_vi": "Yếu Tố Nguy Cơ\nTuổi >65\nNam giới\nHút thuốc\nLDL tăng\nBéo phì\nNhịp tim >80\nTiền sử gia đình\nMãn kinh sớm\nTiền ĐTĐ\nÍt vận động",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": {
+          "kind": "REFERENCE_LIST",
+          "purpose": "Reference list for the supplied risk-factor count.",
+          "input_path": "input.risk_factor_count"
+        },
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 2,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "87efde60-6424-85bc-efd5-d3650c1e3850",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T2_GLOBAL_RISK_FACTOR_COUNT_AT_LEAST_3_NOTE": {
+        "id": "15d21cbf-d095-e977-4b20-b71b993a7aad",
+        "node_key": "T2_GLOBAL_RISK_FACTOR_COUNT_AT_LEAST_3_NOTE",
+        "node_type": "GLOBAL",
+        "text_en": "For all BP categories (high-normal BP, Grade 1, Grade 2), ≥3 risk factors indicate high risk immediately.",
+        "text_vi": "Tất cả loại THA (Bình thường cao, độ 1, độ 2 nếu có >=3 thì nguy cơ cao ngay)",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": {
+          "kind": "OVERRIDE_NOTE",
+          "purpose": "Risk-factor count >=3 has immediate high-risk precedence.",
+          "implemented_by_condition": "T2_C_RISK_FACTOR_COUNT_AT_LEAST_3"
+        },
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 3,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "46a16dd3-2e02-461b-e9ba-6ba207a8043b",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T2_C_HIGH_RISK_COMORBIDITY_PRESENT": {
+        "id": "7ba7c905-6d36-3414-e4c5-0116b03bcdbf",
+        "node_key": "T2_C_HIGH_RISK_COMORBIDITY_PRESENT",
+        "node_type": "CONDITION",
+        "text_en": "At least 3 of: target-organ damage, CKD stage 3 or higher, diabetes, TIA, stroke, or cardiovascular disease",
+        "text_vi": "Có ít nhất 3 trong các yếu tố: TTCQĐ, BTM giai đoạn ≥3, ĐTĐ, TIA, Stroke hoặc Bệnh tim mạch",
+        "condition_definition": {
+          "any": [
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_target_organ_damage",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_ckd_stage_3_or_higher",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_diabetes",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_target_organ_damage",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_ckd_stage_3_or_higher",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_tia",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_target_organ_damage",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_diabetes",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_tia",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_ckd_stage_3_or_higher",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_diabetes",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_tia",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_target_organ_damage",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_ckd_stage_3_or_higher",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_stroke",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_target_organ_damage",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_diabetes",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_stroke",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_target_organ_damage",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_tia",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_stroke",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_ckd_stage_3_or_higher",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_diabetes",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_stroke",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_ckd_stage_3_or_higher",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_tia",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_stroke",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_diabetes",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_tia",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_stroke",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_target_organ_damage",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_ckd_stage_3_or_higher",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_cardiovascular_disease",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_target_organ_damage",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_diabetes",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_cardiovascular_disease",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_target_organ_damage",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_tia",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_cardiovascular_disease",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_target_organ_damage",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_stroke",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_cardiovascular_disease",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_ckd_stage_3_or_higher",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_diabetes",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_cardiovascular_disease",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_ckd_stage_3_or_higher",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_tia",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_cardiovascular_disease",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_ckd_stage_3_or_higher",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_stroke",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_cardiovascular_disease",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_diabetes",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_tia",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_cardiovascular_disease",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_diabetes",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_stroke",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_cardiovascular_disease",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_tia",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_stroke",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_cardiovascular_disease",
+                  "value": true
+                }
+              ]
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 4,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 14:43:43.947879+00:00",
+        "references": [
+          {
+            "id": "7d92526e-31e5-1877-4fae-31a76a463bd7",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "9513c8ad-8705-3e2c-1da7-ed614f3bb286",
+            "traversal_order": 1,
+            "to_node_key": "T2_INF_HIGH_RISK_COMORBIDITY_PRESENT",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T2_INF_HIGH_RISK_COMORBIDITY_PRESENT": {
+        "id": "9dc9020e-d70e-1ebe-f2ea-b390b5346c33",
+        "node_key": "T2_INF_HIGH_RISK_COMORBIDITY_PRESENT",
+        "node_type": "INFERENCE",
+        "text_en": "High risk",
+        "text_vi": "NGUY CƠ CAO",
+        "condition_definition": null,
+        "context_patch": {
+          "risk": {
+            "level": "HIGH"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 5,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "aabbecc7-5311-a444-8c6e-43adca6db8f8",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "a350d472-69f2-9a41-c648-f422ecdc3ed2",
+            "traversal_order": 1,
+            "to_node_key": "T2_LINK_HIGH_RISK_COMORBIDITY_TO_TREE_3",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T2_LINK_HIGH_RISK_COMORBIDITY_TO_TREE_3": {
+        "id": "230600f6-0c3f-ca8c-4f84-7a449004be41",
+        "node_key": "T2_LINK_HIGH_RISK_COMORBIDITY_TO_TREE_3",
+        "node_type": "LINK",
+        "text_en": "Treatment Threshold and BP Target Tree",
+        "text_vi": "Cây 3: Ngưỡng và đích điều trị",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "treatment-threshold-and-bp-target",
+        "link_target_node_key": null,
+        "display_order": 6,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T2_C_RISK_FACTOR_COUNT_AT_LEAST_3": {
+        "id": "3f0e2f17-4775-0538-ce10-6f11dc621c84",
+        "node_key": "T2_C_RISK_FACTOR_COUNT_AT_LEAST_3",
+        "node_type": "CONDITION",
+        "text_en": "At least 3 risk factors",
+        "text_vi": "≥3 YTNC",
+        "condition_definition": {
+          "op": "gte",
+          "path": "input.risk_factor_count",
+          "value": 3
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 7,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "fc97fa1d-f292-08e4-bf2d-9e47d0be42fe",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "0ec9f145-3bf2-02b9-3525-ffc0938f6c0c",
+            "traversal_order": 1,
+            "to_node_key": "T2_INF_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T2_INF_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3": {
+        "id": "23276de5-636d-3312-1636-1dc4f4b6b969",
+        "node_key": "T2_INF_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3",
+        "node_type": "INFERENCE",
+        "text_en": "High risk",
+        "text_vi": "NGUY CƠ CAO",
+        "condition_definition": null,
+        "context_patch": {
+          "risk": {
+            "level": "HIGH"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 8,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "8dee95a5-d5cf-2d35-ffe5-a695a521fe5d",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "cec99beb-0f35-65d0-ea93-7263cbb79cf2",
+            "traversal_order": 1,
+            "to_node_key": "T2_LINK_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3_TO_TREE_3",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T2_LINK_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3_TO_TREE_3": {
+        "id": "48152ce5-628b-7448-66f0-833128715fc9",
+        "node_key": "T2_LINK_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3_TO_TREE_3",
+        "node_type": "LINK",
+        "text_en": "Treatment Threshold and BP Target Tree",
+        "text_vi": "Cây 3: Ngưỡng và đích điều trị",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "treatment-threshold-and-bp-target",
+        "link_target_node_key": null,
+        "display_order": 9,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T2_C_NO_HIGH_RISK_COMORBIDITY": {
+        "id": "8ceb98a6-3e3f-0fce-ab0d-6b746ac16f7a",
+        "node_key": "T2_C_NO_HIGH_RISK_COMORBIDITY",
+        "node_type": "CONDITION",
+        "text_en": "Fewer than 3 of: target-organ damage, CKD stage 3 or higher, diabetes, TIA, stroke, or cardiovascular disease",
+        "text_vi": "Có dưới 3 trong các yếu tố: TTCQĐ, BTM giai đoạn ≥3, ĐTĐ, TIA, Stroke hoặc Bệnh tim mạch",
+        "condition_definition": {
+          "not": {
+            "any": [
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_target_organ_damage",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_ckd_stage_3_or_higher",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_diabetes",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_target_organ_damage",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_ckd_stage_3_or_higher",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_tia",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_target_organ_damage",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_diabetes",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_tia",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_ckd_stage_3_or_higher",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_diabetes",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_tia",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_target_organ_damage",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_ckd_stage_3_or_higher",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_stroke",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_target_organ_damage",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_diabetes",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_stroke",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_target_organ_damage",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_tia",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_stroke",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_ckd_stage_3_or_higher",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_diabetes",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_stroke",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_ckd_stage_3_or_higher",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_tia",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_stroke",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_diabetes",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_tia",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_stroke",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_target_organ_damage",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_ckd_stage_3_or_higher",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_cardiovascular_disease",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_target_organ_damage",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_diabetes",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_cardiovascular_disease",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_target_organ_damage",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_tia",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_cardiovascular_disease",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_target_organ_damage",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_stroke",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_cardiovascular_disease",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_ckd_stage_3_or_higher",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_diabetes",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_cardiovascular_disease",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_ckd_stage_3_or_higher",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_tia",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_cardiovascular_disease",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_ckd_stage_3_or_higher",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_stroke",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_cardiovascular_disease",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_diabetes",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_tia",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_cardiovascular_disease",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_diabetes",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_stroke",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_cardiovascular_disease",
+                    "value": true
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_tia",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_stroke",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_cardiovascular_disease",
+                    "value": true
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 10,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 14:43:43.947879+00:00",
+        "references": [
+          {
+            "id": "291c9310-1d52-35bd-7238-1d871f229bc9",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "fc191456-bf3d-1e48-cd96-36731dfad782",
+            "traversal_order": 1,
+            "to_node_key": "T2_C_CONTEXT_HIGH_NORMAL_BP",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "context.diagnosis.hypertension_class",
+              "value": "HIGH_NORMAL_BP"
+            }
+          },
+          {
+            "edge_id": "c2cddbd9-5c3f-ed56-d3f9-9ad80925ba99",
+            "traversal_order": 2,
+            "to_node_key": "T2_C_CONTEXT_GRADE_1_OR_MASKED_HYPERTENSION",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "eq",
+                  "path": "context.diagnosis.hypertension_class",
+                  "value": "GRADE_1_HYPERTENSION"
+                },
+                {
+                  "op": "eq",
+                  "path": "context.diagnosis.hypertension_class",
+                  "value": "MASKED_HYPERTENSION"
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "af8036f1-0ed2-7b13-a548-21f5ad89b582",
+            "traversal_order": 3,
+            "to_node_key": "T2_C_CONTEXT_GRADE_2_HYPERTENSION",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "context.diagnosis.hypertension_class",
+              "value": "GRADE_2_HYPERTENSION"
+            }
+          }
+        ]
+      },
+      "T2_C_CONTEXT_HIGH_NORMAL_BP": {
+        "id": "98cee07d-28ca-dcc6-384c-02c30b0b50fe",
+        "node_key": "T2_C_CONTEXT_HIGH_NORMAL_BP",
+        "node_type": "CONDITION",
+        "text_en": "High-normal BP",
+        "text_vi": "HA bình thường cao",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.diagnosis.hypertension_class",
+          "value": "HIGH_NORMAL_BP"
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 11,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "08237b25-0cf2-860a-4eb7-2f224cf8b078",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "9132bc0b-fa63-0f8b-b465-9e2bff3251b0",
+            "traversal_order": 1,
+            "to_node_key": "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_AT_MOST_1",
+            "candidate_condition": {
+              "op": "lte",
+              "path": "input.risk_factor_count",
+              "value": 1
+            }
+          },
+          {
+            "edge_id": "097a699c-da3a-e936-6dd0-62d96ceeef62",
+            "traversal_order": 2,
+            "to_node_key": "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_2",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.risk_factor_count",
+              "value": 2
+            }
+          }
+        ]
+      },
+      "T2_C_CONTEXT_GRADE_1_OR_MASKED_HYPERTENSION": {
+        "id": "8058aebe-6375-cafe-b718-d5df20ac85c9",
+        "node_key": "T2_C_CONTEXT_GRADE_1_OR_MASKED_HYPERTENSION",
+        "node_type": "CONDITION",
+        "text_en": "Grade 1 hypertension OR masked hypertension (equivalent to Grade 1)",
+        "text_vi": "THA độ 1 HOẶC THA ẩn giấu (Tương đương Độ 1)",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "eq",
+              "path": "context.diagnosis.hypertension_class",
+              "value": "GRADE_1_HYPERTENSION"
+            },
+            {
+              "op": "eq",
+              "path": "context.diagnosis.hypertension_class",
+              "value": "MASKED_HYPERTENSION"
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 12,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "f9a0aeb5-ed6c-4e8a-dd58-571160d99ccc",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "718cb933-e7dc-fec2-5096-716150f25a7e",
+            "traversal_order": 1,
+            "to_node_key": "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_0",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.risk_factor_count",
+              "value": 0
+            }
+          },
+          {
+            "edge_id": "7dea9443-6a0a-9ff1-2a51-d4fdbc68e2ab",
+            "traversal_order": 2,
+            "to_node_key": "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_1_OR_2",
+            "candidate_condition": {
+              "op": "in",
+              "path": "input.risk_factor_count",
+              "value": [
+                1,
+                2
+              ]
+            }
+          }
+        ]
+      },
+      "T2_C_CONTEXT_GRADE_2_HYPERTENSION": {
+        "id": "165c4ea4-8261-4117-9efb-83084a9b3e2a",
+        "node_key": "T2_C_CONTEXT_GRADE_2_HYPERTENSION",
+        "node_type": "CONDITION",
+        "text_en": "Grade 2 hypertension",
+        "text_vi": "THA độ 2",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.diagnosis.hypertension_class",
+          "value": "GRADE_2_HYPERTENSION"
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 13,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "3a2b9cb2-e219-44fe-067e-897835d7647c",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "7f0ec247-a428-3fcb-1eaf-624ab360c43a",
+            "traversal_order": 1,
+            "to_node_key": "T2_C_GRADE_2_RISK_FACTOR_COUNT_AT_LEAST_1",
+            "candidate_condition": {
+              "op": "gte",
+              "path": "input.risk_factor_count",
+              "value": 1
+            }
+          },
+          {
+            "edge_id": "535567c6-2d9a-df76-0dd9-0e09231723b6",
+            "traversal_order": 2,
+            "to_node_key": "T2_C_GRADE_2_RISK_FACTOR_COUNT_0",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.risk_factor_count",
+              "value": 0
+            }
+          }
+        ]
+      },
+      "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_AT_MOST_1": {
+        "id": "ba1a1c44-b0fd-499d-144c-ac54731ba62d",
+        "node_key": "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_AT_MOST_1",
+        "node_type": "CONDITION",
+        "text_en": "≤1 risk factor",
+        "text_vi": "<=1 YTNC",
+        "condition_definition": {
+          "op": "lte",
+          "path": "input.risk_factor_count",
+          "value": 1
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 14,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "e881996e-eeb1-80db-c331-4f01329f14ce",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "8c0d33d1-69f8-3ffd-4a91-2b2dfb1ebeab",
+            "traversal_order": 1,
+            "to_node_key": "T2_INF_HIGH_NORMAL_LOW_RISK",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T2_INF_HIGH_NORMAL_LOW_RISK": {
+        "id": "b492a11d-3566-318f-3269-e04bc11d09fa",
+        "node_key": "T2_INF_HIGH_NORMAL_LOW_RISK",
+        "node_type": "INFERENCE",
+        "text_en": "Low risk",
+        "text_vi": "NGUY CƠ THẤP",
+        "condition_definition": null,
+        "context_patch": {
+          "risk": {
+            "level": "LOW"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 15,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "0be6b1eb-5f24-12e9-d397-bcde65a00867",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "488bbae7-24e3-3bad-c2be-2c286ece183e",
+            "traversal_order": 1,
+            "to_node_key": "T2_LINK_HIGH_NORMAL_LOW_RISK_TO_TREE_3",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T2_LINK_HIGH_NORMAL_LOW_RISK_TO_TREE_3": {
+        "id": "ca8f6031-35f3-7851-80f9-dc274edf0f1d",
+        "node_key": "T2_LINK_HIGH_NORMAL_LOW_RISK_TO_TREE_3",
+        "node_type": "LINK",
+        "text_en": "Treatment Threshold and BP Target Tree",
+        "text_vi": "Cây 3: Ngưỡng và đích điều trị",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "treatment-threshold-and-bp-target",
+        "link_target_node_key": null,
+        "display_order": 16,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_2": {
+        "id": "3ed68451-bfad-5d50-de50-7c968df606af",
+        "node_key": "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_2",
+        "node_type": "CONDITION",
+        "text_en": "2 risk factors",
+        "text_vi": "2 YTNC",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.risk_factor_count",
+          "value": 2
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 17,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "e87ff68c-328c-e11d-ff02-c1cd4d6bf043",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "4b7b2d3a-1dce-eb66-3187-ee4d5129e705",
+            "traversal_order": 1,
+            "to_node_key": "T2_INF_HIGH_NORMAL_MEDIUM_RISK",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T2_INF_HIGH_NORMAL_MEDIUM_RISK": {
+        "id": "03f895d0-ee99-19d6-58c3-35b49042dda3",
+        "node_key": "T2_INF_HIGH_NORMAL_MEDIUM_RISK",
+        "node_type": "INFERENCE",
+        "text_en": "Medium risk",
+        "text_vi": "NGUY CƠ TRUNG BÌNH",
+        "condition_definition": null,
+        "context_patch": {
+          "risk": {
+            "level": "MEDIUM"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 18,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "c2548457-b9a3-fe2d-5ce0-e7a02ccd59e6",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "81a419d4-7f40-47be-b9fe-12c1fb81b194",
+            "traversal_order": 1,
+            "to_node_key": "T2_LINK_HIGH_NORMAL_MEDIUM_RISK_TO_TREE_3",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T2_LINK_HIGH_NORMAL_MEDIUM_RISK_TO_TREE_3": {
+        "id": "943686dd-9e22-48ef-9787-989530941b54",
+        "node_key": "T2_LINK_HIGH_NORMAL_MEDIUM_RISK_TO_TREE_3",
+        "node_type": "LINK",
+        "text_en": "Treatment Threshold and BP Target Tree",
+        "text_vi": "Cây 3: Ngưỡng và đích điều trị",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "treatment-threshold-and-bp-target",
+        "link_target_node_key": null,
+        "display_order": 19,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_0": {
+        "id": "fb7c62d1-4d86-0013-e05e-4f862b4a4d8a",
+        "node_key": "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_0",
+        "node_type": "CONDITION",
+        "text_en": "0 risk factors",
+        "text_vi": "0 YTNC",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.risk_factor_count",
+          "value": 0
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 20,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "cd8ea5a0-f160-41bb-b4e9-c2e53a4e4584",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "44a2cb10-680e-db04-c115-9a0ec0bd8f96",
+            "traversal_order": 1,
+            "to_node_key": "T2_INF_GRADE_1_OR_MASKED_LOW_RISK",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T2_INF_GRADE_1_OR_MASKED_LOW_RISK": {
+        "id": "27c4d74f-163b-4131-11d4-9597e6404738",
+        "node_key": "T2_INF_GRADE_1_OR_MASKED_LOW_RISK",
+        "node_type": "INFERENCE",
+        "text_en": "Low risk",
+        "text_vi": "NGUY CƠ THẤP",
+        "condition_definition": null,
+        "context_patch": {
+          "risk": {
+            "level": "LOW"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 21,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "aada0213-b8a4-61de-a921-131821358e27",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "800a8f0c-5954-973f-0b8f-a25c783180bb",
+            "traversal_order": 1,
+            "to_node_key": "T2_LINK_GRADE_1_OR_MASKED_LOW_RISK_TO_TREE_3",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T2_LINK_GRADE_1_OR_MASKED_LOW_RISK_TO_TREE_3": {
+        "id": "0365dd82-cd8a-5d80-5236-3ef0f7fe85ac",
+        "node_key": "T2_LINK_GRADE_1_OR_MASKED_LOW_RISK_TO_TREE_3",
+        "node_type": "LINK",
+        "text_en": "Treatment Threshold and BP Target Tree",
+        "text_vi": "Cây 3: Ngưỡng và đích điều trị",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "treatment-threshold-and-bp-target",
+        "link_target_node_key": null,
+        "display_order": 22,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_1_OR_2": {
+        "id": "20a7535d-1695-4d68-0048-c86dc1101221",
+        "node_key": "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_1_OR_2",
+        "node_type": "CONDITION",
+        "text_en": "1 or 2 risk factors",
+        "text_vi": "1 hoặc 2 YTNC",
+        "condition_definition": {
+          "op": "in",
+          "path": "input.risk_factor_count",
+          "value": [
+            1,
+            2
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 23,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "c1c2302b-0d3a-5ab3-150b-45843e151216",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "9b96b74c-f961-de5c-5005-bc92f335ed33",
+            "traversal_order": 1,
+            "to_node_key": "T2_INF_GRADE_1_OR_MASKED_MEDIUM_RISK",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T2_INF_GRADE_1_OR_MASKED_MEDIUM_RISK": {
+        "id": "d186b9cc-2b53-3662-e66d-655fff3ba7c6",
+        "node_key": "T2_INF_GRADE_1_OR_MASKED_MEDIUM_RISK",
+        "node_type": "INFERENCE",
+        "text_en": "Medium risk",
+        "text_vi": "NGUY CƠ TRUNG BÌNH",
+        "condition_definition": null,
+        "context_patch": {
+          "risk": {
+            "level": "MEDIUM"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 24,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "28d95fe6-493b-c58a-54ae-06c4e3c1df0a",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "450aa77b-b85b-982b-bb6a-53aa27ae8beb",
+            "traversal_order": 1,
+            "to_node_key": "T2_LINK_GRADE_1_OR_MASKED_MEDIUM_RISK_TO_TREE_3",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T2_LINK_GRADE_1_OR_MASKED_MEDIUM_RISK_TO_TREE_3": {
+        "id": "bc18f0a9-5f31-749d-19b1-b65596d769f9",
+        "node_key": "T2_LINK_GRADE_1_OR_MASKED_MEDIUM_RISK_TO_TREE_3",
+        "node_type": "LINK",
+        "text_en": "Treatment Threshold and BP Target Tree",
+        "text_vi": "Cây 3: Ngưỡng và đích điều trị",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "treatment-threshold-and-bp-target",
+        "link_target_node_key": null,
+        "display_order": 25,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T2_C_GRADE_2_RISK_FACTOR_COUNT_AT_LEAST_1": {
+        "id": "d77ec0d8-f756-6377-6f0a-e8cb2f5e8a15",
+        "node_key": "T2_C_GRADE_2_RISK_FACTOR_COUNT_AT_LEAST_1",
+        "node_type": "CONDITION",
+        "text_en": "At least 1 risk factor",
+        "text_vi": "≥1 YTNC",
+        "condition_definition": {
+          "op": "gte",
+          "path": "input.risk_factor_count",
+          "value": 1
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 26,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "ea77249b-d6b3-d92e-e796-068aa2e1cf1e",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "0281eecb-d94e-0002-88b2-baf80e4ba6ec",
+            "traversal_order": 1,
+            "to_node_key": "T2_INF_GRADE_2_HIGH_RISK",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T2_INF_GRADE_2_HIGH_RISK": {
+        "id": "fc7fc2c0-c399-0786-26b1-836ef99c51c4",
+        "node_key": "T2_INF_GRADE_2_HIGH_RISK",
+        "node_type": "INFERENCE",
+        "text_en": "High risk",
+        "text_vi": "NGUY CƠ CAO",
+        "condition_definition": null,
+        "context_patch": {
+          "risk": {
+            "level": "HIGH"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 27,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "f4f51b89-fc46-1b73-7eb6-ae2134465717",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "af4503ff-db60-5051-5705-3e366123f3ac",
+            "traversal_order": 1,
+            "to_node_key": "T2_LINK_GRADE_2_HIGH_RISK_TO_TREE_3",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T2_LINK_GRADE_2_HIGH_RISK_TO_TREE_3": {
+        "id": "f568eca7-99d1-6a0a-db05-08b1ef7f342a",
+        "node_key": "T2_LINK_GRADE_2_HIGH_RISK_TO_TREE_3",
+        "node_type": "LINK",
+        "text_en": "Treatment Threshold and BP Target Tree",
+        "text_vi": "Cây 3: Ngưỡng và đích điều trị",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "treatment-threshold-and-bp-target",
+        "link_target_node_key": null,
+        "display_order": 28,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T2_C_GRADE_2_RISK_FACTOR_COUNT_0": {
+        "id": "4ef64653-acf3-b7b9-e6fc-8e594a02967a",
+        "node_key": "T2_C_GRADE_2_RISK_FACTOR_COUNT_0",
+        "node_type": "CONDITION",
+        "text_en": "0 risk factors",
+        "text_vi": "0 YTNC",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.risk_factor_count",
+          "value": 0
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 29,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 08:31:00.446744+00:00",
+        "references": [
+          {
+            "id": "c406b519-5e7e-06d8-4dd7-9c3478a4c74f",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "7a595f93-e07c-4990-e493-35e652671be4",
+            "traversal_order": 1,
+            "to_node_key": "T2_INF_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T2_INF_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK": {
+        "id": "ebd2cf1d-a6d6-e606-f1b7-d83ae2028e4e",
+        "node_key": "T2_INF_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK",
+        "node_type": "INFERENCE",
+        "text_en": "High risk",
+        "text_vi": "NGUY CƠ CAO",
+        "condition_definition": null,
+        "context_patch": {
+          "risk": {
+            "level": "HIGH"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 30,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 12:12:43.995138+00:00",
+        "references": [
+          {
+            "id": "af6bcb23-393f-6099-e149-08ad7b93ff7f",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp",
+            "locator_detail": "Risk-factor list, high-risk comorbidities, and risk classification by BP category and risk-factor count.",
+            "printed_page_numbers": [
+              9
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Digitized according to the approved Tree 2 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "59404c46-a828-3626-69ed-742e6d29ac7e",
+            "traversal_order": 1,
+            "to_node_key": "T2_LINK_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK_TO_TREE_3",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T2_LINK_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK_TO_TREE_3": {
+        "id": "16af59eb-1c84-0708-9259-f351eeb59ae5",
+        "node_key": "T2_LINK_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK_TO_TREE_3",
+        "node_type": "LINK",
+        "text_en": "Treatment Threshold and BP Target Tree",
+        "text_vi": "Cây 3: Ngưỡng và đích điều trị",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "treatment-threshold-and-bp-target",
+        "link_target_node_key": null,
+        "display_order": 31,
+        "created_at": "2026-06-27 08:31:00.446744+00:00",
+        "updated_at": "2026-06-27 12:12:43.995138+00:00",
+        "references": [],
+        "transitions": []
       }
-    },
-    "edges": [
-      {
-        "id": "718cb933-e7dc-fec2-5096-716150f25a7e",
-        "from_node_key": "T2_C_CONTEXT_GRADE_1_OR_MASKED_HYPERTENSION",
-        "to_node_key": "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_0",
-        "traversal_order": 1
-      },
-      {
-        "id": "7dea9443-6a0a-9ff1-2a51-d4fdbc68e2ab",
-        "from_node_key": "T2_C_CONTEXT_GRADE_1_OR_MASKED_HYPERTENSION",
-        "to_node_key": "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_1_OR_2",
-        "traversal_order": 2
-      },
-      {
-        "id": "7f0ec247-a428-3fcb-1eaf-624ab360c43a",
-        "from_node_key": "T2_C_CONTEXT_GRADE_2_HYPERTENSION",
-        "to_node_key": "T2_C_GRADE_2_RISK_FACTOR_COUNT_AT_LEAST_1",
-        "traversal_order": 1
-      },
-      {
-        "id": "535567c6-2d9a-df76-0dd9-0e09231723b6",
-        "from_node_key": "T2_C_CONTEXT_GRADE_2_HYPERTENSION",
-        "to_node_key": "T2_C_GRADE_2_RISK_FACTOR_COUNT_0",
-        "traversal_order": 2
-      },
-      {
-        "id": "9132bc0b-fa63-0f8b-b465-9e2bff3251b0",
-        "from_node_key": "T2_C_CONTEXT_HIGH_NORMAL_BP",
-        "to_node_key": "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_AT_MOST_1",
-        "traversal_order": 1
-      },
-      {
-        "id": "097a699c-da3a-e936-6dd0-62d96ceeef62",
-        "from_node_key": "T2_C_CONTEXT_HIGH_NORMAL_BP",
-        "to_node_key": "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_2",
-        "traversal_order": 2
-      },
-      {
-        "id": "44a2cb10-680e-db04-c115-9a0ec0bd8f96",
-        "from_node_key": "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_0",
-        "to_node_key": "T2_INF_GRADE_1_OR_MASKED_LOW_RISK",
-        "traversal_order": 1
-      },
-      {
-        "id": "9b96b74c-f961-de5c-5005-bc92f335ed33",
-        "from_node_key": "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_1_OR_2",
-        "to_node_key": "T2_INF_GRADE_1_OR_MASKED_MEDIUM_RISK",
-        "traversal_order": 1
-      },
-      {
-        "id": "7a595f93-e07c-4990-e493-35e652671be4",
-        "from_node_key": "T2_C_GRADE_2_RISK_FACTOR_COUNT_0",
-        "to_node_key": "T2_INF_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK",
-        "traversal_order": 1
-      },
-      {
-        "id": "0281eecb-d94e-0002-88b2-baf80e4ba6ec",
-        "from_node_key": "T2_C_GRADE_2_RISK_FACTOR_COUNT_AT_LEAST_1",
-        "to_node_key": "T2_INF_GRADE_2_HIGH_RISK",
-        "traversal_order": 1
-      },
-      {
-        "id": "4b7b2d3a-1dce-eb66-3187-ee4d5129e705",
-        "from_node_key": "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_2",
-        "to_node_key": "T2_INF_HIGH_NORMAL_MEDIUM_RISK",
-        "traversal_order": 1
-      },
-      {
-        "id": "8c0d33d1-69f8-3ffd-4a91-2b2dfb1ebeab",
-        "from_node_key": "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_AT_MOST_1",
-        "to_node_key": "T2_INF_HIGH_NORMAL_LOW_RISK",
-        "traversal_order": 1
-      },
-      {
-        "id": "9513c8ad-8705-3e2c-1da7-ed614f3bb286",
-        "from_node_key": "T2_C_HIGH_RISK_COMORBIDITY_PRESENT",
-        "to_node_key": "T2_INF_HIGH_RISK_COMORBIDITY_PRESENT",
-        "traversal_order": 1
-      },
-      {
-        "id": "fc191456-bf3d-1e48-cd96-36731dfad782",
-        "from_node_key": "T2_C_NO_HIGH_RISK_COMORBIDITY",
-        "to_node_key": "T2_C_CONTEXT_HIGH_NORMAL_BP",
-        "traversal_order": 1
-      },
-      {
-        "id": "c2cddbd9-5c3f-ed56-d3f9-9ad80925ba99",
-        "from_node_key": "T2_C_NO_HIGH_RISK_COMORBIDITY",
-        "to_node_key": "T2_C_CONTEXT_GRADE_1_OR_MASKED_HYPERTENSION",
-        "traversal_order": 2
-      },
-      {
-        "id": "af8036f1-0ed2-7b13-a548-21f5ad89b582",
-        "from_node_key": "T2_C_NO_HIGH_RISK_COMORBIDITY",
-        "to_node_key": "T2_C_CONTEXT_GRADE_2_HYPERTENSION",
-        "traversal_order": 3
-      },
-      {
-        "id": "0ec9f145-3bf2-02b9-3525-ffc0938f6c0c",
-        "from_node_key": "T2_C_RISK_FACTOR_COUNT_AT_LEAST_3",
-        "to_node_key": "T2_INF_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3",
-        "traversal_order": 1
-      },
-      {
-        "id": "800a8f0c-5954-973f-0b8f-a25c783180bb",
-        "from_node_key": "T2_INF_GRADE_1_OR_MASKED_LOW_RISK",
-        "to_node_key": "T2_LINK_GRADE_1_OR_MASKED_LOW_RISK_TO_TREE_3",
-        "traversal_order": 1
-      },
-      {
-        "id": "450aa77b-b85b-982b-bb6a-53aa27ae8beb",
-        "from_node_key": "T2_INF_GRADE_1_OR_MASKED_MEDIUM_RISK",
-        "to_node_key": "T2_LINK_GRADE_1_OR_MASKED_MEDIUM_RISK_TO_TREE_3",
-        "traversal_order": 1
-      },
-      {
-        "id": "af4503ff-db60-5051-5705-3e366123f3ac",
-        "from_node_key": "T2_INF_GRADE_2_HIGH_RISK",
-        "to_node_key": "T2_LINK_GRADE_2_HIGH_RISK_TO_TREE_3",
-        "traversal_order": 1
-      },
-      {
-        "id": "59404c46-a828-3626-69ed-742e6d29ac7e",
-        "from_node_key": "T2_INF_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK",
-        "to_node_key": "T2_LINK_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK_TO_TREE_3",
-        "traversal_order": 1
-      },
-      {
-        "id": "488bbae7-24e3-3bad-c2be-2c286ece183e",
-        "from_node_key": "T2_INF_HIGH_NORMAL_LOW_RISK",
-        "to_node_key": "T2_LINK_HIGH_NORMAL_LOW_RISK_TO_TREE_3",
-        "traversal_order": 1
-      },
-      {
-        "id": "81a419d4-7f40-47be-b9fe-12c1fb81b194",
-        "from_node_key": "T2_INF_HIGH_NORMAL_MEDIUM_RISK",
-        "to_node_key": "T2_LINK_HIGH_NORMAL_MEDIUM_RISK_TO_TREE_3",
-        "traversal_order": 1
-      },
-      {
-        "id": "a350d472-69f2-9a41-c648-f422ecdc3ed2",
-        "from_node_key": "T2_INF_HIGH_RISK_COMORBIDITY_PRESENT",
-        "to_node_key": "T2_LINK_HIGH_RISK_COMORBIDITY_TO_TREE_3",
-        "traversal_order": 1
-      },
-      {
-        "id": "cec99beb-0f35-65d0-ea93-7263cbb79cf2",
-        "from_node_key": "T2_INF_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3",
-        "to_node_key": "T2_LINK_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3_TO_TREE_3",
-        "traversal_order": 1
-      },
-      {
-        "id": "32a5ae42-e246-66fd-5e4a-ee8122bfd0cf",
-        "from_node_key": "T2_START_RISK_AND_COMORBIDITY_INFORMATION",
-        "to_node_key": "T2_C_HIGH_RISK_COMORBIDITY_PRESENT",
-        "traversal_order": 1
-      },
-      {
-        "id": "d4b8e8ac-d57e-fdcf-998f-7e1329895b03",
-        "from_node_key": "T2_START_RISK_AND_COMORBIDITY_INFORMATION",
-        "to_node_key": "T2_C_RISK_FACTOR_COUNT_AT_LEAST_3",
-        "traversal_order": 2
-      },
-      {
-        "id": "1be514ac-f43e-544c-d199-37a62a20bb4a",
-        "from_node_key": "T2_START_RISK_AND_COMORBIDITY_INFORMATION",
-        "to_node_key": "T2_C_NO_HIGH_RISK_COMORBIDITY",
-        "traversal_order": 3
-      }
-    ],
-    "layout": {
-      "id": "711caa2d-227b-40e1-bc73-c037e341e42b",
-      "arrow_kind": "elbow",
-      "node_positions": {
-        "T2_INF_GRADE_2_HIGH_RISK": {
-          "x": 1572.0,
-          "y": 540.0
-        },
-        "T2_C_CONTEXT_HIGH_NORMAL_BP": {
-          "x": 755.0,
-          "y": 276.0
-        },
-        "T2_INF_HIGH_NORMAL_LOW_RISK": {
-          "x": 532.0,
-          "y": 540.0
-        },
-        "T2_C_NO_HIGH_RISK_COMORBIDITY": {
-          "x": 810.0,
-          "y": 144.0
-        },
-        "T2_INF_HIGH_NORMAL_MEDIUM_RISK": {
-          "x": 792.0,
-          "y": 540.0
-        },
-        "T2_C_GRADE_2_RISK_FACTOR_COUNT_0": {
-          "x": 1832.0,
-          "y": 408.0
-        },
-        "T2_C_CONTEXT_GRADE_2_HYPERTENSION": {
-          "x": 1702.477088948787,
-          "y": 274.16711590296495
-        },
-        "T2_C_RISK_FACTOR_COUNT_AT_LEAST_3": {
-          "x": 272.0,
-          "y": 144.0
-        },
-        "T2_INF_GRADE_1_OR_MASKED_LOW_RISK": {
-          "x": 1052.0,
-          "y": 540.0
-        },
-        "T2_C_HIGH_RISK_COMORBIDITY_PRESENT": {
-          "x": 12.0,
-          "y": 144.0
-        },
-        "T2_LINK_GRADE_2_HIGH_RISK_TO_TREE_3": {
-          "x": 1572.0,
-          "y": 672.0
-        },
-        "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_2": {
-          "x": 792.0,
-          "y": 408.0
-        },
-        "T2_INF_GRADE_1_OR_MASKED_MEDIUM_RISK": {
-          "x": 1312.0,
-          "y": 540.0
-        },
-        "T2_INF_HIGH_RISK_COMORBIDITY_PRESENT": {
-          "x": 12.0,
-          "y": 276.0
-        },
-        "T2_LINK_HIGH_NORMAL_LOW_RISK_TO_TREE_3": {
-          "x": 532.0,
-          "y": 672.0
-        },
-        "T2_LINK_HIGH_RISK_COMORBIDITY_TO_TREE_3": {
-          "x": 12.0,
-          "y": 408.0
-        },
-        "T2_INF_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3": {
-          "x": 272.0,
-          "y": 276.0
-        },
-        "T2_C_GRADE_2_RISK_FACTOR_COUNT_AT_LEAST_1": {
-          "x": 1572.0,
-          "y": 408.0
-        },
-        "T2_INF_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK": {
-          "x": 1832.0,
-          "y": 540.0
-        },
-        "T2_LINK_HIGH_NORMAL_MEDIUM_RISK_TO_TREE_3": {
-          "x": 792.0,
-          "y": 672.0
-        },
-        "T2_START_RISK_AND_COMORBIDITY_INFORMATION": {
-          "x": 272.0,
-          "y": 12.0
-        },
-        "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_0": {
-          "x": 1052.0,
-          "y": 408.0
-        },
-        "T2_C_CONTEXT_GRADE_1_OR_MASKED_HYPERTENSION": {
-          "x": 1089.0,
-          "y": 276.0
-        },
-        "T2_C_HIGH_NORMAL_RISK_FACTOR_COUNT_AT_MOST_1": {
-          "x": 532.0,
-          "y": 408.0
-        },
-        "T2_LINK_GRADE_1_OR_MASKED_LOW_RISK_TO_TREE_3": {
-          "x": 1052.0,
-          "y": 672.0
-        },
-        "T2_C_GRADE_1_OR_MASKED_RISK_FACTOR_COUNT_1_OR_2": {
-          "x": 1312.0,
-          "y": 408.0
-        },
-        "T2_LINK_GRADE_1_OR_MASKED_MEDIUM_RISK_TO_TREE_3": {
-          "x": 1312.0,
-          "y": 672.0
-        },
-        "T2_LINK_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3_TO_TREE_3": {
-          "x": 272.0,
-          "y": 408.0
-        },
-        "T2_LINK_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK_TO_TREE_3": {
-          "x": 1832.0,
-          "y": 672.0
-        }
-      },
-      "created_at": "2026-07-26 02:20:48.266074+00:00",
-      "updated_at": "2026-07-26 02:20:48.266078+00:00"
     }
-  },
-  "counts": {
-    "nodes": 31,
-    "edges": 28,
-    "references": 22,
-    "layouts": 1
   }
 }

@@ -25,6 +25,45 @@
     ],
     "global_node_keys": [],
     "nodes": {
+      "T1_START_PATIENT_INFORMATION": {
+        "id": "854590f4-9e9c-3158-47af-43695e29611e",
+        "node_key": "T1_START_PATIENT_INFORMATION",
+        "node_type": "START",
+        "text_en": "Patient information",
+        "text_vi": "Thông tin bệnh nhân",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 1,
+        "created_at": "2026-06-27 07:20:49.313128+00:00",
+        "updated_at": "2026-06-27 07:20:49.313128+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "10cd6b1a-81ba-40c2-aead-22283d34c033",
+            "traversal_order": 1,
+            "to_node_key": "T1_C_IS_PREGNANT",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.is_pregnant",
+              "value": true
+            }
+          },
+          {
+            "edge_id": "d969c060-cb00-4068-a9d5-06762ce7df73",
+            "traversal_order": 2,
+            "to_node_key": "T1_C_IS_NOT_PREGNANT",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.is_pregnant",
+              "value": false
+            }
+          }
+        ]
+      },
       "T1_C_CLINIC_1_CRISIS": {
         "id": "a04f0087-1e67-7368-d086-d6fcccdaedb1",
         "node_key": "T1_C_CLINIC_1_CRISIS",
@@ -35,12 +74,12 @@
           "any": [
             {
               "op": "gte",
-              "path": "input.clinic_1_sbp",
+              "path": "input.current_clinic_sbp",
               "value": 180
             },
             {
               "op": "gte",
-              "path": "input.clinic_1_dbp",
+              "path": "input.current_clinic_dbp",
               "value": 120
             }
           ]
@@ -112,6 +151,78 @@
           }
         ]
       },
+      "T1_INF_HYPERTENSIVE_EMERGENCY": {
+        "id": "bfbb746b-d5ff-6d27-a5e6-5376a31d2841",
+        "node_key": "T1_INF_HYPERTENSIVE_EMERGENCY",
+        "node_type": "INFERENCE",
+        "text_en": "Hypertensive emergency",
+        "text_vi": "THA CẤP CỨU",
+        "condition_definition": null,
+        "context_patch": {
+          "diagnosis": {
+            "hypertension_class": "HYPERTENSIVE_EMERGENCY"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 3,
+        "created_at": "2026-06-27 07:20:49.313128+00:00",
+        "updated_at": "2026-06-27 07:20:49.313128+00:00",
+        "references": [
+          {
+            "id": "182e5760-86b3-51d0-6561-dd73eaf46a5d",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Sơ đồ chẩn đoán tăng huyết áp",
+                "number": "1.3"
+              }
+            ],
+            "locator": "Hình 1. Sơ đồ chẩn đoán tăng huyết áp với phương pháp đo huyết áp tại phòng khám (thiết yếu) và phương pháp đo huyết áp tại nhà, đo huyết áp liên tục (tối ưu)",
+            "locator_detail": "Tree 1 diagnosis workflow and routing logic.",
+            "printed_page_numbers": [
+              8
+            ],
+            "pdf_page_numbers": [
+              10
+            ],
+            "reference_note": "Digitized according to the approved Tree 1 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "3083677e-0c15-2332-6c31-a8400c4cddb7",
+            "traversal_order": 1,
+            "to_node_key": "T1_LINK_HYPERTENSIVE_EMERGENCY",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T1_LINK_HYPERTENSIVE_EMERGENCY": {
+        "id": "b8778eca-3e96-47d7-fc9d-c8ff3c68e3f7",
+        "node_key": "T1_LINK_HYPERTENSIVE_EMERGENCY",
+        "node_type": "LINK",
+        "text_en": "Hypertensive Emergency Tree",
+        "text_vi": "Cây 14: THA CẤP CỨU",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "hypertensive-emergency",
+        "link_target_node_key": null,
+        "display_order": 4,
+        "created_at": "2026-06-27 07:20:49.313128+00:00",
+        "updated_at": "2026-06-27 07:20:49.313128+00:00",
+        "references": [],
+        "transitions": []
+      },
       "T1_C_CLINIC_1_NON_CRISIS": {
         "id": "6538e358-5110-978e-fdeb-9f9163930524",
         "node_key": "T1_C_CLINIC_1_NON_CRISIS",
@@ -122,12 +233,12 @@
           "all": [
             {
               "op": "lt",
-              "path": "input.clinic_1_sbp",
+              "path": "input.current_clinic_sbp",
               "value": 180
             },
             {
               "op": "lt",
-              "path": "input.clinic_1_dbp",
+              "path": "input.current_clinic_dbp",
               "value": 120
             }
           ]
@@ -199,12 +310,12 @@
               "any": [
                 {
                   "op": "gte",
-                  "path": "input.clinic_1_sbp",
+                  "path": "input.current_clinic_sbp",
                   "value": 140
                 },
                 {
                   "op": "gte",
-                  "path": "input.clinic_1_dbp",
+                  "path": "input.current_clinic_dbp",
                   "value": 90
                 }
               ]
@@ -220,12 +331,12 @@
                   "all": [
                     {
                       "op": "gte",
-                      "path": "input.clinic_1_sbp",
+                      "path": "input.current_clinic_sbp",
                       "value": 130
                     },
                     {
                       "op": "lte",
-                      "path": "input.clinic_1_sbp",
+                      "path": "input.current_clinic_sbp",
                       "value": 139
                     }
                   ]
@@ -234,12 +345,12 @@
                   "all": [
                     {
                       "op": "gte",
-                      "path": "input.clinic_1_dbp",
+                      "path": "input.current_clinic_dbp",
                       "value": 85
                     },
                     {
                       "op": "lte",
-                      "path": "input.clinic_1_dbp",
+                      "path": "input.current_clinic_dbp",
                       "value": 89
                     }
                   ]
@@ -255,313 +366,16 @@
               "all": [
                 {
                   "op": "lt",
-                  "path": "input.clinic_1_sbp",
+                  "path": "input.current_clinic_sbp",
                   "value": 130
                 },
                 {
                   "op": "lt",
-                  "path": "input.clinic_1_dbp",
+                  "path": "input.current_clinic_dbp",
                   "value": 85
                 }
               ]
             }
-          }
-        ]
-      },
-      "T1_C_ESSENTIAL_GRADE_1": {
-        "id": "60c1e457-4b7d-614b-8ef7-61506403ef5f",
-        "node_key": "T1_C_ESSENTIAL_GRADE_1",
-        "node_type": "CONDITION",
-        "text_en": "SBP 140–159 mmHg OR DBP 90–99 mmHg",
-        "text_vi": "HATT 140–159 mmHg HOẶC HATTr 90–99 mmHg",
-        "condition_definition": {
-          "any": [
-            {
-              "all": [
-                {
-                  "op": "gte",
-                  "path": "input.clinic_1_sbp",
-                  "value": 140
-                },
-                {
-                  "op": "lte",
-                  "path": "input.clinic_1_sbp",
-                  "value": 159
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "gte",
-                  "path": "input.clinic_1_dbp",
-                  "value": 90
-                },
-                {
-                  "op": "lte",
-                  "path": "input.clinic_1_dbp",
-                  "value": 99
-                }
-              ]
-            }
-          ]
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 57,
-        "created_at": "2026-06-27 07:20:49.313128+00:00",
-        "updated_at": "2026-06-27 07:20:49.313128+00:00",
-        "references": [
-          {
-            "id": "c2a63230-8448-db17-f1d5-a6032e1ae413",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Sơ đồ chẩn đoán tăng huyết áp",
-                "number": "1.3"
-              }
-            ],
-            "locator": "Hình 1. Sơ đồ chẩn đoán tăng huyết áp với phương pháp đo huyết áp tại phòng khám (thiết yếu) và phương pháp đo huyết áp tại nhà, đo huyết áp liên tục (tối ưu)",
-            "locator_detail": "Tree 1 diagnosis workflow and routing logic.",
-            "printed_page_numbers": [
-              8
-            ],
-            "pdf_page_numbers": [
-              10
-            ],
-            "reference_note": "Digitized according to the approved Tree 1 diagram.",
-            "reference_order": 1
-          },
-          {
-            "id": "ca5f6545-1f29-7137-94b3-fa6de915005e",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Định nghĩa và phân loại tăng huyết áp",
-                "number": "1.2"
-              }
-            ],
-            "locator": "Bảng 1. Chẩn đoán tăng huyết áp theo ngưỡng huyết áp đo tại phòng khám",
-            "locator_detail": "Clinic BP thresholds for normal BP, high-normal BP, Grade 1 hypertension, Grade 2 hypertension, hypertensive emergency, and isolated systolic hypertension.",
-            "printed_page_numbers": [
-              7
-            ],
-            "pdf_page_numbers": [
-              9
-            ],
-            "reference_note": null,
-            "reference_order": 2
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "56c35a70-3380-20a3-9bee-50d97423d558",
-            "traversal_order": 1,
-            "to_node_key": "T1_INF_ESSENTIAL_GRADE_1",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T1_C_ESSENTIAL_GRADE_2": {
-        "id": "67ab35c9-30ea-85e4-ffb8-1a15cfb906e1",
-        "node_key": "T1_C_ESSENTIAL_GRADE_2",
-        "node_type": "CONDITION",
-        "text_en": "SBP ≥ 160 mmHg OR DBP ≥ 100 mmHg",
-        "text_vi": "HATT ≥ 160 HOẶC HATTr ≥ 100 mmHg",
-        "condition_definition": {
-          "any": [
-            {
-              "op": "gte",
-              "path": "input.clinic_1_sbp",
-              "value": 160
-            },
-            {
-              "op": "gte",
-              "path": "input.clinic_1_dbp",
-              "value": 100
-            }
-          ]
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 54,
-        "created_at": "2026-06-27 07:20:49.313128+00:00",
-        "updated_at": "2026-06-27 07:20:49.313128+00:00",
-        "references": [
-          {
-            "id": "ac307e17-9776-50b9-6308-c04589f2dec9",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Sơ đồ chẩn đoán tăng huyết áp",
-                "number": "1.3"
-              }
-            ],
-            "locator": "Hình 1. Sơ đồ chẩn đoán tăng huyết áp với phương pháp đo huyết áp tại phòng khám (thiết yếu) và phương pháp đo huyết áp tại nhà, đo huyết áp liên tục (tối ưu)",
-            "locator_detail": "Tree 1 diagnosis workflow and routing logic.",
-            "printed_page_numbers": [
-              8
-            ],
-            "pdf_page_numbers": [
-              10
-            ],
-            "reference_note": "Digitized according to the approved Tree 1 diagram.",
-            "reference_order": 1
-          },
-          {
-            "id": "e208c1dc-0299-e113-595a-99a21277f8a0",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Định nghĩa và phân loại tăng huyết áp",
-                "number": "1.2"
-              }
-            ],
-            "locator": "Bảng 1. Chẩn đoán tăng huyết áp theo ngưỡng huyết áp đo tại phòng khám",
-            "locator_detail": "Clinic BP thresholds for normal BP, high-normal BP, Grade 1 hypertension, Grade 2 hypertension, hypertensive emergency, and isolated systolic hypertension.",
-            "printed_page_numbers": [
-              7
-            ],
-            "pdf_page_numbers": [
-              9
-            ],
-            "reference_note": null,
-            "reference_order": 2
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "75922197-ea80-da5c-c403-2554bfd7e888",
-            "traversal_order": 1,
-            "to_node_key": "T1_INF_ESSENTIAL_GRADE_2",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T1_C_ESSENTIAL_HIGH_NORMAL_BP": {
-        "id": "cd0e9072-3ea2-ae16-3d22-9c27c95e0bf5",
-        "node_key": "T1_C_ESSENTIAL_HIGH_NORMAL_BP",
-        "node_type": "CONDITION",
-        "text_en": "SBP 130–139 mmHg OR DBP 85–89 mmHg",
-        "text_vi": "HATT 130–139 HOẶC HATTr 85–89",
-        "condition_definition": {
-          "any": [
-            {
-              "all": [
-                {
-                  "op": "gte",
-                  "path": "input.clinic_1_sbp",
-                  "value": 130
-                },
-                {
-                  "op": "lte",
-                  "path": "input.clinic_1_sbp",
-                  "value": 139
-                }
-              ]
-            },
-            {
-              "all": [
-                {
-                  "op": "gte",
-                  "path": "input.clinic_1_dbp",
-                  "value": 85
-                },
-                {
-                  "op": "lte",
-                  "path": "input.clinic_1_dbp",
-                  "value": 89
-                }
-              ]
-            }
-          ]
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 60,
-        "created_at": "2026-06-27 07:20:49.313128+00:00",
-        "updated_at": "2026-06-27 07:20:49.313128+00:00",
-        "references": [
-          {
-            "id": "b8a9e70b-bd9a-d062-78f4-761b3945c796",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Sơ đồ chẩn đoán tăng huyết áp",
-                "number": "1.3"
-              }
-            ],
-            "locator": "Hình 1. Sơ đồ chẩn đoán tăng huyết áp với phương pháp đo huyết áp tại phòng khám (thiết yếu) và phương pháp đo huyết áp tại nhà, đo huyết áp liên tục (tối ưu)",
-            "locator_detail": "Tree 1 diagnosis workflow and routing logic.",
-            "printed_page_numbers": [
-              8
-            ],
-            "pdf_page_numbers": [
-              10
-            ],
-            "reference_note": "Digitized according to the approved Tree 1 diagram.",
-            "reference_order": 1
-          },
-          {
-            "id": "85075b17-de81-bd3f-eccc-ef3a5e46eb16",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Định nghĩa và phân loại tăng huyết áp",
-                "number": "1.2"
-              }
-            ],
-            "locator": "Bảng 1. Chẩn đoán tăng huyết áp theo ngưỡng huyết áp đo tại phòng khám",
-            "locator_detail": "Clinic BP thresholds for normal BP, high-normal BP, Grade 1 hypertension, Grade 2 hypertension, hypertensive emergency, and isolated systolic hypertension.",
-            "printed_page_numbers": [
-              7
-            ],
-            "pdf_page_numbers": [
-              9
-            ],
-            "reference_note": null,
-            "reference_order": 2
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "6d85e9fe-f59e-5a5b-1bf4-f17b96bc666b",
-            "traversal_order": 1,
-            "to_node_key": "T1_INF_ESSENTIAL_HIGH_NORMAL_BP",
-            "candidate_condition": null
           }
         ]
       },
@@ -575,12 +389,12 @@
           "any": [
             {
               "op": "gte",
-              "path": "input.clinic_1_sbp",
+              "path": "input.current_clinic_sbp",
               "value": 140
             },
             {
               "op": "gte",
-              "path": "input.clinic_1_dbp",
+              "path": "input.current_clinic_dbp",
               "value": 90
             }
           ]
@@ -648,488 +462,6 @@
             "edge_id": "a2ece51c-4e7d-b61e-47ed-3237c63eca64",
             "traversal_order": 1,
             "to_node_key": "T1_INF_ESSENTIAL_HYPERTENSION",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T1_C_ESSENTIAL_NORMAL_BP": {
-        "id": "578ce908-3403-1df1-378a-79136a9eedb3",
-        "node_key": "T1_C_ESSENTIAL_NORMAL_BP",
-        "node_type": "CONDITION",
-        "text_en": "SBP < 130 mmHg AND DBP < 85 mmHg",
-        "text_vi": "HATT < 130 VÀ HATTr < 85",
-        "condition_definition": {
-          "all": [
-            {
-              "op": "lt",
-              "path": "input.clinic_1_sbp",
-              "value": 130
-            },
-            {
-              "op": "lt",
-              "path": "input.clinic_1_dbp",
-              "value": 85
-            }
-          ]
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 63,
-        "created_at": "2026-06-27 07:20:49.313128+00:00",
-        "updated_at": "2026-06-27 07:20:49.313128+00:00",
-        "references": [
-          {
-            "id": "0c79217b-9541-04b4-5888-7e26d6185876",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Sơ đồ chẩn đoán tăng huyết áp",
-                "number": "1.3"
-              }
-            ],
-            "locator": "Hình 1. Sơ đồ chẩn đoán tăng huyết áp với phương pháp đo huyết áp tại phòng khám (thiết yếu) và phương pháp đo huyết áp tại nhà, đo huyết áp liên tục (tối ưu)",
-            "locator_detail": "Tree 1 diagnosis workflow and routing logic.",
-            "printed_page_numbers": [
-              8
-            ],
-            "pdf_page_numbers": [
-              10
-            ],
-            "reference_note": "Digitized according to the approved Tree 1 diagram.",
-            "reference_order": 1
-          },
-          {
-            "id": "e9b42f67-ee25-1a03-c97b-79b658d7d0d0",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Định nghĩa và phân loại tăng huyết áp",
-                "number": "1.2"
-              }
-            ],
-            "locator": "Bảng 1. Chẩn đoán tăng huyết áp theo ngưỡng huyết áp đo tại phòng khám",
-            "locator_detail": "Clinic BP thresholds for normal BP, high-normal BP, Grade 1 hypertension, Grade 2 hypertension, hypertensive emergency, and isolated systolic hypertension.",
-            "printed_page_numbers": [
-              7
-            ],
-            "pdf_page_numbers": [
-              9
-            ],
-            "reference_note": null,
-            "reference_order": 2
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "24ac7da9-9c3b-8cd0-ae14-438b81f12f34",
-            "traversal_order": 1,
-            "to_node_key": "T1_END_ESSENTIAL_NORMAL_BP",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T1_C_IS_NOT_PREGNANT": {
-        "id": "8a14e0bd-3f41-4672-9b28-f236d56cfe99",
-        "node_key": "T1_C_IS_NOT_PREGNANT",
-        "node_type": "CONDITION",
-        "text_en": "Patient is not pregnant",
-        "text_vi": "Bệnh nhân không mang thai",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.is_pregnant",
-          "value": false
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 67,
-        "created_at": "2026-06-27 07:20:49.313128+00:00",
-        "updated_at": "2026-06-27 07:20:49.313128+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "e683dce1-92d1-420a-8493-72f55ae08fe6",
-            "traversal_order": 1,
-            "to_node_key": "T1_C_CLINIC_1_CRISIS",
-            "candidate_condition": {
-              "any": [
-                {
-                  "op": "gte",
-                  "path": "input.clinic_1_sbp",
-                  "value": 180
-                },
-                {
-                  "op": "gte",
-                  "path": "input.clinic_1_dbp",
-                  "value": 120
-                }
-              ]
-            }
-          },
-          {
-            "edge_id": "9a624eb5-da84-4ecf-aec4-2b84969caf3f",
-            "traversal_order": 2,
-            "to_node_key": "T1_C_CLINIC_1_NON_CRISIS",
-            "candidate_condition": {
-              "all": [
-                {
-                  "op": "lt",
-                  "path": "input.clinic_1_sbp",
-                  "value": 180
-                },
-                {
-                  "op": "lt",
-                  "path": "input.clinic_1_dbp",
-                  "value": 120
-                }
-              ]
-            }
-          }
-        ]
-      },
-      "T1_C_IS_PREGNANT": {
-        "id": "af62ea0d-827f-488d-9218-ffb2d0e4e0b0",
-        "node_key": "T1_C_IS_PREGNANT",
-        "node_type": "CONDITION",
-        "text_en": "Patient is pregnant",
-        "text_vi": "Bệnh nhân đang mang thai",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.is_pregnant",
-          "value": true
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 65,
-        "created_at": "2026-06-27 07:20:49.313128+00:00",
-        "updated_at": "2026-06-27 07:20:49.313128+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "81fe5658-af2c-4b1f-bab4-3ca14dd44965",
-            "traversal_order": 1,
-            "to_node_key": "T1_LINK_HYPERTENSION_IN_PREGNANCY",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T1_END_ESSENTIAL_NORMAL_BP": {
-        "id": "c0a64934-faa3-7403-22a9-8db45fb883d9",
-        "node_key": "T1_END_ESSENTIAL_NORMAL_BP",
-        "node_type": "END",
-        "text_en": "Normal BP",
-        "text_vi": "HA BÌNH THƯỜNG",
-        "condition_definition": null,
-        "context_patch": {
-          "diagnosis": {
-            "hypertension_class": "NORMAL_BP"
-          }
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 64,
-        "created_at": "2026-06-27 07:20:49.313128+00:00",
-        "updated_at": "2026-06-28 07:51:47.889206+00:00",
-        "references": [
-          {
-            "id": "7a6734e0-e98a-1c22-e051-bae8bef0bafb",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Sơ đồ chẩn đoán tăng huyết áp",
-                "number": "1.3"
-              }
-            ],
-            "locator": "Hình 1. Sơ đồ chẩn đoán tăng huyết áp với phương pháp đo huyết áp tại phòng khám (thiết yếu) và phương pháp đo huyết áp tại nhà, đo huyết áp liên tục (tối ưu)",
-            "locator_detail": "Tree 1 diagnosis workflow and routing logic.",
-            "printed_page_numbers": [
-              8
-            ],
-            "pdf_page_numbers": [
-              10
-            ],
-            "reference_note": "Digitized according to the approved Tree 1 diagram.",
-            "reference_order": 1
-          },
-          {
-            "id": "8b8f272d-f1a8-3f53-647d-f9d6a4595943",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Định nghĩa và phân loại tăng huyết áp",
-                "number": "1.2"
-              }
-            ],
-            "locator": "Bảng 1. Chẩn đoán tăng huyết áp theo ngưỡng huyết áp đo tại phòng khám",
-            "locator_detail": "Clinic BP thresholds for normal BP, high-normal BP, Grade 1 hypertension, Grade 2 hypertension, hypertensive emergency, and isolated systolic hypertension.",
-            "printed_page_numbers": [
-              7
-            ],
-            "pdf_page_numbers": [
-              9
-            ],
-            "reference_note": null,
-            "reference_order": 2
-          }
-        ],
-        "transitions": []
-      },
-      "T1_INF_ESSENTIAL_GRADE_1": {
-        "id": "1bfbc013-8b60-85f8-0e6f-16bb8b2e08f3",
-        "node_key": "T1_INF_ESSENTIAL_GRADE_1",
-        "node_type": "INFERENCE",
-        "text_en": "Grade 1 hypertension",
-        "text_vi": "THA độ 1",
-        "condition_definition": null,
-        "context_patch": {
-          "diagnosis": {
-            "hypertension_class": "GRADE_1_HYPERTENSION"
-          }
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 58,
-        "created_at": "2026-06-27 07:20:49.313128+00:00",
-        "updated_at": "2026-06-27 07:20:49.313128+00:00",
-        "references": [
-          {
-            "id": "5838d15b-3878-f2fe-0511-b0337972e8ac",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Sơ đồ chẩn đoán tăng huyết áp",
-                "number": "1.3"
-              }
-            ],
-            "locator": "Hình 1. Sơ đồ chẩn đoán tăng huyết áp với phương pháp đo huyết áp tại phòng khám (thiết yếu) và phương pháp đo huyết áp tại nhà, đo huyết áp liên tục (tối ưu)",
-            "locator_detail": "Tree 1 diagnosis workflow and routing logic.",
-            "printed_page_numbers": [
-              8
-            ],
-            "pdf_page_numbers": [
-              10
-            ],
-            "reference_note": "Digitized according to the approved Tree 1 diagram.",
-            "reference_order": 1
-          },
-          {
-            "id": "12cfcaf8-bb6c-49d2-baac-e7fd8af7ce82",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Định nghĩa và phân loại tăng huyết áp",
-                "number": "1.2"
-              }
-            ],
-            "locator": "Bảng 1. Chẩn đoán tăng huyết áp theo ngưỡng huyết áp đo tại phòng khám",
-            "locator_detail": "Clinic BP thresholds for normal BP, high-normal BP, Grade 1 hypertension, Grade 2 hypertension, hypertensive emergency, and isolated systolic hypertension.",
-            "printed_page_numbers": [
-              7
-            ],
-            "pdf_page_numbers": [
-              9
-            ],
-            "reference_note": null,
-            "reference_order": 2
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "184ed309-1c67-9ada-5453-28ae7a6ebc8b",
-            "traversal_order": 1,
-            "to_node_key": "T1_LINK_ESSENTIAL_GRADE_1_TO_RISK",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T1_INF_ESSENTIAL_GRADE_2": {
-        "id": "42a86643-3a3d-4e13-e45f-c160a278e0b9",
-        "node_key": "T1_INF_ESSENTIAL_GRADE_2",
-        "node_type": "INFERENCE",
-        "text_en": "Grade 2 hypertension",
-        "text_vi": "THA độ 2",
-        "condition_definition": null,
-        "context_patch": {
-          "diagnosis": {
-            "hypertension_class": "GRADE_2_HYPERTENSION"
-          }
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 55,
-        "created_at": "2026-06-27 07:20:49.313128+00:00",
-        "updated_at": "2026-06-27 07:20:49.313128+00:00",
-        "references": [
-          {
-            "id": "0128aaea-6325-23af-d1cc-6ce73f1f7bfd",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Sơ đồ chẩn đoán tăng huyết áp",
-                "number": "1.3"
-              }
-            ],
-            "locator": "Hình 1. Sơ đồ chẩn đoán tăng huyết áp với phương pháp đo huyết áp tại phòng khám (thiết yếu) và phương pháp đo huyết áp tại nhà, đo huyết áp liên tục (tối ưu)",
-            "locator_detail": "Tree 1 diagnosis workflow and routing logic.",
-            "printed_page_numbers": [
-              8
-            ],
-            "pdf_page_numbers": [
-              10
-            ],
-            "reference_note": "Digitized according to the approved Tree 1 diagram.",
-            "reference_order": 1
-          },
-          {
-            "id": "ed0d04da-ed49-25b9-e34f-36aac80e78bb",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Định nghĩa và phân loại tăng huyết áp",
-                "number": "1.2"
-              }
-            ],
-            "locator": "Bảng 1. Chẩn đoán tăng huyết áp theo ngưỡng huyết áp đo tại phòng khám",
-            "locator_detail": "Clinic BP thresholds for normal BP, high-normal BP, Grade 1 hypertension, Grade 2 hypertension, hypertensive emergency, and isolated systolic hypertension.",
-            "printed_page_numbers": [
-              7
-            ],
-            "pdf_page_numbers": [
-              9
-            ],
-            "reference_note": null,
-            "reference_order": 2
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "a8ba8ec1-8fbe-2dfa-9208-55650393604a",
-            "traversal_order": 1,
-            "to_node_key": "T1_LINK_ESSENTIAL_GRADE_2_TO_RISK",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T1_INF_ESSENTIAL_HIGH_NORMAL_BP": {
-        "id": "28c71bb1-a8df-b8d0-bc32-06c0e5006228",
-        "node_key": "T1_INF_ESSENTIAL_HIGH_NORMAL_BP",
-        "node_type": "INFERENCE",
-        "text_en": "High-normal BP",
-        "text_vi": "HA bình thường-cao",
-        "condition_definition": null,
-        "context_patch": {
-          "diagnosis": {
-            "hypertension_class": "HIGH_NORMAL_BP"
-          }
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 61,
-        "created_at": "2026-06-27 07:20:49.313128+00:00",
-        "updated_at": "2026-06-27 07:20:49.313128+00:00",
-        "references": [
-          {
-            "id": "812249ad-b551-8ee7-c690-dd1acaffd71c",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Sơ đồ chẩn đoán tăng huyết áp",
-                "number": "1.3"
-              }
-            ],
-            "locator": "Hình 1. Sơ đồ chẩn đoán tăng huyết áp với phương pháp đo huyết áp tại phòng khám (thiết yếu) và phương pháp đo huyết áp tại nhà, đo huyết áp liên tục (tối ưu)",
-            "locator_detail": "Tree 1 diagnosis workflow and routing logic.",
-            "printed_page_numbers": [
-              8
-            ],
-            "pdf_page_numbers": [
-              10
-            ],
-            "reference_note": "Digitized according to the approved Tree 1 diagram.",
-            "reference_order": 1
-          },
-          {
-            "id": "85710b63-b3eb-24e8-ba25-24bd20e6e338",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chẩn đoán tăng huyết áp",
-                "number": "I"
-              },
-              {
-                "title": "Định nghĩa và phân loại tăng huyết áp",
-                "number": "1.2"
-              }
-            ],
-            "locator": "Bảng 1. Chẩn đoán tăng huyết áp theo ngưỡng huyết áp đo tại phòng khám",
-            "locator_detail": "Clinic BP thresholds for normal BP, high-normal BP, Grade 1 hypertension, Grade 2 hypertension, hypertensive emergency, and isolated systolic hypertension.",
-            "printed_page_numbers": [
-              7
-            ],
-            "pdf_page_numbers": [
-              9
-            ],
-            "reference_note": null,
-            "reference_order": 2
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "7a72ec6b-d038-74c4-6e83-620ee5be96ed",
-            "traversal_order": 1,
-            "to_node_key": "T1_LINK_ESSENTIAL_HIGH_NORMAL_BP_TO_RISK",
             "candidate_condition": null
           }
         ]
@@ -1212,12 +544,12 @@
               "any": [
                 {
                   "op": "gte",
-                  "path": "input.clinic_1_sbp",
+                  "path": "input.current_clinic_sbp",
                   "value": 160
                 },
                 {
                   "op": "gte",
-                  "path": "input.clinic_1_dbp",
+                  "path": "input.current_clinic_dbp",
                   "value": 100
                 }
               ]
@@ -1233,12 +565,12 @@
                   "all": [
                     {
                       "op": "gte",
-                      "path": "input.clinic_1_sbp",
+                      "path": "input.current_clinic_sbp",
                       "value": 140
                     },
                     {
                       "op": "lte",
-                      "path": "input.clinic_1_sbp",
+                      "path": "input.current_clinic_sbp",
                       "value": 159
                     }
                   ]
@@ -1247,12 +579,12 @@
                   "all": [
                     {
                       "op": "gte",
-                      "path": "input.clinic_1_dbp",
+                      "path": "input.current_clinic_dbp",
                       "value": 90
                     },
                     {
                       "op": "lte",
-                      "path": "input.clinic_1_dbp",
+                      "path": "input.current_clinic_dbp",
                       "value": 99
                     }
                   ]
@@ -1262,28 +594,37 @@
           }
         ]
       },
-      "T1_INF_HYPERTENSIVE_EMERGENCY": {
-        "id": "bfbb746b-d5ff-6d27-a5e6-5376a31d2841",
-        "node_key": "T1_INF_HYPERTENSIVE_EMERGENCY",
-        "node_type": "INFERENCE",
-        "text_en": "Hypertensive emergency",
-        "text_vi": "THA CẤP CỨU",
-        "condition_definition": null,
-        "context_patch": {
-          "diagnosis": {
-            "hypertension_class": "HYPERTENSIVE_EMERGENCY"
-          }
+      "T1_C_ESSENTIAL_GRADE_2": {
+        "id": "67ab35c9-30ea-85e4-ffb8-1a15cfb906e1",
+        "node_key": "T1_C_ESSENTIAL_GRADE_2",
+        "node_type": "CONDITION",
+        "text_en": "SBP ≥ 160 mmHg OR DBP ≥ 100 mmHg",
+        "text_vi": "HATT ≥ 160 HOẶC HATTr ≥ 100 mmHg",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "gte",
+              "path": "input.current_clinic_sbp",
+              "value": 160
+            },
+            {
+              "op": "gte",
+              "path": "input.current_clinic_dbp",
+              "value": 100
+            }
+          ]
         },
+        "context_patch": null,
         "action_payload": null,
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 3,
+        "display_order": 54,
         "created_at": "2026-06-27 07:20:49.313128+00:00",
         "updated_at": "2026-06-27 07:20:49.313128+00:00",
         "references": [
           {
-            "id": "182e5760-86b3-51d0-6561-dd73eaf46a5d",
+            "id": "ac307e17-9776-50b9-6308-c04589f2dec9",
             "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
             "section_path": [
               {
@@ -1305,13 +646,316 @@
             ],
             "reference_note": "Digitized according to the approved Tree 1 diagram.",
             "reference_order": 1
+          },
+          {
+            "id": "e208c1dc-0299-e113-595a-99a21277f8a0",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Định nghĩa và phân loại tăng huyết áp",
+                "number": "1.2"
+              }
+            ],
+            "locator": "Bảng 1. Chẩn đoán tăng huyết áp theo ngưỡng huyết áp đo tại phòng khám",
+            "locator_detail": "Clinic BP thresholds for normal BP, high-normal BP, Grade 1 hypertension, Grade 2 hypertension, hypertensive emergency, and isolated systolic hypertension.",
+            "printed_page_numbers": [
+              7
+            ],
+            "pdf_page_numbers": [
+              9
+            ],
+            "reference_note": null,
+            "reference_order": 2
           }
         ],
         "transitions": [
           {
-            "edge_id": "3083677e-0c15-2332-6c31-a8400c4cddb7",
+            "edge_id": "75922197-ea80-da5c-c403-2554bfd7e888",
             "traversal_order": 1,
-            "to_node_key": "T1_LINK_HYPERTENSIVE_EMERGENCY",
+            "to_node_key": "T1_INF_ESSENTIAL_GRADE_2",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T1_INF_ESSENTIAL_GRADE_2": {
+        "id": "42a86643-3a3d-4e13-e45f-c160a278e0b9",
+        "node_key": "T1_INF_ESSENTIAL_GRADE_2",
+        "node_type": "INFERENCE",
+        "text_en": "Grade 2 hypertension",
+        "text_vi": "THA độ 2",
+        "condition_definition": null,
+        "context_patch": {
+          "diagnosis": {
+            "hypertension_class": "GRADE_2_HYPERTENSION"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 55,
+        "created_at": "2026-06-27 07:20:49.313128+00:00",
+        "updated_at": "2026-06-27 07:20:49.313128+00:00",
+        "references": [
+          {
+            "id": "0128aaea-6325-23af-d1cc-6ce73f1f7bfd",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Sơ đồ chẩn đoán tăng huyết áp",
+                "number": "1.3"
+              }
+            ],
+            "locator": "Hình 1. Sơ đồ chẩn đoán tăng huyết áp với phương pháp đo huyết áp tại phòng khám (thiết yếu) và phương pháp đo huyết áp tại nhà, đo huyết áp liên tục (tối ưu)",
+            "locator_detail": "Tree 1 diagnosis workflow and routing logic.",
+            "printed_page_numbers": [
+              8
+            ],
+            "pdf_page_numbers": [
+              10
+            ],
+            "reference_note": "Digitized according to the approved Tree 1 diagram.",
+            "reference_order": 1
+          },
+          {
+            "id": "ed0d04da-ed49-25b9-e34f-36aac80e78bb",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Định nghĩa và phân loại tăng huyết áp",
+                "number": "1.2"
+              }
+            ],
+            "locator": "Bảng 1. Chẩn đoán tăng huyết áp theo ngưỡng huyết áp đo tại phòng khám",
+            "locator_detail": "Clinic BP thresholds for normal BP, high-normal BP, Grade 1 hypertension, Grade 2 hypertension, hypertensive emergency, and isolated systolic hypertension.",
+            "printed_page_numbers": [
+              7
+            ],
+            "pdf_page_numbers": [
+              9
+            ],
+            "reference_note": null,
+            "reference_order": 2
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "a8ba8ec1-8fbe-2dfa-9208-55650393604a",
+            "traversal_order": 1,
+            "to_node_key": "T1_LINK_ESSENTIAL_GRADE_2_TO_RISK",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T1_LINK_ESSENTIAL_GRADE_2_TO_RISK": {
+        "id": "da558a72-f0f4-eb91-e3b1-e823f6b4054b",
+        "node_key": "T1_LINK_ESSENTIAL_GRADE_2_TO_RISK",
+        "node_type": "LINK",
+        "text_en": "Risk Classification Tree",
+        "text_vi": "Cây 2: Phân Tầng Nguy Cơ",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "risk-classification",
+        "link_target_node_key": null,
+        "display_order": 56,
+        "created_at": "2026-06-27 07:20:49.313128+00:00",
+        "updated_at": "2026-06-27 07:20:49.313128+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T1_C_ESSENTIAL_GRADE_1": {
+        "id": "60c1e457-4b7d-614b-8ef7-61506403ef5f",
+        "node_key": "T1_C_ESSENTIAL_GRADE_1",
+        "node_type": "CONDITION",
+        "text_en": "SBP 140–159 mmHg OR DBP 90–99 mmHg",
+        "text_vi": "HATT 140–159 mmHg HOẶC HATTr 90–99 mmHg",
+        "condition_definition": {
+          "any": [
+            {
+              "all": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 140
+                },
+                {
+                  "op": "lte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 159
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                },
+                {
+                  "op": "lte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 99
+                }
+              ]
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 57,
+        "created_at": "2026-06-27 07:20:49.313128+00:00",
+        "updated_at": "2026-06-27 07:20:49.313128+00:00",
+        "references": [
+          {
+            "id": "c2a63230-8448-db17-f1d5-a6032e1ae413",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Sơ đồ chẩn đoán tăng huyết áp",
+                "number": "1.3"
+              }
+            ],
+            "locator": "Hình 1. Sơ đồ chẩn đoán tăng huyết áp với phương pháp đo huyết áp tại phòng khám (thiết yếu) và phương pháp đo huyết áp tại nhà, đo huyết áp liên tục (tối ưu)",
+            "locator_detail": "Tree 1 diagnosis workflow and routing logic.",
+            "printed_page_numbers": [
+              8
+            ],
+            "pdf_page_numbers": [
+              10
+            ],
+            "reference_note": "Digitized according to the approved Tree 1 diagram.",
+            "reference_order": 1
+          },
+          {
+            "id": "ca5f6545-1f29-7137-94b3-fa6de915005e",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Định nghĩa và phân loại tăng huyết áp",
+                "number": "1.2"
+              }
+            ],
+            "locator": "Bảng 1. Chẩn đoán tăng huyết áp theo ngưỡng huyết áp đo tại phòng khám",
+            "locator_detail": "Clinic BP thresholds for normal BP, high-normal BP, Grade 1 hypertension, Grade 2 hypertension, hypertensive emergency, and isolated systolic hypertension.",
+            "printed_page_numbers": [
+              7
+            ],
+            "pdf_page_numbers": [
+              9
+            ],
+            "reference_note": null,
+            "reference_order": 2
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "56c35a70-3380-20a3-9bee-50d97423d558",
+            "traversal_order": 1,
+            "to_node_key": "T1_INF_ESSENTIAL_GRADE_1",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T1_INF_ESSENTIAL_GRADE_1": {
+        "id": "1bfbc013-8b60-85f8-0e6f-16bb8b2e08f3",
+        "node_key": "T1_INF_ESSENTIAL_GRADE_1",
+        "node_type": "INFERENCE",
+        "text_en": "Grade 1 hypertension",
+        "text_vi": "THA độ 1",
+        "condition_definition": null,
+        "context_patch": {
+          "diagnosis": {
+            "hypertension_class": "GRADE_1_HYPERTENSION"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 58,
+        "created_at": "2026-06-27 07:20:49.313128+00:00",
+        "updated_at": "2026-06-27 07:20:49.313128+00:00",
+        "references": [
+          {
+            "id": "5838d15b-3878-f2fe-0511-b0337972e8ac",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Sơ đồ chẩn đoán tăng huyết áp",
+                "number": "1.3"
+              }
+            ],
+            "locator": "Hình 1. Sơ đồ chẩn đoán tăng huyết áp với phương pháp đo huyết áp tại phòng khám (thiết yếu) và phương pháp đo huyết áp tại nhà, đo huyết áp liên tục (tối ưu)",
+            "locator_detail": "Tree 1 diagnosis workflow and routing logic.",
+            "printed_page_numbers": [
+              8
+            ],
+            "pdf_page_numbers": [
+              10
+            ],
+            "reference_note": "Digitized according to the approved Tree 1 diagram.",
+            "reference_order": 1
+          },
+          {
+            "id": "12cfcaf8-bb6c-49d2-baac-e7fd8af7ce82",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Định nghĩa và phân loại tăng huyết áp",
+                "number": "1.2"
+              }
+            ],
+            "locator": "Bảng 1. Chẩn đoán tăng huyết áp theo ngưỡng huyết áp đo tại phòng khám",
+            "locator_detail": "Clinic BP thresholds for normal BP, high-normal BP, Grade 1 hypertension, Grade 2 hypertension, hypertensive emergency, and isolated systolic hypertension.",
+            "printed_page_numbers": [
+              7
+            ],
+            "pdf_page_numbers": [
+              9
+            ],
+            "reference_note": null,
+            "reference_order": 2
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "184ed309-1c67-9ada-5453-28ae7a6ebc8b",
+            "traversal_order": 1,
+            "to_node_key": "T1_LINK_ESSENTIAL_GRADE_1_TO_RISK",
             "candidate_condition": null
           }
         ]
@@ -1334,23 +978,188 @@
         "references": [],
         "transitions": []
       },
-      "T1_LINK_ESSENTIAL_GRADE_2_TO_RISK": {
-        "id": "da558a72-f0f4-eb91-e3b1-e823f6b4054b",
-        "node_key": "T1_LINK_ESSENTIAL_GRADE_2_TO_RISK",
-        "node_type": "LINK",
-        "text_en": "Risk Classification Tree",
-        "text_vi": "Cây 2: Phân Tầng Nguy Cơ",
-        "condition_definition": null,
+      "T1_C_ESSENTIAL_HIGH_NORMAL_BP": {
+        "id": "cd0e9072-3ea2-ae16-3d22-9c27c95e0bf5",
+        "node_key": "T1_C_ESSENTIAL_HIGH_NORMAL_BP",
+        "node_type": "CONDITION",
+        "text_en": "SBP 130–139 mmHg OR DBP 85–89 mmHg",
+        "text_vi": "HATT 130–139 HOẶC HATTr 85–89",
+        "condition_definition": {
+          "any": [
+            {
+              "all": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 130
+                },
+                {
+                  "op": "lte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 139
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 85
+                },
+                {
+                  "op": "lte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 89
+                }
+              ]
+            }
+          ]
+        },
         "context_patch": null,
         "action_payload": null,
         "global_config": null,
-        "link_target_tree_key": "risk-classification",
+        "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 56,
+        "display_order": 60,
         "created_at": "2026-06-27 07:20:49.313128+00:00",
         "updated_at": "2026-06-27 07:20:49.313128+00:00",
-        "references": [],
-        "transitions": []
+        "references": [
+          {
+            "id": "b8a9e70b-bd9a-d062-78f4-761b3945c796",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Sơ đồ chẩn đoán tăng huyết áp",
+                "number": "1.3"
+              }
+            ],
+            "locator": "Hình 1. Sơ đồ chẩn đoán tăng huyết áp với phương pháp đo huyết áp tại phòng khám (thiết yếu) và phương pháp đo huyết áp tại nhà, đo huyết áp liên tục (tối ưu)",
+            "locator_detail": "Tree 1 diagnosis workflow and routing logic.",
+            "printed_page_numbers": [
+              8
+            ],
+            "pdf_page_numbers": [
+              10
+            ],
+            "reference_note": "Digitized according to the approved Tree 1 diagram.",
+            "reference_order": 1
+          },
+          {
+            "id": "85075b17-de81-bd3f-eccc-ef3a5e46eb16",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Định nghĩa và phân loại tăng huyết áp",
+                "number": "1.2"
+              }
+            ],
+            "locator": "Bảng 1. Chẩn đoán tăng huyết áp theo ngưỡng huyết áp đo tại phòng khám",
+            "locator_detail": "Clinic BP thresholds for normal BP, high-normal BP, Grade 1 hypertension, Grade 2 hypertension, hypertensive emergency, and isolated systolic hypertension.",
+            "printed_page_numbers": [
+              7
+            ],
+            "pdf_page_numbers": [
+              9
+            ],
+            "reference_note": null,
+            "reference_order": 2
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "6d85e9fe-f59e-5a5b-1bf4-f17b96bc666b",
+            "traversal_order": 1,
+            "to_node_key": "T1_INF_ESSENTIAL_HIGH_NORMAL_BP",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T1_INF_ESSENTIAL_HIGH_NORMAL_BP": {
+        "id": "28c71bb1-a8df-b8d0-bc32-06c0e5006228",
+        "node_key": "T1_INF_ESSENTIAL_HIGH_NORMAL_BP",
+        "node_type": "INFERENCE",
+        "text_en": "High-normal BP",
+        "text_vi": "HA bình thường-cao",
+        "condition_definition": null,
+        "context_patch": {
+          "diagnosis": {
+            "hypertension_class": "HIGH_NORMAL_BP"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 61,
+        "created_at": "2026-06-27 07:20:49.313128+00:00",
+        "updated_at": "2026-06-27 07:20:49.313128+00:00",
+        "references": [
+          {
+            "id": "812249ad-b551-8ee7-c690-dd1acaffd71c",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Sơ đồ chẩn đoán tăng huyết áp",
+                "number": "1.3"
+              }
+            ],
+            "locator": "Hình 1. Sơ đồ chẩn đoán tăng huyết áp với phương pháp đo huyết áp tại phòng khám (thiết yếu) và phương pháp đo huyết áp tại nhà, đo huyết áp liên tục (tối ưu)",
+            "locator_detail": "Tree 1 diagnosis workflow and routing logic.",
+            "printed_page_numbers": [
+              8
+            ],
+            "pdf_page_numbers": [
+              10
+            ],
+            "reference_note": "Digitized according to the approved Tree 1 diagram.",
+            "reference_order": 1
+          },
+          {
+            "id": "85710b63-b3eb-24e8-ba25-24bd20e6e338",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Định nghĩa và phân loại tăng huyết áp",
+                "number": "1.2"
+              }
+            ],
+            "locator": "Bảng 1. Chẩn đoán tăng huyết áp theo ngưỡng huyết áp đo tại phòng khám",
+            "locator_detail": "Clinic BP thresholds for normal BP, high-normal BP, Grade 1 hypertension, Grade 2 hypertension, hypertensive emergency, and isolated systolic hypertension.",
+            "printed_page_numbers": [
+              7
+            ],
+            "pdf_page_numbers": [
+              9
+            ],
+            "reference_note": null,
+            "reference_order": 2
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "7a72ec6b-d038-74c4-6e83-620ee5be96ed",
+            "traversal_order": 1,
+            "to_node_key": "T1_LINK_ESSENTIAL_HIGH_NORMAL_BP_TO_RISK",
+            "candidate_condition": null
+          }
+        ]
       },
       "T1_LINK_ESSENTIAL_HIGH_NORMAL_BP_TO_RISK": {
         "id": "8130a5fc-4e3c-edb9-6a46-d1eb994e3efd",
@@ -1370,6 +1179,193 @@
         "references": [],
         "transitions": []
       },
+      "T1_C_ESSENTIAL_NORMAL_BP": {
+        "id": "578ce908-3403-1df1-378a-79136a9eedb3",
+        "node_key": "T1_C_ESSENTIAL_NORMAL_BP",
+        "node_type": "CONDITION",
+        "text_en": "SBP < 130 mmHg AND DBP < 85 mmHg",
+        "text_vi": "HATT < 130 VÀ HATTr < 85",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value": 130
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value": 85
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 63,
+        "created_at": "2026-06-27 07:20:49.313128+00:00",
+        "updated_at": "2026-06-27 07:20:49.313128+00:00",
+        "references": [
+          {
+            "id": "0c79217b-9541-04b4-5888-7e26d6185876",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Sơ đồ chẩn đoán tăng huyết áp",
+                "number": "1.3"
+              }
+            ],
+            "locator": "Hình 1. Sơ đồ chẩn đoán tăng huyết áp với phương pháp đo huyết áp tại phòng khám (thiết yếu) và phương pháp đo huyết áp tại nhà, đo huyết áp liên tục (tối ưu)",
+            "locator_detail": "Tree 1 diagnosis workflow and routing logic.",
+            "printed_page_numbers": [
+              8
+            ],
+            "pdf_page_numbers": [
+              10
+            ],
+            "reference_note": "Digitized according to the approved Tree 1 diagram.",
+            "reference_order": 1
+          },
+          {
+            "id": "e9b42f67-ee25-1a03-c97b-79b658d7d0d0",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Định nghĩa và phân loại tăng huyết áp",
+                "number": "1.2"
+              }
+            ],
+            "locator": "Bảng 1. Chẩn đoán tăng huyết áp theo ngưỡng huyết áp đo tại phòng khám",
+            "locator_detail": "Clinic BP thresholds for normal BP, high-normal BP, Grade 1 hypertension, Grade 2 hypertension, hypertensive emergency, and isolated systolic hypertension.",
+            "printed_page_numbers": [
+              7
+            ],
+            "pdf_page_numbers": [
+              9
+            ],
+            "reference_note": null,
+            "reference_order": 2
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "24ac7da9-9c3b-8cd0-ae14-438b81f12f34",
+            "traversal_order": 1,
+            "to_node_key": "T1_END_ESSENTIAL_NORMAL_BP",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T1_END_ESSENTIAL_NORMAL_BP": {
+        "id": "c0a64934-faa3-7403-22a9-8db45fb883d9",
+        "node_key": "T1_END_ESSENTIAL_NORMAL_BP",
+        "node_type": "END",
+        "text_en": "Normal BP",
+        "text_vi": "HA BÌNH THƯỜNG",
+        "condition_definition": null,
+        "context_patch": {
+          "diagnosis": {
+            "hypertension_class": "NORMAL_BP"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 64,
+        "created_at": "2026-06-27 07:20:49.313128+00:00",
+        "updated_at": "2026-06-28 07:51:47.889206+00:00",
+        "references": [
+          {
+            "id": "7a6734e0-e98a-1c22-e051-bae8bef0bafb",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Sơ đồ chẩn đoán tăng huyết áp",
+                "number": "1.3"
+              }
+            ],
+            "locator": "Hình 1. Sơ đồ chẩn đoán tăng huyết áp với phương pháp đo huyết áp tại phòng khám (thiết yếu) và phương pháp đo huyết áp tại nhà, đo huyết áp liên tục (tối ưu)",
+            "locator_detail": "Tree 1 diagnosis workflow and routing logic.",
+            "printed_page_numbers": [
+              8
+            ],
+            "pdf_page_numbers": [
+              10
+            ],
+            "reference_note": "Digitized according to the approved Tree 1 diagram.",
+            "reference_order": 1
+          },
+          {
+            "id": "8b8f272d-f1a8-3f53-647d-f9d6a4595943",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chẩn đoán tăng huyết áp",
+                "number": "I"
+              },
+              {
+                "title": "Định nghĩa và phân loại tăng huyết áp",
+                "number": "1.2"
+              }
+            ],
+            "locator": "Bảng 1. Chẩn đoán tăng huyết áp theo ngưỡng huyết áp đo tại phòng khám",
+            "locator_detail": "Clinic BP thresholds for normal BP, high-normal BP, Grade 1 hypertension, Grade 2 hypertension, hypertensive emergency, and isolated systolic hypertension.",
+            "printed_page_numbers": [
+              7
+            ],
+            "pdf_page_numbers": [
+              9
+            ],
+            "reference_note": null,
+            "reference_order": 2
+          }
+        ],
+        "transitions": []
+      },
+      "T1_C_IS_PREGNANT": {
+        "id": "af62ea0d-827f-488d-9218-ffb2d0e4e0b0",
+        "node_key": "T1_C_IS_PREGNANT",
+        "node_type": "CONDITION",
+        "text_en": "Patient is pregnant",
+        "text_vi": "Bệnh nhân đang mang thai",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.is_pregnant",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 65,
+        "created_at": "2026-06-27 07:20:49.313128+00:00",
+        "updated_at": "2026-06-27 07:20:49.313128+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "81fe5658-af2c-4b1f-bab4-3ca14dd44965",
+            "traversal_order": 1,
+            "to_node_key": "T1_LINK_HYPERTENSION_IN_PREGNANCY",
+            "candidate_condition": null
+          }
+        ]
+      },
       "T1_LINK_HYPERTENSION_IN_PREGNANCY": {
         "id": "8a526e4b-cfd9-4b7b-8fc5-06c18cad2dd8",
         "node_key": "T1_LINK_HYPERTENSION_IN_PREGNANCY",
@@ -1388,283 +1384,67 @@
         "references": [],
         "transitions": []
       },
-      "T1_LINK_HYPERTENSIVE_EMERGENCY": {
-        "id": "b8778eca-3e96-47d7-fc9d-c8ff3c68e3f7",
-        "node_key": "T1_LINK_HYPERTENSIVE_EMERGENCY",
-        "node_type": "LINK",
-        "text_en": "Hypertensive Emergency Tree",
-        "text_vi": "Cây 14: THA CẤP CỨU",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": "hypertensive-emergency",
-        "link_target_node_key": null,
-        "display_order": 4,
-        "created_at": "2026-06-27 07:20:49.313128+00:00",
-        "updated_at": "2026-06-27 07:20:49.313128+00:00",
-        "references": [],
-        "transitions": []
-      },
-      "T1_START_PATIENT_INFORMATION": {
-        "id": "854590f4-9e9c-3158-47af-43695e29611e",
-        "node_key": "T1_START_PATIENT_INFORMATION",
-        "node_type": "START",
-        "text_en": "Patient information",
-        "text_vi": "Thông tin bệnh nhân",
-        "condition_definition": null,
+      "T1_C_IS_NOT_PREGNANT": {
+        "id": "8a14e0bd-3f41-4672-9b28-f236d56cfe99",
+        "node_key": "T1_C_IS_NOT_PREGNANT",
+        "node_type": "CONDITION",
+        "text_en": "Patient is not pregnant",
+        "text_vi": "Bệnh nhân không mang thai",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.is_pregnant",
+          "value": false
+        },
         "context_patch": null,
         "action_payload": null,
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 1,
+        "display_order": 67,
         "created_at": "2026-06-27 07:20:49.313128+00:00",
         "updated_at": "2026-06-27 07:20:49.313128+00:00",
         "references": [],
         "transitions": [
           {
-            "edge_id": "10cd6b1a-81ba-40c2-aead-22283d34c033",
+            "edge_id": "e683dce1-92d1-420a-8493-72f55ae08fe6",
             "traversal_order": 1,
-            "to_node_key": "T1_C_IS_PREGNANT",
+            "to_node_key": "T1_C_CLINIC_1_CRISIS",
             "candidate_condition": {
-              "op": "eq",
-              "path": "input.is_pregnant",
-              "value": true
+              "any": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 180
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 120
+                }
+              ]
             }
           },
           {
-            "edge_id": "d969c060-cb00-4068-a9d5-06762ce7df73",
+            "edge_id": "9a624eb5-da84-4ecf-aec4-2b84969caf3f",
             "traversal_order": 2,
-            "to_node_key": "T1_C_IS_NOT_PREGNANT",
+            "to_node_key": "T1_C_CLINIC_1_NON_CRISIS",
             "candidate_condition": {
-              "op": "eq",
-              "path": "input.is_pregnant",
-              "value": false
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 180
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 120
+                }
+              ]
             }
           }
         ]
       }
-    },
-    "edges": [
-      {
-        "id": "1bff8c2b-2e3e-c7cd-a976-7df20869808e",
-        "from_node_key": "T1_C_CLINIC_1_CRISIS",
-        "to_node_key": "T1_INF_HYPERTENSIVE_EMERGENCY",
-        "traversal_order": 1
-      },
-      {
-        "id": "b22c358f-eda9-4438-9b88-b34e83d76b9b",
-        "from_node_key": "T1_C_CLINIC_1_NON_CRISIS",
-        "to_node_key": "T1_C_ESSENTIAL_HYPERTENSION",
-        "traversal_order": 1
-      },
-      {
-        "id": "ad72a65f-a011-457b-8052-23e8d6cb9603",
-        "from_node_key": "T1_C_CLINIC_1_NON_CRISIS",
-        "to_node_key": "T1_C_ESSENTIAL_HIGH_NORMAL_BP",
-        "traversal_order": 2
-      },
-      {
-        "id": "6b04a2fc-57f9-4c8b-8e25-fa1c6db85fd2",
-        "from_node_key": "T1_C_CLINIC_1_NON_CRISIS",
-        "to_node_key": "T1_C_ESSENTIAL_NORMAL_BP",
-        "traversal_order": 3
-      },
-      {
-        "id": "56c35a70-3380-20a3-9bee-50d97423d558",
-        "from_node_key": "T1_C_ESSENTIAL_GRADE_1",
-        "to_node_key": "T1_INF_ESSENTIAL_GRADE_1",
-        "traversal_order": 1
-      },
-      {
-        "id": "75922197-ea80-da5c-c403-2554bfd7e888",
-        "from_node_key": "T1_C_ESSENTIAL_GRADE_2",
-        "to_node_key": "T1_INF_ESSENTIAL_GRADE_2",
-        "traversal_order": 1
-      },
-      {
-        "id": "6d85e9fe-f59e-5a5b-1bf4-f17b96bc666b",
-        "from_node_key": "T1_C_ESSENTIAL_HIGH_NORMAL_BP",
-        "to_node_key": "T1_INF_ESSENTIAL_HIGH_NORMAL_BP",
-        "traversal_order": 1
-      },
-      {
-        "id": "a2ece51c-4e7d-b61e-47ed-3237c63eca64",
-        "from_node_key": "T1_C_ESSENTIAL_HYPERTENSION",
-        "to_node_key": "T1_INF_ESSENTIAL_HYPERTENSION",
-        "traversal_order": 1
-      },
-      {
-        "id": "24ac7da9-9c3b-8cd0-ae14-438b81f12f34",
-        "from_node_key": "T1_C_ESSENTIAL_NORMAL_BP",
-        "to_node_key": "T1_END_ESSENTIAL_NORMAL_BP",
-        "traversal_order": 1
-      },
-      {
-        "id": "e683dce1-92d1-420a-8493-72f55ae08fe6",
-        "from_node_key": "T1_C_IS_NOT_PREGNANT",
-        "to_node_key": "T1_C_CLINIC_1_CRISIS",
-        "traversal_order": 1
-      },
-      {
-        "id": "9a624eb5-da84-4ecf-aec4-2b84969caf3f",
-        "from_node_key": "T1_C_IS_NOT_PREGNANT",
-        "to_node_key": "T1_C_CLINIC_1_NON_CRISIS",
-        "traversal_order": 2
-      },
-      {
-        "id": "81fe5658-af2c-4b1f-bab4-3ca14dd44965",
-        "from_node_key": "T1_C_IS_PREGNANT",
-        "to_node_key": "T1_LINK_HYPERTENSION_IN_PREGNANCY",
-        "traversal_order": 1
-      },
-      {
-        "id": "184ed309-1c67-9ada-5453-28ae7a6ebc8b",
-        "from_node_key": "T1_INF_ESSENTIAL_GRADE_1",
-        "to_node_key": "T1_LINK_ESSENTIAL_GRADE_1_TO_RISK",
-        "traversal_order": 1
-      },
-      {
-        "id": "a8ba8ec1-8fbe-2dfa-9208-55650393604a",
-        "from_node_key": "T1_INF_ESSENTIAL_GRADE_2",
-        "to_node_key": "T1_LINK_ESSENTIAL_GRADE_2_TO_RISK",
-        "traversal_order": 1
-      },
-      {
-        "id": "7a72ec6b-d038-74c4-6e83-620ee5be96ed",
-        "from_node_key": "T1_INF_ESSENTIAL_HIGH_NORMAL_BP",
-        "to_node_key": "T1_LINK_ESSENTIAL_HIGH_NORMAL_BP_TO_RISK",
-        "traversal_order": 1
-      },
-      {
-        "id": "b42e06c4-7380-0d8f-3661-97544cfcbb56",
-        "from_node_key": "T1_INF_ESSENTIAL_HYPERTENSION",
-        "to_node_key": "T1_C_ESSENTIAL_GRADE_2",
-        "traversal_order": 1
-      },
-      {
-        "id": "7ad6d701-9274-32a1-e293-b68fc4dd165a",
-        "from_node_key": "T1_INF_ESSENTIAL_HYPERTENSION",
-        "to_node_key": "T1_C_ESSENTIAL_GRADE_1",
-        "traversal_order": 2
-      },
-      {
-        "id": "3083677e-0c15-2332-6c31-a8400c4cddb7",
-        "from_node_key": "T1_INF_HYPERTENSIVE_EMERGENCY",
-        "to_node_key": "T1_LINK_HYPERTENSIVE_EMERGENCY",
-        "traversal_order": 1
-      },
-      {
-        "id": "10cd6b1a-81ba-40c2-aead-22283d34c033",
-        "from_node_key": "T1_START_PATIENT_INFORMATION",
-        "to_node_key": "T1_C_IS_PREGNANT",
-        "traversal_order": 1
-      },
-      {
-        "id": "d969c060-cb00-4068-a9d5-06762ce7df73",
-        "from_node_key": "T1_START_PATIENT_INFORMATION",
-        "to_node_key": "T1_C_IS_NOT_PREGNANT",
-        "traversal_order": 2
-      }
-    ],
-    "layout": {
-      "id": "ee76fa04-6401-4646-b3cf-6fa6b0dd8643",
-      "arrow_kind": "elbow",
-      "node_positions": {
-        "T1_C_IS_PREGNANT": {
-          "x": 12.0,
-          "y": 144.0
-        },
-        "T1_C_CLINIC_1_CRISIS": {
-          "x": 272.0,
-          "y": 276.0
-        },
-        "T1_C_IS_NOT_PREGNANT": {
-          "x": 309.0,
-          "y": 144.0
-        },
-        "T1_C_ESSENTIAL_GRADE_1": {
-          "x": 829.0,
-          "y": 672.0
-        },
-        "T1_C_ESSENTIAL_GRADE_2": {
-          "x": 569.0,
-          "y": 672.0
-        },
-        "T1_C_CLINIC_1_NON_CRISIS": {
-          "x": 1034.0,
-          "y": 276.0
-        },
-        "T1_C_ESSENTIAL_NORMAL_BP": {
-          "x": 532.0,
-          "y": 408.0
-        },
-        "T1_INF_ESSENTIAL_GRADE_1": {
-          "x": 829.0,
-          "y": 804.0
-        },
-        "T1_INF_ESSENTIAL_GRADE_2": {
-          "x": 569.0,
-          "y": 804.0
-        },
-        "T1_END_ESSENTIAL_NORMAL_BP": {
-          "x": 532.0,
-          "y": 540.0
-        },
-        "T1_C_ESSENTIAL_HYPERTENSION": {
-          "x": 792.0,
-          "y": 408.0
-        },
-        "T1_START_PATIENT_INFORMATION": {
-          "x": 138.08088223759546,
-          "y": 17.786764693066175
-        },
-        "T1_C_ESSENTIAL_HIGH_NORMAL_BP": {
-          "x": 1089.0,
-          "y": 408.0
-        },
-        "T1_INF_ESSENTIAL_HYPERTENSION": {
-          "x": 792.0,
-          "y": 540.0
-        },
-        "T1_INF_HYPERTENSIVE_EMERGENCY": {
-          "x": 272.0,
-          "y": 408.0
-        },
-        "T1_LINK_HYPERTENSIVE_EMERGENCY": {
-          "x": 272.0,
-          "y": 540.0
-        },
-        "T1_INF_ESSENTIAL_HIGH_NORMAL_BP": {
-          "x": 1089.0,
-          "y": 540.0
-        },
-        "T1_LINK_ESSENTIAL_GRADE_1_TO_RISK": {
-          "x": 829.0,
-          "y": 936.0
-        },
-        "T1_LINK_ESSENTIAL_GRADE_2_TO_RISK": {
-          "x": 569.0,
-          "y": 936.0
-        },
-        "T1_LINK_HYPERTENSION_IN_PREGNANCY": {
-          "x": 12.0,
-          "y": 276.0
-        },
-        "T1_LINK_ESSENTIAL_HIGH_NORMAL_BP_TO_RISK": {
-          "x": 1089.0,
-          "y": 672.0
-        }
-      },
-      "created_at": "2026-07-26 08:42:56.587898+00:00",
-      "updated_at": "2026-07-26 08:42:56.587901+00:00"
     }
-  },
-  "counts": {
-    "nodes": 21,
-    "edges": 20,
-    "references": 25,
-    "layouts": 1
   }
 }
