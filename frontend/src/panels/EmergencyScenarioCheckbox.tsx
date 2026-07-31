@@ -13,6 +13,7 @@ const SCENARIOS = [
   ['has_acute_cardiogenic_pulmonary_edema', 'Cardiogenic pulmonary edema'],
   ['has_acute_aortic_syndrome', 'Acute aortic syndrome'],
   ['has_eclampsia_severe_preeclampsia_or_hellp', 'Eclampsia / severe preeclampsia / HELLP'],
+  ['has_tma_or_acute_kidney_injury', 'Thrombotic microangiopathy (TMA) / acute kidney injury'],
 ] as const
 
 export function EmergencyScenarioCheckbox({ onConfirm, onCancel }: Props) {
