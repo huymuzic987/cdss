@@ -42,8 +42,7 @@ def assert_local_target(url: str) -> str:
     host = (u.host or "").lower().rstrip(".")
     if host not in LOCAL_HOSTS:
         sys.exit(
-            f"REFUSING: target host '{host}' is not local. "
-            "restore.py only wipes local databases."
+            f"REFUSING: target host '{host}' is not local. restore.py only wipes local databases."
         )
     return f"{host}:{u.port or 54321}/{u.database}"
 
@@ -61,12 +60,9 @@ def wipe_and_replay(conn, dump_path: Path) -> None:
 
     def flush_sql() -> None:
         stmt = "".join(sql_buf)
-        stmt = "\n".join(
-            x for x in stmt.splitlines() if x.strip() not in ("BEGIN;", "COMMIT;")
-        )
+        stmt = "\n".join(x for x in stmt.splitlines() if x.strip() not in ("BEGIN;", "COMMIT;"))
         has_code = any(
-            line.strip() and not line.strip().startswith("--")
-            for line in stmt.splitlines()
+            line.strip() and not line.strip().startswith("--") for line in stmt.splitlines()
         )
         if has_code:
             cur.execute(stmt)

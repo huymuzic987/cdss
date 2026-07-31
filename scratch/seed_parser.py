@@ -1,6 +1,7 @@
 """Offline parser: reconstruct TreeGraph objects straight from backups/cdss_merged.sql,
-   without a live Postgres connection, so the real domain/FHIR code can be exercised.
+without a live Postgres connection, so the real domain/FHIR code can be exercised.
 """
+
 from __future__ import annotations
 
 import json
@@ -12,6 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
+from cdss.domain.decision_tree.contracts import NodeType  # noqa: E402
 from cdss.domain.decision_tree.graph import (  # noqa: E402
     EdgeDefinition,
     NodeDefinition,
@@ -19,7 +21,6 @@ from cdss.domain.decision_tree.graph import (  # noqa: E402
     TreeDefinition,
     TreeGraph,
 )
-from cdss.domain.decision_tree.contracts import NodeType  # noqa: E402
 
 SQL_PATH = Path(__file__).resolve().parent.parent / "backups" / "cdss_merged.sql"
 
@@ -127,14 +128,14 @@ def parse_scalar(token: str):
         return None
     if token.startswith("ARRAY["):
         close = token.index("]")
-        inner = token[len("ARRAY["):close]
+        inner = token[len("ARRAY[") : close]
         return [int(x.strip()) for x in inner.split(",") if x.strip()]
     if token.startswith("'"):
         # find matching closing quote (handle '' escapes), then optional ::cast
         m = re.match(r"'((?:[^']|'')*)'", token, re.S)
         assert m, f"bad quoted token: {token!r}"
         raw = m.group(1).replace("''", "'")
-        rest = token[m.end():].strip()
+        rest = token[m.end() :].strip()
         if rest.startswith("::jsonb"):
             return json.loads(raw)
         return raw
@@ -149,9 +150,8 @@ def extract_cte_body(statement: str, cte_name: str) -> str | None:
     marker = f"{cte_name} ("
     idx = statement.find(marker)
     if idx == -1:
-        # also allow "cte_name (\n    col1, col2\n) AS (" style already includes '(' right after name
+        # The accepted form already includes '(' immediately after the CTE name.
         return None
-    open_idx = idx + len(cte_name) + 1
     # careful: this '(' is the column-list paren, not the AS ( body. Find "AS (" after it.
     close_idx = find_matching_paren(statement, statement.find("(", idx))
     as_idx = statement.find("AS", close_idx)
@@ -163,7 +163,7 @@ def extract_cte_body(statement: str, cte_name: str) -> str | None:
 def parse_values_rows(cte_body: str) -> list[list]:
     body = cte_body.strip()
     assert body.upper().startswith("VALUES"), body[:50]
-    rest = body[len("VALUES"):]
+    rest = body[len("VALUES") :]
     rows: list[list] = []
     i = 0
     n = len(rest)
@@ -200,7 +200,7 @@ def parse_all_trees() -> dict[str, RawTree]:
     # ---- 1. COPY-style decision_trees ----
     id_to_key: dict[str, str] = {}
     for m in re.finditer(
-        r'COPY public\.decision_trees \([^)]*\) FROM stdin;\n(.*?)\n\\\.\n', content, re.S
+        r"COPY public\.decision_trees \([^)]*\) FROM stdin;\n(.*?)\n\\\.\n", content, re.S
     ):
         for line in m.group(1).split("\n"):
             if not line.strip():
@@ -213,24 +213,39 @@ def parse_all_trees() -> dict[str, RawTree]:
     # ---- 2. COPY-style decision_nodes ----
     node_id_to_key: dict[str, tuple[str, str]] = {}  # node_id -> (tree_key, node_key)
     for m in re.finditer(
-        r'COPY public\.decision_nodes \([^)]*\) FROM stdin;\n(.*?)\n\\\.\n', content, re.S
+        r"COPY public\.decision_nodes \([^)]*\) FROM stdin;\n(.*?)\n\\\.\n", content, re.S
     ):
         for line in m.group(1).split("\n"):
             if not line.strip():
                 continue
             cols = line.split("\t")
             (
-                nid, tree_id, node_key, node_type, text_en, text_vi,
-                cond, ctx_patch, action, global_cfg, link_tree, link_node,
-                disp_order, _created, _updated,
+                nid,
+                tree_id,
+                node_key,
+                node_type,
+                text_en,
+                text_vi,
+                cond,
+                ctx_patch,
+                action,
+                global_cfg,
+                link_tree,
+                link_node,
+                disp_order,
+                _created,
+                _updated,
             ) = cols
             tkey = id_to_key.get(tree_id)
             if tkey is None:
                 continue
+
             def jv(s: str):
                 return None if s == r"\N" else json.loads(s)
+
             def sv(s: str):
                 return None if s == r"\N" else s
+
             node = NodeDefinition(
                 id=uuid.UUID(nid),
                 tree_id=uuid.UUID(tree_id),
@@ -251,7 +266,7 @@ def parse_all_trees() -> dict[str, RawTree]:
 
     # ---- 3. COPY-style decision_edges ----
     for m in re.finditer(
-        r'COPY public\.decision_edges \([^)]*\) FROM stdin;\n(.*?)\n\\\.\n', content, re.S
+        r"COPY public\.decision_edges \([^)]*\) FROM stdin;\n(.*?)\n\\\.\n", content, re.S
     ):
         for line in m.group(1).split("\n"):
             if not line.strip():
@@ -271,31 +286,41 @@ def parse_all_trees() -> dict[str, RawTree]:
         return [int(x) for x in s.strip("{}").split(",") if x]
 
     for m in re.finditer(
-        r'COPY public\.node_source_references \([^)]*\) FROM stdin;\n(.*?)\n\\\.\n', content, re.S
+        r"COPY public\.node_source_references \([^)]*\) FROM stdin;\n(.*?)\n\\\.\n", content, re.S
     ):
         for line in m.group(1).split("\n"):
             if not line.strip():
                 continue
             cols = line.split("\t")
             (
-                _rid, node_id, source_title, section_path, locator, locator_detail,
-                printed_pages, pdf_pages, reference_note, ref_order,
+                _rid,
+                node_id,
+                source_title,
+                section_path,
+                locator,
+                locator_detail,
+                printed_pages,
+                pdf_pages,
+                reference_note,
+                ref_order,
             ) = cols
             info = node_id_to_key.get(node_id)
             if info is None:
                 continue
             tkey, node_key = info
-            trees[tkey].references.append((
-                node_key,
-                source_title,
-                json.loads(section_path),
-                None if locator == r"\N" else locator,
-                None if locator_detail == r"\N" else locator_detail,
-                parse_pg_array(printed_pages),
-                parse_pg_array(pdf_pages),
-                None if reference_note == r"\N" else reference_note,
-                int(ref_order),
-            ))
+            trees[tkey].references.append(
+                (
+                    node_key,
+                    source_title,
+                    json.loads(section_path),
+                    None if locator == r"\N" else locator,
+                    None if locator_detail == r"\N" else locator_detail,
+                    parse_pg_array(printed_pages),
+                    parse_pg_array(pdf_pages),
+                    None if reference_note == r"\N" else reference_note,
+                    int(ref_order),
+                )
+            )
 
     # ---- 4. INSERT-style decision_trees (gen_random_uuid based) ----
     for m in re.finditer(
@@ -311,8 +336,14 @@ def parse_all_trees() -> dict[str, RawTree]:
 
     # ---- 5. INSERT-style node_seed / edge_seed CTEs, one per statement ----
     # Each statement block runs from one "WITH tree_ctx AS (" to its terminating ";"
+    tree_statement_pattern = (
+        r"WITH tree_ctx AS \(\s*SELECT id AS tree_id\s+"
+        r"FROM public\.decision_trees\s+"
+        r"WHERE tree_key = '([a-z0-9-]+)'\s*\).*?"
+        r"(?=\nWITH tree_ctx AS \(|\Z)"
+    )
     for stmt_match in re.finditer(
-        r"WITH tree_ctx AS \(\s*SELECT id AS tree_id\s+FROM public\.decision_trees\s+WHERE tree_key = '([a-z0-9-]+)'\s*\).*?(?=\nWITH tree_ctx AS \(|\Z)",
+        tree_statement_pattern,
         content,
         re.S,
     ):
@@ -325,9 +356,17 @@ def parse_all_trees() -> dict[str, RawTree]:
         if node_body is not None and "INSERT INTO public.decision_nodes" in stmt:
             for row in parse_values_rows(node_body):
                 (
-                    node_key, node_type, text_en, text_vi,
-                    cond, ctx_patch, action, global_cfg,
-                    link_tree, link_node, disp_order,
+                    node_key,
+                    node_type,
+                    text_en,
+                    text_vi,
+                    cond,
+                    ctx_patch,
+                    action,
+                    global_cfg,
+                    link_tree,
+                    link_node,
+                    disp_order,
                 ) = row
                 node = NodeDefinition(
                     id=uuid.uuid4(),
@@ -356,20 +395,38 @@ def parse_all_trees() -> dict[str, RawTree]:
         if ref_body is not None and "INSERT INTO public.node_source_references" in stmt:
             for row in parse_values_rows(ref_body):
                 (
-                    node_key, source_title, section_path, locator, locator_detail,
-                    printed_pages, pdf_pages, reference_note, ref_order,
+                    node_key,
+                    source_title,
+                    section_path,
+                    locator,
+                    locator_detail,
+                    printed_pages,
+                    pdf_pages,
+                    reference_note,
+                    ref_order,
                 ) = row
-                trees[tkey].references.append((
-                    node_key, source_title, section_path, locator, locator_detail,
-                    printed_pages, pdf_pages, reference_note, int(ref_order),
-                ))
+                trees[tkey].references.append(
+                    (
+                        node_key,
+                        source_title,
+                        section_path,
+                        locator,
+                        locator_detail,
+                        printed_pages,
+                        pdf_pages,
+                        reference_note,
+                        int(ref_order),
+                    )
+                )
 
     return trees
 
 
 def build_tree_graph(raw: RawTree) -> TreeGraph:
     tree_id = uuid.uuid4()
-    tree_def = TreeDefinition(id=tree_id, tree_key=raw.tree_key, name_en=raw.name_en, name_vi=raw.name_vi)
+    tree_def = TreeDefinition(
+        id=tree_id, tree_key=raw.tree_key, name_en=raw.name_en, name_vi=raw.name_vi
+    )
 
     key_to_node: dict[str, NodeDefinition] = {}
     fixed_nodes = []
@@ -411,8 +468,15 @@ def build_tree_graph(raw: RawTree) -> TreeGraph:
 
     references = []
     for (
-        node_key, source_title, section_path, locator, locator_detail,
-        printed_pages, pdf_pages, reference_note, ref_order,
+        node_key,
+        source_title,
+        section_path,
+        locator,
+        locator_detail,
+        printed_pages,
+        pdf_pages,
+        reference_note,
+        ref_order,
     ) in raw.references:
         node = key_to_node.get(node_key)
         if node is None:

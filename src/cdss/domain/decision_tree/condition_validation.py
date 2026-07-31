@@ -112,6 +112,3 @@ class ConditionDefinitionValidator:
             details={"reason": reason},
             partial_run_state=self.partial_run_state,
         )
-
-
-

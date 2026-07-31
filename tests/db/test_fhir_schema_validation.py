@@ -39,7 +39,7 @@ _SCHEMA_PATH = Path(__file__).parent.parent / "fhir" / "schema" / "fhir.schema.j
 
 @pytest.fixture(scope="module")
 def fhir_validator() -> tuple[str, Registry[Any]]:
-    schema = json.loads(_SCHEMA_PATH.read_text())
+    schema = json.loads(_SCHEMA_PATH.read_text(encoding="utf-8"))
     base_uri = schema["id"]
     resource = Resource.from_contents(schema)
     registry = Registry().with_resource(base_uri, resource)

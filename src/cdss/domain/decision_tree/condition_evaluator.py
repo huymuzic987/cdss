@@ -147,8 +147,3 @@ class ConditionEvaluator(ConditionOperations):
                 "result": result,
             },
         )
-
-
-
-
-

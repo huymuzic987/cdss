@@ -17,6 +17,7 @@ from cdss.domain.decision_tree import (
     TreeMetadata,
     select_output_actions,
 )
+from cdss.domain.follow_up import FollowUpType
 
 
 class ApiModel(BaseModel):
@@ -33,9 +34,7 @@ class EvaluationResponse(ApiModel):
     tree_metadata: list[TreeMetadata]
     started_at: datetime
     completed_at: datetime
-    inferred_follow_up_type: (
-        Literal["INITIAL_VISIT", "LIFESTYLE_FOLLOW_UP", "MEDICATION_FOLLOW_UP"] | None
-    ) = None
+    inferred_follow_up_type: FollowUpType | None = None
     previous_recommended_action_types: list[str] = Field(default_factory=list)
 
     @classmethod
@@ -44,10 +43,7 @@ class EvaluationResponse(ApiModel):
         result: TraversalResult,
         *,
         debug_output: bool = False,
-        inferred_follow_up_type: Literal[
-            "INITIAL_VISIT", "LIFESTYLE_FOLLOW_UP", "MEDICATION_FOLLOW_UP"
-        ]
-        | None = None,
+        inferred_follow_up_type: FollowUpType | None = None,
         previous_recommended_action_types: list[str] | None = None,
         input_snapshot: JsonObject | None = None,
         actions: list[ExecutedAction] | None = None,
