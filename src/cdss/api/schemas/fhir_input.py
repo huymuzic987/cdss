@@ -307,7 +307,9 @@ def _scalar_parameter_value(value: JsonValue) -> JsonObject:
     if value is None:
         return {}
     raise InvalidFhirInput(
-        details={"reason": f"unsupported input value type for FHIR Parameters: {type(value).__name__}"}
+        details={
+            "reason": f"unsupported input value type for FHIR Parameters: {type(value).__name__}"
+        }
     )
 
 
@@ -316,7 +318,11 @@ _SCALAR_VALUE_KEYS = ("valueBoolean", "valueInteger", "valueDecimal", "valueStri
 
 def _parameter_to_value(entry: Mapping[str, Any]) -> JsonValue:
     if _find_extension(entry, _EXT_PARAMETER_IS_ARRAY) is not None:
-        return [_parameter_to_value(part) for part in entry.get("part") or [] if isinstance(part, Mapping)]
+        return [
+            _parameter_to_value(part)
+            for part in entry.get("part") or []
+            if isinstance(part, Mapping)
+        ]
     parts = entry.get("part")
     if parts is not None:
         result: JsonObject = {}
@@ -357,7 +363,9 @@ def input_to_bundle(flat: Mapping[str, JsonValue]) -> JsonObject:
     for key, (loinc_code, display, unit) in _LAB_OBSERVATIONS.items():
         value = remaining.pop(key, None)
         if value is not None:
-            entries.append({"resource": _lab_observation_resource(loinc_code, display, unit, value)})
+            entries.append(
+                {"resource": _lab_observation_resource(loinc_code, display, unit, value)}
+            )
 
     for key in [k for k in remaining if is_clinical_flag_key(k)]:
         value = remaining.pop(key)
@@ -370,7 +378,9 @@ def input_to_bundle(flat: Mapping[str, JsonValue]) -> JsonObject:
             {
                 "resource": {
                     "resourceType": "Parameters",
-                    "parameter": [_value_to_parameter(key, value) for key, value in remaining.items()],
+                    "parameter": [
+                        _value_to_parameter(key, value) for key, value in remaining.items()
+                    ],
                 }
             }
         )
@@ -390,14 +400,26 @@ def _bp_observation_resource(role: str, sbp: JsonValue, dbp: JsonValue) -> JsonO
     if sbp is not None:
         components.append(
             {
-                "code": {"coding": [{"system": _LOINC, "code": _LOINC_SBP, "display": "Systolic blood pressure"}]},
+                "code": {
+                    "coding": [
+                        {"system": _LOINC, "code": _LOINC_SBP, "display": "Systolic blood pressure"}
+                    ]
+                },
                 "valueQuantity": {"value": sbp, "unit": "mmHg"},
             }
         )
     if dbp is not None:
         components.append(
             {
-                "code": {"coding": [{"system": _LOINC, "code": _LOINC_DBP, "display": "Diastolic blood pressure"}]},
+                "code": {
+                    "coding": [
+                        {
+                            "system": _LOINC,
+                            "code": _LOINC_DBP,
+                            "display": "Diastolic blood pressure",
+                        }
+                    ]
+                },
                 "valueQuantity": {"value": dbp, "unit": "mmHg"},
             }
         )
@@ -405,13 +427,19 @@ def _bp_observation_resource(role: str, sbp: JsonValue, dbp: JsonValue) -> JsonO
         "resourceType": "Observation",
         "status": "final",
         "category": [{"coding": [{"system": _CS_OBSERVATION_CATEGORY, "code": "vital-signs"}]}],
-        "code": {"coding": [{"system": _LOINC, "code": _LOINC_BP_PANEL, "display": "Blood pressure panel"}]},
+        "code": {
+            "coding": [
+                {"system": _LOINC, "code": _LOINC_BP_PANEL, "display": "Blood pressure panel"}
+            ]
+        },
         "extension": [{"url": _EXT_READING_ROLE, "valueCode": role}],
         "component": components,
     }
 
 
-def _lab_observation_resource(loinc_code: str, display: str, unit: str, value: JsonValue) -> JsonObject:
+def _lab_observation_resource(
+    loinc_code: str, display: str, unit: str, value: JsonValue
+) -> JsonObject:
     return {
         "resourceType": "Observation",
         "status": "final",
@@ -425,10 +453,14 @@ def _condition_resource(key: str, value: bool) -> JsonObject:
     return {
         "resourceType": "Condition",
         "clinicalStatus": {
-            "coding": [{"system": _CS_CONDITION_CLINICAL, "code": "active" if value else "resolved"}]
+            "coding": [
+                {"system": _CS_CONDITION_CLINICAL, "code": "active" if value else "resolved"}
+            ]
         },
         "verificationStatus": {
-            "coding": [{"system": _CS_CONDITION_VER_STATUS, "code": "confirmed" if value else "refuted"}]
+            "coding": [
+                {"system": _CS_CONDITION_VER_STATUS, "code": "confirmed" if value else "refuted"}
+            ]
         },
         "code": {"coding": [{"system": _CS_CLINICAL_FLAG, "code": key}]},
     }

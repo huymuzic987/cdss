@@ -11,7 +11,9 @@ from cdss.main import create_app
 
 def test_separate_follow_up_endpoint_is_retired() -> None:
     assert "/evaluate/follow-up" not in {
-        route.path for route in create_app().routes if hasattr(route, "path")
+        path
+        for route in create_app().routes
+        if isinstance(path := getattr(route, "path", None), str)
     }
 
 
@@ -32,9 +34,7 @@ def test_two_encounters_map_immediately_previous_and_current_readings() -> None:
 def test_longitudinal_bundle_requires_complete_latest_bp_pair() -> None:
     bundle = _longitudinal_bundle()
     bundle["entry"] = [
-        entry
-        for entry in bundle["entry"]
-        if entry["resource"].get("id") != "current-dbp"
+        entry for entry in bundle["entry"] if entry["resource"].get("id") != "current-dbp"
     ]
 
     with pytest.raises(InvalidFhirInput) as exc_info:

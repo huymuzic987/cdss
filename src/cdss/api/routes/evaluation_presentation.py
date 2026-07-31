@@ -4,6 +4,7 @@ from cdss.api.routes.evaluation_pregnancy_presentation import enrich_pregnancy_a
 from cdss.domain.decision_tree import (
     DecisionTreeError,
     ExecutedAction,
+    FrozenJsonObject,
     JsonObject,
     NodeType,
     RunState,
@@ -29,8 +30,7 @@ def select_presentation_actions(
     pregnancy_entries = [
         entry
         for entry in result.trace
-        if entry.event is TraceEvent.NODE_ENTERED
-        and entry.tree_key == _PREGNANCY_TREE_KEY
+        if entry.event is TraceEvent.NODE_ENTERED and entry.tree_key == _PREGNANCY_TREE_KEY
     ]
     if not pregnancy_entries:
         return selected
@@ -50,8 +50,7 @@ def select_presentation_actions(
         (
             action
             for action in reversed(result.actions)
-            if action.tree_key == _PREGNANCY_TREE_KEY
-            and action.node_key == terminal_entry.node_key
+            if action.tree_key == _PREGNANCY_TREE_KEY and action.node_key == terminal_entry.node_key
         ),
         None,
     )
@@ -94,7 +93,7 @@ def restore_raw_bundle(error: DecisionTreeError, bundle: JsonObject) -> None:
     if state is None:
         return
     error.partial_run_state = RunState(
-        input_snapshot=bundle,
+        input_snapshot=FrozenJsonObject(bundle),
         context=state.context,
         actions=state.actions,
         trace=state.trace,

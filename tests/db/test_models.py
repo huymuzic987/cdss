@@ -174,4 +174,3 @@ def test_symptom_field_assignment() -> None:
     assert symptom.symptom_id == "SYM0001"
     assert symptom.name_vn == "Tăng huyết áp"
     assert symptom.type == "Bệnh"
-

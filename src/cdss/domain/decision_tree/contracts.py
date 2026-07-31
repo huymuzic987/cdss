@@ -14,7 +14,11 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 type JsonValue = str | int | float | bool | None | list[JsonValue] | dict[str, JsonValue]
-type JsonObject = dict[str, JsonValue]
+# JSON objects are validated at runtime when they cross the API/domain boundary.
+# Keeping their values open avoids false positives caused by mutable container
+# invariance (for example, ``list[JsonObject]`` is valid JSON but not assignable
+# to ``list[JsonValue]`` in Python's type system).
+type JsonObject = dict[str, Any]
 
 
 class FrozenJsonObject(Mapping[str, Any]):

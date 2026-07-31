@@ -36,7 +36,7 @@ ACTIVE_BP_TARGET = {
     "sbp": {
         "lower_reference_mmhg": 120,
         "or_lower": True,
-        "upper_exclusive_mmhg": 130,
+        "upper_exclusive_mmhg": 140,
     },
     "source": "TREE_3_GENERIC",
 }
@@ -76,7 +76,9 @@ def test_seeded_tree_1_normal_bp_is_read_only(seeded_api_context: SeededApiConte
     body = response.json()
     assert body["status"] == "success"
     assert body["context"]["diagnosis"]["hypertension_class"] == "NORMAL_BP"
-    assert body["actions"] == []
+    assert [
+        (action["tree_key"], action["node_key"], action["node_type"]) for action in body["actions"]
+    ] == [(T1, "T1_END_ESSENTIAL_NORMAL_BP", "END")]
     assert body["traversal_log"][-1]["node_key"] == "T1_END_ESSENTIAL_NORMAL_BP"
     assert body["references"]
 
@@ -107,7 +109,7 @@ def test_seeded_drug_combination_uses_closed_world_clinical_defaults(
 ) -> None:
     response = _post_read_only(
         seeded_api_context,
-        bundle=_medication_bundle(current_sbp=130, current_dbp=80),
+        bundle=_medication_bundle(current_sbp=140, current_dbp=80),
     )
 
     assert response.status_code == 200
@@ -166,7 +168,13 @@ def _medication_bundle(*, current_sbp: int, current_dbp: int) -> dict[str, Any]:
         "resourceType": "Bundle",
         "type": "collection",
         "entry": [
-            {"resource": {"resourceType": "Patient", "id": patient_id}},
+            {
+                "resource": {
+                    "resourceType": "Patient",
+                    "id": patient_id,
+                    "birthDate": "1980-01-01",
+                }
+            },
             {"resource": _encounter(patient_id, "previous", "2026-01-01")},
             {"resource": _encounter(patient_id, "current", "2026-02-01")},
             {"resource": _bp(patient_id, "previous", "previous-sbp", "8459-0", 150)},

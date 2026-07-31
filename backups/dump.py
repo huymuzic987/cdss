@@ -73,7 +73,7 @@ def dump(conn) -> str:
 
     out = io.StringIO()
     w = out.write
-    now = dt.datetime.now(dt.timezone.utc).isoformat()
+    now = dt.datetime.now(dt.UTC).isoformat()
 
     w("--\n-- CDSS database backup\n")
     w(f"-- Source database : {dbname}\n")

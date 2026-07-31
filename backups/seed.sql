@@ -5321,14 +5321,16 @@ INSERT INTO public.symptoms (symptom_id, type, subgroup, name_vn, name_en, descr
 VALUES ('SYM0086', 'Tình trạng sinh lý', 'Khác', 'Người cao tuổi', 'Older Adult', 'Nhóm bệnh nhân cao tuổi.', 'The older-adult patient group.', 'Mục 3.7.1., mục 3.6.7.', NULL, NULL, '30525-0', 'Age', 'Ngưỡng và đích điều trị, Điều trị thiết yếu, Điều trị tối ưu, THA người cao tuổi', 'Treatment Threshold and BP Target, Essential treatment strategy, Optimal treatment strategy, Hypertension older adults')
 ON CONFLICT (symptom_id) DO UPDATE SET type = EXCLUDED.type, subgroup = EXCLUDED.subgroup, name_vn = EXCLUDED.name_vn, name_en = EXCLUDED.name_en, description_vn = EXCLUDED.description_vn, description_en = EXCLUDED.description_en, source = EXCLUDED.source, icd10_code = EXCLUDED.icd10_code, snomed_code = EXCLUDED.snomed_code, loinc_code = EXCLUDED.loinc_code, loinc_common_name = EXCLUDED.loinc_common_name, decision_tree_vn = EXCLUDED.decision_tree_vn, decision_tree_en = EXCLUDED.decision_tree_en;
 
--- Remove Tree 12 nodes consolidated into the surviving combination nodes.
+-- Remove Tree 12 nodes consolidated into surviving nodes or explicitly removed
+-- from the workflow (R2: pregnancy/postpartum monitoring).
 DELETE FROM public.node_source_references
 WHERE node_id IN (
   SELECT n.id
   FROM public.decision_nodes n
   JOIN public.decision_trees t ON t.id = n.tree_id
-  WHERE t.tree_key = 'hypertension-in-pregnancy'
+    WHERE t.tree_key = 'hypertension-in-pregnancy'
     AND n.node_key IN (
+      'T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM',
       'T12_INF_LABETALOL_ORAL',
       'T12_INF_NIFEDIPINE_OR_NICARDIPINE',
       'T12_INF_NICARDIPINE_MGSO4'
@@ -5342,6 +5344,7 @@ WHERE from_node_id IN (
     JOIN public.decision_trees t ON t.id = n.tree_id
     WHERE t.tree_key = 'hypertension-in-pregnancy'
       AND n.node_key IN (
+        'T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM',
         'T12_INF_LABETALOL_ORAL',
         'T12_INF_NIFEDIPINE_OR_NICARDIPINE',
         'T12_INF_NICARDIPINE_MGSO4'
@@ -5353,6 +5356,7 @@ WHERE from_node_id IN (
     JOIN public.decision_trees t ON t.id = n.tree_id
     WHERE t.tree_key = 'hypertension-in-pregnancy'
       AND n.node_key IN (
+        'T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM',
         'T12_INF_LABETALOL_ORAL',
         'T12_INF_NIFEDIPINE_OR_NICARDIPINE',
         'T12_INF_NICARDIPINE_MGSO4'
@@ -5366,6 +5370,7 @@ WHERE tree_id = (
     WHERE tree_key = 'hypertension-in-pregnancy'
   )
   AND node_key IN (
+    'T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM',
     'T12_INF_LABETALOL_ORAL',
     'T12_INF_NIFEDIPINE_OR_NICARDIPINE',
     'T12_INF_NICARDIPINE_MGSO4'

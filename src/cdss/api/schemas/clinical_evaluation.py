@@ -11,7 +11,7 @@ from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
-from typing import Any
+from typing import Any, Never
 
 from cdss.api.schemas.fhir_clinical import (
     EXT_BASE,
@@ -347,9 +347,7 @@ def _apply_conditions(
     for condition in conditions:
         _require_subject(condition, patient_ref)
         code_concept = condition.get("code")
-        codings = (
-            (code_concept or {}).get("coding") if isinstance(code_concept, Mapping) else []
-        )
+        codings = (code_concept or {}).get("coding") if isinstance(code_concept, Mapping) else []
         codings = codings if isinstance(codings, list) else []
         pairs = {(c.get("system"), c.get("code")) for c in codings if isinstance(c, Mapping)}
         verification = _coding_codes(
@@ -543,5 +541,5 @@ def _parse_date(value: str, path: str) -> date:
         ) from exc
 
 
-def _invalid(reason: str) -> None:
+def _invalid(reason: str) -> Never:
     raise InvalidFhirInput(details={"reason": reason})

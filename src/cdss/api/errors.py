@@ -50,13 +50,15 @@ def _verbose_error_message(error: DecisionTreeError) -> str:
             missing_segment = error.details.get("missing_segment")
             message = (
                 f"A required runtime path is missing: '{path}'. "
-                f"Specifically, the segment '{missing_segment}' was not found under '{resolved_prefix}'."
+                f"Specifically, the segment '{missing_segment}' was not found "
+                f"under '{resolved_prefix}'."
             )
         elif reason == "non_object_path_segment":
             resolved_prefix = error.details.get("resolved_prefix")
             message = (
                 f"A required runtime path is missing: '{path}'. "
-                f"Specifically, '{resolved_prefix}' is not an object/mapping, so it cannot be traversed further."
+                f"Specifically, '{resolved_prefix}' is not an object/mapping, "
+                "so it cannot be traversed further."
             )
         elif reason == "invalid_path_root":
             message = (
@@ -73,13 +75,21 @@ def _verbose_error_message(error: DecisionTreeError) -> str:
         if reason == "invalid_runtime_input":
             message = "Runtime input is not a valid JSON object."
         elif operator == "in":
-            message = f"A runtime value has an invalid type. Operator 'in' requires the right operand to be a list, but got '{actual_type}'."
+            message = (
+                "A runtime value has an invalid type. Operator 'in' requires "
+                f"the right operand to be a list, but got '{actual_type}'."
+            )
         elif operator and operand:
-            message = f"A runtime value has an invalid type. Operator '{operator}' requires numeric operands, but the {operand} operand was of type '{actual_type}'."
+            message = (
+                f"A runtime value has an invalid type. Operator '{operator}' "
+                f"requires numeric operands, but the {operand} operand was "
+                f"of type '{actual_type}'."
+            )
     elif isinstance(error, NoMatchingTransition):
         candidate_count = error.details.get("outgoing_candidate_count")
         message = (
-            f"No outgoing transition matched from node '{error.node_key}' in tree '{error.tree_key}'. "
+            f"No outgoing transition matched from node '{error.node_key}' "
+            f"in tree '{error.tree_key}'. "
             f"Tested {candidate_count} candidate transitions, but none evaluated to true."
         )
     elif isinstance(error, LinkTargetNotFound):

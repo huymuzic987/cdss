@@ -25,9 +25,10 @@ class FollowUpInference:
 
 
 def has_complete_previous_bp(runtime_input: Mapping[str, Any]) -> bool:
-    return runtime_input.get("previous_sbp") is not None and runtime_input.get(
-        "previous_dbp"
-    ) is not None
+    return (
+        runtime_input.get("previous_sbp") is not None
+        and runtime_input.get("previous_dbp") is not None
+    )
 
 
 def build_previous_visit_input(runtime_input: Mapping[str, Any]) -> JsonObject:
@@ -84,9 +85,7 @@ def build_current_visit_input(
 ) -> JsonObject:
     """Inject inferred workflow state for today's traversal."""
     current: JsonObject = dict(runtime_input)
-    current["is_lifestyle_follow_up"] = (
-        inference.follow_up_type == FollowUpType.LIFESTYLE_FOLLOW_UP
-    )
+    current["is_lifestyle_follow_up"] = inference.follow_up_type == FollowUpType.LIFESTYLE_FOLLOW_UP
     current["is_medication_follow_up"] = (
         inference.follow_up_type == FollowUpType.MEDICATION_FOLLOW_UP
     )

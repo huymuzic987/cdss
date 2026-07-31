@@ -38,9 +38,7 @@ class MedicineCatalogCache:
                 by_class.setdefault(medicine.drug_class, []).append(medicine)
 
         self._by_id = by_id
-        self._by_class = {
-            class_letter: tuple(group) for class_letter, group in by_class.items()
-        }
+        self._by_class = {class_letter: tuple(group) for class_letter, group in by_class.items()}
         return self._by_id, self._by_class
 
     def clear(self) -> None:

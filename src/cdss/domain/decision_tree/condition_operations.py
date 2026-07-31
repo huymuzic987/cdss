@@ -12,6 +12,7 @@ class ConditionOperations:
     run_state: RunState
     tree_key: str | None
     node_key: str | None
+
     def _resolve_path_operand(self, path_value: Any, operand: str) -> tuple[Any, JsonObject]:
         if not isinstance(path_value, str):
             raise self._invalid(f"{operand}_path_must_be_string")
@@ -119,4 +120,3 @@ def strict_equal(left: Any, right: Any) -> bool:
     if type(left) in {int, float} and type(right) in {int, float}:
         return left == right
     return type(left) is type(right) and left == right
-

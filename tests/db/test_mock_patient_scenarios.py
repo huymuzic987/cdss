@@ -585,9 +585,7 @@ DRUG_COMBINATION_STARTED_MISSING_HEART_FAILURE_INPUT = [
         True,
     ),
     _entered("drug-combination", "T6_C_IS_FOLLOW_UP_FOR_REGIMEN"),
-    _candidate(
-        "drug-combination", "T6_C_IS_FOLLOW_UP_FOR_REGIMEN", "T6_C_TARGET_ACHIEVED", False
-    ),
+    _candidate("drug-combination", "T6_C_IS_FOLLOW_UP_FOR_REGIMEN", "T6_C_TARGET_ACHIEVED", False),
     _candidate(
         "drug-combination", "T6_C_IS_FOLLOW_UP_FOR_REGIMEN", "T6_C_TARGET_NOT_ACHIEVED", True
     ),
@@ -723,17 +721,8 @@ RESISTANT_HYPERTENSION_FULL_TREATMENT = [
     _candidate("resistant-hypertension", "T13_START", "T13_C_LIMITED", False),
     _candidate("resistant-hypertension", "T13_START", "T13_C_FULL", True),
     _entered("resistant-hypertension", "T13_C_FULL"),
-    _candidate("resistant-hypertension", "T13_C_FULL", "T13_A_OPTIMAL_TREATMENT", True),
-    _entered("resistant-hypertension", "T13_A_OPTIMAL_TREATMENT"),
-    _candidate(
-        "resistant-hypertension",
-        "T13_A_OPTIMAL_TREATMENT",
-        "T13_A_CONSIDER_DEVICE",
-        True,
-    ),
+    _candidate("resistant-hypertension", "T13_C_FULL", "T13_A_CONSIDER_DEVICE", True),
     _entered("resistant-hypertension", "T13_A_CONSIDER_DEVICE"),
-    _candidate("resistant-hypertension", "T13_A_CONSIDER_DEVICE", "T13_END_REFER", True),
-    _entered("resistant-hypertension", "T13_END_REFER"),
 ]
 
 
@@ -741,10 +730,7 @@ def test_tree_5_escalated_regimen_resolves_link_and_reaches_resistant_hypertensi
     seeded_trees: SeededTrees,
     active_bp_target: dict[str, Any],
 ) -> None:
-    """resistant-hypertension is now seeded (backups/cdss_merged.sql), so the LINK
-    resolves and traversal continues into it, reaching a full terminal ACTION instead
-    of raising LinkTargetNotFound.
-    """
+    """The Tree 5 LINK resolves into the configured full-resource Tree 13 action."""
     runtime_input = _medication_input(
         active_bp_target,
         facility="FULL_RESOURCES",
@@ -778,22 +764,9 @@ def test_tree_5_escalated_regimen_resolves_link_and_reaches_resistant_hypertensi
     ] == [
         (
             "resistant-hypertension",
-            "T13_A_OPTIMAL_TREATMENT",
-            "Điều trị theo tiêu chuẩn tối ưu và Tăng cường biện pháp tđls, "
-            "đặc biệt là hạn chế muối",
-            {"action_type": "LIFESTYLE_CHANGES", "salt_restriction": True},
-        ),
-        (
-            "resistant-hypertension",
             "T13_A_CONSIDER_DEVICE",
             "Xem xét điều trị can thiệp dụng cụ",
             {"action_type": "CONSIDER_DEVICE_INTERVENTION"},
-        ),
-        (
-            "resistant-hypertension",
-            "T13_END_REFER",
-            "Chuyển lên trung tâm chuyên khoa",
-            {"action_type": "REFER_TO_SPECIALIZED_CENTER"},
         ),
     ]
     _assert_trace(
@@ -810,9 +783,7 @@ def test_tree_5_escalated_regimen_resolves_link_and_reaches_resistant_hypertensi
             (T5, "T5_INF_RESISTANT_HYPERTENSION_TREATMENT_STEP", 1),
             ("resistant-hypertension", "T13_START", 1),
             ("resistant-hypertension", "T13_C_FULL", 1),
-            ("resistant-hypertension", "T13_A_OPTIMAL_TREATMENT", 1),
             ("resistant-hypertension", "T13_A_CONSIDER_DEVICE", 1),
-            ("resistant-hypertension", "T13_END_REFER", 1),
         ],
     )
 

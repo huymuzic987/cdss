@@ -68,9 +68,7 @@ def test_medication_recommendation_takes_precedence_and_restores_state() -> None
     )
 
     assert inference.follow_up_type == FollowUpType.MEDICATION_FOLLOW_UP
-    current = build_current_visit_input(
-        {"previous_sbp": 150, "previous_dbp": 95}, inference
-    )
+    current = build_current_visit_input({"previous_sbp": 150, "previous_dbp": 95}, inference)
     assert current["is_medication_follow_up"] is True
     assert current["is_lifestyle_follow_up"] is False
     assert current["active_bp_target"] == target
@@ -91,9 +89,7 @@ def test_lifestyle_recommendation_builds_lifestyle_follow_up_input() -> None:
     )
 
     assert inference.follow_up_type == FollowUpType.LIFESTYLE_FOLLOW_UP
-    current = build_current_visit_input(
-        {"previous_sbp": 130, "previous_dbp": 85}, inference
-    )
+    current = build_current_visit_input({"previous_sbp": 130, "previous_dbp": 85}, inference)
     assert current["is_lifestyle_follow_up"] is True
     assert current["is_medication_follow_up"] is False
     assert current["pre_lifestyle_clinic_sbp"] == 130

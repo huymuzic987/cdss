@@ -67,7 +67,9 @@ def evaluate_follow_up(
         if value is None
     ]
     if missing:
-        raise InvalidFhirInput(details={"reason": f"missing required field(s): {', '.join(missing)}"})
+        raise InvalidFhirInput(
+            details={"reason": f"missing required field(s): {', '.join(missing)}"}
+        )
 
     runtime_input["is_medication_follow_up"] = True
     runtime_input["is_lifestyle_follow_up"] = False

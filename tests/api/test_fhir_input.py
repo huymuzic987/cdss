@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 import pytest
 
 from cdss.api.schemas.fhir_input import bundle_to_input, input_to_bundle
-from cdss.domain.decision_tree import InvalidFhirInput
+from cdss.domain.decision_tree import InvalidFhirInput, JsonObject
 
 _BP_ROLES = [
     ("current_clinic", "current_clinic_sbp", "current_clinic_dbp"),
@@ -21,7 +21,9 @@ def test_patient_birthdate_maps_to_age() -> None:
     bundle = {
         "resourceType": "Bundle",
         "type": "collection",
-        "entry": [{"resource": {"resourceType": "Patient", "birthDate": f"{this_year - 52}-01-01"}}],
+        "entry": [
+            {"resource": {"resourceType": "Patient", "birthDate": f"{this_year - 52}-01-01"}}
+        ],
     }
 
     assert bundle_to_input(bundle)["age"] == 52
@@ -145,13 +147,13 @@ def test_nested_object_round_trips_via_parameters_part() -> None:
 
 
 def test_array_round_trips_via_parameters_part_with_array_extension() -> None:
-    flat = {"contraindicated_drug_classes": ["MRA", "ALPHA_BLOCKER"]}
+    flat: JsonObject = {"contraindicated_drug_classes": ["MRA", "ALPHA_BLOCKER"]}
 
     assert bundle_to_input(input_to_bundle(flat)) == flat
 
 
 def test_single_element_array_is_not_confused_with_a_scalar() -> None:
-    flat = {"contraindicated_drug_classes": ["MRA"]}
+    flat: JsonObject = {"contraindicated_drug_classes": ["MRA"]}
 
     bundle = input_to_bundle(flat)
     result = bundle_to_input(bundle)

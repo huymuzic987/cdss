@@ -2,7 +2,14 @@
 
 from collections.abc import Mapping
 
-from cdss.domain.decision_tree import ExecutedAction, JsonObject, NodeType, TraceEvent, TraversalResult, TreeGraph
+from cdss.domain.decision_tree import (
+    ExecutedAction,
+    JsonObject,
+    NodeType,
+    TraceEvent,
+    TraversalResult,
+    TreeGraph,
+)
 
 _PREGNANCY_TREE_KEY = "hypertension-in-pregnancy"
 
@@ -76,15 +83,9 @@ def _pregnancy_recommendation_text(
     text_key = "text_en" if locale == "en" else "text_vi"
     sections = [recommendation]
     regimen_lines = [
-        item[text_key]
-        for item in regimen_summary
-        if isinstance(item.get(text_key), str)
+        item[text_key] for item in regimen_summary if isinstance(item.get(text_key), str)
     ]
-    safety_lines = [
-        item[text_key]
-        for item in safety_notes
-        if isinstance(item.get(text_key), str)
-    ]
+    safety_lines = [item[text_key] for item in safety_notes if isinstance(item.get(text_key), str)]
     if regimen_lines:
         sections.append(f"{regimen_heading}:\n- " + "\n- ".join(regimen_lines))
     if safety_lines:
