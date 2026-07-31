@@ -26,6 +26,15 @@ pipeline {
         githubPush()
     }
 
+    parameters {
+        string(
+            name: 'NOTIFICATION_EMAILS',
+            defaultValue: 'phamlequangminh2411@gmail.com',
+            trim: true,
+            description: 'Comma-separated addresses that receive a detailed report for every build. Commit authors, culprits, and the manual build requester are also included when Jenkins knows their email addresses.'
+        )
+    }
+
     options {
         // Checkout is performed explicitly below; avoid Declarative
         // Pipeline's otherwise automatic duplicate checkout.
@@ -40,6 +49,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 echo 'Checking out source code...'
                 checkout scm
             }
@@ -47,6 +57,7 @@ pipeline {
 
         stage('Verify Files') {
             steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sh '''
                     echo "=== Jenkins Build Info ==="
                     pwd
@@ -81,6 +92,7 @@ pipeline {
         // pipeline, so promotion of a broken build is impossible.
         stage('Quality Gates') {
             steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sh '''
                     chmod +x deploy/run_quality_gates.sh
                     ./deploy/run_quality_gates.sh
@@ -90,6 +102,7 @@ pipeline {
 
         stage('Deploy Files') {
             steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
@@ -123,6 +136,7 @@ pipeline {
 
         stage('Inject Environment') {
             steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 withCredentials([file(credentialsId: 'cdss-prod-env', variable: 'ENV_FILE')]) {
                     sshagent(['ubuntu-vm-jenkins']) {
                         sh '''
@@ -141,6 +155,7 @@ pipeline {
         // lengthy build. This also recreates a missing stable router.
         stage('Ensure Live Route') {
             steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
@@ -159,6 +174,7 @@ pipeline {
         // Provision and promotion reuse these exact images.
         stage('Build Images') {
             steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
@@ -177,6 +193,7 @@ pipeline {
         // host backup directory, outside all per-version Docker volumes.
         stage('Backup Current Database') {
             steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
@@ -195,6 +212,7 @@ pipeline {
         // Production remains online throughout this stage.
         stage('Provision New Stack') {
             steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
@@ -214,6 +232,7 @@ pipeline {
         // without stopping the old release.
         stage('Promote New Stack') {
             steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
@@ -229,6 +248,7 @@ pipeline {
 
         stage('Prune Old Stacks') {
             steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
@@ -244,6 +264,7 @@ pipeline {
 
         stage('Verify Public Endpoint') {
             steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sh '''
                     for attempt in $(seq 1 10); do
                         release_header=$(
@@ -292,7 +313,113 @@ pipeline {
             }
         }
 
-        always {
+        cleanup {
+            script {
+                def stageNames = [
+                    'Checkout',
+                    'Verify Files',
+                    'Quality Gates',
+                    'Deploy Files',
+                    'Inject Environment',
+                    'Ensure Live Route',
+                    'Build Images',
+                    'Backup Current Database',
+                    'Provision New Stack',
+                    'Promote New Stack',
+                    'Prune Old Stacks',
+                    'Verify Public Endpoint'
+                ]
+                def buildResult = currentBuild.currentResult ?: 'UNKNOWN'
+                def activeStage = env.CDSS_CURRENT_STAGE ?: 'Pipeline initialization'
+                def activeStageIndex = stageNames.indexOf(activeStage)
+                def stageRows = stageNames.collectWithIndex { stageName, index ->
+                    def stageResult
+                    if (buildResult == 'SUCCESS') {
+                        stageResult = 'SUCCESS'
+                    } else if (activeStageIndex < 0) {
+                        stageResult = 'NOT RUN'
+                    } else if (index < activeStageIndex) {
+                        stageResult = 'SUCCESS'
+                    } else if (index == activeStageIndex) {
+                        stageResult = buildResult
+                    } else {
+                        stageResult = 'NOT RUN'
+                    }
+
+                    def color = stageResult == 'SUCCESS'
+                        ? '#15803d'
+                        : (stageResult == 'NOT RUN' ? '#64748b' : '#b91c1c')
+                    return """
+                        <tr>
+                            <td style="padding:6px 10px;border:1px solid #cbd5e1;">${stageName}</td>
+                            <td style="padding:6px 10px;border:1px solid #cbd5e1;color:${color};font-weight:700;">${stageResult}</td>
+                        </tr>
+                    """
+                }.join('\n')
+
+                def commitSummary = sh(
+                    script: "git log -1 --pretty=format:'%h %s' 2>/dev/null || true",
+                    returnStdout: true
+                ).trim()
+                def resultColor = buildResult == 'SUCCESS' ? '#15803d' : '#b91c1c'
+                def subject = "[CDSS] ${buildResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+                def recipients = [
+                    env.CDSS_NOTIFICATION_EMAILS?.trim(),
+                    params.NOTIFICATION_EMAILS?.trim()
+                ].findAll { it }.join(',')
+                def emailBody = """
+                    <html>
+                    <body style="font-family:Arial,sans-serif;color:#0f172a;">
+                        <h2 style="color:${resultColor};">CDSS build ${buildResult}</h2>
+                        <table style="border-collapse:collapse;margin-bottom:18px;">
+                            <tr><td><strong>Job</strong></td><td style="padding-left:14px;">${env.JOB_NAME}</td></tr>
+                            <tr><td><strong>Build</strong></td><td style="padding-left:14px;">#${env.BUILD_NUMBER}</td></tr>
+                            <tr><td><strong>Result</strong></td><td style="padding-left:14px;color:${resultColor};font-weight:700;">${buildResult}</td></tr>
+                            <tr><td><strong>Failed/current stage</strong></td><td style="padding-left:14px;">${activeStage}</td></tr>
+                            <tr><td><strong>Duration</strong></td><td style="padding-left:14px;">${currentBuild.durationString}</td></tr>
+                            <tr><td><strong>Commit</strong></td><td style="padding-left:14px;">${commitSummary ?: 'Unavailable'}</td></tr>
+                            <tr><td><strong>Build URL</strong></td><td style="padding-left:14px;"><a href="${env.BUILD_URL}">${env.BUILD_URL}</a></td></tr>
+                            <tr><td><strong>Console log</strong></td><td style="padding-left:14px;"><a href="${env.BUILD_URL}console">${env.BUILD_URL}console</a></td></tr>
+                        </table>
+
+                        <h3>Stage summary</h3>
+                        <table style="border-collapse:collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="padding:6px 10px;border:1px solid #cbd5e1;text-align:left;">Stage</th>
+                                    <th style="padding:6px 10px;border:1px solid #cbd5e1;text-align:left;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>${stageRows}</tbody>
+                        </table>
+
+                        <h3>Final console output (last 150 lines)</h3>
+                        <pre style="white-space:pre-wrap;background:#0f172a;color:#e2e8f0;padding:14px;border-radius:6px;">\${BUILD_LOG, maxLines=150, escapeHtml=true}</pre>
+                        <p>The complete compressed console log is attached.</p>
+                    </body>
+                    </html>
+                """
+
+                try {
+                    emailext(
+                        subject: subject,
+                        body: emailBody,
+                        mimeType: 'text/html',
+                        to: recipients,
+                        recipientProviders: [
+                            developers(),
+                            culprits(),
+                            requestor()
+                        ],
+                        attachLog: true,
+                        compressLog: true
+                    )
+                    echo "Build notification email requested for ${recipients ?: 'Jenkins-derived recipients'}."
+                } catch (notificationError) {
+                    echo "WARNING: unable to send build notification email: ${notificationError}"
+                    echo 'Verify that the Email Extension plugin and SMTP settings are configured in Jenkins.'
+                }
+            }
             cleanWs()
         }
     }
