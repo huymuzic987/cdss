@@ -1,0 +1,1463 @@
+{
+  "format": "cdss-traversal-graph",
+  "format_version": 1,
+  "source": "backups/seed.sql",
+  "traversal_semantics": {
+    "entry": "entry_node_keys",
+    "node_lookup": "trees[].nodes[node_key]",
+    "branch_priority": "transitions sorted by traversal_order ascending",
+    "branch_condition": "condition_definition on the target node; copied to candidate_condition",
+    "cross_tree_jump": "LINK nodes use link_target_tree_key and optional link_target_node_key"
+  },
+  "document_type": "decision_tree",
+  "tree": {
+    "id": "5be98c95-06f2-e474-21d9-cb52308e0455",
+    "tree_key": "optimal-treatment-strategy",
+    "name_en": "Optimal treatment strategy",
+    "name_vi": "Cây chiến lược điều trị tối ưu",
+    "created_at": "2026-06-28 04:55:48.876854+00:00",
+    "updated_at": "2026-06-28 04:55:48.876854+00:00",
+    "entry_node_keys": [
+      "T5_START_BP_AND_AGE_INFORMATION"
+    ],
+    "root_node_keys": [
+      "T5_GLOBAL_BP_TARGET_OVERRIDE_NOTE",
+      "T5_START_BP_AND_AGE_INFORMATION"
+    ],
+    "global_node_keys": [
+      "T5_GLOBAL_BP_TARGET_OVERRIDE_NOTE"
+    ],
+    "nodes": {
+      "T5_ACTION_CONSIDER_MONOTHERAPY_ONE_PILL": {
+        "id": "88a2ff70-ecc2-23e0-97e7-ebc3213188cd",
+        "node_key": "T5_ACTION_CONSIDER_MONOTHERAPY_ONE_PILL",
+        "node_type": "ACTION",
+        "text_en": "Consider monotherapy in one pill: A (ACE inhibitor/ARB/ARNI), B, C (calcium-channel blocker), or D (thiazide-like diuretic)",
+        "text_vi": "Xem xét ĐƠN TRỊ LIỆU (1 viên): A (ƯCMC/CTTA/ARNI), B, C (CKCa), hoặc D (Lợi tiểu Thiazide-like)",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "pill_count": 1,
+          "action_type": "CONSIDER_MONOTHERAPY",
+          "drug_options": [
+            {
+              "class": "A",
+              "description": "ACE inhibitor, ARB, or ARNI"
+            },
+            {
+              "class": "B",
+              "description": "Beta-blocker",
+              "requires_indication": true
+            },
+            {
+              "class": "C",
+              "description": "Calcium-channel blocker"
+            },
+            {
+              "class": "D",
+              "description": "Thiazide-like diuretic"
+            }
+          ],
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true,
+          "requires_clinician_review": true,
+          "next_medication_follow_up_stage": "INITIAL_REGIMEN",
+          "beta_blocker_requires_indication": true
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 22,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [
+          {
+            "id": "99178c76-adb6-5f07-a0de-58e2c908440c",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Chiến lược điều trị tăng huyết áp",
+                "number": "3.2"
+              }
+            ],
+            "locator": "Hình 4. Sơ đồ điều trị tăng huyết áp tối ưu VSH/VNHA 2022",
+            "locator_detail": "One-pill monotherapy options: A, B, C, or D. Beta-blocker requires an appropriate indication.",
+            "printed_page_numbers": [
+              18
+            ],
+            "pdf_page_numbers": [
+              20
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "cd454155-994d-581b-6794-e62240d2b7bd",
+            "traversal_order": 1,
+            "to_node_key": "T5_LINK_MONOTHERAPY_TO_TREE_6",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION": {
+        "id": "5c6c7d16-4242-c6df-8601-559b06c8df6e",
+        "node_key": "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION",
+        "node_type": "ACTION",
+        "text_en": "Fixed-dose three-drug combination in one pill: A + C + D",
+        "text_vi": "VIÊN PHỐI HỢP 3 THUỐC (1 viên): A+C+D",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "classes": [
+            "A",
+            "C",
+            "D"
+          ],
+          "pill_count": 1,
+          "action_type": "FIXED_DOSE_THREE_DRUG_COMBINATION",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true,
+          "fixed_dose_combination": true,
+          "requires_clinician_review": true,
+          "next_medication_follow_up_stage": "ESCALATED_REGIMEN"
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 8,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [
+          {
+            "id": "29df3401-4760-e1b3-7a14-a96531b8c9f7",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Chiến lược điều trị tăng huyết áp",
+                "number": "3.2"
+              }
+            ],
+            "locator": "Hình 4. Sơ đồ điều trị tăng huyết áp tối ưu VSH/VNHA 2022",
+            "locator_detail": "One-pill fixed-dose A+C+D combination.",
+            "printed_page_numbers": [
+              18
+            ],
+            "pdf_page_numbers": [
+              20
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "99117de2-48a3-0d05-ec75-cb15776e9e8b",
+            "traversal_order": 1,
+            "to_node_key": "T5_LINK_THREE_DRUG_TO_TREE_6",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T5_ACTION_FIXED_DOSE_TWO_DRUG_COMBINATION": {
+        "id": "c3ba5d02-6f67-3af6-016c-6d9649bed79b",
+        "node_key": "T5_ACTION_FIXED_DOSE_TWO_DRUG_COMBINATION",
+        "node_type": "ACTION",
+        "text_en": "Fixed-dose two-drug combination in one pill: A + C or A + D; start at half the usual dose",
+        "text_vi": "VIÊN PHỐI HỢP 2 THUỐC (1 viên): A+C hoặc A+D (Khởi đầu 1/2 liều thông thường)",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "pill_count": 1,
+          "action_type": "FIXED_DOSE_TWO_DRUG_COMBINATION",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true,
+          "combination_options": [
+            [
+              "A",
+              "C"
+            ],
+            [
+              "A",
+              "D"
+            ]
+          ],
+          "fixed_dose_combination": true,
+          "requires_clinician_review": true,
+          "next_medication_follow_up_stage": "INITIAL_REGIMEN",
+          "starting_dose_fraction_of_usual": 0.5
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 18,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [
+          {
+            "id": "deab63a5-49ad-5f4d-3bc7-0c723570c90d",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Chiến lược điều trị tăng huyết áp",
+                "number": "3.2"
+              }
+            ],
+            "locator": "Hình 4. Sơ đồ điều trị tăng huyết áp tối ưu VSH/VNHA 2022",
+            "locator_detail": "One-pill fixed-dose two-drug combination, starting at half the usual dose.",
+            "printed_page_numbers": [
+              18
+            ],
+            "pdf_page_numbers": [
+              20
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "e9638d59-f758-ac01-815a-7d3d8ae2d871",
+            "traversal_order": 1,
+            "to_node_key": "T5_LINK_INITIAL_TWO_DRUG_TO_TREE_6",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T5_C_ESCALATED_REGIMEN_BP_TARGET_NOT_REACHED": {
+        "id": "ef355d74-058e-da5d-ee4f-f98a16f6b826",
+        "node_key": "T5_C_ESCALATED_REGIMEN_BP_TARGET_NOT_REACHED",
+        "node_type": "CONDITION",
+        "text_en": "Blood pressure target not reached",
+        "text_vi": "HA chưa đạt đích điều trị",
+        "condition_definition": {
+          "not": {
+            "all": [
+              {
+                "op": "lt",
+                "path": "input.current_clinic_sbp",
+                "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+              },
+              {
+                "op": "lt",
+                "path": "input.current_clinic_dbp",
+                "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+              }
+            ]
+          }
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 13,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "672ddd64-cc32-a3df-cf65-214e972b3d3b",
+            "traversal_order": 1,
+            "to_node_key": "T5_INF_RESISTANT_HYPERTENSION_TREATMENT_STEP",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T5_C_ESCALATED_REGIMEN_BP_TARGET_REACHED": {
+        "id": "54aa834e-dedb-0126-4412-13764f18e243",
+        "node_key": "T5_C_ESCALATED_REGIMEN_BP_TARGET_REACHED",
+        "node_type": "CONDITION",
+        "text_en": "Blood pressure target reached",
+        "text_vi": "HA đã đạt đích điều trị",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 11,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [
+          {
+            "id": "eaea46ad-616a-4fcc-25a2-8396fc4d68b8",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Chiến lược điều trị tăng huyết áp",
+                "number": "3.2"
+              }
+            ],
+            "locator": "Hình 4. Sơ đồ điều trị tăng huyết áp tối ưu VSH/VNHA 2022",
+            "locator_detail": "Treatment follow-up checks whether clinic BP has reached the active target.",
+            "printed_page_numbers": [
+              18
+            ],
+            "pdf_page_numbers": [
+              20
+            ],
+            "reference_note": "Runtime target comparison uses context.treatment.bp_target.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "041c616d-2acb-cf0b-d693-a3691cc386e2",
+            "traversal_order": 1,
+            "to_node_key": "T5_END_ESCALATED_REGIMEN_TARGET_REACHED",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T5_C_HABTC_LOW_OR_MEDIUM_RISK": {
+        "id": "aa012536-8918-710b-0209-3b1da478cd70",
+        "node_key": "T5_C_HABTC_LOW_OR_MEDIUM_RISK",
+        "node_type": "CONDITION",
+        "text_en": "High-normal BP with low or intermediate risk",
+        "text_vi": "HABTC + nguy cơ thấp/TB",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value": 140
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value": 90
+            },
+            {
+              "any": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 130
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 85
+                }
+              ]
+            },
+            {
+              "any": [
+                {
+                  "op": "eq",
+                  "path": "context.risk.level",
+                  "value": "LOW"
+                },
+                {
+                  "op": "eq",
+                  "path": "context.risk.level",
+                  "value": "MEDIUM"
+                }
+              ]
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 20,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [
+          {
+            "id": "1a8d6914-7ebe-a572-5569-97a1e795101e",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Chiến lược điều trị tăng huyết áp",
+                "number": "3.2"
+              }
+            ],
+            "locator": "Hình 4. Sơ đồ điều trị tăng huyết áp tối ưu VSH/VNHA 2022",
+            "locator_detail": "High-normal BP with low/intermediate risk follows the monotherapy-consideration branch.",
+            "printed_page_numbers": [
+              18
+            ],
+            "pdf_page_numbers": [
+              20
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "2df979c2-7e7a-f421-6e95-75ededf683bf",
+            "traversal_order": 1,
+            "to_node_key": "T5_C_MONOTHERAPY_ELIGIBILITY",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "eq",
+                  "path": "input.is_lifestyle_follow_up",
+                  "value": true
+                },
+                {
+                  "op": "gte",
+                  "path": "input.age",
+                  "value": 80
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_frailty_syndrome",
+                  "value": true
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T5_C_INITIAL_REGIMEN_BP_TARGET_NOT_REACHED": {
+        "id": "35bc4ca0-b4e1-eb55-4aec-24103ff89e87",
+        "node_key": "T5_C_INITIAL_REGIMEN_BP_TARGET_NOT_REACHED",
+        "node_type": "CONDITION",
+        "text_en": "Blood pressure target not reached",
+        "text_vi": "HA chưa đạt đích điều trị",
+        "condition_definition": {
+          "not": {
+            "all": [
+              {
+                "op": "lt",
+                "path": "input.current_clinic_sbp",
+                "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+              },
+              {
+                "op": "lt",
+                "path": "input.current_clinic_dbp",
+                "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+              }
+            ]
+          }
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 7,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "e7fa3d62-10a1-0eb1-179b-ead940e51612",
+            "traversal_order": 1,
+            "to_node_key": "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T5_C_INITIAL_REGIMEN_BP_TARGET_REACHED": {
+        "id": "98a3e03c-3fe0-aefc-fa04-b34573372eab",
+        "node_key": "T5_C_INITIAL_REGIMEN_BP_TARGET_REACHED",
+        "node_type": "CONDITION",
+        "text_en": "Blood pressure target reached",
+        "text_vi": "HA đã đạt đích điều trị",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 5,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [
+          {
+            "id": "e57d52cd-dbee-066b-bc2c-99c64454c750",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Chiến lược điều trị tăng huyết áp",
+                "number": "3.2"
+              }
+            ],
+            "locator": "Hình 4. Sơ đồ điều trị tăng huyết áp tối ưu VSH/VNHA 2022",
+            "locator_detail": "Treatment follow-up checks whether clinic BP has reached the active target.",
+            "printed_page_numbers": [
+              18
+            ],
+            "pdf_page_numbers": [
+              20
+            ],
+            "reference_note": "Runtime target comparison uses context.treatment.bp_target.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "3a33fe63-dfbe-ee8d-4be4-46c5f2c492fe",
+            "traversal_order": 1,
+            "to_node_key": "T5_END_INITIAL_REGIMEN_TARGET_REACHED",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T5_C_INITIAL_TREATMENT_ENCOUNTER": {
+        "id": "eda6c713-9824-ea0b-c265-dcbbcde38fe4",
+        "node_key": "T5_C_INITIAL_TREATMENT_ENCOUNTER",
+        "node_type": "CONDITION",
+        "text_en": "Initial treatment-selection encounter",
+        "text_vi": "Khám chọn chiến lược điều trị ban đầu",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.is_medication_follow_up",
+          "value": false
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 16,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "7574aee0-813e-e113-1dab-c4b394aba1fc",
+            "traversal_order": 1,
+            "to_node_key": "T5_C_TWO_DRUG_TREATMENT_ELIGIBILITY",
+            "candidate_condition": {
+              "any": [
+                {
+                  "all": [
+                    {
+                      "op": "lt",
+                      "path": "input.current_clinic_sbp",
+                      "value": 140
+                    },
+                    {
+                      "op": "lt",
+                      "path": "input.current_clinic_dbp",
+                      "value": 90
+                    },
+                    {
+                      "any": [
+                        {
+                          "op": "gte",
+                          "path": "input.current_clinic_sbp",
+                          "value": 130
+                        },
+                        {
+                          "op": "gte",
+                          "path": "input.current_clinic_dbp",
+                          "value": 85
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "path": "context.risk.level",
+                      "value": "HIGH"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_coronary_artery_disease",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_type_2_diabetes",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_heart_failure",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_ckd",
+                  "value": true
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 140
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "205e651c-2cd5-ec04-8de5-6864c342ab23",
+            "traversal_order": 2,
+            "to_node_key": "T5_C_HABTC_LOW_OR_MEDIUM_RISK",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 140
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                },
+                {
+                  "any": [
+                    {
+                      "op": "gte",
+                      "path": "input.current_clinic_sbp",
+                      "value": 130
+                    },
+                    {
+                      "op": "gte",
+                      "path": "input.current_clinic_dbp",
+                      "value": 85
+                    }
+                  ]
+                },
+                {
+                  "any": [
+                    {
+                      "op": "eq",
+                      "path": "context.risk.level",
+                      "value": "LOW"
+                    },
+                    {
+                      "op": "eq",
+                      "path": "context.risk.level",
+                      "value": "MEDIUM"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T5_C_IS_MEDICATION_FOLLOW_UP": {
+        "id": "7c65f813-54a4-e49b-6761-998010679793",
+        "node_key": "T5_C_IS_MEDICATION_FOLLOW_UP",
+        "node_type": "CONDITION",
+        "text_en": "Medication follow-up visit",
+        "text_vi": "Tái khám sau điều trị thuốc",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.is_medication_follow_up",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 3,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "cdf885df-b3c4-a48e-f872-c00bb66761ab",
+            "traversal_order": 1,
+            "to_node_key": "T5_C_MEDICATION_FOLLOW_UP_INITIAL_REGIMEN",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.medication_follow_up_stage",
+              "value": "INITIAL_REGIMEN"
+            }
+          },
+          {
+            "edge_id": "74e0e72b-4973-9941-1160-72681a5ec08d",
+            "traversal_order": 2,
+            "to_node_key": "T5_C_MEDICATION_FOLLOW_UP_ESCALATED_REGIMEN",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.medication_follow_up_stage",
+              "value": "ESCALATED_REGIMEN"
+            }
+          }
+        ]
+      },
+      "T5_C_MEDICATION_FOLLOW_UP_ESCALATED_REGIMEN": {
+        "id": "329f1d88-b1c0-0dfb-e483-04e44d7a8cb7",
+        "node_key": "T5_C_MEDICATION_FOLLOW_UP_ESCALATED_REGIMEN",
+        "node_type": "CONDITION",
+        "text_en": "Follow-up after escalated regimen",
+        "text_vi": "Tái khám sau phác đồ điều trị đã tăng cường",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.medication_follow_up_stage",
+          "value": "ESCALATED_REGIMEN"
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 10,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "0f64515b-1bc7-a684-555e-a1b04b189b38",
+            "traversal_order": 1,
+            "to_node_key": "T5_C_ESCALATED_REGIMEN_BP_TARGET_REACHED",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "d56d956b-a59b-6224-3ae8-fc75a6acdc59",
+            "traversal_order": 2,
+            "to_node_key": "T5_C_ESCALATED_REGIMEN_BP_TARGET_NOT_REACHED",
+            "candidate_condition": {
+              "not": {
+                "all": [
+                  {
+                    "op": "lt",
+                    "path": "input.current_clinic_sbp",
+                    "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+                  },
+                  {
+                    "op": "lt",
+                    "path": "input.current_clinic_dbp",
+                    "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "T5_C_MEDICATION_FOLLOW_UP_INITIAL_REGIMEN": {
+        "id": "cad9430a-f29b-3654-69d2-6522e78fd10b",
+        "node_key": "T5_C_MEDICATION_FOLLOW_UP_INITIAL_REGIMEN",
+        "node_type": "CONDITION",
+        "text_en": "Follow-up after initial regimen",
+        "text_vi": "Tái khám sau phác đồ điều trị ban đầu",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.medication_follow_up_stage",
+          "value": "INITIAL_REGIMEN"
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 4,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "9a2597db-bccd-f318-f80d-f51c9cbf56f6",
+            "traversal_order": 1,
+            "to_node_key": "T5_C_INITIAL_REGIMEN_BP_TARGET_REACHED",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "a6f240ad-dab6-1c70-41b1-b9aec73756bf",
+            "traversal_order": 2,
+            "to_node_key": "T5_C_INITIAL_REGIMEN_BP_TARGET_NOT_REACHED",
+            "candidate_condition": {
+              "not": {
+                "all": [
+                  {
+                    "op": "lt",
+                    "path": "input.current_clinic_sbp",
+                    "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+                  },
+                  {
+                    "op": "lt",
+                    "path": "input.current_clinic_dbp",
+                    "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "T5_C_MONOTHERAPY_ELIGIBILITY": {
+        "id": "94a026fb-28af-8d31-f0d7-f05073711e3c",
+        "node_key": "T5_C_MONOTHERAPY_ELIGIBILITY",
+        "node_type": "CONDITION",
+        "text_en": "Persistent high-normal BP after lifestyle management, age 80 or older, or frailty syndrome",
+        "text_vi": "HABTC không đạt mục tiêu sau thay đổi lối sống hoặc tuổi >= 80 hoặc hội chứng lão hóa",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "eq",
+              "path": "input.is_lifestyle_follow_up",
+              "value": true
+            },
+            {
+              "op": "gte",
+              "path": "input.age",
+              "value": 80
+            },
+            {
+              "op": "eq",
+              "path": "input.has_frailty_syndrome",
+              "value": true
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 21,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [
+          {
+            "id": "c43d9257-2df1-facf-3454-ea4fa9c2db0d",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Chiến lược điều trị tăng huyết áp",
+                "number": "3.2"
+              }
+            ],
+            "locator": "Hình 4. Sơ đồ điều trị tăng huyết áp tối ưu VSH/VNHA 2022",
+            "locator_detail": "Monotherapy may be considered after lifestyle management when BP remains uncontrolled, or for age >=80 / frailty.",
+            "printed_page_numbers": [
+              18
+            ],
+            "pdf_page_numbers": [
+              20
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "5023ebda-3b22-02d6-9dc8-fd02915a321d",
+            "traversal_order": 1,
+            "to_node_key": "T5_ACTION_CONSIDER_MONOTHERAPY_ONE_PILL",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T5_C_TWO_DRUG_TREATMENT_ELIGIBILITY": {
+        "id": "fd5f90fd-3e68-39f1-46ab-441095c17fd8",
+        "node_key": "T5_C_TWO_DRUG_TREATMENT_ELIGIBILITY",
+        "node_type": "CONDITION",
+        "text_en": "High-normal BP with high risk or comorbidity, or clinic BP at or above 140/90 mmHg",
+        "text_vi": "HABTC + nguy cơ cao/bệnh đồng mắc hoặc THA >= 140/90",
+        "condition_definition": {
+          "any": [
+            {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 140
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                },
+                {
+                  "any": [
+                    {
+                      "op": "gte",
+                      "path": "input.current_clinic_sbp",
+                      "value": 130
+                    },
+                    {
+                      "op": "gte",
+                      "path": "input.current_clinic_dbp",
+                      "value": 85
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "path": "context.risk.level",
+                  "value": "HIGH"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "path": "input.has_coronary_artery_disease",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_type_2_diabetes",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_heart_failure",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_ckd",
+              "value": true
+            },
+            {
+              "op": "gte",
+              "path": "input.current_clinic_sbp",
+              "value": 140
+            },
+            {
+              "op": "gte",
+              "path": "input.current_clinic_dbp",
+              "value": 90
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 17,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [
+          {
+            "id": "a7fb39c2-4cd7-8bdc-7aa6-8471ba8520ac",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Chiến lược điều trị tăng huyết áp",
+                "number": "3.2"
+              }
+            ],
+            "locator": "Hình 4. Sơ đồ điều trị tăng huyết áp tối ưu VSH/VNHA 2022",
+            "locator_detail": "High-normal BP with high risk or comorbidity, or hypertension >=140/90, enters the two-drug strategy.",
+            "printed_page_numbers": [
+              18
+            ],
+            "pdf_page_numbers": [
+              20
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "8dae7a7b-80d3-5d9f-70be-e145f0f57fc1",
+            "traversal_order": 1,
+            "to_node_key": "T5_ACTION_FIXED_DOSE_TWO_DRUG_COMBINATION",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T5_END_ESCALATED_REGIMEN_TARGET_REACHED": {
+        "id": "75c0a05c-7687-2266-8952-473fe7b86d06",
+        "node_key": "T5_END_ESCALATED_REGIMEN_TARGET_REACHED",
+        "node_type": "END",
+        "text_en": "Continue monitoring and maintain regimen",
+        "text_vi": "Tiếp tục theo dõi và duy trì phác đồ",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "CONTINUE_MONITORING_AND_MAINTAIN_REGIMEN",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true,
+          "next_medication_follow_up_stage": "ESCALATED_REGIMEN"
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 12,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T5_END_INITIAL_REGIMEN_TARGET_REACHED": {
+        "id": "0380de58-e79b-5348-28bb-b502643bdf13",
+        "node_key": "T5_END_INITIAL_REGIMEN_TARGET_REACHED",
+        "node_type": "END",
+        "text_en": "Continue monitoring and maintain regimen",
+        "text_vi": "Tiếp tục theo dõi và duy trì phác đồ",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "CONTINUE_MONITORING_AND_MAINTAIN_REGIMEN",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true,
+          "next_medication_follow_up_stage": "INITIAL_REGIMEN"
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 6,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T5_GLOBAL_BP_TARGET_OVERRIDE_NOTE": {
+        "id": "74f3cdc3-0390-aa3d-5f21-9d8128a6f3d7",
+        "node_key": "T5_GLOBAL_BP_TARGET_OVERRIDE_NOTE",
+        "node_type": "GLOBAL",
+        "text_en": "Comorbidities may have their own treatment target and override Tree 3 general target. Applies to every BP-target achievement check.",
+        "text_vi": "Nếu có bệnh đồng mắc thì có thể bệnh đồng mắc sẽ có đích điều trị riêng và override đích điều trị general của cây 3. Áp dụng cho mọi node condition check HA đã đạt đích điều trị hay chưa",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": {
+          "applies_to": [
+            "T5_C_INITIAL_REGIMEN_BP_TARGET_REACHED",
+            "T5_C_INITIAL_REGIMEN_BP_TARGET_NOT_REACHED",
+            "T5_C_ESCALATED_REGIMEN_BP_TARGET_REACHED",
+            "T5_C_ESCALATED_REGIMEN_BP_TARGET_NOT_REACHED"
+          ],
+          "target_path": "context.treatment.bp_target",
+          "override_rule": "MODIFIER_TREE_TARGET_OVERRIDES_TREE_3_TARGET",
+          "comparison_contract": {
+            "systolic_input_path": "input.current_clinic_sbp",
+            "diastolic_input_path": "input.current_clinic_dbp",
+            "systolic_target_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg",
+            "diastolic_target_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+          }
+        },
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 2,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [
+          {
+            "id": "9ad64ebe-8d98-2678-09e0-9a397359fc06",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Chiến lược điều trị tăng huyết áp",
+                "number": "3.2"
+              }
+            ],
+            "locator": "Hình 4. Sơ đồ điều trị tăng huyết áp tối ưu VSH/VNHA 2022",
+            "locator_detail": "Tree 5 uses the current accumulated BP target, including modifier-tree overrides.",
+            "printed_page_numbers": [
+              18
+            ],
+            "pdf_page_numbers": [
+              20
+            ],
+            "reference_note": "Implementation note for target propagation across Tree 3 and modifier trees.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T5_INF_RESISTANT_HYPERTENSION_TREATMENT_STEP": {
+        "id": "2d8f35fd-3fe7-7869-49f5-bc9cbb752ea1",
+        "node_key": "T5_INF_RESISTANT_HYPERTENSION_TREATMENT_STEP",
+        "node_type": "INFERENCE",
+        "text_en": "Resistant hypertension: add MRA, another diuretic, alpha-blocker, or beta-blocker; increase to two pills",
+        "text_vi": "THA KHÁNG TRỊ: Thêm MRA, Lợi tiểu khác, chẹn alpha hoặc beta (Lên 2 viên)",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment": {
+            "status": "RESISTANT_HYPERTENSION",
+            "pill_count": 2,
+            "additional_options": [
+              "MRA",
+              "ANOTHER_DIURETIC",
+              "ALPHA_BLOCKER",
+              "BETA_BLOCKER"
+            ]
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 14,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [
+          {
+            "id": "729cbbd3-0ab8-d04e-0f0d-610256d8d158",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Chiến lược điều trị tăng huyết áp",
+                "number": "3.2"
+              }
+            ],
+            "locator": "Hình 4. Sơ đồ điều trị tăng huyết áp tối ưu VSH/VNHA 2022",
+            "locator_detail": "Resistant-hypertension treatment step before transition to the resistant-hypertension tree.",
+            "printed_page_numbers": [
+              18
+            ],
+            "pdf_page_numbers": [
+              20
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "ef6bc006-1f20-874c-d3e3-5625c0e89e64",
+            "traversal_order": 1,
+            "to_node_key": "T5_LINK_RESISTANT_HYPERTENSION",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T5_LINK_INITIAL_TWO_DRUG_TO_TREE_6": {
+        "id": "f9fd109c-05a1-f132-af67-590edb731f71",
+        "node_key": "T5_LINK_INITIAL_TWO_DRUG_TO_TREE_6",
+        "node_type": "LINK",
+        "text_en": "Tree 6: Drug combination",
+        "text_vi": "Cây 6: Phối hợp thuốc",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "drug-combination",
+        "link_target_node_key": null,
+        "display_order": 19,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T5_LINK_MONOTHERAPY_TO_TREE_6": {
+        "id": "61c0ccb8-5d7d-d019-86c6-9a94b712064e",
+        "node_key": "T5_LINK_MONOTHERAPY_TO_TREE_6",
+        "node_type": "LINK",
+        "text_en": "Tree 6: Drug combination",
+        "text_vi": "Cây 6: Phối hợp thuốc",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "drug-combination",
+        "link_target_node_key": null,
+        "display_order": 23,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T5_LINK_RESISTANT_HYPERTENSION": {
+        "id": "30170f69-9377-9632-126e-7bb8214811a2",
+        "node_key": "T5_LINK_RESISTANT_HYPERTENSION",
+        "node_type": "LINK",
+        "text_en": "Resistant hypertension",
+        "text_vi": "Cây 14: THA Kháng Trị",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "resistant-hypertension",
+        "link_target_node_key": null,
+        "display_order": 15,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T5_LINK_THREE_DRUG_TO_TREE_6": {
+        "id": "58b9fa36-356d-7ed4-f695-88d943509db5",
+        "node_key": "T5_LINK_THREE_DRUG_TO_TREE_6",
+        "node_type": "LINK",
+        "text_en": "Tree 6: Drug combination",
+        "text_vi": "Cây 6: Phối hợp thuốc",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "drug-combination",
+        "link_target_node_key": null,
+        "display_order": 9,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T5_START_BP_AND_AGE_INFORMATION": {
+        "id": "914f793f-2376-a2c1-dddb-33614c13d6bb",
+        "node_key": "T5_START_BP_AND_AGE_INFORMATION",
+        "node_type": "START",
+        "text_en": "Patient blood pressure and age information",
+        "text_vi": "Thông tin huyết áp bệnh nhân và tuổi",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 1,
+        "created_at": "2026-06-28 04:55:48.876854+00:00",
+        "updated_at": "2026-06-28 04:55:48.876854+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "31b3958c-13e4-69d7-d15c-78ee66ff58e7",
+            "traversal_order": 1,
+            "to_node_key": "T5_C_IS_MEDICATION_FOLLOW_UP",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.is_medication_follow_up",
+              "value": true
+            }
+          },
+          {
+            "edge_id": "7f580a2d-ba09-3510-aba8-e6af29a6ccd6",
+            "traversal_order": 2,
+            "to_node_key": "T5_C_INITIAL_TREATMENT_ENCOUNTER",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.is_medication_follow_up",
+              "value": false
+            }
+          }
+        ]
+      }
+    },
+    "edges": [
+      {
+        "id": "cd454155-994d-581b-6794-e62240d2b7bd",
+        "from_node_key": "T5_ACTION_CONSIDER_MONOTHERAPY_ONE_PILL",
+        "to_node_key": "T5_LINK_MONOTHERAPY_TO_TREE_6",
+        "traversal_order": 1
+      },
+      {
+        "id": "99117de2-48a3-0d05-ec75-cb15776e9e8b",
+        "from_node_key": "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION",
+        "to_node_key": "T5_LINK_THREE_DRUG_TO_TREE_6",
+        "traversal_order": 1
+      },
+      {
+        "id": "e9638d59-f758-ac01-815a-7d3d8ae2d871",
+        "from_node_key": "T5_ACTION_FIXED_DOSE_TWO_DRUG_COMBINATION",
+        "to_node_key": "T5_LINK_INITIAL_TWO_DRUG_TO_TREE_6",
+        "traversal_order": 1
+      },
+      {
+        "id": "672ddd64-cc32-a3df-cf65-214e972b3d3b",
+        "from_node_key": "T5_C_ESCALATED_REGIMEN_BP_TARGET_NOT_REACHED",
+        "to_node_key": "T5_INF_RESISTANT_HYPERTENSION_TREATMENT_STEP",
+        "traversal_order": 1
+      },
+      {
+        "id": "041c616d-2acb-cf0b-d693-a3691cc386e2",
+        "from_node_key": "T5_C_ESCALATED_REGIMEN_BP_TARGET_REACHED",
+        "to_node_key": "T5_END_ESCALATED_REGIMEN_TARGET_REACHED",
+        "traversal_order": 1
+      },
+      {
+        "id": "2df979c2-7e7a-f421-6e95-75ededf683bf",
+        "from_node_key": "T5_C_HABTC_LOW_OR_MEDIUM_RISK",
+        "to_node_key": "T5_C_MONOTHERAPY_ELIGIBILITY",
+        "traversal_order": 1
+      },
+      {
+        "id": "e7fa3d62-10a1-0eb1-179b-ead940e51612",
+        "from_node_key": "T5_C_INITIAL_REGIMEN_BP_TARGET_NOT_REACHED",
+        "to_node_key": "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION",
+        "traversal_order": 1
+      },
+      {
+        "id": "3a33fe63-dfbe-ee8d-4be4-46c5f2c492fe",
+        "from_node_key": "T5_C_INITIAL_REGIMEN_BP_TARGET_REACHED",
+        "to_node_key": "T5_END_INITIAL_REGIMEN_TARGET_REACHED",
+        "traversal_order": 1
+      },
+      {
+        "id": "7574aee0-813e-e113-1dab-c4b394aba1fc",
+        "from_node_key": "T5_C_INITIAL_TREATMENT_ENCOUNTER",
+        "to_node_key": "T5_C_TWO_DRUG_TREATMENT_ELIGIBILITY",
+        "traversal_order": 1
+      },
+      {
+        "id": "205e651c-2cd5-ec04-8de5-6864c342ab23",
+        "from_node_key": "T5_C_INITIAL_TREATMENT_ENCOUNTER",
+        "to_node_key": "T5_C_HABTC_LOW_OR_MEDIUM_RISK",
+        "traversal_order": 2
+      },
+      {
+        "id": "cdf885df-b3c4-a48e-f872-c00bb66761ab",
+        "from_node_key": "T5_C_IS_MEDICATION_FOLLOW_UP",
+        "to_node_key": "T5_C_MEDICATION_FOLLOW_UP_INITIAL_REGIMEN",
+        "traversal_order": 1
+      },
+      {
+        "id": "74e0e72b-4973-9941-1160-72681a5ec08d",
+        "from_node_key": "T5_C_IS_MEDICATION_FOLLOW_UP",
+        "to_node_key": "T5_C_MEDICATION_FOLLOW_UP_ESCALATED_REGIMEN",
+        "traversal_order": 2
+      },
+      {
+        "id": "0f64515b-1bc7-a684-555e-a1b04b189b38",
+        "from_node_key": "T5_C_MEDICATION_FOLLOW_UP_ESCALATED_REGIMEN",
+        "to_node_key": "T5_C_ESCALATED_REGIMEN_BP_TARGET_REACHED",
+        "traversal_order": 1
+      },
+      {
+        "id": "d56d956b-a59b-6224-3ae8-fc75a6acdc59",
+        "from_node_key": "T5_C_MEDICATION_FOLLOW_UP_ESCALATED_REGIMEN",
+        "to_node_key": "T5_C_ESCALATED_REGIMEN_BP_TARGET_NOT_REACHED",
+        "traversal_order": 2
+      },
+      {
+        "id": "9a2597db-bccd-f318-f80d-f51c9cbf56f6",
+        "from_node_key": "T5_C_MEDICATION_FOLLOW_UP_INITIAL_REGIMEN",
+        "to_node_key": "T5_C_INITIAL_REGIMEN_BP_TARGET_REACHED",
+        "traversal_order": 1
+      },
+      {
+        "id": "a6f240ad-dab6-1c70-41b1-b9aec73756bf",
+        "from_node_key": "T5_C_MEDICATION_FOLLOW_UP_INITIAL_REGIMEN",
+        "to_node_key": "T5_C_INITIAL_REGIMEN_BP_TARGET_NOT_REACHED",
+        "traversal_order": 2
+      },
+      {
+        "id": "5023ebda-3b22-02d6-9dc8-fd02915a321d",
+        "from_node_key": "T5_C_MONOTHERAPY_ELIGIBILITY",
+        "to_node_key": "T5_ACTION_CONSIDER_MONOTHERAPY_ONE_PILL",
+        "traversal_order": 1
+      },
+      {
+        "id": "8dae7a7b-80d3-5d9f-70be-e145f0f57fc1",
+        "from_node_key": "T5_C_TWO_DRUG_TREATMENT_ELIGIBILITY",
+        "to_node_key": "T5_ACTION_FIXED_DOSE_TWO_DRUG_COMBINATION",
+        "traversal_order": 1
+      },
+      {
+        "id": "ef6bc006-1f20-874c-d3e3-5625c0e89e64",
+        "from_node_key": "T5_INF_RESISTANT_HYPERTENSION_TREATMENT_STEP",
+        "to_node_key": "T5_LINK_RESISTANT_HYPERTENSION",
+        "traversal_order": 1
+      },
+      {
+        "id": "31b3958c-13e4-69d7-d15c-78ee66ff58e7",
+        "from_node_key": "T5_START_BP_AND_AGE_INFORMATION",
+        "to_node_key": "T5_C_IS_MEDICATION_FOLLOW_UP",
+        "traversal_order": 1
+      },
+      {
+        "id": "7f580a2d-ba09-3510-aba8-e6af29a6ccd6",
+        "from_node_key": "T5_START_BP_AND_AGE_INFORMATION",
+        "to_node_key": "T5_C_INITIAL_TREATMENT_ENCOUNTER",
+        "traversal_order": 2
+      }
+    ],
+    "layout": null
+  },
+  "counts": {
+    "nodes": 23,
+    "edges": 21,
+    "references": 10,
+    "layouts": 0
+  }
+}

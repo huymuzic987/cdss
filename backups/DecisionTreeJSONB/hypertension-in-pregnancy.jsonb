@@ -1,0 +1,3609 @@
+{
+  "format": "cdss-traversal-graph",
+  "format_version": 1,
+  "source": "backups/seed.sql",
+  "traversal_semantics": {
+    "entry": "entry_node_keys",
+    "node_lookup": "trees[].nodes[node_key]",
+    "branch_priority": "transitions sorted by traversal_order ascending",
+    "branch_condition": "condition_definition on the target node; copied to candidate_condition",
+    "cross_tree_jump": "LINK nodes use link_target_tree_key and optional link_target_node_key"
+  },
+  "document_type": "decision_tree",
+  "tree": {
+    "id": "f3e7fca1-cff8-40ec-b798-9de6f1d80e66",
+    "tree_key": "hypertension-in-pregnancy",
+    "name_en": "Hypertension in Pregnancy",
+    "name_vi": "THA trong thai kỳ",
+    "created_at": "2026-07-25 11:46:28.101935+00:00",
+    "updated_at": "2026-07-25 11:46:28.101935+00:00",
+    "entry_node_keys": [
+      "T12_START_PREGNANCY_HTN_SEQUENCE"
+    ],
+    "root_node_keys": [
+      "T12_GLOBAL_ABBREVIATION_GLOSSARY",
+      "T12_GLOBAL_PREGNANCY_DRUG_CONTRAINDICATIONS",
+      "T12_START_PREGNANCY_HTN_SEQUENCE"
+    ],
+    "global_node_keys": [
+      "T12_GLOBAL_ABBREVIATION_GLOSSARY",
+      "T12_GLOBAL_PREGNANCY_DRUG_CONTRAINDICATIONS"
+    ],
+    "nodes": {
+      "T12_ACTION_CLASSIFY_HTN_TYPE": {
+        "id": "90b23d3e-8b13-43f3-9c2d-8f8858c6c643",
+        "node_key": "T12_ACTION_CLASSIFY_HTN_TYPE",
+        "node_type": "ACTION",
+        "text_en": "Determine type of hypertensive disorder of pregnancy",
+        "text_vi": "Xác định kiểu THA trong thai kỳ",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "CLASSIFY_PREGNANCY_HYPERTENSION_TYPE",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 5,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "d71359dd-dc38-4ced-9525-63ef37fa82b8",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)",
+            "locator_detail": "Classifies into the 5 categories of Bảng 15: pre-existing, gestational, preeclampsia, eclampsia, HELLP syndrome.",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "Phân loại theo 5 nhóm của Bảng 15: THA từ trước, THA thai kỳ, Tiền sản giật, Sản giật, Hội chứng HELLP.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "d071d4b0-d8f0-4572-89bf-f07e4ee5281d",
+            "traversal_order": 1,
+            "to_node_key": "T12_C_CHRONIC_HTN",
+            "candidate_condition": {
+              "all": [
+                {
+                  "any": [
+                    {
+                      "op": "eq",
+                      "path": "input.has_pre_pregnancy_hypertension",
+                      "value": true
+                    },
+                    {
+                      "op": "eq",
+                      "path": "input.has_hypertension_before_week_20",
+                      "value": true
+                    }
+                  ]
+                },
+                {
+                  "all": [
+                    {
+                      "op": "gt",
+                      "path": "input.weeks_persisting_postpartum",
+                      "value": 6
+                    },
+                    {
+                      "op": "eq",
+                      "path": "input.has_proteinuria",
+                      "value": true
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "fd33a9a6-4bcc-4f6c-a3e6-668a8f430a3b",
+            "traversal_order": 2,
+            "to_node_key": "T12_C_GESTATIONAL_HTN",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_hypertension_after_week_20",
+                  "value": true
+                },
+                {
+                  "op": "lt",
+                  "path": "input.weeks_resolved_postpartum",
+                  "value": 6
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "c8bc36c6-6877-48d4-9041-852a8457f0cb",
+            "traversal_order": 3,
+            "to_node_key": "T12_C_PREECLAMPSIA_PROTEINURIA",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "gt",
+                  "path": "input.proteinuria_24h_mg",
+                  "value": 300
+                },
+                {
+                  "op": "gte",
+                  "path": "input.acr_mg_mmol",
+                  "value": 30
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "19e25e87-b188-4c01-b7a1-479d4f69252d",
+            "traversal_order": 4,
+            "to_node_key": "T12_C_PREECLAMPSIA_RISK_FACTOR",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "eq",
+                  "path": "input.has_prior_gestational_hypertension",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_diabetes",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_ckd",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_autoimmune_disease",
+                  "value": true
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "fc0a35a8-d7cc-4e20-bb6a-0f0875eecc81",
+            "traversal_order": 5,
+            "to_node_key": "T12_C_SEVERE_SIGNS",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "eq",
+                  "path": "input.has_seizure",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_severe_headache",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_visual_disturbance",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_epigastric_pain",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_hemolysis",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_elevated_liver_enzymes",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_low_platelets",
+                  "value": true
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM": {
+        "id": "a3aafcec-6a7b-4dec-903e-c3fea2be4dad",
+        "node_key": "T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM",
+        "node_type": "ACTION",
+        "text_en": "Monitor pregnancy status and postpartum",
+        "text_vi": "Theo dõi tình trạng thai kỳ và hậu sản",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "MONITOR_PREGNANCY_AND_POSTPARTUM",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 34,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "ce1b2775-e402-4911-9299-938fe609584e",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Ongoing management of hypertension in pregnancy: monitor pregnancy status and postpartum course.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Quản lý THA trong thai kỳ theo dõi tình trạng mang thai và hậu sản.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "e772f765-723d-4f48-a145-cfbebfc295f1",
+            "traversal_order": 1,
+            "to_node_key": "T12_C_CURRENTLY_PREGNANT",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.is_pregnant",
+              "value": true
+            }
+          },
+          {
+            "edge_id": "d8fe00d6-c2f8-4dc0-b546-8dc141095168",
+            "traversal_order": 2,
+            "to_node_key": "T12_C_POSTPARTUM",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.is_postpartum",
+              "value": true
+            }
+          }
+        ]
+      },
+      "T12_ACTION_POSTPARTUM_CONTRAINDICATIONS": {
+        "id": "ba46f4c2-f4e3-49fe-87ec-dc2091a2580d",
+        "node_key": "T12_ACTION_POSTPARTUM_CONTRAINDICATIONS",
+        "node_type": "ACTION",
+        "text_en": "Mandatory contraindications while breastfeeding / BP still high",
+        "text_vi": "Chống chỉ định bắt buộc: Nicardipine\nTránh Atenolol, Propranolol, Nifedipine\nƯu tiên dùng Methyldopa / CKCa kéo dài",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "POSTPARTUM_DRUG_CONTRAINDICATIONS",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 46,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "3db22b45-2ff5-44bd-a906-524e4dca292c",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Contraindicated: nicardipine. Avoid: atenolol, propranolol, nifedipine. Prefer: methyldopa/long-acting CCB.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Chống chỉ định Nicardipine; tránh Atenolol, Propranolol, Nifedipine; ưu tiên Methyldopa/CKCa tác dụng kéo dài.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "46b94323-0fca-475a-b323-213fd5c0ac80",
+            "traversal_order": 1,
+            "to_node_key": "T12_END_MAINTAIN_REGIMEN_POSTPARTUM",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_BP_MILD_MODERATE": {
+        "id": "dbe30126-44ec-4c56-829c-708a70377dc5",
+        "node_key": "T12_C_BP_MILD_MODERATE",
+        "node_type": "CONDITION",
+        "text_en": "SBP 140-159 mmHg OR DBP 90-109 mmHg",
+        "text_vi": "HATT 140-159 mmHg\nHOẶC\nHATTr 90-109 mmHg",
+        "condition_definition": {
+          "any": [
+            {
+              "all": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 140
+                },
+                {
+                  "op": "lte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 159
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                },
+                {
+                  "op": "lte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 109
+                }
+              ]
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 16,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "91451039-e24c-4839-9967-ed3a0a1ae8b7",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Mục 3.6.6. Tăng huyết áp trong thai kỳ",
+            "locator_detail": "Mild-to-moderate severity: SBP >=140 (but <160) mmHg and/or DBP >=90 (but <110) mmHg, from the paragraph immediately preceding Bảng 15.",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "THA nhẹ đến trung bình: đo HA ít nhất 2 lần cách nhau >=4 giờ, HATT >=140 (nhưng <160) mmHg và/hoặc HATTr >=90 (nhưng <110) mmHg.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "7bbedfd8-dafa-4251-9876-c1b48abdc128",
+            "traversal_order": 1,
+            "to_node_key": "T12_INF_MILD_MODERATE_SEVERITY",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_BP_NOT_HIGH": {
+        "id": "c4601693-22d1-4b02-b02e-385ced0783f4",
+        "node_key": "T12_C_BP_NOT_HIGH",
+        "node_type": "CONDITION",
+        "text_en": "BP no longer high: SBP<140mmHg and DBP<90mmHg",
+        "text_vi": "HA không còn cao\nHATT < 140 mmHg\nvà\nHATTr < 90 mmHg",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value": 140
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value": 90
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 45,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "85d98a65-6001-45e7-8b9c-7b2d08bcbd8c",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Postpartum BP no longer high: maintain regimen.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "HA sau sinh không còn cao: duy trì phác đồ.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "5295b925-31ae-4d32-8d6c-92e2fc62c662",
+            "traversal_order": 1,
+            "to_node_key": "T12_END_MAINTAIN_REGIMEN_POSTPARTUM",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_BP_SEVERE": {
+        "id": "e751565d-5998-4447-b42c-eefe0875ccb7",
+        "node_key": "T12_C_BP_SEVERE",
+        "node_type": "CONDITION",
+        "text_en": "SBP>=160 mmHg OR DBP>=110 mmHg",
+        "text_vi": "HATT >= 160 mmHg\nHOẶC\nHATTr >= 110 mmHg",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "gte",
+              "path": "input.current_clinic_sbp",
+              "value": 160
+            },
+            {
+              "op": "gte",
+              "path": "input.current_clinic_dbp",
+              "value": 110
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 17,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "8dc99a55-86aa-442f-83e7-b1f4f7e6035b",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Mục 3.6.6. Tăng huyết áp trong thai kỳ",
+            "locator_detail": "Severe hypertension: SBP >=160 mmHg and/or DBP >=110 mmHg; SBP >=170 mmHg is a medical emergency.",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "THA nặng: HATT >=160 mmHg và/hoặc HATTr >=110 mmHg. HATT >=170 mmHg là cấp cứu nội khoa.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "75417199-4a3d-4e83-9fa0-372a24cff2f7",
+            "traversal_order": 1,
+            "to_node_key": "T12_INF_SEVERE_SEVERITY",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_BP_STILL_HIGH": {
+        "id": "ebfc17f2-78bb-4f0f-a2d2-2960ab0a2cbf",
+        "node_key": "T12_C_BP_STILL_HIGH",
+        "node_type": "CONDITION",
+        "text_en": "BP still high: SBP>=140mmHg or DBP>=90mmHg",
+        "text_vi": "HA còn cao\nHATT >= 140 mmHg\nhoặc\nHATTr >= 90 mmHg",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "gte",
+              "path": "input.current_clinic_sbp",
+              "value": 140
+            },
+            {
+              "op": "gte",
+              "path": "input.current_clinic_dbp",
+              "value": 90
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 44,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "5f4fd04b-eb68-4382-869d-1d0b1feb35b7",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Postpartum BP: if still high, any recommended drug may be used except methyldopa (postpartum depression risk).",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "HA sau sinh: nếu HA cao vẫn tiếp diễn, dùng bất kỳ thuốc nào được khuyến cáo trừ Methyldopa (gây trầm cảm sau sinh).",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "b6f52e45-28b0-4e7f-97c6-dc23e8a17cdd",
+            "traversal_order": 1,
+            "to_node_key": "T12_ACTION_POSTPARTUM_CONTRAINDICATIONS",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_BP_TARGET_ACHIEVED": {
+        "id": "201508d7-82e4-485c-b683-755af31dd8ef",
+        "node_key": "T12_C_BP_TARGET_ACHIEVED",
+        "node_type": "CONDITION",
+        "text_en": "BP target achieved: SBP 110-140 mmHg and DBP ~85 mmHg [exact DBP figure uncertain in source image]",
+        "text_vi": "HA Đạt Đích Điều Trị\nHATT 110 - 140 mmHg\nvà\nHATTr 85 mmHg",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "gte",
+              "path": "input.current_clinic_sbp",
+              "value": 110
+            },
+            {
+              "op": "lte",
+              "path": "input.current_clinic_sbp",
+              "value": 140
+            },
+            {
+              "op": "eq",
+              "path": "input.current_clinic_dbp",
+              "value": 85
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 39,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "e746cc24-d7ca-4dab-8a4b-4399117b0beb",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Treatment target: clinic DBP 85 mmHg (and SBP 110-140 mmHg).",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Mục tiêu điều trị: HATTr 85 mmHg tại phòng khám (và HATT từ 110-140 mmHg).",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "8cca6817-9e91-4b2b-9e36-e6084da11b7a",
+            "traversal_order": 1,
+            "to_node_key": "T12_END_MAINTAIN_REGIMEN_PREGNANT",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_BP_TARGET_NOT_ACHIEVED": {
+        "id": "a2abca12-7f23-4c2c-a074-4550d807c223",
+        "node_key": "T12_C_BP_TARGET_NOT_ACHIEVED",
+        "node_type": "CONDITION",
+        "text_en": "BP target not achieved [criteria text partly illegible in source image, appears identical range to the achieved box]",
+        "text_vi": "HA Không Đạt Đích Điều Trị\nHATT 110 - 140 mmHg\nvà\nHATTr 85 mmHg",
+        "condition_definition": {
+          "not": {
+            "all": [
+              {
+                "op": "gte",
+                "path": "input.current_clinic_sbp",
+                "value": 110
+              },
+              {
+                "op": "lte",
+                "path": "input.current_clinic_sbp",
+                "value": 140
+              },
+              {
+                "op": "eq",
+                "path": "input.current_clinic_dbp",
+                "value": 85
+              }
+            ]
+          }
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 41,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "0f89b6e4-2e76-46de-8501-6d87adc0ee68",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Complement of the treatment-target-achieved condition.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Không đạt mục tiêu điều trị.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "44f6f2f1-38d4-461a-8ea4-0087dea673c0",
+            "traversal_order": 1,
+            "to_node_key": "T12_END_REFER_OBGYN",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_BREASTFEEDING": {
+        "id": "f5ccb0d9-96f5-444b-bfe9-202afa69e1bc",
+        "node_key": "T12_C_BREASTFEEDING",
+        "node_type": "CONDITION",
+        "text_en": "Currently breastfeeding",
+        "text_vi": "Đang cho con bú",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.is_breastfeeding",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 43,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "7e542a54-42f3-4ade-8336-634e00c191f3",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Breastfeeding period: avoid atenolol, propranolol, nifedipine; prefer long-acting CCB.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Thời kỳ cho con bú: tránh Atenolol, Propranolol, Nifedipine; ưu tiên CKCa tác dụng kéo dài.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "b389d8cd-6c6e-421d-8391-b5397af71e15",
+            "traversal_order": 1,
+            "to_node_key": "T12_ACTION_POSTPARTUM_CONTRAINDICATIONS",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_CHRONIC_HTN": {
+        "id": "c3bd2db9-7aba-4717-9374-4d782a694759",
+        "node_key": "T12_C_CHRONIC_HTN",
+        "node_type": "CONDITION",
+        "text_en": "Chronic HTN before pregnancy/before week 20, persisting >6 weeks postpartum with proteinuria",
+        "text_vi": "THA trước khi mang thai hoặc trước tuần 20, tồn tại > 6 tuần sau sinh với protein niệu.",
+        "condition_definition": {
+          "all": [
+            {
+              "any": [
+                {
+                  "op": "eq",
+                  "path": "input.has_pre_pregnancy_hypertension",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_hypertension_before_week_20",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "all": [
+                {
+                  "op": "gt",
+                  "path": "input.weeks_persisting_postpartum",
+                  "value": 6
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_proteinuria",
+                  "value": true
+                }
+              ]
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 6,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "cfe55a9e-1ceb-4ea6-9d61-bd2ef1e93c21",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)",
+            "locator_detail": "Pre-existing hypertension: present before pregnancy or before week 20, persisting >6 weeks postpartum with proteinuria.",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "THA có trước khi mang thai hoặc trước tuần lễ thứ 20 của thai kỳ và tồn tại > 6 tuần sau sinh với protein niệu.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "a2db5d85-5a71-41b9-8b63-ebc7273df6bc",
+            "traversal_order": 1,
+            "to_node_key": "T12_END_PRE_EXISTING_HTN",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_CLINIC_BP_HIGH": {
+        "id": "cb4e7627-8be2-46d7-ba61-75027fcadd61",
+        "node_key": "T12_C_CLINIC_BP_HIGH",
+        "node_type": "CONDITION",
+        "text_en": "HAPK: SBP>=140 mmHg and DBP>=90 mmHg",
+        "text_vi": "HAPK\nHATT >= 140 mmHg\nvà\nHATTr >= 90 mmHg",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "gte",
+              "path": "input.current_clinic_sbp",
+              "value": 140
+            },
+            {
+              "op": "gte",
+              "path": "input.current_clinic_dbp",
+              "value": 90
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 2,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "0470b245-b115-4771-871f-504037f7e5bc",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Clinic BP >=140/90 mmHg should be treated.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "HA ổn định >=140/90 mmHg đo tại phòng khám nên được điều trị.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "9b5397f1-0a75-4b8f-a1aa-697e3836fca5",
+            "traversal_order": 1,
+            "to_node_key": "T12_ACTION_CLASSIFY_HTN_TYPE",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_CLINIC_BP_NORMAL": {
+        "id": "e9806f6f-d538-4d91-81cc-0d90a1c9609c",
+        "node_key": "T12_C_CLINIC_BP_NORMAL",
+        "node_type": "CONDITION",
+        "text_en": "HAPK: SBP<140 mmHg and DBP<90 mmHg",
+        "text_vi": "HAPK\nHATT < 140 mmHg\nvà\nHATTr < 90 mmHg",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value": 140
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value": 90
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 3,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "4851a19b-38aa-4cbc-833d-5955ace21114",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Complement of the clinic-BP treatment threshold: below threshold.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "HA dưới ngưỡng điều trị đo tại phòng khám.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "b186e2a7-6356-4879-ae45-0b2c87782c62",
+            "traversal_order": 1,
+            "to_node_key": "T12_END_FOLLOW_UP_MONITOR",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_CURRENTLY_PREGNANT": {
+        "id": "10eb7a06-764c-4ae7-9391-01a868025771",
+        "node_key": "T12_C_CURRENTLY_PREGNANT",
+        "node_type": "CONDITION",
+        "text_en": "Currently pregnant",
+        "text_vi": "Đang mang thai",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.is_pregnant",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 35,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "0f08dc4d-7fc8-493c-83c6-f23f50d2516b",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Branch: still pregnant.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Nhánh còn đang mang thai.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "c4b52cf4-3e93-4947-a550-1d81a6bdf54a",
+            "traversal_order": 1,
+            "to_node_key": "T12_C_HIGH_PREECLAMPSIA_RISK",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.has_high_preeclampsia_risk",
+              "value": true
+            }
+          },
+          {
+            "edge_id": "7eef7a67-bfd3-419e-a60e-9aba01de6d8c",
+            "traversal_order": 2,
+            "to_node_key": "T12_C_BP_TARGET_ACHIEVED",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 110
+                },
+                {
+                  "op": "lte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 140
+                },
+                {
+                  "op": "eq",
+                  "path": "input.current_clinic_dbp",
+                  "value": 85
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "5ab367d0-2f2f-477c-8f29-9c7008601a82",
+            "traversal_order": 3,
+            "to_node_key": "T12_C_BP_TARGET_NOT_ACHIEVED",
+            "candidate_condition": {
+              "not": {
+                "all": [
+                  {
+                    "op": "gte",
+                    "path": "input.current_clinic_sbp",
+                    "value": 110
+                  },
+                  {
+                    "op": "lte",
+                    "path": "input.current_clinic_sbp",
+                    "value": 140
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.current_clinic_dbp",
+                    "value": 85
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "T12_C_GESTATIONAL_HTN": {
+        "id": "5f02e857-990d-4ebe-a0a9-68884e31d737",
+        "node_key": "T12_C_GESTATIONAL_HTN",
+        "node_type": "CONDITION",
+        "text_en": "Gestational HTN after week 20, resolving <6 weeks postpartum",
+        "text_vi": "THA sau tuần 20, kéo dài < 6 tuần sau sinh",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "eq",
+              "path": "input.has_hypertension_after_week_20",
+              "value": true
+            },
+            {
+              "op": "lt",
+              "path": "input.weeks_resolved_postpartum",
+              "value": 6
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 8,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "f4fbbb14-e315-49ce-a6fc-3f7ce2914c5f",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)",
+            "locator_detail": "Gestational hypertension: onset after week 20, resolving within 6 weeks postpartum.",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "THA khởi phát sau tuần thứ 20 của thai kỳ, và kéo dài < 6 tuần sau sinh.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "05b09f96-5f56-493e-9843-befdba7765e6",
+            "traversal_order": 1,
+            "to_node_key": "T12_INF_GESTATIONAL_HTN_CLASSIFICATION",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_HIGH_PREECLAMPSIA_RISK": {
+        "id": "be39376c-bcc1-458e-9c14-666190a3b2cb",
+        "node_key": "T12_C_HIGH_PREECLAMPSIA_RISK",
+        "node_type": "CONDITION",
+        "text_en": "High risk of preeclampsia",
+        "text_vi": "Nguy cơ tiền sản giật cao",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.has_high_preeclampsia_risk",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 37,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "557594d4-3c43-4df3-a3dc-43a4ef54d7ab",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Preeclampsia prophylaxis: 75-162 mg aspirin from week 12-36.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Phòng ngừa tiền sản giật: 75-162 mg Aspirin vào tuần 12-36.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "67726c13-71ee-4b13-b76f-254f406a9f29",
+            "traversal_order": 1,
+            "to_node_key": "T12_END_ASPIRIN_PROPHYLAXIS",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_HOME_BP_HIGH": {
+        "id": "a671d656-ad9f-4285-aa95-e1fc83c18f34",
+        "node_key": "T12_C_HOME_BP_HIGH",
+        "node_type": "CONDITION",
+        "text_en": "HATN: SBP>=135 mmHg and DBP>=85 mmHg",
+        "text_vi": "HATN\nHATT >= 135 mmHg\nvà\nHATTr >= 85 mmHg",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "gte",
+              "path": "input.home_sbp",
+              "value": 135
+            },
+            {
+              "op": "gte",
+              "path": "input.home_dbp",
+              "value": 85
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 1,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "3b744102-7aa2-47b2-baca-fa6b3f76090f",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Home BP >=135/85 mmHg should be treated.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "HA ổn định >=135/85 mmHg đo tại nhà nên được điều trị.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "44f2ce67-6484-4980-83d2-7af0b782f9d6",
+            "traversal_order": 1,
+            "to_node_key": "T12_ACTION_CLASSIFY_HTN_TYPE",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_HYPERTENSIVE_CRISIS": {
+        "id": "963bbde1-3b32-4072-96ba-66d230aca8bf",
+        "node_key": "T12_C_HYPERTENSIVE_CRISIS",
+        "node_type": "CONDITION",
+        "text_en": "Hypertensive crisis",
+        "text_vi": "Liên cơn THA",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.has_hypertensive_crisis",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 25,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "e25179b3-34d1-48bb-97c5-d9fdb41896af",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "During a hypertensive crisis: add magnesium to prevent eclampsia.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Trong cơn THA: bổ sung magiê để ngăn ngừa sản giật.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "6e0e3f71-7e4b-4c73-9ef7-c677e151b885",
+            "traversal_order": 1,
+            "to_node_key": "T12_INF_IV_NITROGLYCERIN",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_IMMEDIATE_TARGET": {
+        "id": "dbe4c15b-a6ef-452d-a318-b050d1bf9d5d",
+        "node_key": "T12_C_IMMEDIATE_TARGET",
+        "node_type": "CONDITION",
+        "text_en": "Immediate treatment target: SBP<160 mmHg and DBP<105 mmHg",
+        "text_vi": "Đích điều trị\nNgay lập tức hạ HA\nHATT < 160 mmHg\nvà\nHATTr < 105 mmHg",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value": 160
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value": 105
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 31,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "c7b98a90-ba93-4758-98c2-b7645d8a05c8",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)",
+            "locator_detail": "Immediate treatment target: SBP<160 mmHg and DBP<105 mmHg.",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "Đích điều trị ngay lập tức: HATT <160 mmHg và HATTr <105 mmHg.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "ce82f1b8-1cba-4891-9be3-b2db3daf8b6a",
+            "traversal_order": 1,
+            "to_node_key": "T12_C_TARGET_NOT_MET",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "eq",
+                  "path": "input.is_treatment_target_not_achieved",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_visual_disturbance",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_coagulopathy",
+                  "value": true
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T12_C_POSTPARTUM": {
+        "id": "cd911f23-23ea-4a2e-9fee-05d41c2ededc",
+        "node_key": "T12_C_POSTPARTUM",
+        "node_type": "CONDITION",
+        "text_en": "Postpartum",
+        "text_vi": "Sau sinh",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.is_postpartum",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 36,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "1b224d48-0bdc-4133-a833-152b48b82625",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Branch: postpartum.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Nhánh sau sinh.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "dd867a65-48bf-43da-bcdb-587fcdee602c",
+            "traversal_order": 1,
+            "to_node_key": "T12_C_BREASTFEEDING",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.is_breastfeeding",
+              "value": true
+            }
+          },
+          {
+            "edge_id": "849e7193-ae71-4935-8ae6-7c557d3c52fb",
+            "traversal_order": 2,
+            "to_node_key": "T12_C_BP_STILL_HIGH",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 140
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "9f9b9534-54ca-4eed-b9b4-07021708ed8e",
+            "traversal_order": 3,
+            "to_node_key": "T12_C_BP_NOT_HIGH",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 140
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T12_C_PREECLAMPSIA_PROTEINURIA": {
+        "id": "f331fd19-bb3e-4b33-89c8-93a42f9c33c5",
+        "node_key": "T12_C_PREECLAMPSIA_PROTEINURIA",
+        "node_type": "CONDITION",
+        "text_en": "or gestational HTN with proteinuria >300mg/24h or ACR>=30mg/mmol",
+        "text_vi": "hoặc THA thai kỳ có Protein niệu >300mg/24h\nhoặc ACR >= 30 mg/mmol",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "gt",
+              "path": "input.proteinuria_24h_mg",
+              "value": 300
+            },
+            {
+              "op": "gte",
+              "path": "input.acr_mg_mmol",
+              "value": 30
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 10,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "2e57a10b-39d0-4d95-bfe6-54a6d7ca97c1",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)",
+            "locator_detail": "Preeclampsia: gestational hypertension with proteinuria >300mg/24h or ACR >=30 mg/mmol [265 mg/g].",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "THA thai kỳ và có protein niệu (>300 mg/24h hoặc tỷ albumin/creatinine niệu (ACR) >30 mg/mmol [265 mg/g]).",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "0d5f3611-2098-4733-9713-e0a3ad5b1ca1",
+            "traversal_order": 1,
+            "to_node_key": "T12_INF_PREECLAMPSIA_CLASSIFICATION",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_PREECLAMPSIA_RISK_FACTOR": {
+        "id": "836153af-e9e1-4dc0-b287-de2eafea3910",
+        "node_key": "T12_C_PREECLAMPSIA_RISK_FACTOR",
+        "node_type": "CONDITION",
+        "text_en": "or has >=1 risk factor (prior gestational HTN, diabetes, chronic kidney disease, autoimmune disease, etc.) [text partly illegible in source image]",
+        "text_vi": "hoặc có 1 trong các Yếu Tố Nguy Cơ:\nTHA trong lần thai trước đó / đái tháo đường / bệnh thận mạn / thai lần đầu hoặc nhiều lần / bệnh tự miễn",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "eq",
+              "path": "input.has_prior_gestational_hypertension",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_diabetes",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_ckd",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_autoimmune_disease",
+              "value": true
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 11,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "25e0ad57-6959-40c9-be59-1dc0f4433cef",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)",
+            "locator_detail": "Preeclampsia risk factors: prior hypertension, prior gestational hypertension, diabetes, kidney disease, nulliparity/multiparity, autoimmune disease (SLE).",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "Các yếu tố nguy cơ: THA từ trước, THA trong lần thai kỳ trước, đái tháo đường, bệnh thận, thai lần đầu hay nhiều lần, và bệnh tự miễn (SLE).",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "8ff2da8b-670a-4cf9-99f2-5856aeb0215e",
+            "traversal_order": 1,
+            "to_node_key": "T12_INF_PREECLAMPSIA_CLASSIFICATION",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_PULMONARY_EDEMA": {
+        "id": "3a9fa478-e803-489f-a13e-0f616615f529",
+        "node_key": "T12_C_PULMONARY_EDEMA",
+        "node_type": "CONDITION",
+        "text_en": "Pulmonary edema",
+        "text_vi": "Phù phổi",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.has_pulmonary_edema",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 26,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "66d21146-7054-4e64-bb2d-f0a8190e3459",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "In pulmonary edema: IV nitroglycerin infusion; avoid sodium nitroprusside (fetal cyanide toxicity risk).",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Trong phù phổi: truyền TM Nitroglycerin; tránh Natri nitroprusside do nguy cơ nhiễm độc xyanua thai nhi.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "f9e32734-2daa-420e-912b-1205b85f47b1",
+            "traversal_order": 1,
+            "to_node_key": "T12_INF_MAGNESIUM_SUPPLEMENT",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_SEVERE_SIGNS": {
+        "id": "dd42c4e2-e3c5-4120-9af0-638bd8d6860c",
+        "node_key": "T12_C_SEVERE_SIGNS",
+        "node_type": "CONDITION",
+        "text_en": "Severe features: seizure, severe headache, visual disturbance, epigastric pain, hemolysis, elevated liver enzymes, low platelets [column boundary in source image uncertain — see note]",
+        "text_vi": "Tán huyết, tăng men gan, giảm tiểu cầu (Hemolysis, elevated liver enzymes, low platelets); có thể kèm co giật, đau đầu dữ dội, rối loạn thị giác, đau thượng vị",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "eq",
+              "path": "input.has_seizure",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_severe_headache",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_visual_disturbance",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_epigastric_pain",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_hemolysis",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_elevated_liver_enzymes",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_low_platelets",
+              "value": true
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 13,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "ed6ae95e-3748-4aa9-9ba5-96d1d3a0cf50",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)",
+            "locator_detail": "Eclampsia: seizure, severe headache, visual disturbance, epigastric pain. HELLP: hemolysis, elevated liver enzymes, low platelets.",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "Sản giật: co giật, đau đầu dữ dội, rối loạn thị giác, đau bụng, buồn nôn/nôn, thiểu niệu. HELLP: tán huyết, tăng men gan, giảm tiểu cầu.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "ec6930d0-52cc-4e73-b65d-1dcd9b2741b9",
+            "traversal_order": 1,
+            "to_node_key": "T12_INF_ECLAMPSIA_CLASSIFICATION",
+            "candidate_condition": null
+          },
+          {
+            "edge_id": "22f6edfc-c75d-4f58-b9d7-adf070aad30d",
+            "traversal_order": 2,
+            "to_node_key": "T12_INF_HELLP_SYNDROME_CLASSIFICATION",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_C_TARGET_NOT_MET": {
+        "id": "ef92df48-2219-45a1-a5e8-818b052a6b60",
+        "node_key": "T12_C_TARGET_NOT_MET",
+        "node_type": "CONDITION",
+        "text_en": "If target not reached, or visual disturbance / coagulopathy present [exact timing text illegible in source image]",
+        "text_vi": "Nếu không đạt được đích điều trị,\nhoặc có rối loạn thị giác, rối loạn đông cầm máu",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "eq",
+              "path": "input.is_treatment_target_not_achieved",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_visual_disturbance",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_coagulopathy",
+              "value": true
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 32,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "ea695aef-37e4-42f7-b29f-dfc1a1106d82",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Emergency delivery indicated when visual disturbance or coagulopathy is present.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Lấy thai cấp cứu khi có rối loạn thị giác, rối loạn đông cầm máu.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "488bc096-a048-4b88-9717-86b733c0156a",
+            "traversal_order": 1,
+            "to_node_key": "T12_END_EMERGENCY_DELIVERY",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_END_ASPIRIN_PROPHYLAXIS": {
+        "id": "4348e7a3-9c1a-440f-8a9f-48569e6cb142",
+        "node_key": "T12_END_ASPIRIN_PROPHYLAXIS",
+        "node_type": "END",
+        "text_en": "Aspirin 75-162mg from week 12-36",
+        "text_vi": "Aspirin 75-162 mg từ tuần 12-36",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "ASPIRIN_PROPHYLAXIS",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 38,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "2b2e2e15-af49-4f19-bb61-60521dc5587e",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Preeclampsia prophylaxis: 75-162 mg aspirin from week 12-36; oral calcium 1.5-2 g/day recommended for low-calcium diets (<600 mg/day).",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Phòng ngừa tiền sản giật: 75-162 mg Aspirin vào tuần 12-36. Bổ sung canxi 1,5-2 g/ngày được khuyến khích ở phụ nữ có chế độ ăn ít canxi (<600 mg/ngày).",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T12_END_EMERGENCY_DELIVERY": {
+        "id": "6a3f79b6-dee1-4f2a-962c-9b3fa96a3d48",
+        "node_key": "T12_END_EMERGENCY_DELIVERY",
+        "node_type": "END",
+        "text_en": "Emergency delivery, terminate pregnancy",
+        "text_vi": "Lấy thai cấp cứu, chấm dứt thai kỳ",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "EMERGENCY_DELIVERY",
+          "follow_up_mode": "IMMEDIATE",
+          "follow_up_required": false
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 33,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "c81e1c0c-f4d4-411d-b0fc-bc3a2eb8d773",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Delivery for gestational hypertension or preeclampsia is recommended at week 37 if asymptomatic; emergency delivery for visual disturbance/coagulopathy.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Chấm dứt thai kỳ trong THA thai kỳ hoặc Tiền sản giật: khuyến cáo ở tuần 37 nếu không triệu chứng; lấy thai cấp cứu khi có rối loạn thị giác/đông cầm máu.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T12_END_FOLLOW_UP_MONITOR": {
+        "id": "defd8834-a6f4-4f01-b748-9c06a1ef9963",
+        "node_key": "T12_END_FOLLOW_UP_MONITOR",
+        "node_type": "END",
+        "text_en": "Follow-up / monitor",
+        "text_vi": "Theo dõi",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "CONTINUE_MONITORING",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 4,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "487dce43-8a7a-4ee2-92e9-2b5fab179d9f",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "BP below the 140/90 mmHg (clinic) / 135/85 mmHg (home) treatment threshold does not require drug therapy; continue monitoring.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "HA dưới ngưỡng 140/90 mmHg (phòng khám) / 135/85 mmHg (tại nhà) không cần điều trị thuốc; tiếp tục theo dõi.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T12_END_MAINTAIN_REGIMEN_POSTPARTUM": {
+        "id": "c172f668-f132-49f4-bacb-2fe7b18391d9",
+        "node_key": "T12_END_MAINTAIN_REGIMEN_POSTPARTUM",
+        "node_type": "END",
+        "text_en": "Maintain regimen",
+        "text_vi": "Duy trì phác đồ",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "MAINTAIN_CURRENT_REGIMEN",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 47,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "1e804196-3778-49e9-81f9-75eaf35d1ff0",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Postpartum: maintain regimen.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Duy trì phác đồ sau sinh.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T12_END_MAINTAIN_REGIMEN_PREGNANT": {
+        "id": "7a568755-5190-484b-a63b-e0508a7dbeeb",
+        "node_key": "T12_END_MAINTAIN_REGIMEN_PREGNANT",
+        "node_type": "END",
+        "text_en": "Maintain regimen",
+        "text_vi": "Duy trì phác đồ",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "MAINTAIN_CURRENT_REGIMEN",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 40,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "a32e8ef6-c4db-406c-abc0-9c15b137611a",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Target achieved: maintain current regimen.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Đạt mục tiêu điều trị: duy trì phác đồ hiện tại.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T12_END_PRE_EXISTING_HTN": {
+        "id": "ffc06448-0a7d-43a4-8295-ed6d52ad6978",
+        "node_key": "T12_END_PRE_EXISTING_HTN",
+        "node_type": "END",
+        "text_en": "Pre-existing (chronic) hypertension",
+        "text_vi": "THA từ trước",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "PRE_EXISTING_HYPERTENSION_DIAGNOSIS",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 7,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "93be01b4-6b71-43ed-b93d-f80ea21ed84d",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)",
+            "locator_detail": "Terminal classification: pre-existing (chronic) hypertension.",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "Phân loại kết thúc \"THA từ trước\" của Bảng 15.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T12_END_REFER_OBGYN": {
+        "id": "5176834b-7f0f-464c-96b6-0aeb52b4121b",
+        "node_key": "T12_END_REFER_OBGYN",
+        "node_type": "END",
+        "text_en": "Refer to OB specialist",
+        "text_vi": "Chuyển chuyên khoa Sản",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "REFER_TO_OBGYN_SPECIALIST",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 42,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "971c341e-266b-4c79-94fa-3d8d9f7216a6",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Target not achieved: refer to OB specialist.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Không đạt mục tiêu điều trị: chuyển chuyên khoa Sản.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T12_GLOBAL_ABBREVIATION_GLOSSARY": {
+        "id": "e51643fe-2444-4f18-ab9b-32e4f4c06232",
+        "node_key": "T12_GLOBAL_ABBREVIATION_GLOSSARY",
+        "node_type": "GLOBAL",
+        "text_en": "Abbreviation glossary",
+        "text_vi": "Chú giải viết tắt",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": {
+          "kind": "ABBREVIATION_GLOSSARY",
+          "entries": {
+            "6_MRA": {
+              "label": "MRA: thuốc đối kháng thụ thể mineralocorticoid"
+            },
+            "5_SGLT2i": {
+              "label": "SGLT2i: thuốc ức chế đồng vận chuyển Natri-glucose 2"
+            },
+            "2_D_loi_tieu": {
+              "LT": "lợi tiểu",
+              "label": "D: lợi tiểu"
+            },
+            "4_B_chen_Beta": {
+              "CB": "chẹn Beta",
+              "label": "B: chẹn Beta"
+            },
+            "1_A_uc_che_he_RAS": {
+              "ARNI": "chẹn thụ thể Angiotensine-neprisyline",
+              "CTTA": "chẹn thụ thể angiotensin II",
+              "UCMC": "ức chế men chuyển",
+              "label": "A: ức chế hệ RAS"
+            },
+            "3_C_chen_kenh_Canxi": {
+              "CKCa": "chẹn kênh Canxi",
+              "label": "C: chẹn kênh Canxi"
+            }
+          },
+          "purpose": "Chú giải các chữ viết tắt nhóm thuốc dùng trong Cây 12."
+        },
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 98,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "05e16176-b034-45d4-8eaf-1468a65634f4",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52), chú thích",
+            "locator_detail": "Footnote abbreviation glossary for the drug classes named in Bảng 16.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Chú giải viết tắt cho các nhóm thuốc nêu trong Bảng 16 (ƯCMC, CTTA, CKCa, LT, MRA, SGLT2i).",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T12_GLOBAL_PREGNANCY_DRUG_CONTRAINDICATIONS": {
+        "id": "b6d2b7c0-1bb6-45e2-9bbd-72c98a861cf8",
+        "node_key": "T12_GLOBAL_PREGNANCY_DRUG_CONTRAINDICATIONS",
+        "node_type": "GLOBAL",
+        "text_en": "Drug contraindications in pregnancy",
+        "text_vi": "Chống chỉ định thuốc trong thai kỳ",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": {
+          "kind": "OVERRIDE_NOTE",
+          "details": {
+            "chong_chi_dinh_uc_che_he_RAS": {
+              "items": [
+                "Ức chế men chuyển (ƯCMC)",
+                "Chẹn thụ thể Angiotensin II (CTTA)",
+                "Ức chế renin trực tiếp",
+                "thuốc kháng thụ thể Mineralocorticoid (MRA)"
+              ],
+              "label": "Chống chỉ định các thuốc ức chế hệ RAS gồm"
+            }
+          },
+          "purpose": "Chống chỉ định thuốc bắt buộc trong thai kỳ, áp dụng cho mọi lựa chọn thuốc hạ áp trong Cây 12."
+        },
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 99,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "c64ad3d7-772c-4fdd-b795-db439206a708",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "RAS-inhibitor drugs are contraindicated in pregnancy; avoid sodium nitroprusside (fetal cyanide toxicity risk).",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "THA trong thai kỳ: chống chỉ định thuốc ức chế RAS; tránh Natri nitroprusside do nguy cơ nhiễm độc xyanua thai nhi.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T12_INF_ABSOLUTE_CONTRAINDICATIONS": {
+        "id": "e8197786-f1f5-4718-b574-ddca2e736978",
+        "node_key": "T12_INF_ABSOLUTE_CONTRAINDICATIONS",
+        "node_type": "INFERENCE",
+        "text_en": "Absolute contraindication: A (ACEI, ARB), ARNI",
+        "text_vi": "Chống chỉ định tuyệt đối:\nA (ƯCMC, CTTA)\nARNI",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment": {
+            "absolute_contraindications": [
+              "ƯCMC (ức chế men chuyển)",
+              "CTTA (chẹn thụ thể angiotensin II)",
+              "ARNI"
+            ]
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 23,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "bca42b47-d93c-4daf-bc7d-b64ab9fde2c4",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "RAS-inhibitor drugs (ACEI, ARB, direct renin inhibitors, MRA) are contraindicated in pregnancy.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "THA trong thai kỳ: chống chỉ định dùng các thuốc ức chế RAS (ƯCMC, CTTA, ức chế renin trực tiếp, lợi tiểu kháng thụ thể Mineralocorticoid).",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "a9c49f9f-cb8f-4ee7-9c5b-02ddfe81f810",
+            "traversal_order": 1,
+            "to_node_key": "T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_INF_ECLAMPSIA_CLASSIFICATION": {
+        "id": "1f19d5a8-96a5-4292-8a65-e2e14ca3aefc",
+        "node_key": "T12_INF_ECLAMPSIA_CLASSIFICATION",
+        "node_type": "INFERENCE",
+        "text_en": "Eclampsia",
+        "text_vi": "Sản giật",
+        "condition_definition": null,
+        "context_patch": {
+          "diagnosis": {
+            "pregnancy_hypertension_type": "ECLAMPSIA"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 14,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "5cd81e97-cc31-4767-8676-c93176f58578",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)",
+            "locator_detail": "Classification label: eclampsia.",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "Nhãn phân loại \"Sản giật\" (eclampsia) của Bảng 15.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "9e72baec-cf51-4bf7-b36d-c4502cd61f08",
+            "traversal_order": 1,
+            "to_node_key": "T12_INF_LABETALOL_MGSO4",
+            "candidate_condition": null
+          },
+          {
+            "edge_id": "c9065c54-22f6-4b2d-91ea-3318e09ebebc",
+            "traversal_order": 2,
+            "to_node_key": "T12_INF_NICARDIPINE_MGSO4",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_INF_GESTATIONAL_HTN_CLASSIFICATION": {
+        "id": "5c2989f1-d68f-48af-9c9b-7a3a72f1ba35",
+        "node_key": "T12_INF_GESTATIONAL_HTN_CLASSIFICATION",
+        "node_type": "INFERENCE",
+        "text_en": "Gestational hypertension",
+        "text_vi": "Thai kỳ",
+        "condition_definition": null,
+        "context_patch": {
+          "diagnosis": {
+            "pregnancy_hypertension_type": "GESTATIONAL_HYPERTENSION"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 9,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "91dcebc3-3d52-4a5b-8564-095b1b19d052",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)",
+            "locator_detail": "Classification label: gestational hypertension.",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "Nhãn phân loại \"THA trong thai kỳ\" (gestational hypertension) của Bảng 15.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "283c7285-67fa-413d-b2d6-63d5f2ab2d7f",
+            "traversal_order": 1,
+            "to_node_key": "T12_C_BP_MILD_MODERATE",
+            "candidate_condition": {
+              "any": [
+                {
+                  "all": [
+                    {
+                      "op": "gte",
+                      "path": "input.current_clinic_sbp",
+                      "value": 140
+                    },
+                    {
+                      "op": "lte",
+                      "path": "input.current_clinic_sbp",
+                      "value": 159
+                    }
+                  ]
+                },
+                {
+                  "all": [
+                    {
+                      "op": "gte",
+                      "path": "input.current_clinic_dbp",
+                      "value": 90
+                    },
+                    {
+                      "op": "lte",
+                      "path": "input.current_clinic_dbp",
+                      "value": 109
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "976cba79-409c-4cb5-8df3-85f57b3441ad",
+            "traversal_order": 2,
+            "to_node_key": "T12_C_BP_SEVERE",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 160
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 110
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T12_INF_HELLP_SYNDROME_CLASSIFICATION": {
+        "id": "30b3b86e-8ce8-4ae1-8e0f-bf899c225544",
+        "node_key": "T12_INF_HELLP_SYNDROME_CLASSIFICATION",
+        "node_type": "INFERENCE",
+        "text_en": "HELLP syndrome",
+        "text_vi": "Hội chứng HELLP",
+        "condition_definition": null,
+        "context_patch": {
+          "diagnosis": {
+            "pregnancy_hypertension_type": "HELLP_SYNDROME"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 15,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "509ab4e3-24d7-42ab-b43e-388ca1b7338d",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)",
+            "locator_detail": "Classification label: HELLP syndrome (Hemolysis, Elevated Liver enzymes, Low Platelets).",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "Nhãn phân loại \"Hội chứng HELLP\" của Bảng 15.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "d7bf1139-997e-4e2d-9d2f-502cf921be8b",
+            "traversal_order": 1,
+            "to_node_key": "T12_INF_LABETALOL_MGSO4",
+            "candidate_condition": null
+          },
+          {
+            "edge_id": "b624b514-c41d-4fce-90e4-b4e0ca4f6abd",
+            "traversal_order": 2,
+            "to_node_key": "T12_INF_NICARDIPINE_MGSO4",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_INF_IV_NITROGLYCERIN": {
+        "id": "54dafeb4-5f46-4ed4-b7fb-fec57a3c0029",
+        "node_key": "T12_INF_IV_NITROGLYCERIN",
+        "node_type": "INFERENCE",
+        "text_en": "IV nitroglycerin infusion",
+        "text_vi": "Truyền Nitroglycerin tĩnh mạch",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment_preferences": {
+            "route": "IV_INFUSION"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 27,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "d9e23d55-4676-425a-9836-c6b13cf53f91",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Pulmonary edema management: IV nitroglycerin infusion.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Trong phù phổi: Truyền TM Nitroglycerin.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "e994686b-35f3-49f0-9b08-ad4403145c54",
+            "traversal_order": 1,
+            "to_node_key": "T12_C_IMMEDIATE_TARGET",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 160
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 105
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T12_INF_LABETALOL_MGSO4": {
+        "id": "d5af70df-5c22-4524-96e9-a6fd37acfaff",
+        "node_key": "T12_INF_LABETALOL_MGSO4",
+        "node_type": "INFERENCE",
+        "text_en": "Labetalol + Magnesium Sulfate",
+        "text_vi": "Labetalol (Chẹn Beta) +\nMagnesium Sulfate",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 29,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "e2f710ee-5d4d-4be4-9677-f1a7ab0d9b83",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)",
+            "locator_detail": "Eclampsia/severe preeclampsia/HELLP: treat immediately (SBP<160, DBP<105 mmHg), labetalol or nicardipine plus magnesium sulfate.",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "Sản giật/Tiền sản giật nặng/HELLP: ngay lập tức hạ HA, Labetalol hoặc Nicardipine và Magnesium sulfate.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "ab119443-91f4-48eb-9acf-53de2ac629ac",
+            "traversal_order": 1,
+            "to_node_key": "T12_C_IMMEDIATE_TARGET",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 160
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 105
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T12_INF_LABETALOL_ORAL": {
+        "id": "df96c137-3378-4753-b2a8-dccd72a244f8",
+        "node_key": "T12_INF_LABETALOL_ORAL",
+        "node_type": "INFERENCE",
+        "text_en": "(Beta blocker) Labetalol",
+        "text_vi": "(Chẹn Beta)\nLabetalol",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment_preferences": {
+            "drug_class": "BETA_BLOCKER"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 21,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "618dbcad-05a7-49e0-9531-db6c92c9f6e6",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Mild hypertension, first-choice option: beta-blocker (labetalol).",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "THA nhẹ, lựa chọn đầu tiên: chẹn beta (Labetalol).",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "67fb48e9-fd62-4710-9794-cb4bf004af09",
+            "traversal_order": 1,
+            "to_node_key": "T12_INF_ABSOLUTE_CONTRAINDICATIONS",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_INF_MAGNESIUM_SUPPLEMENT": {
+        "id": "a604674f-7384-4fb2-a663-bc3944337246",
+        "node_key": "T12_INF_MAGNESIUM_SUPPLEMENT",
+        "node_type": "INFERENCE",
+        "text_en": "Add magnesium",
+        "text_vi": "Bổ sung magie",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 28,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "dedaeec3-d9f2-4a0b-9f84-e64ab38a377e",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Hypertensive crisis management: add magnesium sulfate to prevent eclampsia.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "Bổ sung magiê trong cơn THA để ngăn ngừa sản giật.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "d5b1cbf6-3440-4a2d-8f46-65e2a5fa2723",
+            "traversal_order": 1,
+            "to_node_key": "T12_C_IMMEDIATE_TARGET",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 160
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 105
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T12_INF_METHYLDOPA": {
+        "id": "36028c0b-d677-4efd-9d89-6868f677300f",
+        "node_key": "T12_INF_METHYLDOPA",
+        "node_type": "INFERENCE",
+        "text_en": "(Central alpha-2 agonist) Methyldopa",
+        "text_vi": "(Chủ vận chọn lọc alpha-2 giao cảm)\nMethyldopa",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment_preferences": {
+            "drug_class": "CENTRAL_ALPHA2_AGONIST"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 20,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "6bc2889d-3e89-4cf8-96ab-9d1d984cbb3d",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Mild hypertension, first-choice option: methyldopa.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "THA nhẹ, lựa chọn đầu tiên: methyldopa.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "f336e7a9-91ad-4b3e-ae62-865a622662c4",
+            "traversal_order": 1,
+            "to_node_key": "T12_INF_ABSOLUTE_CONTRAINDICATIONS",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_INF_MILD_MODERATE_SEVERITY": {
+        "id": "af8bcf05-a21b-4088-8a63-46fa63185b7a",
+        "node_key": "T12_INF_MILD_MODERATE_SEVERITY",
+        "node_type": "INFERENCE",
+        "text_en": "Mild-moderate",
+        "text_vi": "Tính nhẹ - trung bình",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment": {
+            "severity": "MILD_MODERATE"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 18,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "2297e678-5c2a-4bc5-8ab2-8935433037d8",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Mục 3.6.6. Tăng huyết áp trong thai kỳ",
+            "locator_detail": "Severity label: mild-to-moderate.",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "Phân độ \"nhẹ đến trung bình\".",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "c1b371c7-9d07-4d44-9996-6145feacabb3",
+            "traversal_order": 1,
+            "to_node_key": "T12_INF_METHYLDOPA",
+            "candidate_condition": null
+          },
+          {
+            "edge_id": "0e2c6738-b945-4abc-84d1-0db7b7f74b50",
+            "traversal_order": 2,
+            "to_node_key": "T12_INF_LABETALOL_ORAL",
+            "candidate_condition": null
+          },
+          {
+            "edge_id": "9d538074-c040-431b-b8fc-458537364017",
+            "traversal_order": 3,
+            "to_node_key": "T12_INF_NIFEDIPINE_OR_NICARDIPINE",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_INF_NICARDIPINE_MGSO4": {
+        "id": "1290beb3-4be1-42be-8e86-80361913f907",
+        "node_key": "T12_INF_NICARDIPINE_MGSO4",
+        "node_type": "INFERENCE",
+        "text_en": "Nicardipine + Magnesium Sulfate",
+        "text_vi": "Nicardipine (CKCa) +\nMagnesium Sulfate",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 30,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "51fb69d8-52b6-41cb-ae31-cd8afbf8223f",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)",
+            "locator_detail": "Eclampsia/severe preeclampsia/HELLP: treat immediately (SBP<160, DBP<105 mmHg), labetalol or nicardipine plus magnesium sulfate.",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "Sản giật/Tiền sản giật nặng/HELLP: ngay lập tức hạ HA, Labetalol hoặc Nicardipine và Magnesium sulfate.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "bbb57722-986a-42d5-be40-79167bf6193f",
+            "traversal_order": 1,
+            "to_node_key": "T12_C_IMMEDIATE_TARGET",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 160
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 105
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T12_INF_NIFEDIPINE_OR_NICARDIPINE": {
+        "id": "82d04526-8de0-42f0-85ac-3d4e1b603ab6",
+        "node_key": "T12_INF_NIFEDIPINE_OR_NICARDIPINE",
+        "node_type": "INFERENCE",
+        "text_en": "(Dihydropyridine CCB) Nifedipine (avoid capsule form) or Nicardipine",
+        "text_vi": "(CKCa - Dihydropyridine)\nNifedipine [trừ viên dạng nang]\nhoặc\nNicardipine",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment_preferences": {
+            "drug_class": "DIHYDROPYRIDINE_CCB"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 22,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "6d9ba12c-3a29-4fc5-9b6e-9a08a7caf33b",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Mild hypertension, first-choice option: dihydropyridine CCB (nifedipine [not capsule form], nicardipine).",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "THA nhẹ, lựa chọn đầu tiên: chẹn kênh canxi dihydropyridine (Nifedipine [trừ dạng viên nang], Nicardipine).",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "39341121-b3da-4984-b285-ba44e1eff9c7",
+            "traversal_order": 1,
+            "to_node_key": "T12_INF_ABSOLUTE_CONTRAINDICATIONS",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_INF_PREECLAMPSIA_CLASSIFICATION": {
+        "id": "3bf12557-a06e-44ac-adfb-da0004db5e47",
+        "node_key": "T12_INF_PREECLAMPSIA_CLASSIFICATION",
+        "node_type": "INFERENCE",
+        "text_en": "Preeclampsia",
+        "text_vi": "Tiền sản giật",
+        "condition_definition": null,
+        "context_patch": {
+          "diagnosis": {
+            "pregnancy_hypertension_type": "PREECLAMPSIA"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 12,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "8fa6820f-7135-45e3-b031-f64c802d302f",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 15. Phân loại tăng huyết áp trong thai kỳ (52)",
+            "locator_detail": "Classification label: preeclampsia.",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "Nhãn phân loại \"Tiền sản giật\" (preeclampsia) của Bảng 15.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "2f7141df-55a8-4ec9-87ea-d01c4071bb17",
+            "traversal_order": 1,
+            "to_node_key": "T12_C_BP_MILD_MODERATE",
+            "candidate_condition": {
+              "any": [
+                {
+                  "all": [
+                    {
+                      "op": "gte",
+                      "path": "input.current_clinic_sbp",
+                      "value": 140
+                    },
+                    {
+                      "op": "lte",
+                      "path": "input.current_clinic_sbp",
+                      "value": 159
+                    }
+                  ]
+                },
+                {
+                  "all": [
+                    {
+                      "op": "gte",
+                      "path": "input.current_clinic_dbp",
+                      "value": 90
+                    },
+                    {
+                      "op": "lte",
+                      "path": "input.current_clinic_dbp",
+                      "value": 109
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "5772df3a-f561-4f80-ba2d-12c8b78873bd",
+            "traversal_order": 2,
+            "to_node_key": "T12_C_BP_SEVERE",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 160
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 110
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T12_INF_SEVERE_DRUG_OPTIONS": {
+        "id": "35f6bea4-1c2c-46b8-a0a3-d0f08fecebcd",
+        "node_key": "T12_INF_SEVERE_DRUG_OPTIONS",
+        "node_type": "INFERENCE",
+        "text_en": "Methyldopa oral, or Nifedipine/Nicardipine, or IV Labetalol/Nicardipine, or Esmolol, Hydralazine, Urapidil",
+        "text_vi": "Methyldopa uống\nhoặc (CKCa-Dihydropyridine) Nifedipine [trừ viên dạng nang] hoặc Nicardipine\nhoặc Labetalol tĩnh mạch\nhoặc Nicardipine tĩnh mạch\nhoặc Esmolol (Chẹn Beta)\nhoặc Hydralazine (Giãn mạch)\nhoặc Urapidil",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 24,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "acd98a12-d86c-4ee9-ae3a-604d0fd50cb9",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Bảng 16. Khuyến cáo điều trị tăng huyết áp trong thai kỳ (2, 52)",
+            "locator_detail": "Severe hypertension: IV labetalol (or IV nicardipine, esmolol, hydralazine, urapidil), oral methyldopa, or dihydropyridine CCB.",
+            "printed_page_numbers": [
+              30
+            ],
+            "pdf_page_numbers": [
+              32
+            ],
+            "reference_note": "THA nặng: Labetalol TM (hoặc Nicardipine TM, Esmolol, Hydralazine, Urapidil), Methyldopa uống, hoặc CKCa dihydropyridine.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "c8bff402-3701-461d-820b-9148044f17e7",
+            "traversal_order": 1,
+            "to_node_key": "T12_C_HYPERTENSIVE_CRISIS",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.has_hypertensive_crisis",
+              "value": true
+            }
+          },
+          {
+            "edge_id": "de84d0ef-7d5f-49e2-a293-a3b5133cfd6c",
+            "traversal_order": 2,
+            "to_node_key": "T12_C_PULMONARY_EDEMA",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.has_pulmonary_edema",
+              "value": true
+            }
+          }
+        ]
+      },
+      "T12_INF_SEVERE_SEVERITY": {
+        "id": "04b4e1d5-11ab-4d25-9f07-13d058f2fe9d",
+        "node_key": "T12_INF_SEVERE_SEVERITY",
+        "node_type": "INFERENCE",
+        "text_en": "Severe hypertension",
+        "text_vi": "THA nặng",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment": {
+            "severity": "SEVERE"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 19,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "9bf4742c-f5ad-42e5-aefe-ba114e8da8ac",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Mục 3.6.6. Tăng huyết áp trong thai kỳ",
+            "locator_detail": "Severity label: severe.",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "Phân độ \"nặng\".",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "dccdc020-ac9d-4ddc-8222-952a54c4ee41",
+            "traversal_order": 1,
+            "to_node_key": "T12_INF_SEVERE_DRUG_OPTIONS",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T12_START_PREGNANCY_HTN_SEQUENCE": {
+        "id": "dc98e224-0743-49ec-9111-3c6f66e6fec5",
+        "node_key": "T12_START_PREGNANCY_HTN_SEQUENCE",
+        "node_type": "START",
+        "text_en": "Tree 13: Pregnancy sequence / Tree 17: Tree 8 sequence",
+        "text_vi": "Cây 13: Trình tự thai kỳ\nCây 17: Trình tự Cây 8",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 0,
+        "created_at": "2026-07-25 11:46:28.101935+00:00",
+        "updated_at": "2026-07-25 11:46:28.101935+00:00",
+        "references": [
+          {
+            "id": "8c30fcea-ce09-435f-97a3-161b82662a00",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp trong thai kỳ",
+                "number": "3.6.6"
+              }
+            ],
+            "locator": "Mục 3.6.6. Tăng huyết áp trong thai kỳ",
+            "locator_detail": "Entry point of the pregnancy-hypertension sequence.",
+            "printed_page_numbers": [
+              29
+            ],
+            "pdf_page_numbers": [
+              31
+            ],
+            "reference_note": "Điểm vào của trình tự THA trong thai kỳ, theo Mục 3.6.6.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "2bc20b0c-e635-4678-9a91-9792ae207979",
+            "traversal_order": 1,
+            "to_node_key": "T12_C_HOME_BP_HIGH",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "gte",
+                  "path": "input.home_sbp",
+                  "value": 135
+                },
+                {
+                  "op": "gte",
+                  "path": "input.home_dbp",
+                  "value": 85
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "bbf524db-be4c-4184-93fc-792a97761819",
+            "traversal_order": 2,
+            "to_node_key": "T12_C_CLINIC_BP_HIGH",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 140
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "a27d6e7c-c91f-4514-9e7e-87a5139bd679",
+            "traversal_order": 3,
+            "to_node_key": "T12_C_CLINIC_BP_NORMAL",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 140
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "edges": [
+      {
+        "id": "d071d4b0-d8f0-4572-89bf-f07e4ee5281d",
+        "from_node_key": "T12_ACTION_CLASSIFY_HTN_TYPE",
+        "to_node_key": "T12_C_CHRONIC_HTN",
+        "traversal_order": 1
+      },
+      {
+        "id": "fd33a9a6-4bcc-4f6c-a3e6-668a8f430a3b",
+        "from_node_key": "T12_ACTION_CLASSIFY_HTN_TYPE",
+        "to_node_key": "T12_C_GESTATIONAL_HTN",
+        "traversal_order": 2
+      },
+      {
+        "id": "c8bc36c6-6877-48d4-9041-852a8457f0cb",
+        "from_node_key": "T12_ACTION_CLASSIFY_HTN_TYPE",
+        "to_node_key": "T12_C_PREECLAMPSIA_PROTEINURIA",
+        "traversal_order": 3
+      },
+      {
+        "id": "19e25e87-b188-4c01-b7a1-479d4f69252d",
+        "from_node_key": "T12_ACTION_CLASSIFY_HTN_TYPE",
+        "to_node_key": "T12_C_PREECLAMPSIA_RISK_FACTOR",
+        "traversal_order": 4
+      },
+      {
+        "id": "fc0a35a8-d7cc-4e20-bb6a-0f0875eecc81",
+        "from_node_key": "T12_ACTION_CLASSIFY_HTN_TYPE",
+        "to_node_key": "T12_C_SEVERE_SIGNS",
+        "traversal_order": 5
+      },
+      {
+        "id": "e772f765-723d-4f48-a145-cfbebfc295f1",
+        "from_node_key": "T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM",
+        "to_node_key": "T12_C_CURRENTLY_PREGNANT",
+        "traversal_order": 1
+      },
+      {
+        "id": "d8fe00d6-c2f8-4dc0-b546-8dc141095168",
+        "from_node_key": "T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM",
+        "to_node_key": "T12_C_POSTPARTUM",
+        "traversal_order": 2
+      },
+      {
+        "id": "46b94323-0fca-475a-b323-213fd5c0ac80",
+        "from_node_key": "T12_ACTION_POSTPARTUM_CONTRAINDICATIONS",
+        "to_node_key": "T12_END_MAINTAIN_REGIMEN_POSTPARTUM",
+        "traversal_order": 1
+      },
+      {
+        "id": "7bbedfd8-dafa-4251-9876-c1b48abdc128",
+        "from_node_key": "T12_C_BP_MILD_MODERATE",
+        "to_node_key": "T12_INF_MILD_MODERATE_SEVERITY",
+        "traversal_order": 1
+      },
+      {
+        "id": "5295b925-31ae-4d32-8d6c-92e2fc62c662",
+        "from_node_key": "T12_C_BP_NOT_HIGH",
+        "to_node_key": "T12_END_MAINTAIN_REGIMEN_POSTPARTUM",
+        "traversal_order": 1
+      },
+      {
+        "id": "75417199-4a3d-4e83-9fa0-372a24cff2f7",
+        "from_node_key": "T12_C_BP_SEVERE",
+        "to_node_key": "T12_INF_SEVERE_SEVERITY",
+        "traversal_order": 1
+      },
+      {
+        "id": "b6f52e45-28b0-4e7f-97c6-dc23e8a17cdd",
+        "from_node_key": "T12_C_BP_STILL_HIGH",
+        "to_node_key": "T12_ACTION_POSTPARTUM_CONTRAINDICATIONS",
+        "traversal_order": 1
+      },
+      {
+        "id": "8cca6817-9e91-4b2b-9e36-e6084da11b7a",
+        "from_node_key": "T12_C_BP_TARGET_ACHIEVED",
+        "to_node_key": "T12_END_MAINTAIN_REGIMEN_PREGNANT",
+        "traversal_order": 1
+      },
+      {
+        "id": "44f6f2f1-38d4-461a-8ea4-0087dea673c0",
+        "from_node_key": "T12_C_BP_TARGET_NOT_ACHIEVED",
+        "to_node_key": "T12_END_REFER_OBGYN",
+        "traversal_order": 1
+      },
+      {
+        "id": "b389d8cd-6c6e-421d-8391-b5397af71e15",
+        "from_node_key": "T12_C_BREASTFEEDING",
+        "to_node_key": "T12_ACTION_POSTPARTUM_CONTRAINDICATIONS",
+        "traversal_order": 1
+      },
+      {
+        "id": "a2db5d85-5a71-41b9-8b63-ebc7273df6bc",
+        "from_node_key": "T12_C_CHRONIC_HTN",
+        "to_node_key": "T12_END_PRE_EXISTING_HTN",
+        "traversal_order": 1
+      },
+      {
+        "id": "9b5397f1-0a75-4b8f-a1aa-697e3836fca5",
+        "from_node_key": "T12_C_CLINIC_BP_HIGH",
+        "to_node_key": "T12_ACTION_CLASSIFY_HTN_TYPE",
+        "traversal_order": 1
+      },
+      {
+        "id": "b186e2a7-6356-4879-ae45-0b2c87782c62",
+        "from_node_key": "T12_C_CLINIC_BP_NORMAL",
+        "to_node_key": "T12_END_FOLLOW_UP_MONITOR",
+        "traversal_order": 1
+      },
+      {
+        "id": "c4b52cf4-3e93-4947-a550-1d81a6bdf54a",
+        "from_node_key": "T12_C_CURRENTLY_PREGNANT",
+        "to_node_key": "T12_C_HIGH_PREECLAMPSIA_RISK",
+        "traversal_order": 1
+      },
+      {
+        "id": "7eef7a67-bfd3-419e-a60e-9aba01de6d8c",
+        "from_node_key": "T12_C_CURRENTLY_PREGNANT",
+        "to_node_key": "T12_C_BP_TARGET_ACHIEVED",
+        "traversal_order": 2
+      },
+      {
+        "id": "5ab367d0-2f2f-477c-8f29-9c7008601a82",
+        "from_node_key": "T12_C_CURRENTLY_PREGNANT",
+        "to_node_key": "T12_C_BP_TARGET_NOT_ACHIEVED",
+        "traversal_order": 3
+      },
+      {
+        "id": "05b09f96-5f56-493e-9843-befdba7765e6",
+        "from_node_key": "T12_C_GESTATIONAL_HTN",
+        "to_node_key": "T12_INF_GESTATIONAL_HTN_CLASSIFICATION",
+        "traversal_order": 1
+      },
+      {
+        "id": "67726c13-71ee-4b13-b76f-254f406a9f29",
+        "from_node_key": "T12_C_HIGH_PREECLAMPSIA_RISK",
+        "to_node_key": "T12_END_ASPIRIN_PROPHYLAXIS",
+        "traversal_order": 1
+      },
+      {
+        "id": "44f2ce67-6484-4980-83d2-7af0b782f9d6",
+        "from_node_key": "T12_C_HOME_BP_HIGH",
+        "to_node_key": "T12_ACTION_CLASSIFY_HTN_TYPE",
+        "traversal_order": 1
+      },
+      {
+        "id": "6e0e3f71-7e4b-4c73-9ef7-c677e151b885",
+        "from_node_key": "T12_C_HYPERTENSIVE_CRISIS",
+        "to_node_key": "T12_INF_IV_NITROGLYCERIN",
+        "traversal_order": 1
+      },
+      {
+        "id": "ce82f1b8-1cba-4891-9be3-b2db3daf8b6a",
+        "from_node_key": "T12_C_IMMEDIATE_TARGET",
+        "to_node_key": "T12_C_TARGET_NOT_MET",
+        "traversal_order": 1
+      },
+      {
+        "id": "dd867a65-48bf-43da-bcdb-587fcdee602c",
+        "from_node_key": "T12_C_POSTPARTUM",
+        "to_node_key": "T12_C_BREASTFEEDING",
+        "traversal_order": 1
+      },
+      {
+        "id": "849e7193-ae71-4935-8ae6-7c557d3c52fb",
+        "from_node_key": "T12_C_POSTPARTUM",
+        "to_node_key": "T12_C_BP_STILL_HIGH",
+        "traversal_order": 2
+      },
+      {
+        "id": "9f9b9534-54ca-4eed-b9b4-07021708ed8e",
+        "from_node_key": "T12_C_POSTPARTUM",
+        "to_node_key": "T12_C_BP_NOT_HIGH",
+        "traversal_order": 3
+      },
+      {
+        "id": "0d5f3611-2098-4733-9713-e0a3ad5b1ca1",
+        "from_node_key": "T12_C_PREECLAMPSIA_PROTEINURIA",
+        "to_node_key": "T12_INF_PREECLAMPSIA_CLASSIFICATION",
+        "traversal_order": 1
+      },
+      {
+        "id": "8ff2da8b-670a-4cf9-99f2-5856aeb0215e",
+        "from_node_key": "T12_C_PREECLAMPSIA_RISK_FACTOR",
+        "to_node_key": "T12_INF_PREECLAMPSIA_CLASSIFICATION",
+        "traversal_order": 1
+      },
+      {
+        "id": "f9e32734-2daa-420e-912b-1205b85f47b1",
+        "from_node_key": "T12_C_PULMONARY_EDEMA",
+        "to_node_key": "T12_INF_MAGNESIUM_SUPPLEMENT",
+        "traversal_order": 1
+      },
+      {
+        "id": "ec6930d0-52cc-4e73-b65d-1dcd9b2741b9",
+        "from_node_key": "T12_C_SEVERE_SIGNS",
+        "to_node_key": "T12_INF_ECLAMPSIA_CLASSIFICATION",
+        "traversal_order": 1
+      },
+      {
+        "id": "22f6edfc-c75d-4f58-b9d7-adf070aad30d",
+        "from_node_key": "T12_C_SEVERE_SIGNS",
+        "to_node_key": "T12_INF_HELLP_SYNDROME_CLASSIFICATION",
+        "traversal_order": 2
+      },
+      {
+        "id": "488bc096-a048-4b88-9717-86b733c0156a",
+        "from_node_key": "T12_C_TARGET_NOT_MET",
+        "to_node_key": "T12_END_EMERGENCY_DELIVERY",
+        "traversal_order": 1
+      },
+      {
+        "id": "a9c49f9f-cb8f-4ee7-9c5b-02ddfe81f810",
+        "from_node_key": "T12_INF_ABSOLUTE_CONTRAINDICATIONS",
+        "to_node_key": "T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM",
+        "traversal_order": 1
+      },
+      {
+        "id": "9e72baec-cf51-4bf7-b36d-c4502cd61f08",
+        "from_node_key": "T12_INF_ECLAMPSIA_CLASSIFICATION",
+        "to_node_key": "T12_INF_LABETALOL_MGSO4",
+        "traversal_order": 1
+      },
+      {
+        "id": "c9065c54-22f6-4b2d-91ea-3318e09ebebc",
+        "from_node_key": "T12_INF_ECLAMPSIA_CLASSIFICATION",
+        "to_node_key": "T12_INF_NICARDIPINE_MGSO4",
+        "traversal_order": 2
+      },
+      {
+        "id": "283c7285-67fa-413d-b2d6-63d5f2ab2d7f",
+        "from_node_key": "T12_INF_GESTATIONAL_HTN_CLASSIFICATION",
+        "to_node_key": "T12_C_BP_MILD_MODERATE",
+        "traversal_order": 1
+      },
+      {
+        "id": "976cba79-409c-4cb5-8df3-85f57b3441ad",
+        "from_node_key": "T12_INF_GESTATIONAL_HTN_CLASSIFICATION",
+        "to_node_key": "T12_C_BP_SEVERE",
+        "traversal_order": 2
+      },
+      {
+        "id": "d7bf1139-997e-4e2d-9d2f-502cf921be8b",
+        "from_node_key": "T12_INF_HELLP_SYNDROME_CLASSIFICATION",
+        "to_node_key": "T12_INF_LABETALOL_MGSO4",
+        "traversal_order": 1
+      },
+      {
+        "id": "b624b514-c41d-4fce-90e4-b4e0ca4f6abd",
+        "from_node_key": "T12_INF_HELLP_SYNDROME_CLASSIFICATION",
+        "to_node_key": "T12_INF_NICARDIPINE_MGSO4",
+        "traversal_order": 2
+      },
+      {
+        "id": "e994686b-35f3-49f0-9b08-ad4403145c54",
+        "from_node_key": "T12_INF_IV_NITROGLYCERIN",
+        "to_node_key": "T12_C_IMMEDIATE_TARGET",
+        "traversal_order": 1
+      },
+      {
+        "id": "ab119443-91f4-48eb-9acf-53de2ac629ac",
+        "from_node_key": "T12_INF_LABETALOL_MGSO4",
+        "to_node_key": "T12_C_IMMEDIATE_TARGET",
+        "traversal_order": 1
+      },
+      {
+        "id": "67fb48e9-fd62-4710-9794-cb4bf004af09",
+        "from_node_key": "T12_INF_LABETALOL_ORAL",
+        "to_node_key": "T12_INF_ABSOLUTE_CONTRAINDICATIONS",
+        "traversal_order": 1
+      },
+      {
+        "id": "d5b1cbf6-3440-4a2d-8f46-65e2a5fa2723",
+        "from_node_key": "T12_INF_MAGNESIUM_SUPPLEMENT",
+        "to_node_key": "T12_C_IMMEDIATE_TARGET",
+        "traversal_order": 1
+      },
+      {
+        "id": "f336e7a9-91ad-4b3e-ae62-865a622662c4",
+        "from_node_key": "T12_INF_METHYLDOPA",
+        "to_node_key": "T12_INF_ABSOLUTE_CONTRAINDICATIONS",
+        "traversal_order": 1
+      },
+      {
+        "id": "c1b371c7-9d07-4d44-9996-6145feacabb3",
+        "from_node_key": "T12_INF_MILD_MODERATE_SEVERITY",
+        "to_node_key": "T12_INF_METHYLDOPA",
+        "traversal_order": 1
+      },
+      {
+        "id": "0e2c6738-b945-4abc-84d1-0db7b7f74b50",
+        "from_node_key": "T12_INF_MILD_MODERATE_SEVERITY",
+        "to_node_key": "T12_INF_LABETALOL_ORAL",
+        "traversal_order": 2
+      },
+      {
+        "id": "9d538074-c040-431b-b8fc-458537364017",
+        "from_node_key": "T12_INF_MILD_MODERATE_SEVERITY",
+        "to_node_key": "T12_INF_NIFEDIPINE_OR_NICARDIPINE",
+        "traversal_order": 3
+      },
+      {
+        "id": "bbb57722-986a-42d5-be40-79167bf6193f",
+        "from_node_key": "T12_INF_NICARDIPINE_MGSO4",
+        "to_node_key": "T12_C_IMMEDIATE_TARGET",
+        "traversal_order": 1
+      },
+      {
+        "id": "39341121-b3da-4984-b285-ba44e1eff9c7",
+        "from_node_key": "T12_INF_NIFEDIPINE_OR_NICARDIPINE",
+        "to_node_key": "T12_INF_ABSOLUTE_CONTRAINDICATIONS",
+        "traversal_order": 1
+      },
+      {
+        "id": "2f7141df-55a8-4ec9-87ea-d01c4071bb17",
+        "from_node_key": "T12_INF_PREECLAMPSIA_CLASSIFICATION",
+        "to_node_key": "T12_C_BP_MILD_MODERATE",
+        "traversal_order": 1
+      },
+      {
+        "id": "5772df3a-f561-4f80-ba2d-12c8b78873bd",
+        "from_node_key": "T12_INF_PREECLAMPSIA_CLASSIFICATION",
+        "to_node_key": "T12_C_BP_SEVERE",
+        "traversal_order": 2
+      },
+      {
+        "id": "c8bff402-3701-461d-820b-9148044f17e7",
+        "from_node_key": "T12_INF_SEVERE_DRUG_OPTIONS",
+        "to_node_key": "T12_C_HYPERTENSIVE_CRISIS",
+        "traversal_order": 1
+      },
+      {
+        "id": "de84d0ef-7d5f-49e2-a293-a3b5133cfd6c",
+        "from_node_key": "T12_INF_SEVERE_DRUG_OPTIONS",
+        "to_node_key": "T12_C_PULMONARY_EDEMA",
+        "traversal_order": 2
+      },
+      {
+        "id": "dccdc020-ac9d-4ddc-8222-952a54c4ee41",
+        "from_node_key": "T12_INF_SEVERE_SEVERITY",
+        "to_node_key": "T12_INF_SEVERE_DRUG_OPTIONS",
+        "traversal_order": 1
+      },
+      {
+        "id": "2bc20b0c-e635-4678-9a91-9792ae207979",
+        "from_node_key": "T12_START_PREGNANCY_HTN_SEQUENCE",
+        "to_node_key": "T12_C_HOME_BP_HIGH",
+        "traversal_order": 1
+      },
+      {
+        "id": "bbf524db-be4c-4184-93fc-792a97761819",
+        "from_node_key": "T12_START_PREGNANCY_HTN_SEQUENCE",
+        "to_node_key": "T12_C_CLINIC_BP_HIGH",
+        "traversal_order": 2
+      },
+      {
+        "id": "a27d6e7c-c91f-4514-9e7e-87a5139bd679",
+        "from_node_key": "T12_START_PREGNANCY_HTN_SEQUENCE",
+        "to_node_key": "T12_C_CLINIC_BP_NORMAL",
+        "traversal_order": 3
+      }
+    ],
+    "layout": null
+  },
+  "counts": {
+    "nodes": 50,
+    "edges": 60,
+    "references": 50,
+    "layouts": 0
+  }
+}
