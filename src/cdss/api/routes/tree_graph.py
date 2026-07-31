@@ -32,3 +32,4 @@ def get_tree_graph(
 ) -> TreeGraphResponse:
     graph = repository.get_tree(tree_key)
     return TreeGraphResponse.from_graph(graph)
+
