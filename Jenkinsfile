@@ -72,7 +72,9 @@ pipeline {
                              deploy/promote_stack.sh deploy/prune_old_stacks.sh \
                              deploy/cleanup_failed_stack.sh \
                              deploy/ensure_live_route.sh \
-                             deploy/run_quality_gates.sh; do
+                             deploy/run_quality_gates.sh \
+                             deploy/run_frontend_quality_gates.sh \
+                             scripts/generate_pregnancy_fhir_presets.py; do
                         if [ ! -f "$f" ]; then
                             echo "ERROR: required file missing: $f"
                             exit 1

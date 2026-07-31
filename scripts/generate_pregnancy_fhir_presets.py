@@ -9,6 +9,9 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_DIR = ROOT / "data" / "fhir" / "pregnancy_presets"
+FRONTEND_CATALOG = (
+    ROOT / "frontend" / "src" / "panels" / "patientPresets" / "pregnancyBundles.generated.json"
+)
 
 BASE_URL = "http://example.org/fhir"
 EXT_BASE = "http://cdss.local/fhir/StructureDefinition"
@@ -730,19 +733,29 @@ def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     cases = [*_static_cases(), *_follow_up_cases()]
     expected_files: set[Path] = set()
+    bundles: list[dict[str, Any]] = []
     for index, case in enumerate(cases, start=1):
+        bundle = _bundle(case, index)
         path = OUTPUT_DIR / f"{index:02d}-{case.preset_id}.json"
         path.write_text(
-            json.dumps(_bundle(case, index), ensure_ascii=False, indent=2) + "\n",
+            json.dumps(bundle, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
         expected_files.add(path)
+        bundles.append(bundle)
 
     stale_files = set(OUTPUT_DIR.glob("*.json")) - expected_files
     if stale_files:
         names = ", ".join(sorted(path.name for path in stale_files))
         raise RuntimeError(f"Remove stale generated pregnancy preset files: {names}")
-    print(f"Generated {len(cases)} FHIR R4 pregnancy presets in {OUTPUT_DIR}")
+
+    FRONTEND_CATALOG.write_text(
+        json.dumps(bundles, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    print(
+        f"Generated {len(cases)} FHIR R4 pregnancy presets in {OUTPUT_DIR} and {FRONTEND_CATALOG}"
+    )
 
 
 if __name__ == "__main__":

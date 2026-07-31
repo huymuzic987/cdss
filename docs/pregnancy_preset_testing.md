@@ -2,8 +2,11 @@
 
 ## What the catalog covers
 
-The Patient Simulator now loads 21 committed FHIR R4 Bundles from
-`data/fhir/pregnancy_presets`:
+The Patient Simulator loads 21 committed FHIR R4 Bundles from
+`frontend/src/panels/patientPresets/pregnancyBundles.generated.json`. That
+frontend-owned catalog is generated from the same definitions as the canonical
+per-case files under `data/fhir/pregnancy_presets`, so it is available inside
+both the isolated Jenkins frontend container and the production Docker build:
 
 - 13 single-visit Bundles cover initial pregnancy assessment branches.
 - 4 targeted two-Encounter Bundles cover high-risk and postpartum follow-up branches.
@@ -12,8 +15,10 @@ The Patient Simulator now loads 21 committed FHIR R4 Bundles from
 - The union of the presets executes every non-global node currently present in Tree 12.
 
 The presets are generated deterministically by
-`scripts/generate_pregnancy_fhir_presets.py`. Do not hand-edit a generated JSON file without also
-updating the generator.
+`scripts/generate_pregnancy_fhir_presets.py`. Do not hand-edit generated JSON.
+Update the generator and run it instead. Jenkins also runs the generator before
+every quality gate so a contributor checkout cannot test or deploy a missing or
+stale frontend catalog.
 
 `backups/seed.sql` is not modified by this preset implementation. Legacy pregnancy entry and
 precedence compatibility is isolated in

@@ -103,14 +103,20 @@ STAGING_DATABASE_NAME=
 PRODUCTION_DATABASE_NAME=
 EOF
 
-echo "Migrating the disposable test database to head..."
+echo "Generating deterministic pregnancy FHIR catalogs..."
 docker run --rm --network "$NETWORK" \
     -v "$PWD":/workspace -w /workspace \
     -e DATABASE_URL="$TEST_DATABASE_URL" \
     -e HOME=/tmp -e UV_CACHE_DIR=/tmp/uv-cache -e UV_PROJECT_ENVIRONMENT=/tmp/venv \
     --user "${HOST_UID}:${HOST_GID}" \
     "$UV_IMAGE" \
-    sh -c "uv sync --frozen && uv run alembic upgrade head"
+    sh -c "
+        set -e
+        uv sync --frozen
+        uv run python scripts/generate_pregnancy_fhir_presets.py
+        uv run alembic upgrade head
+    "
+echo "Pregnancy FHIR catalogs generated; disposable database migrated to head."
 
 echo "Seeding the disposable test database (trees, medicines, symptoms reference data)..."
 docker exec -i "$POSTGRES_CONTAINER" psql -p "$TEST_DB_PORT" -U "$PG_USER" -d "$TEST_DB_NAME" \
@@ -135,27 +141,13 @@ docker run --rm --network "$NETWORK" \
         uv run pyright
     "
 
-echo "Running frontend quality gates: pnpm test, pnpm lint, pnpm build..."
+echo "Running frontend quality gates: Vitest, Oxlint, TypeScript, Vite build..."
 docker run --rm \
     -v "$PWD/frontend":/workspace -w /workspace \
+    -v "$PWD/deploy/run_frontend_quality_gates.sh":/quality-gate.sh:ro \
     -e HOME=/tmp \
+    -e PNPM_VERSION="$PNPM_VERSION" \
     "$NODE_IMAGE" \
-    sh -c "
-        set -e
-        corepack enable
-        corepack prepare pnpm@${PNPM_VERSION} --activate
-        node -e \"
-            if (typeof require('node:worker_threads').markAsUncloneable !== 'function') {
-                throw new Error('Node runtime lacks worker_threads.markAsUncloneable')
-            }
-        \"
-        node --version
-        pnpm --version
-        pnpm config set store-dir /tmp/pnpm-store
-        pnpm install --frozen-lockfile
-        pnpm test
-        pnpm lint
-        pnpm build
-    "
+    sh /quality-gate.sh
 
 echo "All quality gates passed."

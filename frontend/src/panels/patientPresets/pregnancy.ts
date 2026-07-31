@@ -1,4 +1,5 @@
 import type { JsonObject, JsonValue } from '../../api/types'
+import pregnancyBundles from './pregnancyBundles.generated.json'
 import {
   PREGNANCY,
   PREGNANCY_FOLLOW_UP,
@@ -7,14 +8,10 @@ import {
 
 const PRESET_META_BASE = 'http://cdss.local/fhir/CodeSystem/preset'
 
-const modules = import.meta.glob<JsonObject>(
-  '../../../../data/fhir/pregnancy_presets/*.json',
-  { eager: true, import: 'default' },
-)
-
-const catalog = Object.entries(modules)
-  .sort(([left], [right]) => left.localeCompare(right))
-  .map(([, bundle]) => toPreset(bundle))
+// Keep the frontend catalog inside its own Docker build context. The canonical
+// per-case FHIR files and this manifest are emitted together by
+// scripts/generate_pregnancy_fhir_presets.py.
+const catalog = (pregnancyBundles as unknown as JsonObject[]).map(toPreset)
 
 export const pregnancyPresets: PatientPresetBundleDefinition[] =
   catalog.filter(({ category }) => category === PREGNANCY)
