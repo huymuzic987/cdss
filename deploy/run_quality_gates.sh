@@ -26,7 +26,10 @@ PG_ADMIN_DB=cdss
 TEST_DB_NAME=cdss_test
 SCHEMA_TEST_DB_NAME=cdss_schema_test
 
-UV_IMAGE="ghcr.io/astral-sh/uv:python3.12-bookworm-slim"
+# Pyright installs a Node.js runtime whose Linux binary requires
+# libatomic.so.1. The full Bookworm image provides it; the slim variant does
+# not, causing Pyright to exit 127 before type checking starts.
+UV_IMAGE="ghcr.io/astral-sh/uv:python3.12-bookworm"
 NODE_IMAGE="node:20-alpine"
 
 HOST_UID="$(id -u)"
@@ -119,6 +122,9 @@ docker run --rm --network "$NETWORK" \
     sh -c "
         set -e
         uv sync --frozen
+        # Fail quickly with a clear runtime error before spending time on the
+        # test suite if Pyright's bundled Node.js cannot start.
+        uv run pyright --version
         uv run pytest
         uv run ruff check
         uv run ruff format --check

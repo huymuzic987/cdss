@@ -315,59 +315,63 @@ pipeline {
 
         cleanup {
             script {
-                def stageNames = [
-                    'Checkout',
-                    'Verify Files',
-                    'Quality Gates',
-                    'Deploy Files',
-                    'Inject Environment',
-                    'Ensure Live Route',
-                    'Build Images',
-                    'Backup Current Database',
-                    'Provision New Stack',
-                    'Promote New Stack',
-                    'Prune Old Stacks',
-                    'Verify Public Endpoint'
-                ]
-                def buildResult = currentBuild.currentResult ?: 'UNKNOWN'
-                def activeStage = env.CDSS_CURRENT_STAGE ?: 'Pipeline initialization'
-                def activeStageIndex = stageNames.indexOf(activeStage)
-                def stageRows = stageNames.collectWithIndex { stageName, index ->
-                    def stageResult
-                    if (buildResult == 'SUCCESS') {
-                        stageResult = 'SUCCESS'
-                    } else if (activeStageIndex < 0) {
-                        stageResult = 'NOT RUN'
-                    } else if (index < activeStageIndex) {
-                        stageResult = 'SUCCESS'
-                    } else if (index == activeStageIndex) {
-                        stageResult = buildResult
-                    } else {
-                        stageResult = 'NOT RUN'
+                // Notification/reporting must never replace the real build
+                // result or prevent cleanWs() from running.
+                try {
+                    def stageNames = [
+                        'Checkout',
+                        'Verify Files',
+                        'Quality Gates',
+                        'Deploy Files',
+                        'Inject Environment',
+                        'Ensure Live Route',
+                        'Build Images',
+                        'Backup Current Database',
+                        'Provision New Stack',
+                        'Promote New Stack',
+                        'Prune Old Stacks',
+                        'Verify Public Endpoint'
+                    ]
+                    def buildResult = currentBuild.currentResult ?: 'UNKNOWN'
+                    def activeStage = env.CDSS_CURRENT_STAGE ?: 'Pipeline initialization'
+                    def activeStageIndex = stageNames.indexOf(activeStage)
+                    def stageRows = ''
+                    for (int index = 0; index < stageNames.size(); index++) {
+                        def stageName = stageNames[index]
+                        def stageResult
+                        if (buildResult == 'SUCCESS') {
+                            stageResult = 'SUCCESS'
+                        } else if (activeStageIndex < 0) {
+                            stageResult = 'NOT RUN'
+                        } else if (index < activeStageIndex) {
+                            stageResult = 'SUCCESS'
+                        } else if (index == activeStageIndex) {
+                            stageResult = buildResult
+                        } else {
+                            stageResult = 'NOT RUN'
+                        }
+
+                        def color = stageResult == 'SUCCESS'
+                            ? '#15803d'
+                            : (stageResult == 'NOT RUN' ? '#64748b' : '#b91c1c')
+                        stageRows += """
+                            <tr>
+                                <td style="padding:6px 10px;border:1px solid #cbd5e1;">${stageName}</td>
+                                <td style="padding:6px 10px;border:1px solid #cbd5e1;color:${color};font-weight:700;">${stageResult}</td>
+                            </tr>
+                        """
                     }
 
-                    def color = stageResult == 'SUCCESS'
-                        ? '#15803d'
-                        : (stageResult == 'NOT RUN' ? '#64748b' : '#b91c1c')
-                    return """
-                        <tr>
-                            <td style="padding:6px 10px;border:1px solid #cbd5e1;">${stageName}</td>
-                            <td style="padding:6px 10px;border:1px solid #cbd5e1;color:${color};font-weight:700;">${stageResult}</td>
-                        </tr>
-                    """
-                }.join('\n')
-
-                def commitSummary = sh(
-                    script: "git log -1 --pretty=format:'%h %s' 2>/dev/null || true",
-                    returnStdout: true
-                ).trim()
-                def resultColor = buildResult == 'SUCCESS' ? '#15803d' : '#b91c1c'
-                def subject = "[CDSS] ${buildResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
-                def recipients = [
-                    env.CDSS_NOTIFICATION_EMAILS?.trim(),
-                    params.NOTIFICATION_EMAILS?.trim()
-                ].findAll { it }.join(',')
-                def emailBody = """
+                    def commitSummary = sh(
+                        script: "git log -1 --pretty=format:'%h %s' 2>/dev/null || true",
+                        returnStdout: true
+                    ).trim()
+                    def resultColor = buildResult == 'SUCCESS' ? '#15803d' : '#b91c1c'
+                    def subject = "[CDSS] ${buildResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+                    def configuredRecipients = env.CDSS_NOTIFICATION_EMAILS?.trim()
+                    def parameterRecipients = params.NOTIFICATION_EMAILS?.trim()
+                    def recipients = configuredRecipients ?: parameterRecipients ?: ''
+                    def emailBody = """
                     <html>
                     <body style="font-family:Arial,sans-serif;color:#0f172a;">
                         <h2 style="color:${resultColor};">CDSS build ${buildResult}</h2>
@@ -398,26 +402,25 @@ pipeline {
                         <p>The complete compressed console log is attached.</p>
                     </body>
                     </html>
-                """
+                    """
 
-                try {
                     emailext(
-                        subject: subject,
-                        body: emailBody,
-                        mimeType: 'text/html',
-                        to: recipients,
-                        recipientProviders: [
-                            developers(),
-                            culprits(),
-                            requestor()
-                        ],
-                        attachLog: true,
-                        compressLog: true
-                    )
+                            subject: subject,
+                            body: emailBody,
+                            mimeType: 'text/html',
+                            to: recipients,
+                            recipientProviders: [
+                                developers(),
+                                culprits(),
+                                requestor()
+                            ],
+                            attachLog: true,
+                            compressLog: true
+                        )
                     echo "Build notification email requested for ${recipients ?: 'Jenkins-derived recipients'}."
                 } catch (notificationError) {
-                    echo "WARNING: unable to send build notification email: ${notificationError}"
-                    echo 'Verify that the Email Extension plugin and SMTP settings are configured in Jenkins.'
+                    echo "WARNING: unable to prepare or send build notification email: ${notificationError}"
+                    echo 'The build result is preserved. Verify the Email Extension plugin and SMTP settings.'
                 }
             }
             cleanWs()
