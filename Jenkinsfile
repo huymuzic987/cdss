@@ -60,7 +60,8 @@ pipeline {
                              deploy/lib.sh deploy/provision_stack.sh \
                              deploy/promote_stack.sh deploy/prune_old_stacks.sh \
                              deploy/cleanup_failed_stack.sh \
-                             deploy/ensure_live_route.sh; do
+                             deploy/ensure_live_route.sh \
+                             deploy/run_quality_gates.sh; do
                         if [ ! -f "$f" ]; then
                             echo "ERROR: required file missing: $f"
                             exit 1
@@ -69,6 +70,20 @@ pipeline {
 
                     echo "Git commit:"
                     git log -1 --oneline
+                '''
+            }
+        }
+
+        // Runs entirely on the Jenkins agent, before the deploy target is
+        // touched: pytest (including the database-backed integration tests,
+        // against a disposable PostgreSQL container), ruff, pyright, and
+        // the frontend's vitest/oxlint/build. A failure here stops the
+        // pipeline, so promotion of a broken build is impossible.
+        stage('Quality Gates') {
+            steps {
+                sh '''
+                    chmod +x deploy/run_quality_gates.sh
+                    ./deploy/run_quality_gates.sh
                 '''
             }
         }

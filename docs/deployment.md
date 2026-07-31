@@ -117,25 +117,32 @@ Stages, in order:
    scripts used later in the pipeline. This means **`backups/backup.sql`
    and `backups/seed.sql` must always be committed and up to date**: a
    broken or missing seed file fails deployment before anything is touched.
-3. **Deploy Files**: `rsync -a --delete` (no compression; same-LAN target)
+3. **Quality Gates**: `deploy/run_quality_gates.sh`, entirely on the Jenkins
+   agent, before the deploy target is touched at all. Runs `pytest` (the
+   full suite, including the database-marked integration tests, against a
+   disposable containerized PostgreSQL), `ruff check`, `ruff format --check`,
+   `pyright`, `pnpm test`, `pnpm lint`, and `pnpm build`. Any failure stops
+   the pipeline here, so a broken build can never reach provisioning or
+   promotion.
+4. **Deploy Files**: `rsync -a --delete` (no compression; same-LAN target)
    from the Jenkins workspace to `deploy@<host>:/opt/webapps/cdss/`,
    excluding `.git`, `.venv`, `node_modules`, `frontend/dist`, `.env*`,
    logs/caches, `scratch`, and the deploy scripts' own runtime state files
    (`deploy/.current_version`, `deploy/.build_state`,
    `deploy/.router_drain_pending`) and
    `persistent-backups`.
-4. **Inject Environment**: copies the `cdss-prod-env` Jenkins credential
+5. **Inject Environment**: copies the `cdss-prod-env` Jenkins credential
    (a file) to the host as `.env.new`, strips CRLF line endings, moves it to
    `.env`.
-5. **Ensure Live Route**: repairs and verifies the public route to the version
+6. **Ensure Live Route**: repairs and verifies the public route to the version
    in `deploy/.current_version`, recreating a missing dedicated router before
    lengthy build or migration work begins.
-6. **Build Images**: `deploy/build_images.sh <version>`.
-7. **Backup Current Database**: `deploy/backup_current_db.sh`.
-8. **Provision New Stack**: `deploy/provision_stack.sh <version>`.
-9. **Promote New Stack**: `deploy/promote_stack.sh <version>`.
-10. **Prune Old Stacks**: `deploy/prune_old_stacks.sh`.
-11. **Verify Public Endpoint**: checks `https://cdss.click/` and `/health`
+7. **Build Images**: `deploy/build_images.sh <version>`.
+8. **Backup Current Database**: `deploy/backup_current_db.sh`.
+9. **Provision New Stack**: `deploy/provision_stack.sh <version>`.
+10. **Promote New Stack**: `deploy/promote_stack.sh <version>`.
+11. **Prune Old Stacks**: `deploy/prune_old_stacks.sh`.
+12. **Verify Public Endpoint**: checks `https://cdss.click/` and `/health`
     from the Jenkins agent and requires `X-CDSS-Release` to match the build
     number. A host-local success can therefore no longer hide an external 502.
 
@@ -156,6 +163,20 @@ helper every other script sources: it detects `docker compose` vs. the
 legacy `docker-compose` binary and builds a `$COMPOSE` command scoped to a
 given project name (`cdss-<version>`), so every script below operates on one
 isolated stack at a time.
+
+### `run_quality_gates.sh`
+
+Runs first, on the Jenkins agent, before the target host is touched.
+Self-contained aside from Docker: it creates its own isolated Docker network
+and a disposable `postgres:16` container (`-p 54321`, matching the port
+`cdss.testing.database`'s safety guard requires), then runs everything else
+in ephemeral `uv`/`node` containers on that network - `alembic upgrade head`
+and `backups/seed.sql` against the disposable database, then `pytest`
+(including the database-marked tests), `ruff check`, `ruff format --check`,
+`pyright`, `pnpm test`, `pnpm lint`, and `pnpm build`. A `trap ... EXIT`
+always removes the container/network/`.env.test` and reclaims ownership of
+anything the (root-run, for `corepack enable`) frontend container wrote into
+`frontend/`, whether the gate passed or failed.
 
 ### `build_images.sh <version>`
 

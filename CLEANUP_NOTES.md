@@ -1,4 +1,154 @@
-# Backend Cleanup Notes
+# Cleanup Notes
+
+## Pass 2: backend + frontend dead-code re-sweep, god-file survey, test scripts
+
+This pass covers three deliverables: a fresh dead-code sweep across both
+`src/cdss` and `frontend/src` (the backend half re-verifies the pass below
+found nothing new; the frontend half is new), a god-file survey written up
+in `REFACTOR_PLAN.md`, and the new test-runner scripts
+(`scripts/test-backend.sh`, `frontend/test-frontend.sh`,
+`scripts/test-all.sh`). Same hard constraints as the pass below: no changes
+to the traversal algorithm, condition evaluation, patch application, path
+resolution, endpoint response shapes, DB query semantics, or domain contract
+signatures.
+
+### Backend: re-verified, nothing new
+
+Re-ran the same AST-based cross-reference method as the first pass (every
+top-level function/class/constant in `src/cdss` checked against the whole
+repo including `tests/`), plus an unreachable-code check (nothing after a
+`return`/`raise`/`continue`/`break` at the same block level) and a fresh
+comment-block scan (runs of 3+ consecutive comment lines, lowered from the
+first pass's threshold of 4 to be more thorough). Nothing new turned up:
+- The same known false positives reappear (FastAPI route handlers referenced
+  only by their decorator, `__all__` re-export lists) -- confirmed real, not
+  dead, same as the first pass.
+- Two ORM model classes, `DevelopmentRuntimeLog`
+  (`infrastructure/db/models.py`) and `Symptom` (same file), are referenced
+  only from tests (`tests/db/test_models.py` and friends), never from any
+  route or repository method. Per this task's explicit instruction ("if
+  used only in tests, keep it and note it"), both are kept unchanged. Both
+  map to real, migrated database tables (`development_runtime_logs`,
+  `symptoms`), so they're schema definitions with no current application
+  consumer, not orphaned code -- consistent with the existing note in
+  `OPEN_QUESTIONS.md` about the `symptoms` table's "future consumer" being
+  undetermined.
+- No unreachable code, no dead conditionals (`if False:` / `if 0:`), no new
+  commented-out code blocks -- every comment-line run found is prose
+  documentation (verified by reading each one).
+
+### Frontend: `TreeNavigator.tsx` and its dedicated CSS removed
+
+- **`frontend/src/panels/TreeNavigator.tsx`** (145 lines) -- deleted. Confirmed
+  via a repo-wide import-resolution scan (every relative `import ... from`
+  in every `.ts`/`.tsx` file, resolved against every other file) that this
+  component was never imported anywhere; the actual tree-selection UI is
+  `app/TreeTabs.tsx`. This file was previously *noted* as dead code in an
+  earlier documentation pass (see `OPEN_QUESTIONS.md`) but left in place
+  because that pass's scope was docs-only; this task explicitly authorizes
+  removing genuinely unused code, so it's removed now.
+- **`frontend/src/styles/canvas-controls.css`** (142 lines) -- deleted in
+  the same change. Despite the filename, every single rule in this file was
+  a `.tree-nav*` class, i.e. it existed only to style the now-deleted
+  component. Removed its `@import` line from `App.css` too.
+- **`frontend/src/styles/responsive.css`** -- removed the one dangling
+  `:root[data-theme="light"] .tree-nav { border-bottom-width: 2px; }` rule
+  (3 lines) that referenced the same now-gone class.
+- Verified no remaining references anywhere (`grep -rn "TreeNavigator\|canvas-controls" frontend/src` returns nothing) and reran the full frontend
+  check suite (see Verification below).
+- The rest of the frontend was scanned the same way as the backend (every
+  exported symbol in every `.ts`/`.tsx` file cross-referenced against the
+  whole frontend corpus) and a comment-block scan; nothing else came up.
+  TypeScript's own `noUnusedLocals`/`noUnusedParameters` (already enabled in
+  `tsconfig.app.json`) already catch unused imports/locals/parameters as
+  compile errors, so `tsc --noEmit` passing clean is itself strong evidence
+  there was nothing else at that level to remove.
+
+### God-file survey and test scripts
+
+See `REFACTOR_PLAN.md` for the full god-file writeup (one frontend split
+performed: `api/types.ts` -> barrel + `api/types/*.ts`; several backend
+splits proposed but not performed, with reasoning for each).
+
+New scripts, matching `dev.sh`'s style (`#!/usr/bin/env bash`, `set -euo
+pipefail`, `cd` to a known directory, then run the real command):
+- **`scripts/test-backend.sh`**: runs `uv run pytest -m "not database"`,
+  then checks whether `.env.test` exists and whether the configured
+  Postgres host:port (parsed from `DATABASE_URL` in `.env.test`, default
+  `localhost:54321` matching `compose.yaml`) is reachable (via `pg_isready`
+  if installed, otherwise a raw `/dev/tcp` probe). If reachable, runs `uv
+  run pytest -m database` too; if not, prints a clear one-line reason
+  (`.env.test` missing, or Postgres unreachable at that host:port) and exits
+  `0` rather than failing. This does not change the database tests'
+  fail-closed fixtures themselves (`tests/conftest.py`,
+  `cdss.testing.database`) -- those still hard-fail if invoked with a
+  misconfigured or unsafe database, by design; the script's job is to avoid
+  invoking them at all when there's clearly no database to talk to.
+- **`frontend/test-frontend.sh`**: runs `pnpm exec tsc --noEmit`, `pnpm run
+  lint`, then `pnpm vitest run`, in that order (fails fast on the cheapest
+  check first).
+- **`scripts/test-all.sh`**: runs the two scripts above in sequence.
+
+All three were made executable (`chmod +x`) and run end to end as part of
+verification below, including deliberately exercising both branches of the
+backend script's database-reachability check (temporarily copying
+`.env.test.example` to `.env.test` to confirm the "present but unreachable"
+path reports the parsed host/port correctly, then removing it again).
+
+### Verification (this pass)
+
+```
+uv run ruff check .
+```
+25 errors, identical (byte-for-byte diff) to the pre-change baseline taken
+at the start of this pass. All are line-length/whitespace/import-order in
+files this pass didn't touch, or in `backups/`/`scratch/` (out of scope).
+
+```
+uv run pyright
+```
+`226 errors, 0 warnings, 0 informations`, identical to baseline (empty
+`diff` of the full output).
+
+```
+uv run pytest -m "not database" -q
+```
+`303 passed, 58 deselected`, identical to baseline.
+
+```
+./scripts/test-backend.sh
+```
+Ran end to end: unit tests pass, then correctly reports `.env.test not
+found` and exits 0 (Docker/Postgres not available in this environment).
+Re-verified the other branch by temporarily creating `.env.test` from the
+example file: correctly parsed `localhost:54321` from `DATABASE_URL` and
+reported "Postgres not reachable at localhost:54321", still exiting 0; the
+temporary file was removed immediately after.
+
+```
+pnpm exec tsc --noEmit
+pnpm run lint
+pnpm vitest run
+```
+(also run together via `./frontend/test-frontend.sh` and again via
+`./scripts/test-all.sh`, both exiting 0). Typecheck and lint clean. Vitest:
+**73 passed, 0 failed** -- note this is different from this pass's own
+frontend baseline (72 passed, 1 known pre-existing failure in
+`fhirBundle.test.ts`'s eclampsia preset test). That failure was fixed by a
+concurrent agent's change to `frontend/src/panels/patientPresets/pregnancy.ts`
+during this session (confirmed via `git diff --stat` showing that file, not
+touched by this pass, changed by 3 lines), not by anything in this pass. Not
+claiming credit for it and didn't touch that file.
+
+No `OPEN_QUESTIONS.md` entry was needed for this pass: every judgment call
+(whether to perform vs. propose each god-file split, what to do with the two
+test-only ORM models) had a clear, defensible answer that's documented
+inline above and in `REFACTOR_PLAN.md`, rather than being a genuine open
+question needing a human decision.
+
+---
+
+# Pass 1: Backend Cleanup Notes
 
 Safe cleanup sweep of `src/cdss` (plus `scripts/` and `tests/`), scoped to dead
 code removal and provably behavior-preserving efficiency/redundancy fixes.

@@ -15,10 +15,6 @@
   border-width: 2px;
 }
 
-:root[data-theme="light"] .tree-nav {
-  border-bottom-width: 2px;
-}
-
 :root[data-theme="light"] .ps-header,
 :root[data-theme="light"] .ps-footer,
 :root[data-theme="light"] .ps-section-header {

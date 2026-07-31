@@ -75,6 +75,21 @@ For Linux commands and troubleshooting, see
 Database-backed tests require isolated test databases. Follow
 [Test database safety](docs/testing.md) before running them.
 
+### Convenience scripts
+
+Instead of remembering the individual commands above, use:
+
+- `./scripts/test-backend.sh` -- runs the fast unit tests, then runs the
+  seeded database tests too if a local Postgres is reachable (checks
+  `.env.test` and the configured host/port); otherwise it prints why and
+  skips that part instead of failing.
+- `./frontend/test-frontend.sh` -- runs the frontend typecheck (`tsc
+  --noEmit`), lint, and `vitest run`.
+- `./scripts/test-all.sh` -- runs both of the above in sequence.
+
+All three exit non-zero if a real check fails, so they're safe to use as a
+pre-push gate.
+
 ## Repository layout
 
 ~~~text
