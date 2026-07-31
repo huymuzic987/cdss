@@ -1,9 +1,10 @@
-"""Test verifying that JSONB trees in backups/DecisionTreeJSONB/ match the trees in backups/seed.sql."""
+"""Verify JSONB trees match the trees in backups/seed.sql."""
 
 import json
 import re
 import uuid
 from pathlib import Path
+
 import pytest
 
 from cdss.domain.decision_tree.contracts import NodeType
@@ -196,7 +197,8 @@ def parse_seed_sql_trees(sql_path: Path = SEED_SQL_PATH) -> dict[str, TreeGraph]
 
     # 4. Parse node_source_references
     pattern_refs = re.compile(
-        r"INSERT INTO public\.node_source_references\s*\([^)]+\)\s*VALUES\s*\((.*?)\)\s*ON CONFLICT",
+        r"INSERT INTO public\.node_source_references\s*\([^)]+\)\s*VALUES\s*"
+        r"\((.*?)\)\s*ON CONFLICT",
         re.DOTALL,
     )
     for m in pattern_refs.finditer(content):
@@ -253,7 +255,7 @@ def parse_seed_sql_trees(sql_path: Path = SEED_SQL_PATH) -> dict[str, TreeGraph]
 
 
 def load_tree_graph_from_jsonb(file_path: Path) -> TreeGraph:
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         data = json.load(f)
 
     tree_data = data["tree"]
@@ -345,7 +347,8 @@ def test_jsonb_trees_match_seed_sql(sql_tree_graphs):
 
     if len(tree_files) != len(sql_tree_graphs):
         discrepancies.append(
-            f"Tree count mismatch: {len(tree_files)} JSONB files vs {len(sql_tree_graphs)} trees in seed.sql"
+            f"Tree count mismatch: {len(tree_files)} JSONB files vs "
+            f"{len(sql_tree_graphs)} trees in seed.sql"
         )
 
     for jsonb_file in sorted(tree_files):
@@ -353,18 +356,22 @@ def test_jsonb_trees_match_seed_sql(sql_tree_graphs):
         tree_key = json_graph.tree.tree_key
 
         if tree_key not in sql_tree_graphs:
-            discrepancies.append(f"Tree key '{tree_key}' from {jsonb_file.name} not found in seed.sql")
+            discrepancies.append(
+                f"Tree key '{tree_key}' from {jsonb_file.name} not found in seed.sql"
+            )
             continue
         sql_graph = sql_tree_graphs[tree_key]
 
         # 1. Compare Tree Metadata
         if json_graph.tree.name_en != sql_graph.tree.name_en:
             discrepancies.append(
-                f"[{tree_key}] name_en mismatch: '{json_graph.tree.name_en}' (JSONB) vs '{sql_graph.tree.name_en}' (SQL)"
+                f"[{tree_key}] name_en mismatch: '{json_graph.tree.name_en}' (JSONB) "
+                f"vs '{sql_graph.tree.name_en}' (SQL)"
             )
         if json_graph.tree.name_vi != sql_graph.tree.name_vi:
             discrepancies.append(
-                f"[{tree_key}] name_vi mismatch: '{json_graph.tree.name_vi}' (JSONB) vs '{sql_graph.tree.name_vi}' (SQL)"
+                f"[{tree_key}] name_vi mismatch: '{json_graph.tree.name_vi}' (JSONB) "
+                f"vs '{sql_graph.tree.name_vi}' (SQL)"
             )
 
         # 2. Compare Nodes Count & Set of Keys
@@ -387,7 +394,10 @@ def test_jsonb_trees_match_seed_sql(sql_tree_graphs):
             sn = sql_graph.nodes_by_key[key]
 
             if jn.node_type != sn.node_type:
-                discrepancies.append(f"[{tree_key}:{key}] node_type mismatch: {jn.node_type} vs {sn.node_type}")
+                discrepancies.append(
+                    f"[{tree_key}:{key}] node_type mismatch: "
+                    f"{jn.node_type} vs {sn.node_type}"
+                )
             if jn.text_en != sn.text_en:
                 discrepancies.append(f"[{tree_key}:{key}] text_en mismatch")
             if jn.text_vi != sn.text_vi:
@@ -405,7 +415,10 @@ def test_jsonb_trees_match_seed_sql(sql_tree_graphs):
             if jn.link_target_node_key != sn.link_target_node_key:
                 discrepancies.append(f"[{tree_key}:{key}] link_target_node_key mismatch")
             if jn.display_order != sn.display_order:
-                discrepancies.append(f"[{tree_key}:{key}] display_order mismatch: {jn.display_order} vs {sn.display_order}")
+                discrepancies.append(
+                    f"[{tree_key}:{key}] display_order mismatch: "
+                    f"{jn.display_order} vs {sn.display_order}"
+                )
 
         # 4. Compare Outgoing Edges
         for key in common_keys:
@@ -431,9 +444,13 @@ def test_jsonb_trees_match_seed_sql(sql_tree_graphs):
             )
             if j_edges != s_edges:
                 discrepancies.append(
-                    f"[{tree_key}:{key}] Outgoing edges mismatch:\n  JSONB: {j_edges}\n  SQL:   {s_edges}"
+                    f"[{tree_key}:{key}] Outgoing edges mismatch:\n"
+                    f"  JSONB: {j_edges}\n  SQL:   {s_edges}"
                 )
 
     if discrepancies:
-        msg = f"Found {len(discrepancies)} discrepancies between JSONB trees and seed.sql:\n" + "\n".join(discrepancies)
+        msg = (
+            f"Found {len(discrepancies)} discrepancies between JSONB trees and seed.sql:\n"
+            + "\n".join(discrepancies)
+        )
         pytest.fail(msg)
