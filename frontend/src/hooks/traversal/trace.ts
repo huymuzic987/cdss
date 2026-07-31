@@ -7,6 +7,7 @@ const EMERGENCY_FLAGS = [
   'is_thrombolysis_candidate', 'has_acute_intracerebral_hemorrhage',
   'has_acute_coronary_syndrome', 'has_acute_cardiogenic_pulmonary_edema',
   'has_acute_aortic_syndrome', 'has_eclampsia_severe_preeclampsia_or_hellp',
+  'has_tma_or_acute_kidney_injury',
 ]
 const CLINICAL_FLAG_SYSTEM = 'http://cdss.local/fhir/CodeSystem/clinical-flag'
 

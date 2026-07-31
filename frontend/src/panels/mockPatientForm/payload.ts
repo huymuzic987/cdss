@@ -105,6 +105,7 @@ function formToFlatInput(form: PatientFormData): JsonObject {
   out['has_pulmonary_edema'] = form.has_pulmonary_edema
   out['has_coagulopathy'] = form.has_coagulopathy
   out['has_hypertensive_crisis'] = form.has_hypertensive_crisis
+  out['has_tma_or_acute_kidney_injury'] = form.has_tma_or_acute_kidney_injury
   out['is_treatment_target_not_achieved'] = form.is_treatment_target_not_achieved
   out['is_postpartum'] = form.is_postpartum
   out['is_breastfeeding'] = form.is_breastfeeding

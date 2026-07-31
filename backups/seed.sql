@@ -5614,7 +5614,7 @@ WHERE e.from_node_id = n.id
       AND node_key = 'T14_ACTION_MALIGNANT_HTN_TMA_AKI'
   );
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-SELECT gen_random_uuid(), src.id, dst.id, 1
+SELECT gen_random_uuid(), src.id, dst.id, 9
 FROM public.decision_nodes src
 JOIN public.decision_nodes dst ON dst.tree_id = src.tree_id
 WHERE src.tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
@@ -5640,5 +5640,89 @@ WHERE src.tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hype
   AND dst.node_key = 'T14_END_MALIGNANT_HTN_TMA_AKI_TARGET'
 ON CONFLICT (from_node_id, traversal_order) DO UPDATE
 SET to_node_id = EXCLUDED.to_node_id;
+
+-- Ensure the scenario selector copies the explicit TMA/AKI finding and that
+-- the malignant branch is selected only when that finding is confirmed.
+UPDATE public.decision_nodes
+SET condition_definition = CASE node_key
+  WHEN 'T14_C_HYPERTENSIVE_ENCEPHALOPATHY' THEN '{"op":"eq","path":"input.has_hypertensive_encephalopathy","value":true}'::jsonb
+  WHEN 'T14_C_AIS_THROMBOLYSIS_CANDIDATE' THEN '{"all":[{"op":"eq","path":"input.has_acute_ischemic_stroke","value":true},{"op":"eq","path":"input.is_thrombolysis_candidate","value":true},{"any":[{"op":"gt","path":"input.current_clinic_sbp","value":185},{"op":"gt","path":"input.current_clinic_dbp","value":110}]}]}'::jsonb
+  WHEN 'T14_C_AIS_SEVERE' THEN '{"all":[{"op":"eq","path":"input.has_acute_ischemic_stroke","value":true},{"any":[{"op":"gt","path":"input.current_clinic_sbp","value":220},{"op":"gt","path":"input.current_clinic_dbp","value":120}]}]}'::jsonb
+  WHEN 'T14_C_ACUTE_ICH' THEN '{"all":[{"op":"eq","path":"input.has_acute_intracerebral_hemorrhage","value":true},{"op":"gt","path":"input.current_clinic_sbp","value":180}]}'::jsonb
+  WHEN 'T14_C_ACS' THEN '{"op":"eq","path":"input.has_acute_coronary_syndrome","value":true}'::jsonb
+  WHEN 'T14_C_ACUTE_CARDIOGENIC_PULMONARY_EDEMA' THEN '{"op":"eq","path":"input.has_acute_cardiogenic_pulmonary_edema","value":true}'::jsonb
+  WHEN 'T14_C_ACUTE_AORTIC_SYNDROME' THEN '{"op":"eq","path":"input.has_acute_aortic_syndrome","value":true}'::jsonb
+  WHEN 'T14_C_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP' THEN '{"op":"eq","path":"input.has_eclampsia_severe_preeclampsia_or_hellp","value":true}'::jsonb
+  ELSE condition_definition
+END
+WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+  AND node_key IN ('T14_C_HYPERTENSIVE_ENCEPHALOPATHY','T14_C_AIS_THROMBOLYSIS_CANDIDATE','T14_C_AIS_SEVERE','T14_C_ACUTE_ICH','T14_C_ACS','T14_C_ACUTE_CARDIOGENIC_PULMONARY_EDEMA','T14_C_ACUTE_AORTIC_SYNDROME','T14_C_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP');
+
+UPDATE public.decision_nodes
+SET condition_definition = '{"op":"eq","path":"input.has_tma_or_acute_kidney_injury","value":true}'::jsonb
+WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+  AND node_key = 'T14_C_MALIGNANT_HTN_TMA_AKI';
+
+UPDATE public.decision_nodes
+SET context_patch = jsonb_set(
+      jsonb_set(context_patch, '{treatment,has_tma_or_acute_kidney_injury}', 'false'::jsonb),
+      '{operations}',
+      (context_patch->'operations') || jsonb_build_array(
+        jsonb_build_object(
+          'op', 'COPY_PATH',
+          'to_path', 'context.treatment.has_tma_or_acute_kidney_injury',
+          'required', false,
+          'from_path', 'input.has_tma_or_acute_kidney_injury'
+        )
+      )
+    )
+WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+  AND node_key = 'T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS'
+  AND NOT (context_patch->'operations' @> '[{"to_path":"context.treatment.has_tma_or_acute_kidney_injury"}]'::jsonb);
+
+-- Route the emergency eclampsia branch into the pregnancy-specific regimen.
+-- The pregnancy tree owns the immediate-target decision and its target-met /
+-- target-not-met transitions; the emergency tree should only select the
+-- clinical scenario and then link into that shared flow.
+DELETE FROM public.decision_edges e
+USING public.decision_nodes n
+WHERE e.from_node_id = n.id
+  AND n.tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+  AND n.node_key = 'T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP';
+
+UPDATE public.decision_nodes
+SET node_type = 'LINK'::public.node_type,
+    text_en = 'Labetalol or Nicardipine plus magnesium sulfate',
+    text_vi = 'Labetalol hoặc Nicardipine phối hợp Magnesium sulfate',
+    condition_definition = NULL,
+    context_patch = NULL,
+    action_payload = NULL,
+    link_target_tree_key = 'hypertension-in-pregnancy',
+    link_target_node_key = 'T12_INF_LABETALOL_MGSO4'
+WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+  AND node_key = 'T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP';
+
+-- The old emergency-local target is retired; the pregnancy tree's
+-- T12_C_IMMEDIATE_TARGET now owns the target confirmation path.
+UPDATE public.decision_nodes
+SET node_type = 'GLOBAL'::public.node_type,
+    condition_definition = NULL,
+    context_patch = NULL,
+    action_payload = NULL,
+    link_target_tree_key = NULL,
+    link_target_node_key = NULL
+WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+  AND node_key = 'T14_END_ECLAMPSIA_TARGET';
+
+-- Ensure the target decision is treated as an interactive checkpoint by
+-- consumers while retaining the existing target-met / target-not-met edges.
+UPDATE public.decision_nodes
+SET action_payload = jsonb_set(
+      COALESCE(action_payload, '{}'::jsonb),
+      '{requires_target_confirmation}',
+      'true'::jsonb
+    )
+WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-in-pregnancy')
+  AND node_key = 'T12_C_IMMEDIATE_TARGET';
 
 COMMIT;

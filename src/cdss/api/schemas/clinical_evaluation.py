@@ -69,6 +69,7 @@ KNOWN_BOOLEAN_FLAGS = frozenset(
         "has_eclampsia_severe_preeclampsia_or_hellp",
         "has_hypertensive_encephalopathy",
         "has_acute_intracerebral_hemorrhage",
+        "has_tma_or_acute_kidney_injury",
         "has_pre_pregnancy_hypertension",
         "has_hypertension_before_week_20",
         "has_hypertension_after_week_20",
@@ -155,6 +156,15 @@ def parse_clinical_bundle(bundle: Any) -> ParsedClinicalBundle:
 
     details: list[JsonObject] = []
     _apply_conditions(by_type.get("Condition", []), patient_ref, runtime, details)
+
+    # Traversal checkpoints may enrich a bundle with a flat boolean mirror
+    # while preserving the canonical Condition resource.  Accept that mirror
+    # on re-evaluation as a compatibility path; the Condition remains the
+    # authoritative FHIR representation for normal requests.
+    for key in KNOWN_BOOLEAN_FLAGS:
+        mirrored = bundle.get(key)
+        if isinstance(mirrored, bool):
+            runtime[key] = mirrored
 
     encounters = by_type.get("Encounter", [])
     encounter_dates: dict[str, str] = {}

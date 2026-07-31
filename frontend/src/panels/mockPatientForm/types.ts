@@ -77,6 +77,7 @@ export interface PatientFormData {
   has_pulmonary_edema: boolean
   has_coagulopathy: boolean
   has_hypertensive_crisis: boolean
+  has_tma_or_acute_kidney_injury: boolean
   is_treatment_target_not_achieved: boolean
   is_postpartum: boolean
   is_breastfeeding: boolean
@@ -153,6 +154,7 @@ export const DEFAULT_FORM: PatientFormData = {
   has_pulmonary_edema: false,
   has_coagulopathy: false,
   has_hypertensive_crisis: false,
+  has_tma_or_acute_kidney_injury: false,
   is_treatment_target_not_achieved: false,
   is_postpartum: false,
   is_breastfeeding: false,
