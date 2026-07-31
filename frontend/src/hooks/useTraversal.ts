@@ -6,8 +6,10 @@ import { useTraversalStore } from './traversal/useTraversalStore'
 export function useTraversal(dependencies: TraversalDependencies) {
   const store = useTraversalStore()
   const runEvaluation = useEvaluationRunner(store, dependencies)
-  const handleStartTraversal = useStandardTraversal(store, dependencies, runEvaluation)
+  const standard = useStandardTraversal(store, dependencies, runEvaluation)
   const manual = useManualTraversal(store, dependencies, runEvaluation)
+  const handleEmergencyScenarioConfirm = (...args: Parameters<typeof manual.handleEmergencyScenarioConfirm>) =>
+    store.manualMode ? manual.handleEmergencyScenarioConfirm(...args) : standard.confirmEmergency(...args)
 
   const handleReset = () => {
     store.runIdRef.current += 1
@@ -17,6 +19,7 @@ export function useTraversal(dependencies: TraversalDependencies) {
     store.setActiveTraversalTreeKey(null)
     store.setShowModal(false)
     store.setShowDrugTolerancePopup(false)
+    store.setCheckpointPending(false)
     dependencies.setFocusNodeKey(null)
     store.setManualMode(false)
     store.setManualStepIndex(0)
@@ -33,8 +36,12 @@ export function useTraversal(dependencies: TraversalDependencies) {
     showModal: store.showModal,
     setShowModal: store.setShowModal,
     showDrugTolerancePopup: store.showDrugTolerancePopup,
-    handleStartTraversal,
+    checkpointKind: store.checkpointKind,
+    checkpointPending: store.checkpointPending,
+    reopenCheckpoint: () => store.setShowDrugTolerancePopup(true),
+    handleStartTraversal: standard.start,
     ...manual,
+    handleEmergencyScenarioConfirm,
     manualMode: store.manualMode,
     manualStepInfo: store.manualMode
       ? { current: store.manualStepIndex, total: store.manualEntriesRef.current.length }

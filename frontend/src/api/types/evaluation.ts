@@ -62,6 +62,17 @@ export interface EvaluationResponse {
   tree_metadata: { tree_key: string; name_en: string; name_vi: string }[]
   started_at: string
   completed_at: string
-  inferred_follow_up_type: 'INITIAL_VISIT' | 'LIFESTYLE_FOLLOW_UP' | 'MEDICATION_FOLLOW_UP' | null
+  inferred_follow_up_type: 'INITIAL_VISIT' | 'LIFESTYLE_FOLLOW_UP' | 'MEDICATION_FOLLOW_UP' | 'PREGNANCY_FOLLOW_UP' | null
   previous_recommended_action_types: string[]
+  pregnancy_follow_up: {
+    episode_id: string
+    encounter_count: number
+    follow_up_number: number
+    phase: 'INITIAL' | 'FOLLOW_UP_1' | 'FOLLOW_UP_2' | 'FOLLOW_UP_3' | 'CONTINUING'
+    minimum_follow_ups_required: number
+    minimum_follow_ups_completed: boolean
+    next_follow_up_number: number | null
+    next_follow_up_required: boolean
+    previous_visit_date: string | null
+  } | null
 }

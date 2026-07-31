@@ -18,10 +18,30 @@ from cdss.domain.decision_tree import (
     select_output_actions,
 )
 from cdss.domain.follow_up import FollowUpType
+from cdss.domain.pregnancy_follow_up import (
+    PregnancyFollowUpPhase,
+    PregnancyFollowUpSummary,
+)
 
 
 class ApiModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
+
+
+class PregnancyFollowUpResponse(ApiModel):
+    episode_id: str
+    encounter_count: int
+    follow_up_number: int
+    phase: PregnancyFollowUpPhase
+    minimum_follow_ups_required: int
+    minimum_follow_ups_completed: bool
+    next_follow_up_number: int | None
+    next_follow_up_required: bool
+    previous_visit_date: str | None
+
+    @classmethod
+    def from_summary(cls, summary: PregnancyFollowUpSummary) -> PregnancyFollowUpResponse:
+        return cls(**summary.__dict__)
 
 
 class EvaluationResponse(ApiModel):
@@ -36,6 +56,7 @@ class EvaluationResponse(ApiModel):
     completed_at: datetime
     inferred_follow_up_type: FollowUpType | None = None
     previous_recommended_action_types: list[str] = Field(default_factory=list)
+    pregnancy_follow_up: PregnancyFollowUpResponse | None = None
 
     @classmethod
     def from_result(
@@ -47,6 +68,7 @@ class EvaluationResponse(ApiModel):
         previous_recommended_action_types: list[str] | None = None,
         input_snapshot: JsonObject | None = None,
         actions: list[ExecutedAction] | None = None,
+        pregnancy_follow_up: PregnancyFollowUpSummary | None = None,
     ) -> EvaluationResponse:
         return cls(
             status=result.status,
@@ -64,6 +86,11 @@ class EvaluationResponse(ApiModel):
             completed_at=result.completed_at,
             inferred_follow_up_type=inferred_follow_up_type,
             previous_recommended_action_types=previous_recommended_action_types or [],
+            pregnancy_follow_up=(
+                PregnancyFollowUpResponse.from_summary(pregnancy_follow_up)
+                if pregnancy_follow_up
+                else None
+            ),
         )
 
 

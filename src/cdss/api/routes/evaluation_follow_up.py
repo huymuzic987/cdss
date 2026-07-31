@@ -5,7 +5,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from cdss.api.dependencies import get_medicine_repository, get_tree_graph_repository
-from cdss.api.routes.evaluation_presentation import restore_raw_bundle, select_presentation_actions
+from cdss.api.routes.evaluation_presentation import (
+    enrich_inferred_medications,
+    restore_raw_bundle,
+    select_presentation_actions,
+)
 from cdss.api.schemas import EvaluationErrorResponse, EvaluationResponse
 from cdss.api.schemas.clinical_evaluation import parse_clinical_bundle
 from cdss.api.schemas.clinical_presentation import attach_terminal_presentation
@@ -93,6 +97,9 @@ def evaluate_follow_up(
         result,
         repository,
         debug_output=settings.debug_output,
+    )
+    selected_actions = enrich_inferred_medications(
+        selected_actions, result, repository, medicine_repository
     )
     presented_actions = [
         presented

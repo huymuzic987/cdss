@@ -7,6 +7,7 @@ import { useSidebarResize } from './hooks/useSidebarResize'
 import { useTraversal } from './hooks/useTraversal'
 import { useTreeGraphs } from './hooks/useTreeGraphs'
 import { DrugToleranceCheckbox } from './panels/DrugToleranceCheckbox'
+import { EmergencyScenarioCheckbox } from './panels/EmergencyScenarioCheckbox'
 import { TraversalResultModal } from './panels/TraversalResultModal'
 import './App.css'
 
@@ -86,15 +87,19 @@ function App() {
         <TraversalResultModal
           result={traversal.modalResult}
           partial={traversal.modalPartial}
+          graphs={graphs.graphCache}
           onClose={() => traversal.setShowModal(false)}
         />
       )}
       {traversal.showDrugTolerancePopup && (
-        <DrugToleranceCheckbox
-          onConfirm={traversal.handleDrugToleranceConfirm}
-          onCancel={traversal.handleDrugToleranceCancel}
-          onChange={traversal.handleDrugToleranceChange}
-        />
+        traversal.checkpointKind === 'emergency'
+          ? <EmergencyScenarioCheckbox onConfirm={traversal.handleEmergencyScenarioConfirm} onCancel={traversal.handleDrugToleranceCancel} />
+          : <DrugToleranceCheckbox onConfirm={traversal.handleDrugToleranceConfirm} onCancel={traversal.handleDrugToleranceCancel} onChange={traversal.handleDrugToleranceChange} />
+      )}
+      {traversal.checkpointPending && !traversal.showDrugTolerancePopup && traversal.traversalState === 'running' && (
+        <button className="checkpoint-reopen" type="button" onClick={traversal.reopenCheckpoint}>
+          Reopen checkpoint
+        </button>
       )}
     </div>
   )

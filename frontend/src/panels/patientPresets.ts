@@ -4,7 +4,10 @@ import { cardioModifierPresets } from './patientPresets/modifiersCardio'
 import { demographicPresets } from './patientPresets/demographic'
 import { diagnosisPresets } from './patientPresets/diagnosis'
 import { followUpPresets } from './patientPresets/followUp'
-import { pregnancyPresets } from './patientPresets/pregnancy'
+import {
+  pregnancyFollowUpPresets,
+  pregnancyPresets,
+} from './patientPresets/pregnancy'
 import { renalModifierPresets } from './patientPresets/modifiersRenal'
 import type { PatientPreset, PatientPresetDefinition } from './patientPresets/shared'
 
@@ -17,9 +20,14 @@ const definitions: PatientPresetDefinition[] = [
   ...cardioModifierPresets,
   ...renalModifierPresets,
   ...pregnancyPresets,
+  ...pregnancyFollowUpPresets,
 ]
 
-export const PATIENT_PRESETS: PatientPreset[] = definitions.map(({ data, ...preset }) => ({
-  ...preset,
-  bundle: formToPayload({ ...DEFAULT_FORM, ...data }),
-}))
+export const PATIENT_PRESETS: PatientPreset[] = definitions.map((definition) => {
+  if ('bundle' in definition) return definition
+  const { data, ...preset } = definition
+  return {
+    ...preset,
+    bundle: formToPayload({ ...DEFAULT_FORM, ...data }),
+  }
+})

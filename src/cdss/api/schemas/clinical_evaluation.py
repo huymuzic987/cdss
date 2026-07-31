@@ -105,6 +105,9 @@ class ParsedClinicalBundle:
     runtime_input: JsonObject
     clinical_details: tuple[JsonObject, ...]
     trigger_evidence: tuple[JsonObject, ...]
+    patient_id: str
+    encounter_ids: tuple[str, ...]
+    encounter_dates: tuple[str, ...]
 
 
 def parse_clinical_bundle(bundle: Any) -> ParsedClinicalBundle:
@@ -295,7 +298,28 @@ def parse_clinical_bundle(bundle: Any) -> ParsedClinicalBundle:
     trigger = _current_bp_evidence(runtime)
     details.extend(labs)
     _apply_medications(by_type.get("MedicationRequest", []), patient_ref, encounter_dates, details)
-    return ParsedClinicalBundle(deepcopy(dict(bundle)), runtime, tuple(details), tuple(trigger))
+    declared_follow_up_number = runtime.get("pregnancy_follow_up_number")
+    derived_follow_up_number = max(0, len(ordered) - 1)
+    if declared_follow_up_number is not None and (
+        not isinstance(declared_follow_up_number, int)
+        or isinstance(declared_follow_up_number, bool)
+        or declared_follow_up_number < 0
+        or declared_follow_up_number != derived_follow_up_number
+    ):
+        _invalid(
+            "pregnancy_follow_up_number must be a non-negative integer matching "
+            "the number of prior Encounters"
+        )
+
+    return ParsedClinicalBundle(
+        deepcopy(dict(bundle)),
+        runtime,
+        tuple(details),
+        tuple(trigger),
+        patient_id,
+        tuple(encounter_id for encounter_id, _ in ordered),
+        tuple(started for _, started in ordered),
+    )
 
 
 def _apply_bp_pair(

@@ -6,7 +6,11 @@ from fastapi import APIRouter, Depends
 
 from cdss.api.dependencies import get_medicine_repository, get_tree_graph_repository
 from cdss.api.routes import evaluation_follow_up
-from cdss.api.routes.evaluation_presentation import restore_raw_bundle, select_presentation_actions
+from cdss.api.routes.evaluation_presentation import (
+    enrich_inferred_medications,
+    restore_raw_bundle,
+    select_presentation_actions,
+)
 from cdss.api.schemas import EvaluationErrorResponse, EvaluationResponse
 from cdss.api.schemas.clinical_evaluation import parse_clinical_bundle
 from cdss.api.schemas.clinical_presentation import attach_terminal_presentation
@@ -26,6 +30,11 @@ from cdss.domain.follow_up import (
     build_previous_visit_input,
     has_complete_previous_bp,
     infer_follow_up,
+)
+from cdss.domain.pregnancy_follow_up import (
+    PREGNANCY_TREE_KEY,
+    pregnancy_follow_up_entry_node,
+    summarize_pregnancy_follow_up,
 )
 
 router = APIRouter(tags=["evaluation"])
@@ -55,6 +64,7 @@ def evaluate(
     runtime_input = parsed.runtime_input
     inference = None
     start_tree_key = _INITIAL_VISIT_TREE_KEY
+    start_node_key = None
 
     if has_complete_previous_bp(runtime_input):
         try:
@@ -79,13 +89,20 @@ def evaluate(
                 }
             )
         runtime_input = build_current_visit_input(runtime_input, inference)
-        if inference.follow_up_type != FollowUpType.INITIAL_VISIT:
+        if inference.follow_up_type in {
+            FollowUpType.LIFESTYLE_FOLLOW_UP,
+            FollowUpType.MEDICATION_FOLLOW_UP,
+        }:
             start_tree_key = _MEDICATION_FOLLOW_UP_TREE_KEY
+        elif inference.follow_up_type == FollowUpType.PREGNANCY_FOLLOW_UP:
+            start_tree_key = PREGNANCY_TREE_KEY
+            start_node_key = pregnancy_follow_up_entry_node(runtime_input)
 
     try:
         result = walk_tree(
             repository.get_tree(start_tree_key),
             runtime_input,
+            start_node_key=start_node_key,
             max_steps=settings.cdss_max_steps,
             repository=repository,
             medicine_repository=medicine_repository,
@@ -116,6 +133,9 @@ def evaluate(
                     payload={},
                 )
             ]
+    selected_actions = enrich_inferred_medications(
+        selected_actions, result, repository, medicine_repository
+    )
     presented_actions = [
         presented
         for action in selected_actions
@@ -125,6 +145,13 @@ def evaluate(
             result.references,
         )
     ]
+    pregnancy_follow_up = summarize_pregnancy_follow_up(
+        runtime_input,
+        patient_id=parsed.patient_id,
+        encounter_ids=parsed.encounter_ids,
+        encounter_dates=parsed.encounter_dates,
+        actions=result.actions,
+    )
     return EvaluationResponse.from_result(
         result,
         debug_output=settings.debug_output,
@@ -134,4 +161,5 @@ def evaluate(
         previous_recommended_action_types=(
             list(inference.previous_action_types) if inference else None
         ),
+        pregnancy_follow_up=pregnancy_follow_up,
     )

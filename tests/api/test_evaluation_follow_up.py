@@ -29,6 +29,8 @@ def test_two_encounters_map_immediately_previous_and_current_readings() -> None:
         "previous_reading",
         "historical_encounter",
     }
+    assert parsed.patient_id == "follow-up-patient"
+    assert parsed.encounter_ids == ("previous", "current")
 
 
 def test_longitudinal_bundle_requires_complete_latest_bp_pair() -> None:
@@ -41,6 +43,22 @@ def test_longitudinal_bundle_requires_complete_latest_bp_pair() -> None:
         parse_clinical_bundle(bundle)
 
     assert "current_clinic blood pressure" in exc_info.value.details["reason"]
+
+
+def test_declared_pregnancy_follow_up_number_must_match_prior_encounters() -> None:
+    bundle = _longitudinal_bundle()
+    patient = bundle["entry"][0]["resource"]
+    patient["extension"] = [
+        {
+            "url": ("http://cdss.local/fhir/StructureDefinition/input/pregnancy_follow_up_number"),
+            "valueInteger": 3,
+        }
+    ]
+
+    with pytest.raises(InvalidFhirInput) as exc_info:
+        parse_clinical_bundle(bundle)
+
+    assert "pregnancy_follow_up_number" in exc_info.value.details["reason"]
 
 
 def _longitudinal_bundle() -> dict:

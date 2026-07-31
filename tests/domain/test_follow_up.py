@@ -10,9 +10,9 @@ from cdss.domain.follow_up import (
 )
 
 
-def _action(**payload: Any) -> ExecutedAction:
+def _action(*, tree_key: str = "test-tree", **payload: Any) -> ExecutedAction:
     return ExecutedAction(
-        tree_key="test-tree",
+        tree_key=tree_key,
         node_key="test-action",
         node_type=NodeType.ACTION,
         text_en="test",
@@ -94,3 +94,24 @@ def test_lifestyle_recommendation_builds_lifestyle_follow_up_input() -> None:
     assert current["is_medication_follow_up"] is False
     assert current["pre_lifestyle_clinic_sbp"] == 130
     assert current["pre_lifestyle_clinic_dbp"] == 85
+
+
+def test_pregnancy_recommendation_keeps_follow_up_on_initial_tree() -> None:
+    inference = infer_follow_up(
+        _result(
+            [
+                _action(
+                    tree_key="hypertension-in-pregnancy",
+                    action_type="MAINTAIN_CURRENT_REGIMEN",
+                    follow_up_required=True,
+                )
+            ],
+            {},
+        )
+    )
+
+    assert inference.follow_up_type == FollowUpType.PREGNANCY_FOLLOW_UP
+    current = build_current_visit_input({"previous_sbp": 140, "previous_dbp": 85}, inference)
+    assert current["is_pregnancy_follow_up"] is True
+    assert current["is_lifestyle_follow_up"] is False
+    assert current["is_medication_follow_up"] is False

@@ -260,6 +260,7 @@ def active_bp_target() -> dict[str, Any]:
 def test_tree_1_normal_bp_route(seeded_trees: SeededTrees) -> None:
     runtime_input = {
         "is_pregnant": False,
+        "is_postpartum": False,
         "current_clinic_sbp": 120,
         "current_clinic_dbp": 80,
     }

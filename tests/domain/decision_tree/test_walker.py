@@ -37,6 +37,32 @@ def test_default_maximum_step_limit_is_300() -> None:
     assert DEFAULT_MAX_STEPS == 300
 
 
+def test_explicit_start_node_resumes_inside_a_valid_graph() -> None:
+    start = _node(1, "start", NodeType.START)
+    first = _node(2, "first", NodeType.ACTION)
+    resumed = _node(3, "resumed", NodeType.ACTION)
+    graph = _graph(
+        [start, first, resumed],
+        [_edge(10, start, first), _edge(11, first, resumed)],
+        tree_key="hypertension-in-pregnancy",
+    )
+
+    result = walk_tree(graph, {}, start_node_key="resumed")
+
+    assert _entered_node_keys(result.trace) == ["resumed"]
+
+
+def test_explicit_start_node_must_exist() -> None:
+    start = _node(1, "start", NodeType.START)
+    end = _node(2, "end", NodeType.END)
+    graph = _graph([start, end], [_edge(10, start, end)])
+
+    with pytest.raises(InvalidTreeStructure) as exc_info:
+        walk_tree(graph, {}, start_node_key="missing")
+
+    assert exc_info.value.details["reason"] == "requested_start_node_missing"
+
+
 def _node(
     serial: int,
     node_key: str,

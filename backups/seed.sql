@@ -1783,9 +1783,14 @@ VALUES ('1cd09c61-8f8a-ef32-ef53-eb47481b78c8', (SELECT id FROM public.decision_
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 
--- ==========================================================================
+-- ========================================================================
 -- 3. DECISION EDGES (428 edges)
--- ==========================================================================
+-- ========================================================================
+-- Rebuild the edge graph deterministically on every seed run. The edge table
+-- has independent uniqueness constraints on (from,to) and (from,traversal),
+-- so replaying a partially normalized graph can fail before corrections run.
+DELETE FROM public.decision_edges;
+
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('e79a8a91-b8d2-439b-a27d-6023d1e66ce6', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'drug-combination' AND n.node_key = 'T6_ACTION_ADJUST_REGIMEN'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'drug-combination' AND n.node_key = 'T6_INF_DETERMINE_CONTRAINDICATIONS'), 1)
 ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
@@ -3005,17 +3010,31 @@ INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order
 VALUES ('dccabbf2-fbc6-4f16-b5f4-05aa5140caf3', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-type-2-diabetes' AND n.node_key = 'T8_START_BP_TARGET_STATUS'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-type-2-diabetes' AND n.node_key = 'T8_C_ABOVE_TARGET'), 2)
 ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
 
+-- The emergency graph is normalized again below.  Remove any stale route
+-- before replaying this legacy seed row so reruns cannot collide on traversal 1.
+DELETE FROM public.decision_edges
+WHERE from_node_id = (
+  SELECT n.id FROM public.decision_nodes n
+  JOIN public.decision_trees t ON t.id = n.tree_id
+  WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_ACTION_ACS'
+);
+
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
-VALUES ('bf32d3c0-b148-453a-83db-8a52387bf926', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_ACTION_ACS'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_LINK_CORONARY_ARTERY_DISEASE'), 1)
-ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
+SELECT 'bf32d3c0-b148-453a-83db-8a52387bf926'::uuid, src.id, dst.id, 1
+FROM public.decision_nodes src
+JOIN public.decision_nodes dst ON dst.tree_id = src.tree_id
+WHERE src.tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+  AND src.node_key = 'T14_ACTION_ACS'
+  AND dst.node_key = 'T14_LINK_CORONARY_ARTERY_DISEASE'
+ON CONFLICT (from_node_id, traversal_order) DO UPDATE SET to_node_id = EXCLUDED.to_node_id;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('57e60c63-253d-4a73-a989-2e9cc2a5f219', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_LINK_HEART_FAILURE'), 1)
-ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
+ON CONFLICT (from_node_id, traversal_order) DO UPDATE SET to_node_id = EXCLUDED.to_node_id;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('ce6d2c2e-7dc8-490d-a51c-c931a5865a7a', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_ACTION_ACUTE_ICH'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_END_REFER_STROKE_MANAGEMENT'), 1)
-ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
+ON CONFLICT (from_node_id, traversal_order) DO UPDATE SET to_node_id = EXCLUDED.to_node_id;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('5026ca45-6bc9-4df8-a734-bf71dfbf41c3', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_ACTION_ADMIT_AND_DETERMINE_TARGET_ORGAN'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS'), 1)
@@ -3023,23 +3042,23 @@ ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('00617851-dde0-4aa9-a7ee-a46cc340cb70', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_ACTION_AIS_SEVERE'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_END_REFER_STROKE_MANAGEMENT'), 1)
-ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
+ON CONFLICT (from_node_id, traversal_order) DO UPDATE SET to_node_id = EXCLUDED.to_node_id;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('c2b1509d-a3d1-4ef6-833e-94f458e9eac0', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_END_REFER_STROKE_MANAGEMENT'), 1)
-ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
+ON CONFLICT (from_node_id, traversal_order) DO UPDATE SET to_node_id = EXCLUDED.to_node_id;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('bd1079ee-fd78-4366-8a55-8a12e84ed768', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_LINK_PREGNANCY'), 1)
-ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
+ON CONFLICT (from_node_id, traversal_order) DO UPDATE SET to_node_id = EXCLUDED.to_node_id;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('49078b31-0fab-4d1b-9fc7-48cf0a5d907f', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_END_REFER_STROKE_MANAGEMENT'), 1)
-ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
+ON CONFLICT (from_node_id, traversal_order) DO UPDATE SET to_node_id = EXCLUDED.to_node_id;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('0a1bef3f-d516-4ce1-9835-17af563a176f', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_ACTION_MALIGNANT_HTN_TMA_AKI'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_END_URGENT_HYPERTENSION'), 1)
-ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
+ON CONFLICT (from_node_id, traversal_order) DO UPDATE SET to_node_id = EXCLUDED.to_node_id;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('1e7a271d-f69d-4197-9108-91958b67cb40', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_C_ACS'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertensive-emergency' AND n.node_key = 'T14_ACTION_ACS'), 1)
@@ -5375,5 +5394,251 @@ WHERE tree_id = (
     'T12_INF_NIFEDIPINE_OR_NICARDIPINE',
     'T12_INF_NICARDIPINE_MGSO4'
   );
+
+-- Emergency/resistant graph normalization: therapeutic drug statements are
+-- inference nodes and target thresholds are terminal end nodes.  Keep the
+-- original node keys and source references where possible, while replacing
+-- obsolete cross-tree links with local terminal recommendations.
+UPDATE public.decision_nodes
+SET node_type = 'INFERENCE'::public.node_type,
+    text_en = CASE node_key
+      WHEN 'T13_A_ALTERNATIVES' THEN 'Add K-sparing D, Increase D dose, or Add Bisoprolol/Doxazosin'
+      WHEN 'T13_A_ADD_SPIRONOLACTONE' THEN 'Add low-dose Spironolactone to current regimen'
+      WHEN 'T13_A_ADD_MRA' THEN 'Combine A + C + D and MRA'
+      WHEN 'T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA' THEN 'Labetalol or Metoprolol'
+      WHEN 'T14_ACTION_ACS' THEN 'Primary Nitroprusside or Nitroglycerine (with a loop diuretic); alternative Urapidil (with a loop diuretic)'
+      WHEN 'T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP' THEN 'Labetalol or Nicardipine plus magnesium sulfate'
+      WHEN 'T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE' THEN 'Primary Labetalol/Nicardipine; alternative Urapidil'
+      WHEN 'T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY' THEN 'Primary Labetalol/Nicardipine; alternative Nitroprusside'
+      WHEN 'T14_ACTION_AIS_SEVERE' THEN 'Primary Labetalol/Nicardipine; alternative Nitroprusside'
+      WHEN 'T14_ACTION_ACUTE_ICH' THEN 'Primary Nitroglycerine/Labetalol; alternative Urapidil'
+      ELSE text_en
+    END,
+    text_vi = CASE node_key
+      WHEN 'T13_A_ALTERNATIVES' THEN 'Thêm nhóm D giữ kali, tăng liều nhóm D, hoặc thêm Bisoprolol/Doxazosin'
+      WHEN 'T13_A_ADD_SPIRONOLACTONE' THEN 'Thêm Spironolactone liều thấp kết hợp với liều thuốc điều trị hiện có'
+      WHEN 'T13_A_ADD_MRA' THEN 'Phối hợp 3 nhóm thuốc A + C + D và MRA'
+      WHEN 'T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA' THEN 'Labetalol hoặc Metoprolol'
+      WHEN 'T14_ACTION_ACS' THEN 'Ưu tiên Nitroprusside hoặc Nitroglycerine (kèm lợi tiểu quai); thay thế Urapidil (kèm lợi tiểu quai)'
+      WHEN 'T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP' THEN 'Labetalol hoặc Nicardipine phối hợp Magnesium sulfate'
+      WHEN 'T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE' THEN 'Ưu tiên Labetalol/Nicardipine; thay thế Urapidil'
+      WHEN 'T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY' THEN 'Ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside'
+      WHEN 'T14_ACTION_AIS_SEVERE' THEN 'Ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside'
+      WHEN 'T14_ACTION_ACUTE_ICH' THEN 'Ưu tiên Nitroglycerine/Labetalol; thay thế Urapidil'
+      ELSE text_vi
+    END
+WHERE node_key IN (
+  'T13_A_ALTERNATIVES', 'T13_A_ADD_SPIRONOLACTONE', 'T13_A_ADD_MRA',
+  'T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA', 'T14_ACTION_ACS',
+  'T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP',
+  'T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE', 'T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY',
+  'T14_ACTION_AIS_SEVERE', 'T14_ACTION_ACUTE_ICH'
+);
+
+UPDATE public.decision_nodes
+SET text_en = 'Target SBP <120 mmHg and heart rate <60 bpm, immediate',
+    text_vi = 'Mục tiêu HATT <120 mmHg và nhịp tim <60 lần/phút, ngay lập tức'
+WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+  AND node_key = 'T14_END_ACUTE_AORTIC_SYNDROME';
+
+INSERT INTO public.decision_nodes
+  (id, tree_id, node_key, node_type, text_en, text_vi, action_payload, display_order, created_at, updated_at)
+SELECT gen_random_uuid(), id, 'T14_INF_ACUTE_AORTIC_SYNDROME', 'INFERENCE'::public.node_type,
+  'Esmolol plus Nitroprusside, Nitroglycerine, or Nicardipine',
+  'Esmolol phối hợp Nitroprusside, Nitroglycerine, hoặc Nicardipine',
+  '{"action_type":"ACUTE_AORTIC_SYNDROME_DRUGS"}'::jsonb, 22,
+  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM public.decision_trees
+WHERE tree_key = 'hypertensive-emergency'
+ON CONFLICT (tree_id, node_key) DO UPDATE SET node_type = EXCLUDED.node_type,
+  text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, action_payload = EXCLUDED.action_payload;
+
+-- Remove obsolete cross-tree links and the shared stroke terminal.
+DELETE FROM public.decision_edges e
+USING public.decision_nodes n
+WHERE e.from_node_id = n.id
+  AND n.node_key IN ('T14_ACTION_ACS', 'T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA',
+                     'T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP',
+                     'T14_ACTION_ACUTE_ICH', 'T14_ACTION_AIS_SEVERE',
+                     'T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE',
+                     'T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY');
+DELETE FROM public.decision_edges e
+USING public.decision_nodes n
+WHERE e.to_node_id = n.id
+  AND n.node_key IN ('T14_LINK_HEART_FAILURE', 'T14_LINK_CORONARY_ARTERY_DISEASE',
+                     'T14_LINK_PREGNANCY', 'T14_END_REFER_STROKE_MANAGEMENT');
+DELETE FROM public.node_source_references r
+USING public.decision_nodes n
+WHERE r.node_id = n.id
+  AND n.node_key IN ('T14_LINK_HEART_FAILURE', 'T14_LINK_CORONARY_ARTERY_DISEASE',
+                     'T14_LINK_PREGNANCY', 'T14_END_REFER_STROKE_MANAGEMENT');
+-- Retain retired rows as GLOBAL metadata so historical references remain
+-- foreign-key safe, while they are excluded from executable reachability.
+UPDATE public.decision_nodes
+SET node_type = 'GLOBAL'::public.node_type,
+    link_target_tree_key = NULL,
+    link_target_node_key = NULL,
+    condition_definition = NULL,
+    action_payload = NULL
+WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+  AND node_key IN ('T14_LINK_HEART_FAILURE', 'T14_LINK_CORONARY_ARTERY_DISEASE',
+                   'T14_LINK_PREGNANCY', 'T14_END_REFER_STROKE_MANAGEMENT');
+
+-- Create one terminal target node for every emergency drug inference.
+INSERT INTO public.decision_nodes
+  (id, tree_id, node_key, node_type, text_en, text_vi, action_payload, display_order, created_at, updated_at)
+SELECT gen_random_uuid(), id, v.node_key, 'END'::public.node_type, v.text_en, v.text_vi,
+       v.payload::jsonb, v.display_order, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM public.decision_trees t
+CROSS JOIN (VALUES
+  ('T14_END_ACUTE_CARDIOGENIC_PULMONARY_EDEMA_TARGET', 'Target SBP <140 mmHg, immediate', 'Mục tiêu HATT <140 mmHg, ngay lập tức', '{"action_type":"ACUTE_CARDIOGENIC_PULMONARY_EDEMA_TARGET","target_timing":"IMMEDIATE","target_sbp_upper_mmhg":140}', 20),
+  ('T14_END_ACS_TARGET', 'Target SBP <140 mmHg, immediate', 'Mục tiêu HATT <140 mmHg, ngay lập tức', '{"action_type":"ACUTE_CORONARY_SYNDROME_TARGET","target_timing":"IMMEDIATE","target_sbp_upper_mmhg":140}', 20),
+  ('T14_END_ECLAMPSIA_TARGET', 'Target SBP <160 mmHg and DBP <105 mmHg, immediate', 'Mục tiêu HATT <160 mmHg và HATTr <105 mmHg, ngay lập tức', '{"action_type":"ECLAMPSIA_TARGET","target_timing":"IMMEDIATE","target_sbp_upper_mmhg":160,"target_dbp_upper_mmhg":105}', 25),
+  ('T14_END_AIS_THROMBOLYSIS_TARGET', 'Target MAP -15%, within 1 hour', 'Mục tiêu MAP giảm 15%, trong 1 giờ', '{"action_type":"AIS_THROMBOLYSIS_TARGET","target_timing":"WITHIN_1_HOUR","target_map_reduction_percent":15}', 10),
+  ('T14_END_HYPERTENSIVE_ENCEPHALOPATHY_TARGET', 'Target MAP -20% to -25%, immediate', 'Mục tiêu MAP giảm 20-25%, ngay lập tức', '{"action_type":"HYPERTENSIVE_ENCEPHALOPATHY_TARGET","target_timing":"IMMEDIATE","target_map_reduction_percent_min":20,"target_map_reduction_percent_max":25}', 8),
+  ('T14_END_AIS_SEVERE_TARGET', 'Target MAP -15%, within 1 hour', 'Mục tiêu MAP giảm 15%, trong 1 giờ', '{"action_type":"AIS_TARGET","target_timing":"WITHIN_1_HOUR","target_map_reduction_percent":15}', 12),
+  ('T14_END_ACUTE_ICH_TARGET', 'Target 130<SBP<180 mmHg', 'Mục tiêu 130<HATT<180 mmHg', '{"action_type":"ACUTE_INTRACEREBRAL_HEMORRHAGE_TARGET","target_sbp_lower_mmhg":130,"target_sbp_upper_mmhg":180}', 14)
+) AS v(node_key, text_en, text_vi, payload, display_order)
+WHERE t.tree_key = 'hypertensive-emergency'
+ON CONFLICT (tree_id, node_key) DO UPDATE SET node_type = EXCLUDED.node_type,
+  text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, action_payload = EXCLUDED.action_payload;
+
+-- Rewire each condition through its drug inference to its target terminal.
+INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
+SELECT gen_random_uuid(), src.id, dst.id, 1
+FROM public.decision_nodes src
+JOIN public.decision_nodes dst ON dst.tree_id = src.tree_id
+  AND dst.node_key = CASE src.node_key
+    WHEN 'T14_C_ACUTE_CARDIOGENIC_PULMONARY_EDEMA' THEN 'T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA'
+    WHEN 'T14_C_ACS' THEN 'T14_ACTION_ACS'
+    WHEN 'T14_C_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP' THEN 'T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP'
+    WHEN 'T14_C_AIS_THROMBOLYSIS_CANDIDATE' THEN 'T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE'
+    WHEN 'T14_C_HYPERTENSIVE_ENCEPHALOPATHY' THEN 'T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY'
+    WHEN 'T14_C_AIS_SEVERE' THEN 'T14_ACTION_AIS_SEVERE'
+    WHEN 'T14_C_ACUTE_ICH' THEN 'T14_ACTION_ACUTE_ICH'
+  END
+WHERE src.tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+  AND src.node_key IN ('T14_C_ACUTE_CARDIOGENIC_PULMONARY_EDEMA', 'T14_C_ACS',
+    'T14_C_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP', 'T14_C_AIS_THROMBOLYSIS_CANDIDATE',
+    'T14_C_HYPERTENSIVE_ENCEPHALOPATHY', 'T14_C_AIS_SEVERE', 'T14_C_ACUTE_ICH')
+ON CONFLICT (from_node_id, traversal_order) DO UPDATE
+SET to_node_id = EXCLUDED.to_node_id;
+
+INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
+SELECT gen_random_uuid(), src.id, dst.id, 1
+FROM public.decision_nodes src
+JOIN public.decision_nodes dst ON dst.tree_id = src.tree_id
+  AND dst.node_key = CASE src.node_key
+    WHEN 'T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA' THEN 'T14_END_ACUTE_CARDIOGENIC_PULMONARY_EDEMA_TARGET'
+    WHEN 'T14_ACTION_ACS' THEN 'T14_END_ACS_TARGET'
+    WHEN 'T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP' THEN 'T14_END_ECLAMPSIA_TARGET'
+    WHEN 'T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE' THEN 'T14_END_AIS_THROMBOLYSIS_TARGET'
+    WHEN 'T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY' THEN 'T14_END_HYPERTENSIVE_ENCEPHALOPATHY_TARGET'
+    WHEN 'T14_ACTION_AIS_SEVERE' THEN 'T14_END_AIS_SEVERE_TARGET'
+    WHEN 'T14_ACTION_ACUTE_ICH' THEN 'T14_END_ACUTE_ICH_TARGET'
+  END
+WHERE src.tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+  AND src.node_key IN ('T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA', 'T14_ACTION_ACS',
+    'T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP', 'T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE',
+    'T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY', 'T14_ACTION_AIS_SEVERE', 'T14_ACTION_ACUTE_ICH')
+ON CONFLICT (from_node_id, traversal_order) DO UPDATE
+SET to_node_id = EXCLUDED.to_node_id;
+
+DELETE FROM public.decision_edges e
+USING public.decision_nodes n
+WHERE e.from_node_id = n.id
+  AND n.node_key = 'T14_C_ACUTE_AORTIC_SYNDROME';
+INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
+SELECT gen_random_uuid(), c.id, i.id, 1
+FROM public.decision_nodes c JOIN public.decision_nodes i ON i.tree_id = c.tree_id
+WHERE c.node_key = 'T14_C_ACUTE_AORTIC_SYNDROME'
+  AND i.node_key = 'T14_INF_ACUTE_AORTIC_SYNDROME'
+  AND c.tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+ON CONFLICT (from_node_id, traversal_order) DO UPDATE
+SET to_node_id = EXCLUDED.to_node_id;
+INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
+SELECT gen_random_uuid(), i.id, e.id, 1
+FROM public.decision_nodes i JOIN public.decision_nodes e ON e.tree_id = i.tree_id
+WHERE i.node_key = 'T14_INF_ACUTE_AORTIC_SYNDROME'
+  AND e.node_key = 'T14_END_ACUTE_AORTIC_SYNDROME'
+  AND i.tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+ON CONFLICT (from_node_id, traversal_order) DO UPDATE
+SET to_node_id = EXCLUDED.to_node_id;
+
+-- Split the malignant/TMA/AKI fallback into condition, drug inference, and
+-- target terminal.  The existing urgent-hypertension terminal remains the
+-- separate no-target-organ-damage branch.
+UPDATE public.decision_nodes
+SET node_type = 'INFERENCE'::public.node_type,
+    text_en = 'Primary Labetalol/Nicardipine; alternative Nitroprusside/Urapidil',
+    text_vi = 'Ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside/Urapidil'
+WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+  AND node_key = 'T14_ACTION_MALIGNANT_HTN_TMA_AKI';
+
+INSERT INTO public.decision_nodes
+  (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, display_order, created_at, updated_at)
+SELECT gen_random_uuid(), id, 'T14_C_MALIGNANT_HTN_TMA_AKI', 'CONDITION'::public.node_type,
+  'Hypertensive emergency with or without TMA/acute kidney injury',
+  'THA cấp cứu có hoặc không có TMA/Suy thận cấp',
+  '{"op":"eq","path":"input.has_target_organ_damage","value":true}'::jsonb,
+  26, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM public.decision_trees
+WHERE tree_key = 'hypertensive-emergency'
+ON CONFLICT (tree_id, node_key) DO UPDATE SET node_type = EXCLUDED.node_type,
+  text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi,
+  condition_definition = EXCLUDED.condition_definition;
+
+INSERT INTO public.decision_nodes
+  (id, tree_id, node_key, node_type, text_en, text_vi, action_payload, display_order, created_at, updated_at)
+SELECT gen_random_uuid(), id, 'T14_END_MALIGNANT_HTN_TMA_AKI_TARGET', 'END'::public.node_type,
+  'Target MAP -20% to -25%, within hours',
+  'Mục tiêu MAP giảm 20-25%, trong vài giờ',
+  '{"action_type":"MALIGNANT_HYPERTENSION_TMA_AKI_TARGET","target_timing":"WITHIN_HOURS","target_map_reduction_percent_min":20,"target_map_reduction_percent_max":25}'::jsonb,
+  27, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM public.decision_trees
+WHERE tree_key = 'hypertensive-emergency'
+ON CONFLICT (tree_id, node_key) DO UPDATE SET node_type = EXCLUDED.node_type,
+  text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, action_payload = EXCLUDED.action_payload;
+
+DELETE FROM public.decision_edges e
+USING public.decision_nodes n
+WHERE e.from_node_id = n.id
+  AND n.node_key = 'T14_ACTION_MALIGNANT_HTN_TMA_AKI';
+DELETE FROM public.decision_edges e
+USING public.decision_nodes n
+WHERE e.from_node_id = n.id
+  AND n.node_key = 'T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS'
+  AND e.to_node_id IN (
+    SELECT id FROM public.decision_nodes
+    WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+      AND node_key = 'T14_ACTION_MALIGNANT_HTN_TMA_AKI'
+  );
+INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
+SELECT gen_random_uuid(), src.id, dst.id, 1
+FROM public.decision_nodes src
+JOIN public.decision_nodes dst ON dst.tree_id = src.tree_id
+WHERE src.tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+  AND src.node_key = 'T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS'
+  AND dst.node_key = 'T14_C_MALIGNANT_HTN_TMA_AKI'
+ON CONFLICT (from_node_id, traversal_order) DO UPDATE
+SET to_node_id = EXCLUDED.to_node_id;
+INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
+SELECT gen_random_uuid(), src.id, dst.id, 1
+FROM public.decision_nodes src
+JOIN public.decision_nodes dst ON dst.tree_id = src.tree_id
+WHERE src.tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+  AND src.node_key = 'T14_C_MALIGNANT_HTN_TMA_AKI'
+  AND dst.node_key = 'T14_ACTION_MALIGNANT_HTN_TMA_AKI'
+ON CONFLICT (from_node_id, traversal_order) DO UPDATE
+SET to_node_id = EXCLUDED.to_node_id;
+INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
+SELECT gen_random_uuid(), src.id, dst.id, 1
+FROM public.decision_nodes src
+JOIN public.decision_nodes dst ON dst.tree_id = src.tree_id
+WHERE src.tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
+  AND src.node_key = 'T14_ACTION_MALIGNANT_HTN_TMA_AKI'
+  AND dst.node_key = 'T14_END_MALIGNANT_HTN_TMA_AKI_TARGET'
+ON CONFLICT (from_node_id, traversal_order) DO UPDATE
+SET to_node_id = EXCLUDED.to_node_id;
 
 COMMIT;

@@ -121,9 +121,12 @@ Stages, in order:
    agent, before the deploy target is touched at all. Runs `pytest` (the
    full suite, including the database-marked integration tests, against a
    disposable containerized PostgreSQL), `ruff check`, `ruff format --check`,
-   `pyright`, `pnpm test`, `pnpm lint`, and `pnpm build`. Any failure stops
-   the pipeline here, so a broken build can never reach provisioning or
-   promotion.
+   `pyright`, and the frontend's Vitest, Oxlint, TypeScript, and Vite build
+   tools. It first regenerates the pregnancy FHIR catalogs so contributor
+   changes cannot leave the frontend copy missing or stale. Each frontend
+   tool is invoked directly and reports a named failing gate instead of
+   pnpm's generic `ELIFECYCLE` wrapper. Any failure stops the pipeline here,
+   so a broken build can never reach provisioning or promotion.
 4. **Deploy Files**: `rsync -a --delete` (no compression; same-LAN target)
    from the Jenkins workspace to `deploy@<host>:/opt/webapps/cdss/`,
    excluding `.git`, `.venv`, `node_modules`, `frontend/dist`, `.env*`,
@@ -170,10 +173,14 @@ Runs first, on the Jenkins agent, before the target host is touched.
 Self-contained aside from Docker: it creates its own isolated Docker network
 and a disposable `postgres:16` container (`-p 54321`, matching the port
 `cdss.testing.database`'s safety guard requires), then runs everything else
-in ephemeral `uv`/`node` containers on that network - `alembic upgrade head`
-and `backups/seed.sql` against the disposable database, then `pytest`
-(including the database-marked tests), `ruff check`, `ruff format --check`,
-`pyright`, `pnpm test`, `pnpm lint`, and `pnpm build`. A `trap ... EXIT`
+in ephemeral `uv`/`node` containers on that network. It regenerates the
+pregnancy FHIR catalogs, runs `alembic upgrade head` and `backups/seed.sql`
+against the disposable database, then runs `pytest` (including the
+database-marked tests), `ruff check`, `ruff format --check`, `pyright`, and
+the named frontend gates in `deploy/run_frontend_quality_gates.sh`: Vitest,
+Oxlint, TypeScript compilation, and the Vite production build. These tools
+are invoked directly, so a failure identifies its actual phase instead of
+ending with a generic pnpm `ELIFECYCLE` message. A `trap ... EXIT`
 always removes the container/network/`.env.test` and reclaims ownership of
 anything the (root-run, for `corepack enable`) frontend container wrote into
 `frontend/`, whether the gate passed or failed.

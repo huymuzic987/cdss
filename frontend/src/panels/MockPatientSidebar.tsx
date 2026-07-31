@@ -28,12 +28,14 @@ export function MockPatientSidebar(props: MockPatientSidebarProps) {
   const [form, setForm] = useState<PatientFormData>(DEFAULT_FORM)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [selectedPresetId, setSelectedPresetId] = useState('')
+  const [selectedPresetBundle, setSelectedPresetBundle] = useState<JsonObject | null>(null)
   const [openSections, setOpenSections] = useState({ bp: true, demographics: true, comorbidities: true, care: true })
   const toggleSection = (key: keyof typeof openSections) =>
     setOpenSections((previous) => ({ ...previous, [key]: !previous[key] }))
 
   const setField = <K extends keyof PatientFormData>(key: K, value: PatientFormData[K]) => {
     setForm((previous) => ({ ...previous, [key]: value }))
+    setSelectedPresetBundle(null)
     setValidationError(null)
   }
   const setStr = (key: keyof PatientFormData, value: string) =>
@@ -45,6 +47,7 @@ export function MockPatientSidebar(props: MockPatientSidebarProps) {
     setSelectedPresetId(presetId)
     setValidationError(null)
     const preset = PATIENT_PRESETS.find((candidate) => candidate.id === presetId)
+    setSelectedPresetBundle(preset?.bundle ?? null)
     setForm(preset ? bundleToForm(preset.bundle) : DEFAULT_FORM)
   }
 
@@ -56,13 +59,14 @@ export function MockPatientSidebar(props: MockPatientSidebarProps) {
     const startTreeKey = form.medication_follow_up_stage !== ''
       ? 'treatment-threshold-and-bp-target'
       : 'hypertension-diagnosis'
-    callback(startTreeKey, validation.payload)
+    callback(startTreeKey, selectedPresetBundle ?? validation.payload)
   }
 
   const reset = () => {
     setForm(DEFAULT_FORM)
     setValidationError(null)
     setSelectedPresetId('')
+    setSelectedPresetBundle(null)
     props.onReset()
   }
 
