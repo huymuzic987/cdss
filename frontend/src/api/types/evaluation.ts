@@ -73,5 +73,6 @@ export interface EvaluationResponse {
     minimum_follow_ups_completed: boolean
     next_follow_up_number: number | null
     next_follow_up_required: boolean
+    previous_visit_date: string | null
   } | null
 }

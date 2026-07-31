@@ -107,6 +107,7 @@ class ParsedClinicalBundle:
     trigger_evidence: tuple[JsonObject, ...]
     patient_id: str
     encounter_ids: tuple[str, ...]
+    encounter_dates: tuple[str, ...]
 
 
 def parse_clinical_bundle(bundle: Any) -> ParsedClinicalBundle:
@@ -317,6 +318,7 @@ def parse_clinical_bundle(bundle: Any) -> ParsedClinicalBundle:
         tuple(trigger),
         patient_id,
         tuple(encounter_id for encounter_id, _ in ordered),
+        tuple(started for _, started in ordered),
     )
 
 

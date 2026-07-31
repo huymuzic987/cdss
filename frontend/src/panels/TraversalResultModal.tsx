@@ -1,37 +1,61 @@
-import { useEffect, useMemo, useRef } from 'react'
-import type { ApiErrorResponse, EvaluationResponse } from '../api/types'
+import { useEffect, useRef } from 'react'
+import type {
+  ApiErrorResponse,
+  EvaluationResponse,
+  ExecutedAction,
+  TreeGraphResponse,
+} from '../api/types'
 import { buildClinicalPresentation } from './clinicalDecisionSupportAdapter'
-import { getClinicalDecisionSupportMessages, type ClinicalDecisionSupportLocale } from './clinicalDecisionSupportMessages'
-import { readableIdentifier, readablePathStep } from './clinicalResult/decisionPath'
-import { RecommendedOrderCard } from './clinicalResult/RecommendedOrderCard'
-import { TriggerEvidence } from './clinicalResult/TriggerEvidence'
+import {
+  getClinicalDecisionSupportMessages,
+  type ClinicalDecisionSupportLocale,
+} from './clinicalDecisionSupportMessages'
+import { deriveCriticalSummary } from './clinicalResult/criticalSummary'
+import { formatVisitDate } from './clinicalResult/criticalFindingFormat'
+import { deriveCareActions } from './clinicalResult/careActions'
+import { ClinicalSection } from './clinicalResult/ClinicalSection'
+import { readableIdentifier } from './clinicalResult/decisionPath'
+import { ImportantDecisionPath } from './clinicalResult/ImportantDecisionPath'
+import {
+  RecommendedOrderCard,
+  type OrderProvenance,
+} from './clinicalResult/RecommendedOrderCard'
 
 export type { RecommendedOrder } from './clinicalDecisionSupportAdapter'
 
 interface TraversalResultModalProps {
   result: EvaluationResponse | null
   partial: ApiErrorResponse | null
+  graphs?: Record<string, TreeGraphResponse>
   onClose: () => void
   locale?: ClinicalDecisionSupportLocale
 }
 
-function ResultDialog({ result, partial, onClose, locale }: Omit<TraversalResultModalProps, 'locale'> & {
-  locale: ClinicalDecisionSupportLocale
-}) {
+function ResultDialog({
+  result, partial, graphs = {}, onClose, locale,
+}: Omit<TraversalResultModalProps, 'locale'> & { locale: ClinicalDecisionSupportLocale }) {
   const messages = getClinicalDecisionSupportMessages(locale)
-  const log = result?.traversal_log ?? partial?.partial_run_state?.traversal_log ?? []
-  const presentation = useMemo(
-    () => buildClinicalPresentation(
-      result?.actions ?? partial?.partial_run_state?.actions ?? [],
-      result?.input_snapshot ?? partial?.partial_run_state?.input_snapshot ?? {},
-      result?.context ?? partial?.partial_run_state?.context ?? {},
-      locale,
-    ),
-    [result, partial, locale],
+  const state = partial?.partial_run_state
+  const actions = result?.actions ?? state?.actions ?? []
+  const context = result?.context ?? state?.context ?? {}
+  const log = result?.traversal_log ?? state?.traversal_log ?? []
+  const references = result?.references ?? state?.references ?? []
+  const presentation = buildClinicalPresentation(
+    actions,
+    result?.input_snapshot ?? state?.input_snapshot ?? {},
+    context,
+    locale,
   )
-  const dialogRef = useRef<HTMLDivElement>(null)
-  const enteredNodes = log.filter((entry) => entry.event === 'node_entered')
-  const pregnancyFollowUp = result?.pregnancy_follow_up
+  const summary = deriveCriticalSummary({
+    log, actions, context, graphs, locale,
+    pregnancyFollowUp: result?.pregnancy_follow_up,
+  })
+  const dialogRef = useRef<HTMLDivElement>(null), recommendationAction = actionWithPresentation(actions) ?? actions.at(-1)
+  const provenance = orderProvenance(recommendationAction, references, graphs, locale), alertTitle = patientAlert(
+    presentation.alert, summary.findings, recommendationAction, partial, locale,
+  ), careActions = deriveCareActions(
+    presentation.recommendation, presentation.additionalActions, summary, context,
+  )
 
   useEffect(() => {
     dialogRef.current?.focus()
@@ -42,83 +66,145 @@ function ResultDialog({ result, partial, onClose, locale }: Omit<TraversalResult
 
   return (
     <div className="modal-overlay" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <div ref={dialogRef} className="modal-box cds-modal" role="dialog" aria-modal="true" aria-labelledby="cds-modal-title" tabIndex={-1}>
-        <header className="modal-header">
-          <div>
-            <div id="cds-modal-title" className="modal-header-title">{messages.recommendationTitle}</div>
-            {!result && partial && <div className="modal-header-sub">{partial.message}</div>}
-          </div>
+      <div ref={dialogRef} className="modal-box cds-modal" role="dialog" aria-modal="true" aria-label={messages.recommendationTitle} tabIndex={-1}>
+        <header className="cds-header">
           <button type="button" className="modal-close" onClick={onClose} aria-label={messages.cancel}>×</button>
         </header>
         <div className="modal-body cds-modal-body">
-          {pregnancyFollowUp && (
-            <section className="cds-section" aria-labelledby="cds-pregnancy-follow-up-title">
-              <h2 id="cds-pregnancy-follow-up-title">{messages.pregnancyFollowUp}</h2>
-              <p className="cds-section-help">
-                {messages.episode}: {pregnancyFollowUp.episode_id} · {messages.encounters}: {pregnancyFollowUp.encounter_count}
-              </p>
-              <p className="cds-recommendation-copy">
-                {pregnancyFollowUp.follow_up_number === 0
-                  ? messages.initialVisit
-                  : `${messages.followUp} ${pregnancyFollowUp.follow_up_number}`}
-                {' · '}
-                {pregnancyFollowUp.minimum_follow_ups_completed
-                  ? messages.minimumComplete
-                  : messages.minimumPending}
-                {' ('}{pregnancyFollowUp.follow_up_number}/{pregnancyFollowUp.minimum_follow_ups_required}{')'}
-              </p>
-              <p className="cds-section-help">
-                {pregnancyFollowUp.next_follow_up_required
-                  ? `${messages.nextVisit}: ${pregnancyFollowUp.next_follow_up_number}`
-                  : messages.noNextVisit}
-              </p>
-            </section>
-          )}
-          <TriggerEvidence items={presentation.evidence} title={messages.whyTitle} emptyText={messages.noEvidence} />
-          <section className="cds-section cds-recommendation" aria-labelledby="cds-recommendation-title">
-            <h2 id="cds-recommendation-title">{messages.recommendedAction}</h2>
-            <p className="cds-recommendation-copy">{presentation.recommendation}</p>
-            {presentation.recommendationSecondary && <p className="cds-bilingual-copy">{presentation.recommendationSecondary}</p>}
-            <div className="cds-recommendation-meta">
-              {presentation.recommendationStrength && <span>{messages.recommendationStrength}: {presentation.recommendationStrength}</span>}
-              {presentation.evidenceLevel && <span>{messages.evidenceLevel}: {presentation.evidenceLevel}</span>}
+          <ClinicalSection title={messages.alertSection} className={`cds-alert-${summary.urgency}`}>
+            <div className="cds-alert-row">
+            <div className="cds-row-heading">
+              <span className="cds-urgency-badge">{summary.urgencyLabel}</span>
+              <strong>{alertTitle}</strong>
             </div>
-          </section>
-          {presentation.orders.length > 0 && (
-            <section className="cds-section cds-orders" aria-label={messages.recommendedOrders}>
-              {presentation.orders.map((order) => <RecommendedOrderCard key={order.id} order={order} locale={locale} />)}
-            </section>
-          )}
-          <section className="cds-additional-actions" aria-labelledby="cds-additional-title">
-            <h2 id="cds-additional-title">{messages.additionalActions}</h2>
-            {presentation.additionalActions.length === 0 ? <p className="cds-empty">{messages.noAdditionalActions}</p> : (
-              <ul>{presentation.additionalActions.map((action) => <li key={action.id}>{action.label}</li>)}</ul>
-            )}
-          </section>
-          <details className="modal-debug cds-decision-path">
-            <summary>{messages.fullDecisionPath}</summary>
-            <div className="modal-path">{enteredNodes.map((entry, index) => {
-              const metadata = result?.tree_metadata.find((tree) => tree.tree_key === entry.tree_key)
-              const treeName = metadata
-                ? (locale === 'vi' ? metadata.name_vi || metadata.name_en : metadata.name_en || metadata.name_vi)
-                : readableIdentifier(entry.tree_key)
-              return <div className="modal-path-step" key={`${entry.tree_key}-${entry.node_key}-${index}`}>
-                <span className="modal-path-num">{index + 1}</span>
-                <span className="modal-path-copy">
-                  <span className="modal-path-node">{readablePathStep(entry, result?.actions ?? partial?.partial_run_state?.actions ?? [], locale)}</span>
-                  <span className="modal-path-tree">{treeName}</span>
-                </span>
+            {careActions[0] && summary.urgency !== 'routine' && (
+              <div className="cds-alert-action">
+                <span>{messages.actionNow}</span><strong>{careActions[0]}</strong>
               </div>
-            })}</div>
-          </details>
+            )}
+            {!result && partial && <div className="cds-inner-row cds-error-copy">{partial.message}</div>}
+            {result?.pregnancy_follow_up && (
+              <div className="cds-inner-row cds-episode-row">
+                <span>{messages.pregnancyFollowUp}</span>
+                {result.pregnancy_follow_up.previous_visit_date && (
+                  <strong>{messages.previousVisit}: {formatVisitDate(result.pregnancy_follow_up.previous_visit_date, locale)}</strong>
+                )}
+              </div>
+            )}
+            </div>
+          </ClinicalSection>
+
+          <ClinicalSection title={messages.whyTitle}>
+            {summary.findings.length === 0 ? <p className="cds-empty">{messages.noEvidence}</p> : (
+              <div className="cds-data-rows">
+                {summary.findings.map((finding) => (
+                  <div className="cds-data-row" key={finding.id}>
+                    <span>{finding.label}<small>{finding.treeName}</small></span>
+                    <strong>{finding.value}</strong>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ClinicalSection>
+
+          <ClinicalSection title={messages.recommendedAction}>
+            {careActions.length === 0 && !summary.followUp && (
+              <p className="cds-empty">{messages.noAdditionalActions}</p>
+            )}
+            {careActions.map((action) => (
+              <div className="cds-inner-row cds-action-item" key={action}>
+                <span aria-hidden="true">→</span><span>{action}</span>
+              </div>
+            ))}
+            {summary.followUp && (
+              <div className="cds-inner-row cds-follow-up-row">
+                <span>{messages.followUpTiming}</span>
+                <strong>{summary.followUp.timing}</strong>
+                <small>{summary.followUp.reason} · {summary.followUp.source}</small>
+              </div>
+            )}
+          </ClinicalSection>
+
+          <ClinicalSection title={messages.recommendedOrders}>
+            {presentation.orders.length === 0 ? <p className="cds-empty">{messages.noRecommendedOrders}</p> : (
+              <div className="cds-order-rows">
+                {presentation.orders.map((order) => (
+                  <RecommendedOrderCard
+                    key={order.id}
+                    order={order}
+                    provenance={provenance}
+                    locale={locale}
+                  />
+                ))}
+              </div>
+            )}
+          </ClinicalSection>
+
+          <ClinicalSection
+            title={messages.importantPath}
+            subtitle={`${summary.path.length} · ${messages.pathSummary}`}
+            className="cds-path-details"
+            defaultOpen={false}
+          >
+            <ImportantDecisionPath steps={summary.path} emptyText={messages.noImportantPath} />
+          </ClinicalSection>
         </div>
       </div>
     </div>
   )
 }
 
+function actionWithPresentation(actions: ExecutedAction[]): ExecutedAction | undefined {
+  return [...actions].reverse().find((action) => {
+    const value = action.payload.presentation
+    return typeof value === 'object' && value !== null && !Array.isArray(value)
+  })
+}
+
+function orderProvenance(
+  action: ExecutedAction | undefined,
+  references: EvaluationResponse['references'],
+  graphs: Record<string, TreeGraphResponse>,
+  locale: ClinicalDecisionSupportLocale,
+): OrderProvenance {
+  if (!action) return { nodeLabel: 'Clinical recommendation', nodeKey: 'N/A', treeName: 'CDSS', references: [] }
+  const graph = graphs[action.tree_key]
+  const node = graph?.nodes.find((item) => item.node_key === action.node_key)
+  const nodeLabel = locale === 'vi'
+    ? node?.text_vi || action.text_vi || node?.text_en || action.text_en
+    : node?.text_en || action.text_en || node?.text_vi || action.text_vi
+  const treeName = graph
+    ? (locale === 'vi' ? graph.tree.name_vi || graph.tree.name_en : graph.tree.name_en || graph.tree.name_vi)
+    : readableIdentifier(action.tree_key)
+  return {
+    nodeLabel,
+    nodeKey: action.node_key,
+    treeName,
+    references: references.filter(
+      (reference) => reference.tree_key === action.tree_key && reference.node_key === action.node_key,
+    ),
+  }
+}
+
+function patientAlert(
+  alert: string,
+  findings: ReturnType<typeof deriveCriticalSummary>['findings'],
+  action: ExecutedAction | undefined,
+  partial: ApiErrorResponse | null,
+  locale: ClinicalDecisionSupportLocale,
+): string {
+  const unusable = /clinical decision support|support recommendation|maintain regimen|recorded regimen|pregnancy safety|combination \(/i
+  if (alert && alert.length <= 120 && !unusable.test(alert)) return alert
+  const finding = findings[0]
+  if (finding) return `${finding.label}: ${finding.value}`
+  const actionText = action ? (locale === 'vi' ? action.text_vi || action.text_en : action.text_en || action.text_vi) : ''
+  if (actionText && actionText.length <= 120 && !unusable.test(actionText)) return actionText
+  return partial?.message || (locale === 'vi' ? 'Cần xem xét ngay dữ kiện lâm sàng quan trọng' : 'Important clinical findings require review')
+}
+
 export function TraversalResultModal({ locale, ...props }: TraversalResultModalProps) {
   if (!props.result && !props.partial) return null
-  const resolvedLocale = locale ?? (document.documentElement.lang.toLowerCase().startsWith('vi') ? 'vi' : 'en')
+  const resolvedLocale = locale
+    ?? (document.documentElement.lang.toLowerCase().startsWith('vi') ? 'vi' : 'en')
   return <ResultDialog {...props} locale={resolvedLocale} />
 }

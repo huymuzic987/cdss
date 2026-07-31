@@ -139,3 +139,10 @@
   cursor: not-allowed;
   box-shadow: none;
 }
+
+.esc-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.esc-choice { display: flex; align-items: center; gap: 9px; padding: 10px; border: 1px solid var(--border); border-radius: 7px; cursor: pointer; color: var(--text-primary); }
+.esc-choice.active { border-color: var(--accent-border); background: var(--bg-panel-hover); color: var(--accent-text); }
+.esc-choice input { accent-color: var(--accent-text); }
+@media (max-width: 640px) { .esc-body { grid-template-columns: 1fr; } }
+.checkpoint-reopen { position: fixed; right: 18px; bottom: 18px; z-index: 10001; padding: 10px 16px; border: 1px solid var(--accent-border); border-radius: 8px; background: var(--bg-panel); color: var(--accent-text); font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.25); }

@@ -49,6 +49,18 @@ _ACTION_CONTINUATION_NODES = frozenset(
             "hypertension-in-pregnancy",
             "T12_C_IMMEDIATE_TARGET",
         ),
+        (
+            "resistant-hypertension",
+            "T13_A_CHECK_MRA",
+        ),
+        (
+            "resistant-hypertension",
+            "T13_A_CHECK_SPIRONOLACTONE",
+        ),
+        (
+            "hypertensive-emergency",
+            "T14_ACTION_ADMIT_AND_DETERMINE_TARGET_ORGAN",
+        ),
     }
 )
 

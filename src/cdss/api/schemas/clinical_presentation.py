@@ -51,6 +51,8 @@ def build_presentation(
 
 def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
     payload = action.payload
+    excluded = _excluded_medicines(payload)
+    blocked_text = f"{_presentation_text(payload)} {action.text_en} {action.text_vi}".casefold()
     existing = payload.get("recommended_orders")
     if isinstance(existing, list):
         return [deepcopy(item) for item in existing if isinstance(item, dict)]
@@ -58,7 +60,11 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
     medicines = payload.get("medicines")
     if isinstance(medicines, list):
         for index, raw in enumerate(medicines):
-            if not isinstance(raw, dict) or raw.get("available") is False:
+            if (
+                not isinstance(raw, dict)
+                or raw.get("available") is False
+                or _medicine_name(raw) in excluded
+            ):
                 continue
             name = _string(raw.get("name"), _string(raw.get("drug_name"), "Medication"))
             drug_id = _string(raw.get("drug_id"), _string(raw.get("id"), f"medicine-{index}"))
@@ -93,7 +99,7 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
                 raw.get("dose_strategy"),
                 _string(payload.get("dose_strategy"), "LOW_TO_USUAL_DOSE"),
             )
-            drug_classes = _drug_class_details(raw, classes, dose_strategy)
+            drug_classes = _drug_class_details(raw, classes, dose_strategy, excluded, blocked_text)
             labels_en = [f"Drug Class {code}" for code in classes]
             labels_vi = [f"Nhóm thuốc {code}" for code in classes]
             orders.append(
@@ -113,7 +119,11 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
 
 
 def _drug_class_details(
-    option: JsonObject, classes: list[str], dose_strategy: str
+    option: JsonObject,
+    classes: list[str],
+    dose_strategy: str,
+    excluded: set[str],
+    blocked_text: str,
 ) -> list[JsonObject]:
     medicine_map = option.get("medicines")
     if not isinstance(medicine_map, dict):
@@ -124,7 +134,9 @@ def _drug_class_details(
         medicines: list[JsonObject] = []
         if isinstance(raw_medicines, list):
             for index, raw in enumerate(raw_medicines):
-                if not isinstance(raw, dict) or raw.get("available") is False:
+                if (not isinstance(raw, dict) or raw.get("available") is False
+                        or _medicine_name(raw) in excluded
+                        or _is_negated(_medicine_name(raw), blocked_text)):
                     continue
                 name = _string(raw.get("name"), _string(raw.get("drug_name")))
                 if not name:
@@ -150,6 +162,49 @@ def _drug_class_details(
             }
         )
     return result
+
+
+def _medicine_name(raw: JsonObject) -> str:
+    value = raw.get("name") or raw.get("drug_name")
+    return value.casefold().strip() if isinstance(value, str) else ""
+
+
+def _excluded_medicines(payload: JsonObject) -> set[str]:
+    combined = _presentation_text(payload)
+    excluded: set[str] = set()
+    for raw in payload.get("medicines", []) if isinstance(payload.get("medicines"), list) else []:
+        if isinstance(raw, dict):
+            name = _medicine_name(raw)
+            if name and _is_negated(name, combined):
+                excluded.add(name)
+    return excluded
+
+
+def _presentation_text(payload: JsonObject) -> str:
+    texts: list[str] = []
+    for key in ("text_en", "text_vi"):
+        value = payload.get(key)
+        if isinstance(value, str):
+            texts.append(value.casefold())
+    for key in ("regimen_summary", "safety_notes"):
+        values = payload.get(key)
+        if isinstance(values, list):
+            for value in values:
+                if isinstance(value, dict):
+                    texts.extend(
+                        str(value.get(key_name, "")).casefold()
+                        for key_name in ("text_en", "text_vi")
+                    )
+    return " ".join(texts)
+
+
+def _is_negated(name: str, text: str) -> bool:
+    position = text.find(name)
+    if position < 0:
+        return False
+    prefix = text[max(0, position - 72):position]
+    markers = ("do not", "don't", "avoid", "contraind", "not use", "exclude")
+    return any(marker in prefix for marker in markers)
 
 
 def _dose_for_strategy(medicine: JsonObject, strategy: str) -> str:

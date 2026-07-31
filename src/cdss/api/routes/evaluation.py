@@ -6,7 +6,11 @@ from fastapi import APIRouter, Depends
 
 from cdss.api.dependencies import get_medicine_repository, get_tree_graph_repository
 from cdss.api.routes import evaluation_follow_up
-from cdss.api.routes.evaluation_presentation import restore_raw_bundle, select_presentation_actions
+from cdss.api.routes.evaluation_presentation import (
+    enrich_inferred_medications,
+    restore_raw_bundle,
+    select_presentation_actions,
+)
 from cdss.api.schemas import EvaluationErrorResponse, EvaluationResponse
 from cdss.api.schemas.clinical_evaluation import parse_clinical_bundle
 from cdss.api.schemas.clinical_presentation import attach_terminal_presentation
@@ -129,6 +133,9 @@ def evaluate(
                     payload={},
                 )
             ]
+    selected_actions = enrich_inferred_medications(
+        selected_actions, result, repository, medicine_repository
+    )
     presented_actions = [
         presented
         for action in selected_actions
@@ -142,6 +149,7 @@ def evaluate(
         runtime_input,
         patient_id=parsed.patient_id,
         encounter_ids=parsed.encounter_ids,
+        encounter_dates=parsed.encounter_dates,
         actions=result.actions,
     )
     return EvaluationResponse.from_result(

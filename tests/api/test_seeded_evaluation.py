@@ -120,6 +120,10 @@ def test_seeded_drug_combination_uses_closed_world_clinical_defaults(
     assert body["status"] == "success"
     assert body["context"]["treatment"]["bp_target"] == ACTIVE_BP_TARGET
     assert any(entry["tree_key"] == "drug-combination" for entry in body["traversal_log"])
+    orders = body["actions"][-1]["payload"]["presentation"]["recommended_orders"]
+    assert orders
+    assert all(order["drug_classes"] for order in orders)
+    assert all(drug_class["medicines"] for order in orders for drug_class in order["drug_classes"])
     assert body["input_snapshot"]["resourceType"] == "Bundle"
     assert body["references"]
 
