@@ -81,7 +81,9 @@ def test_tree_1_essential_normal_bp_result(api_context: ApiTestContext) -> None:
         "completed_at",
         "inferred_follow_up_type",
         "previous_recommended_action_types",
+        "pregnancy_follow_up",
     }
+    assert body["pregnancy_follow_up"] is None
     assert body["status"] == "success"
     assert body["context"]["diagnosis"]["hypertension_class"] == "NORMAL_BP"
     assert body["input_snapshot"] == bundle

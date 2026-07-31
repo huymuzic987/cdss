@@ -14,6 +14,7 @@ class FollowUpType(StrEnum):
     INITIAL_VISIT = "INITIAL_VISIT"
     LIFESTYLE_FOLLOW_UP = "LIFESTYLE_FOLLOW_UP"
     MEDICATION_FOLLOW_UP = "MEDICATION_FOLLOW_UP"
+    PREGNANCY_FOLLOW_UP = "PREGNANCY_FOLLOW_UP"
 
 
 @dataclass(frozen=True)
@@ -77,6 +78,12 @@ def infer_follow_up(previous_result: TraversalResult) -> FollowUpInference:
             action_types,
             bp_target,
         )
+    if any(_is_pregnancy_follow_up_action(action) for action in previous_result.actions):
+        return FollowUpInference(
+            FollowUpType.PREGNANCY_FOLLOW_UP,
+            action_types,
+            bp_target,
+        )
     return FollowUpInference(FollowUpType.INITIAL_VISIT, action_types, bp_target)
 
 
@@ -89,6 +96,7 @@ def build_current_visit_input(
     current["is_medication_follow_up"] = (
         inference.follow_up_type == FollowUpType.MEDICATION_FOLLOW_UP
     )
+    current["is_pregnancy_follow_up"] = inference.follow_up_type == FollowUpType.PREGNANCY_FOLLOW_UP
 
     if inference.follow_up_type == FollowUpType.LIFESTYLE_FOLLOW_UP:
         current["pre_lifestyle_clinic_sbp"] = current["previous_sbp"]
@@ -115,6 +123,13 @@ def _is_lifestyle_follow_up_action(action: ExecutedAction) -> bool:
         action.payload.get("follow_up_required") is True
         and isinstance(action_type, str)
         and "LIFESTYLE" in action_type
+    )
+
+
+def _is_pregnancy_follow_up_action(action: ExecutedAction) -> bool:
+    return (
+        action.tree_key == "hypertension-in-pregnancy"
+        and action.payload.get("follow_up_required") is True
     )
 
 

@@ -31,6 +31,7 @@ function ResultDialog({ result, partial, onClose, locale }: Omit<TraversalResult
   )
   const dialogRef = useRef<HTMLDivElement>(null)
   const enteredNodes = log.filter((entry) => entry.event === 'node_entered')
+  const pregnancyFollowUp = result?.pregnancy_follow_up
 
   useEffect(() => {
     dialogRef.current?.focus()
@@ -50,6 +51,29 @@ function ResultDialog({ result, partial, onClose, locale }: Omit<TraversalResult
           <button type="button" className="modal-close" onClick={onClose} aria-label={messages.cancel}>×</button>
         </header>
         <div className="modal-body cds-modal-body">
+          {pregnancyFollowUp && (
+            <section className="cds-section" aria-labelledby="cds-pregnancy-follow-up-title">
+              <h2 id="cds-pregnancy-follow-up-title">{messages.pregnancyFollowUp}</h2>
+              <p className="cds-section-help">
+                {messages.episode}: {pregnancyFollowUp.episode_id} · {messages.encounters}: {pregnancyFollowUp.encounter_count}
+              </p>
+              <p className="cds-recommendation-copy">
+                {pregnancyFollowUp.follow_up_number === 0
+                  ? messages.initialVisit
+                  : `${messages.followUp} ${pregnancyFollowUp.follow_up_number}`}
+                {' · '}
+                {pregnancyFollowUp.minimum_follow_ups_completed
+                  ? messages.minimumComplete
+                  : messages.minimumPending}
+                {' ('}{pregnancyFollowUp.follow_up_number}/{pregnancyFollowUp.minimum_follow_ups_required}{')'}
+              </p>
+              <p className="cds-section-help">
+                {pregnancyFollowUp.next_follow_up_required
+                  ? `${messages.nextVisit}: ${pregnancyFollowUp.next_follow_up_number}`
+                  : messages.noNextVisit}
+              </p>
+            </section>
+          )}
           <TriggerEvidence items={presentation.evidence} title={messages.whyTitle} emptyText={messages.noEvidence} />
           <section className="cds-section cds-recommendation" aria-labelledby="cds-recommendation-title">
             <h2 id="cds-recommendation-title">{messages.recommendedAction}</h2>

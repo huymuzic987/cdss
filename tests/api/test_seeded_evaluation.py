@@ -121,6 +121,37 @@ def test_seeded_drug_combination_uses_closed_world_clinical_defaults(
     assert body["references"]
 
 
+def test_seeded_pregnancy_third_follow_up_reaches_postpartum_branch(
+    seeded_api_context: SeededApiContext,
+) -> None:
+    response = _post_read_only(
+        seeded_api_context,
+        bundle=_pregnancy_follow_up_bundle(),
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["inferred_follow_up_type"] == "PREGNANCY_FOLLOW_UP"
+    assert body["pregnancy_follow_up"] == {
+        "episode_id": "pregnancy-demo-001",
+        "encounter_count": 4,
+        "follow_up_number": 3,
+        "phase": "FOLLOW_UP_3",
+        "minimum_follow_ups_required": 3,
+        "minimum_follow_ups_completed": True,
+        "next_follow_up_number": 4,
+        "next_follow_up_required": True,
+    }
+    entered = {
+        (entry["tree_key"], entry["node_key"])
+        for entry in body["traversal_log"]
+        if entry["event"] == "node_entered"
+    }
+    assert ("hypertension-diagnosis", "T1_C_IS_PREGNANT") in entered
+    assert ("hypertension-in-pregnancy", "T12_C_POSTPARTUM") in entered
+    assert body["actions"][-1]["node_key"] == "T12_END_MAINTAIN_REGIMEN_POSTPARTUM"
+
+
 def _post_read_only(
     context: SeededApiContext,
     *,
@@ -185,6 +216,129 @@ def _medication_bundle(*, current_sbp: int, current_dbp: int) -> dict[str, Any]:
     }
 
 
+def _pregnancy_follow_up_bundle() -> dict[str, Any]:
+    patient_id = "pregnancy-follow-up-demo"
+    dates_and_bp = (
+        ("initial", "2026-01-05", 150, 95),
+        ("follow-up-1", "2026-01-26", 140, 85),
+        ("follow-up-2", "2026-02-16", 140, 85),
+        ("follow-up-3", "2026-03-09", 142, 92),
+    )
+    input_prefix = "http://cdss.local/fhir/StructureDefinition/input/"
+    entries: list[dict[str, Any]] = [
+        {
+            "resource": {
+                "resourceType": "Patient",
+                "id": patient_id,
+                "birthDate": "1997-01-01",
+                "extension": [
+                    {
+                        "url": f"{input_prefix}pregnancy_episode_id",
+                        "valueString": "pregnancy-demo-001",
+                    },
+                    {
+                        "url": f"{input_prefix}pregnancy_follow_up_number",
+                        "valueInteger": 3,
+                    },
+                    {"url": f"{input_prefix}weeks_resolved_postpartum", "valueInteger": 2},
+                    {"url": f"{input_prefix}weeks_persisting_postpartum", "valueInteger": 0},
+                ],
+            }
+        },
+        {"resource": _clinical_flag(patient_id, "is_postpartum")},
+        {"resource": _clinical_flag(patient_id, "is_breastfeeding")},
+        {"resource": _clinical_flag(patient_id, "has_hypertension_after_week_20")},
+        {
+            "resource": _bp(
+                patient_id,
+                None,
+                "home-sbp",
+                "8459-0",
+                138,
+                reading_role="home",
+            )
+        },
+        {
+            "resource": _bp(
+                patient_id,
+                None,
+                "home-dbp",
+                "8462-4",
+                87,
+                reading_role="home",
+            )
+        },
+        {"resource": _lab(patient_id, "proteinuria", "2889-4", 50, "mg")},
+        {"resource": _lab(patient_id, "acr", "9318-7", 5, "mg/mmol")},
+    ]
+    for encounter_id, started, sbp, dbp in dates_and_bp:
+        entries.extend(
+            [
+                {"resource": _encounter(patient_id, encounter_id, started)},
+                {
+                    "resource": _bp(
+                        patient_id,
+                        encounter_id,
+                        f"{encounter_id}-sbp",
+                        "8459-0",
+                        sbp,
+                    )
+                },
+                {
+                    "resource": _bp(
+                        patient_id,
+                        encounter_id,
+                        f"{encounter_id}-dbp",
+                        "8462-4",
+                        dbp,
+                    )
+                },
+            ]
+        )
+    return {"resourceType": "Bundle", "type": "collection", "entry": entries}
+
+
+def _clinical_flag(patient_id: str, code: str) -> dict[str, Any]:
+    return {
+        "resourceType": "Condition",
+        "id": f"{patient_id}-{code}",
+        "subject": {"reference": f"Patient/{patient_id}"},
+        "verificationStatus": {
+            "coding": [
+                {
+                    "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+                    "code": "confirmed",
+                }
+            ]
+        },
+        "code": {
+            "coding": [
+                {
+                    "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+                    "code": code,
+                }
+            ]
+        },
+    }
+
+
+def _lab(
+    patient_id: str,
+    observation_id: str,
+    code: str,
+    value: int,
+    unit: str,
+) -> dict[str, Any]:
+    return {
+        "resourceType": "Observation",
+        "id": observation_id,
+        "status": "final",
+        "code": {"coding": [{"system": "http://loinc.org", "code": code}]},
+        "subject": {"reference": f"Patient/{patient_id}"},
+        "valueQuantity": {"value": value, "unit": unit},
+    }
+
+
 def _encounter(patient_id: str, encounter_id: str, start: str) -> dict[str, Any]:
     extensions = []
     if encounter_id == "current":
@@ -210,6 +364,8 @@ def _bp(
     observation_id: str,
     code: str,
     value: int,
+    *,
+    reading_role: str | None = None,
 ) -> dict[str, Any]:
     resource: dict[str, Any] = {
         "resourceType": "Observation",
@@ -221,4 +377,11 @@ def _bp(
     }
     if encounter_id is not None:
         resource["encounter"] = {"reference": f"Encounter/{encounter_id}"}
+    if reading_role is not None:
+        resource["extension"] = [
+            {
+                "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+                "valueCode": reading_role,
+            }
+        ]
     return resource

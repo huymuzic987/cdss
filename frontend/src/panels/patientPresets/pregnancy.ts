@@ -1,93 +1,60 @@
-import { PREGNANCY, type PatientPresetDefinition } from './shared'
+import type { JsonObject, JsonValue } from '../../api/types'
+import {
+  PREGNANCY,
+  PREGNANCY_FOLLOW_UP,
+  type PatientPresetBundleDefinition,
+} from './shared'
 
-export const pregnancyPresets: PatientPresetDefinition[] = [
-  {
-    id: 'pregnancy-chronic-htn',
-    label: 'Pregnancy — Pre-Existing (Chronic) Hypertension',
-    category: PREGNANCY,
-    description: 'Pregnant with pre-pregnancy hypertension and proteinuria beyond 6 weeks — classified as pre-existing hypertension, a simple terminal diagnosis.',
-    data: {
-      age: '30', risk_factor_count: '1',
-      is_pregnant: true,
-      home_sbp: '118', home_dbp: '75',
-      current_clinic_sbp: '150', current_clinic_dbp: '95',
-      has_pre_pregnancy_hypertension: true,
-      weeks_persisting_postpartum: '8',
-      weeks_resolved_postpartum: '10',
-      has_proteinuria: true,
-      proteinuria_24h_mg: '100',
-      acr_mg_mmol: '5',
-    },
-  },
-  {
-    id: 'pregnancy-gestational-mild',
-    label: 'Pregnancy — Gestational Hypertension, Mild/Moderate',
-    category: PREGNANCY,
-    description: 'Hypertension after week 20, not yet resolved postpartum, mild/moderate BP range — classified as gestational hypertension, methyldopa first-line, referred to OB/GYN since the pregnancy BP target isn’t met.',
-    data: {
-      age: '28', risk_factor_count: '1',
-      is_pregnant: true,
-      home_sbp: '118', home_dbp: '75',
-      current_clinic_sbp: '150', current_clinic_dbp: '95',
-      has_hypertension_after_week_20: true,
-      weeks_resolved_postpartum: '2',
-      weeks_persisting_postpartum: '0',
-      proteinuria_24h_mg: '50',
-      acr_mg_mmol: '5',
-    },
-  },
-  {
-    id: 'pregnancy-severe-eclampsia',
-    label: 'Pregnancy — Severe Signs (Eclampsia Path)',
-    category: PREGNANCY,
-    description: 'Severe headache and visual disturbance with no other classification match — routes through the eclampsia/HELLP severe-signs branch to IV labetalol + MgSO4, ending in emergency delivery since the treatment target isn’t met.',
-    data: {
-      age: '32', risk_factor_count: '2',
-      is_pregnant: true,
-      home_sbp: '120', home_dbp: '78',
-      current_clinic_sbp: '155', current_clinic_dbp: '100',
-      has_hypertension_after_week_20: true,
-      weeks_persisting_postpartum: '0',
-      weeks_resolved_postpartum: '0',
-      proteinuria_24h_mg: '350',
-      acr_mg_mmol: '5',
-      has_severe_headache: true,
-      has_visual_disturbance: true,
-    },
-  },
-  {
-    id: 'pregnancy-high-preeclampsia-risk-aspirin',
-    label: 'Pregnancy — High Preeclampsia Risk (Aspirin Prophylaxis)',
-    category: PREGNANCY,
-    description: 'Normotensive pregnancy with a high-preeclampsia-risk flag — routes directly to aspirin prophylaxis instead of hypertension treatment.',
-    data: {
-      age: '28', risk_factor_count: '1',
-      is_pregnant: true,
-      home_sbp: '118', home_dbp: '75',
-      current_clinic_sbp: '130', current_clinic_dbp: '80',
-      has_hypertension_after_week_20: false,
-      weeks_resolved_postpartum: '2',
-      weeks_persisting_postpartum: '0',
-      proteinuria_24h_mg: '50',
-      acr_mg_mmol: '5',
-      has_high_preeclampsia_risk: true,
-    },
-  },
-  {
-    id: 'pregnancy-bp-target-achieved',
-    label: 'Pregnancy — BP Target Achieved (Maintain Regimen)',
-    category: PREGNANCY,
-    description: 'Gestational hypertension classified via home BP, with current clinic BP threading the narrow 110–140/exactly-85 pregnancy target window — maintains the current regimen instead of referring to OB/GYN, the one outcome not exercised by the other pregnancy presets.',
-    data: {
-      age: '29', risk_factor_count: '1',
-      is_pregnant: true,
-      home_sbp: '138', home_dbp: '87',
-      current_clinic_sbp: '140', current_clinic_dbp: '85',
-      has_hypertension_after_week_20: true,
-      weeks_resolved_postpartum: '2',
-      weeks_persisting_postpartum: '0',
-      proteinuria_24h_mg: '50',
-      acr_mg_mmol: '5',
-    },
-  },
-]
+const PRESET_META_BASE = 'http://cdss.local/fhir/CodeSystem/preset'
+
+const modules = import.meta.glob<JsonObject>(
+  '../../../../data/fhir/pregnancy_presets/*.json',
+  { eager: true, import: 'default' },
+)
+
+const catalog = Object.entries(modules)
+  .sort(([left], [right]) => left.localeCompare(right))
+  .map(([, bundle]) => toPreset(bundle))
+
+export const pregnancyPresets: PatientPresetBundleDefinition[] =
+  catalog.filter(({ category }) => category === PREGNANCY)
+
+export const pregnancyFollowUpPresets: PatientPresetBundleDefinition[] =
+  catalog.filter(({ category }) => category === PREGNANCY_FOLLOW_UP)
+
+function toPreset(bundle: JsonObject): PatientPresetBundleDefinition {
+  const id = stringProperty(bundle.identifier, 'value')
+  const category = tagDisplay(bundle, 'category')
+  const label = tagDisplay(bundle, 'label')
+  const description = tagDisplay(bundle, 'description')
+  if (!id || !category || !label || !description) {
+    throw new Error(`FHIR pregnancy preset ${String(bundle.id)} has incomplete metadata`)
+  }
+  return { id, category, label, description, bundle }
+}
+
+function tagDisplay(bundle: JsonObject, suffix: string): string | undefined {
+  const meta = asObject(bundle.meta)
+  const tags = Array.isArray(meta?.tag) ? meta.tag : []
+  for (const value of tags) {
+    const tag = asObject(value)
+    if (
+      tag?.system === `${PRESET_META_BASE}/${suffix}`
+      && typeof tag.display === 'string'
+    ) {
+      return tag.display
+    }
+  }
+  return undefined
+}
+
+function stringProperty(value: JsonValue | undefined, key: string): string | undefined {
+  const object = asObject(value)
+  return typeof object?.[key] === 'string' ? object[key] : undefined
+}
+
+function asObject(value: JsonValue | undefined): JsonObject | undefined {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? value
+    : undefined
+}

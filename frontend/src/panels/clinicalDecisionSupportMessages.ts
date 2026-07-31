@@ -12,6 +12,11 @@ const messages = {
     medicineName: 'Medicine', dose: 'Dose', noMedicines: 'No matching medicines are available.',
     additionalActions: 'Additional clinical actions',
     noAdditionalActions: 'No additional actions were provided.',
+    pregnancyFollowUp: 'Pregnancy follow-up episode',
+    episode: 'Episode', encounters: 'Encounters', initialVisit: 'Initial visit',
+    followUp: 'Follow-up', minimumComplete: 'minimum complete',
+    minimumPending: 'minimum not yet complete', nextVisit: 'Next requested visit',
+    noNextVisit: 'No further visit requested by this result',
     fullDecisionPath: 'Full decision path', cancel: 'Close',
   },
   vi: {
@@ -23,6 +28,11 @@ const messages = {
     medicineName: 'Tên thuốc', dose: 'Liều', noMedicines: 'Không có thuốc phù hợp hiện có.',
     additionalActions: 'Hành động lâm sàng bổ sung',
     noAdditionalActions: 'Không có hành động bổ sung.',
+    pregnancyFollowUp: 'Đợt theo dõi tăng huyết áp thai kỳ',
+    episode: 'Đợt', encounters: 'Lần khám', initialVisit: 'Lần khám đầu',
+    followUp: 'Tái khám', minimumComplete: 'đã đủ tối thiểu',
+    minimumPending: 'chưa đủ tối thiểu', nextVisit: 'Lần tái khám tiếp theo',
+    noNextVisit: 'Kết quả này không yêu cầu tái khám tiếp',
     fullDecisionPath: 'Toàn bộ đường đi quyết định', cancel: 'Đóng',
   },
 } as const

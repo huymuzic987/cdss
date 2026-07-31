@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { PATIENT_PRESETS } from '../patientPresets'
-import { FOLLOW_UP } from '../patientPresets/shared'
+import {
+  FOLLOW_UP,
+  PREGNANCY,
+  PREGNANCY_FOLLOW_UP,
+} from '../patientPresets/shared'
 import { bundleToForm, formToPayload } from './payload'
 import { validatePatientForm } from './validation'
 
@@ -56,7 +60,62 @@ describe('canonical FHIR patient presets', () => {
 
     expect(form.has_hypertension_after_week_20).toBe(true)
     expect(form.proteinuria_24h_mg).toBe('350')
-    expect(form.has_severe_headache).toBe(true)
-    expect(form.has_visual_disturbance).toBe(true)
+    expect(form.has_proteinuria).toBe(true)
+    expect(form.has_seizure).toBe(true)
   })
+
+  it('loads a FHIR R4 pregnancy preset for every reachable Tree 12 branch', () => {
+    const pregnancy = PATIENT_PRESETS.filter(({ category }) =>
+      category === PREGNANCY || category === PREGNANCY_FOLLOW_UP)
+    expect(pregnancy).toHaveLength(21)
+
+    for (const preset of pregnancy) {
+      expect(preset.bundle.id, preset.id).toMatch(
+        /^bundle-(?:PG\d{3}|PGF001-fu[0-3])$/,
+      )
+      expect(preset.bundle.timestamp, preset.id).toMatch(/T08:00:00\+07:00$/)
+      const entries = preset.bundle.entry as Array<{
+        fullUrl?: string
+        resource: {
+          resourceType: string
+          id?: string
+          gender?: string
+        }
+      }>
+      expect(entries.length, preset.id).toBeGreaterThan(0)
+      for (const entry of entries) {
+        expect(entry.fullUrl, preset.id).toBe(
+          `http://example.org/fhir/${entry.resource.resourceType}/${entry.resource.id}`,
+        )
+      }
+      const patient = entries.find(({ resource }) => resource.resourceType === 'Patient')
+      expect(patient?.resource.gender, preset.id).toBe('female')
+    }
+  })
+
+  it.each([0, 1, 2, 3])(
+    'keeps pregnancy episode follow-up %s as a complete longitudinal Bundle',
+    (followUpNumber) => {
+      const preset = PATIENT_PRESETS.find(
+        ({ id }) => id === `pregnancy-episode-follow-up-${followUpNumber}`,
+      )
+      expect(preset).toBeDefined()
+      const entries = preset!.bundle.entry as Array<{ resource: {
+        resourceType: string
+        extension?: Array<{ url: string; valueInteger?: number; valueString?: string }>
+      } }>
+      const encounters = entries.filter(({ resource }) => resource.resourceType === 'Encounter')
+      const patient = entries.find(({ resource }) => resource.resourceType === 'Patient')!.resource
+
+      expect(encounters).toHaveLength(followUpNumber + 1)
+      expect(patient.extension).toContainEqual({
+        url: 'http://cdss.local/fhir/StructureDefinition/input/pregnancy_episode_id',
+        valueString: 'pregnancy-demo-001',
+      })
+      expect(patient.extension).toContainEqual({
+        url: 'http://cdss.local/fhir/StructureDefinition/input/pregnancy_follow_up_number',
+        valueInteger: followUpNumber,
+      })
+    },
+  )
 })

@@ -43,7 +43,11 @@ _ACTION_CONTINUATION_NODES = frozenset(
         (
             "hypertension-in-pregnancy",
             "T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM",
-        )
+        ),
+        (
+            "hypertension-in-pregnancy",
+            "T12_C_IMMEDIATE_TARGET",
+        ),
     }
 )
 

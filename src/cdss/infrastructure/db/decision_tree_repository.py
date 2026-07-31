@@ -23,6 +23,7 @@ from cdss.infrastructure.db.models import (
     DecisionTree,
     NodeSourceReference,
 )
+from cdss.infrastructure.db.runtime_graph_overrides import apply_runtime_graph_overrides
 
 
 def _coerce_node_type(node: DecisionNode, tree_key: str) -> NodeType:
@@ -150,6 +151,7 @@ class SqlAlchemyTreeGraphRepository(TreeGraphRepository):
             )
             for reference in reference_rows
         ]
+        nodes, edges = apply_runtime_graph_overrides(tree, nodes, edges)
 
         return TreeGraph.build(
             tree=tree,

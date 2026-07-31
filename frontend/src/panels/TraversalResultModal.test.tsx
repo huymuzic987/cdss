@@ -74,6 +74,7 @@ const result: EvaluationResponse = {
   ],
   started_at: '2026-01-01T00:00:00Z', completed_at: '2026-01-01T00:00:01Z',
   inferred_follow_up_type: null, previous_recommended_action_types: [],
+  pregnancy_follow_up: null,
 }
 
 afterEach(cleanup)
@@ -148,6 +149,28 @@ describe('TraversalResultModal', () => {
     expect(screen.getByText('Use the recommended interventions and reassess.')).toBeTruthy()
     expect(screen.queryByText('T1_COND_PREGNANT')).toBeNull()
     expect(screen.queryByText('EXAMPLE_END')).toBeNull()
+  })
+
+  it('shows pregnancy episode progress when follow-up metadata is present', () => {
+    renderModal({
+      ...result,
+      inferred_follow_up_type: 'PREGNANCY_FOLLOW_UP',
+      pregnancy_follow_up: {
+        episode_id: 'pregnancy-demo-001',
+        encounter_count: 4,
+        follow_up_number: 3,
+        phase: 'FOLLOW_UP_3',
+        minimum_follow_ups_required: 3,
+        minimum_follow_ups_completed: true,
+        next_follow_up_number: 4,
+        next_follow_up_required: true,
+      },
+    })
+
+    expect(screen.getByText('Pregnancy follow-up episode')).toBeTruthy()
+    expect(screen.getByText(/pregnancy-demo-001/)).toBeTruthy()
+    expect(screen.getByText(/Follow-up 3/)).toBeTruthy()
+    expect(screen.getByText(/Next requested visit: 4/)).toBeTruthy()
   })
 
 })

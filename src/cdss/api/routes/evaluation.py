@@ -27,6 +27,7 @@ from cdss.domain.follow_up import (
     has_complete_previous_bp,
     infer_follow_up,
 )
+from cdss.domain.pregnancy_follow_up import summarize_pregnancy_follow_up
 
 router = APIRouter(tags=["evaluation"])
 router.include_router(evaluation_follow_up.router)
@@ -79,7 +80,10 @@ def evaluate(
                 }
             )
         runtime_input = build_current_visit_input(runtime_input, inference)
-        if inference.follow_up_type != FollowUpType.INITIAL_VISIT:
+        if inference.follow_up_type in {
+            FollowUpType.LIFESTYLE_FOLLOW_UP,
+            FollowUpType.MEDICATION_FOLLOW_UP,
+        }:
             start_tree_key = _MEDICATION_FOLLOW_UP_TREE_KEY
 
     try:
@@ -125,6 +129,12 @@ def evaluate(
             result.references,
         )
     ]
+    pregnancy_follow_up = summarize_pregnancy_follow_up(
+        runtime_input,
+        patient_id=parsed.patient_id,
+        encounter_ids=parsed.encounter_ids,
+        actions=result.actions,
+    )
     return EvaluationResponse.from_result(
         result,
         debug_output=settings.debug_output,
@@ -134,4 +144,5 @@ def evaluate(
         previous_recommended_action_types=(
             list(inference.previous_action_types) if inference else None
         ),
+        pregnancy_follow_up=pregnancy_follow_up,
     )
