@@ -1,0 +1,994 @@
+{
+  "format": "cdss-traversal-graph",
+  "format_version": 1,
+  "source": "backups/seed.sql",
+  "traversal_semantics": {
+    "entry": "entry_node_keys",
+    "node_lookup": "trees[].nodes[node_key]",
+    "branch_priority": "transitions sorted by traversal_order ascending",
+    "branch_condition": "condition_definition on the target node; copied to candidate_condition",
+    "cross_tree_jump": "LINK nodes use link_target_tree_key and optional link_target_node_key"
+  },
+  "document_type": "decision_tree",
+  "tree": {
+    "id": "fb619e2e-f9f2-4f79-8ac4-12561707ed21",
+    "tree_key": "hypertension-type-2-diabetes",
+    "name_en": "Hypertension With Type 2 Diabetes",
+    "name_vi": "THA + Đái Tháo Đường Týp 2",
+    "created_at": "2026-07-25 11:46:28.021853+00:00",
+    "updated_at": "2026-07-25 11:46:28.021853+00:00",
+    "entry_node_keys": [
+      "T8_START_BP_TARGET_STATUS"
+    ],
+    "root_node_keys": [
+      "T8_GLOBAL_ABBREVIATION_GLOSSARY",
+      "T8_START_BP_TARGET_STATUS"
+    ],
+    "global_node_keys": [
+      "T8_GLOBAL_ABBREVIATION_GLOSSARY"
+    ],
+    "nodes": {
+      "T8_C_ABOVE_TARGET": {
+        "id": "3fdce53a-e7ae-49cf-846e-81c2b57bc203",
+        "node_key": "T8_C_ABOVE_TARGET",
+        "node_type": "CONDITION",
+        "text_en": "SBP >= 130 mmHg or DBP >= 85 mmHg",
+        "text_vi": "HATT >= 130 mmHg hoặc HATTr >= 85 mmHg",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "gte",
+              "path": "input.current_clinic_sbp",
+              "value": 130
+            },
+            {
+              "op": "gte",
+              "path": "input.current_clinic_dbp",
+              "value": 85
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 2,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "d146a686-27ef-4153-8736-664d2e32fd45",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Đái tháo đường týp 2",
+                "number": "3.7.1"
+              }
+            ],
+            "locator": "Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)",
+            "locator_detail": "Clinic BP threshold for hypertension with type 2 diabetes is >=130/85 mmHg; at/above-target branch.",
+            "printed_page_numbers": [
+              32
+            ],
+            "pdf_page_numbers": [
+              34
+            ],
+            "reference_note": "Ngưỡng HA phòng khám ở bệnh nhân THA kèm đái tháo đường týp 2 khi >= 130/85 mmHg.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "5ef7806e-ad6c-43a2-9b3d-7b6fd484c715",
+            "traversal_order": 1,
+            "to_node_key": "T8_INF_REGIMEN_OPTIONS",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T8_C_BELOW_TARGET": {
+        "id": "68d798f3-7959-472a-b269-77b25ce17f15",
+        "node_key": "T8_C_BELOW_TARGET",
+        "node_type": "CONDITION",
+        "text_en": "SBP < 130 mmHg and DBP < 85 mmHg",
+        "text_vi": "HATT < 130 mmHg và HATTr < 85 mmHg",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value": 130
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value": 85
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 1,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "a32f4939-c493-4894-9770-f8e4cda03611",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Đái tháo đường týp 2",
+                "number": "3.7.1"
+              }
+            ],
+            "locator": "Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)",
+            "locator_detail": "Clinic BP threshold for hypertension with type 2 diabetes is >=130/85 mmHg; below-target branch.",
+            "printed_page_numbers": [
+              32
+            ],
+            "pdf_page_numbers": [
+              34
+            ],
+            "reference_note": "Ngưỡng HA phòng khám ở bệnh nhân THA kèm đái tháo đường týp 2 khi >= 130/85 mmHg.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "a71f14dc-d476-4353-89ae-4aacef57f840",
+            "traversal_order": 1,
+            "to_node_key": "T8_LINK_A_ESSENTIAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "LIMITED_RESOURCES"
+            }
+          },
+          {
+            "edge_id": "7ff3ec4b-80dc-4a72-97c6-c7b7cd5e6287",
+            "traversal_order": 2,
+            "to_node_key": "T8_LINK_A_OPTIMAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "FULL_RESOURCES"
+            }
+          }
+        ]
+      },
+      "T8_C_HAS_CV_RISK": {
+        "id": "01ffe021-3e41-4b3c-a235-0449afedf1a8",
+        "node_key": "T8_C_HAS_CV_RISK",
+        "node_type": "CONDITION",
+        "text_en": "Has atherosclerotic cardiovascular disease (coronary artery disease, stroke, or cardiovascular disease) or high cardiovascular risk",
+        "text_vi": "Có bệnh tim mạch do xơ vữa (bệnh mạch vành, đột quỵ, bệnh tim mạch) hoặc nguy cơ tim mạch cao",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "eq",
+              "path": "input.has_coronary_artery_disease",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_stroke",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_cardiovascular_disease",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.risk.level",
+              "value": "HIGH"
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 4,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "b18dd09c-b30e-483f-b0f1-17e0cb7dc213",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Đái tháo đường týp 2",
+                "number": "3.7.1"
+              }
+            ],
+            "locator": "Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)",
+            "locator_detail": "SGLT2i/GLP-1RA is prioritized when atherosclerotic cardiovascular disease and/or high risk is present.",
+            "printed_page_numbers": [
+              32
+            ],
+            "pdf_page_numbers": [
+              34
+            ],
+            "reference_note": "Điều trị hạ glucose máu với SGLT2-i hoặc GLP-1 RA được ưu tiên khi có bệnh tim mạch do xơ vữa và/hoặc nguy cơ cao.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "d9b67463-7ae1-41cc-b508-f3928c710f31",
+            "traversal_order": 1,
+            "to_node_key": "T8_INF_ADD_SGLT2I_GLP1RA",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T8_C_NO_CV_RISK": {
+        "id": "b52652c1-3b14-4859-af3f-07d26ff3dbce",
+        "node_key": "T8_C_NO_CV_RISK",
+        "node_type": "CONDITION",
+        "text_en": "No atherosclerotic cardiovascular disease and not high cardiovascular risk",
+        "text_vi": "Không có bệnh tim mạch do xơ vữa và không thuộc nhóm nguy cơ tim mạch cao",
+        "condition_definition": {
+          "not": {
+            "any": [
+              {
+                "op": "eq",
+                "path": "input.has_coronary_artery_disease",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "input.has_stroke",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "input.has_cardiovascular_disease",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "context.risk.level",
+                "value": "HIGH"
+              }
+            ]
+          }
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 5,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "e7b29464-3284-4d26-942a-80e731226b77",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Đái tháo đường týp 2",
+                "number": "3.7.1"
+              }
+            ],
+            "locator": "Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)",
+            "locator_detail": "Complement of the SGLT2i/GLP-1RA trigger: no atherosclerotic cardiovascular disease and not high risk.",
+            "printed_page_numbers": [
+              32
+            ],
+            "pdf_page_numbers": [
+              34
+            ],
+            "reference_note": "Phần bù của điều kiện kích hoạt SGLT2-i/GLP-1 RA: không có bệnh tim mạch do xơ vữa và không thuộc nhóm nguy cơ cao.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "668194a9-4326-42af-afba-ee9a11bf73b2",
+            "traversal_order": 1,
+            "to_node_key": "T8_INF_MAINTAIN_REGIMEN",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T8_GLOBAL_ABBREVIATION_GLOSSARY": {
+        "id": "eff9029d-c3bb-4106-8fc6-7cfda5d04df6",
+        "node_key": "T8_GLOBAL_ABBREVIATION_GLOSSARY",
+        "node_type": "GLOBAL",
+        "text_en": "Abbreviation glossary",
+        "text_vi": "Chú giải viết tắt",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": {
+          "kind": "ABBREVIATION_GLOSSARY",
+          "entries": {
+            "6_MRA": {
+              "label": "MRA: thuốc đối kháng thụ thể mineralocorticoid"
+            },
+            "5_SGLT2i": {
+              "label": "SGLT2i: thuốc ức chế đồng vận chuyển Natri-glucose 2"
+            },
+            "2_D_loi_tieu": {
+              "LT": "lợi tiểu",
+              "label": "D: lợi tiểu"
+            },
+            "4_B_chen_Beta": {
+              "CB": "chẹn Beta",
+              "label": "B: chẹn Beta"
+            },
+            "1_A_uc_che_he_RAS": {
+              "ARNI": "chẹn thụ thể Angiotensine-neprisyline",
+              "CTTA": "chẹn thụ thể angiotensin II",
+              "UCMC": "ức chế men chuyển",
+              "label": "A: ức chế hệ RAS"
+            },
+            "3_C_chen_kenh_Canxi": {
+              "CKCa": "chẹn kênh Canxi",
+              "label": "C: chẹn kênh Canxi"
+            }
+          },
+          "purpose": "Chú giải các chữ viết tắt nhóm thuốc dùng trong Cây 8 (hệ thống A/B/C/D), theo chú thích Bảng 18."
+        },
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 99,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "4a3d2dd9-ac0d-4491-aa6c-df8463dbd152",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Đái tháo đường týp 2",
+                "number": "3.7.1"
+              }
+            ],
+            "locator": "Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2), chú thích",
+            "locator_detail": "Footnote abbreviation glossary for the drug classes named in Bảng 18.",
+            "printed_page_numbers": [
+              32
+            ],
+            "pdf_page_numbers": [
+              34
+            ],
+            "reference_note": "Chú thích Bảng 18: RAS: Hệ renin-angiotensin-aldosterone; GLP-1 RA: thuốc đồng vận thụ thể GLP-1; SGLT2i: Thuốc ức chế SGLT2.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T8_INF_ADD_SGLT2I_GLP1RA": {
+        "id": "5020708d-fda3-4d55-aa4f-b30692011a7f",
+        "node_key": "T8_INF_ADD_SGLT2I_GLP1RA",
+        "node_type": "INFERENCE",
+        "text_en": "Add SGLT2i or GLP-1RA",
+        "text_vi": "Bổ sung SGLT2i hoặc GLP-1RA",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment_preferences": {
+            "additional_drug_classes": [
+              "SGLT2_INHIBITOR",
+              "GLP1_RECEPTOR_AGONIST"
+            ]
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 6,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "5fcc3575-2e01-422a-903a-f3fc0e647db9",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Đái tháo đường týp 2",
+                "number": "3.7.1"
+              }
+            ],
+            "locator": "Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)",
+            "locator_detail": "Glucose-lowering therapy with SGLT2i or GLP-1RA is prioritized for its demonstrated cardiovascular benefit.",
+            "printed_page_numbers": [
+              32
+            ],
+            "pdf_page_numbers": [
+              34
+            ],
+            "reference_note": "Điều trị hạ glucose máu với SGLT2-i hoặc GLP-1 RA được ưu tiên với những lợi ích bệnh tim mạch đã được chứng minh.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "73fbf622-a00b-45e4-96f4-e8bfa30be9a2",
+            "traversal_order": 1,
+            "to_node_key": "T8_LINK_B_ESSENTIAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "LIMITED_RESOURCES"
+            }
+          },
+          {
+            "edge_id": "11a5ea21-2561-4f47-a5fa-f55191b5ef6b",
+            "traversal_order": 2,
+            "to_node_key": "T8_LINK_B_OPTIMAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "FULL_RESOURCES"
+            }
+          }
+        ]
+      },
+      "T8_INF_MAINTAIN_REGIMEN": {
+        "id": "e726ffd6-3e0f-483b-aa91-846208d522c1",
+        "node_key": "T8_INF_MAINTAIN_REGIMEN",
+        "node_type": "INFERENCE",
+        "text_en": "Maintain current regimen",
+        "text_vi": "Duy trì phác đồ",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment": {
+            "status": "MAINTAIN_CURRENT_REGIMEN"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 7,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "a1853bc8-3f6e-45a3-8ff5-afe1160b0e93",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Đái tháo đường týp 2",
+                "number": "3.7.1"
+              }
+            ],
+            "locator": "Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)",
+            "locator_detail": "No indication to add SGLT2i/GLP-1RA: continue the current RAS-inhibitor + CCB/diuretic regimen.",
+            "printed_page_numbers": [
+              32
+            ],
+            "pdf_page_numbers": [
+              34
+            ],
+            "reference_note": "Không có chỉ định bổ sung SGLT2-i/GLP-1 RA: tiếp tục phác đồ ức chế RAS + CKCa/lợi tiểu hiện tại.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "4aea4df0-6a55-4fdc-9f3b-5ecb3c82bdc9",
+            "traversal_order": 1,
+            "to_node_key": "T8_LINK_B_ESSENTIAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "LIMITED_RESOURCES"
+            }
+          },
+          {
+            "edge_id": "694f2d3f-53eb-40b5-b632-70b569ef0390",
+            "traversal_order": 2,
+            "to_node_key": "T8_LINK_B_OPTIMAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "FULL_RESOURCES"
+            }
+          }
+        ]
+      },
+      "T8_INF_REGIMEN_OPTIONS": {
+        "id": "00182e46-02d8-44f3-90aa-aeed4b86eb4e",
+        "node_key": "T8_INF_REGIMEN_OPTIONS",
+        "node_type": "INFERENCE",
+        "text_en": "A + C, or A + D (ACE inhibitor/ARB + calcium-channel blocker, or ACE inhibitor/ARB + thiazide-like diuretic)",
+        "text_vi": "A + C, hoặc A + D (ƯCMC/CTTA + CKCa, hoặc ƯCMC/CTTA + LT Thiazide-like)",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment_preferences": {
+            "combination_options": [
+              [
+                "A",
+                "C"
+              ],
+              [
+                "A",
+                "D"
+              ]
+            ]
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 3,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "790cb934-116f-46ad-a10d-a4fca6ecf5e4",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Đái tháo đường týp 2",
+                "number": "3.7.1"
+              }
+            ],
+            "locator": "Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)",
+            "locator_detail": "Combination strategy should include one RAS-inhibitor class (A: ACEI or ARB) and one calcium-channel-blocker or thiazide-like-diuretic class (C or D). Matching Trees 4/5's own pattern, the specific agent within each class (e.g. ACEI vs ARB) is resolved downstream against contraindications in Tree 6 (drug-combination), not decided here.",
+            "printed_page_numbers": [
+              32
+            ],
+            "pdf_page_numbers": [
+              34
+            ],
+            "reference_note": "Chiến lược điều trị nên bao gồm một nhóm thuốc ức chế RAS và một nhóm thuốc chẹn kênh canxi hoặc lợi tiểu thiazide-like.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "22498c75-387a-4483-b205-53638ccf0f80",
+            "traversal_order": 1,
+            "to_node_key": "T8_C_HAS_CV_RISK",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "eq",
+                  "path": "input.has_coronary_artery_disease",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_stroke",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_cardiovascular_disease",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "context.risk.level",
+                  "value": "HIGH"
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "0878b552-bb3c-4839-9d61-062adbe891ad",
+            "traversal_order": 2,
+            "to_node_key": "T8_C_NO_CV_RISK",
+            "candidate_condition": {
+              "not": {
+                "any": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_coronary_artery_disease",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_stroke",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "input.has_cardiovascular_disease",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "context.risk.level",
+                    "value": "HIGH"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "T8_LINK_A_ESSENTIAL_TREATMENT_STRATEGY": {
+        "id": "ec234a72-148a-4e64-ade2-27d5d8ee5657",
+        "node_key": "T8_LINK_A_ESSENTIAL_TREATMENT_STRATEGY",
+        "node_type": "LINK",
+        "text_en": "Tree 4: Essential treatment strategy",
+        "text_vi": "Cây 4: Chiến lược điều trị thiết yếu",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.facility_capability",
+          "value": "LIMITED_RESOURCES"
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "essential-treatment-strategy",
+        "link_target_node_key": null,
+        "display_order": 8,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "0e907118-c64f-44f2-b345-334c7ee8d410",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Đái tháo đường týp 2",
+                "number": "3.7.1"
+              }
+            ],
+            "locator": "Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)",
+            "locator_detail": "Exit point of the \"at target\" branch: continue the essential treatment strategy (limited-resource facility).",
+            "printed_page_numbers": [
+              32
+            ],
+            "pdf_page_numbers": [
+              34
+            ],
+            "reference_note": "Điểm thoát của nhánh \"đạt đích\": tiếp tục chiến lược điều trị thiết yếu.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T8_LINK_A_OPTIMAL_TREATMENT_STRATEGY": {
+        "id": "c118920d-cb09-4538-9c63-60bb03669b67",
+        "node_key": "T8_LINK_A_OPTIMAL_TREATMENT_STRATEGY",
+        "node_type": "LINK",
+        "text_en": "Tree 5: Optimal treatment strategy",
+        "text_vi": "Cây 5: Chiến lược điều trị tối ưu",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.facility_capability",
+          "value": "FULL_RESOURCES"
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "optimal-treatment-strategy",
+        "link_target_node_key": null,
+        "display_order": 9,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "c15c200a-b23f-4d22-84c0-587942531c68",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Đái tháo đường týp 2",
+                "number": "3.7.1"
+              }
+            ],
+            "locator": "Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)",
+            "locator_detail": "Exit point of the \"at target\" branch: continue the optimal treatment strategy (full-resource facility).",
+            "printed_page_numbers": [
+              32
+            ],
+            "pdf_page_numbers": [
+              34
+            ],
+            "reference_note": "Điểm thoát của nhánh \"đạt đích\": tiếp tục chiến lược điều trị tối ưu.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T8_LINK_B_ESSENTIAL_TREATMENT_STRATEGY": {
+        "id": "6a12facf-1a70-4baf-ba74-c9eed313d3dd",
+        "node_key": "T8_LINK_B_ESSENTIAL_TREATMENT_STRATEGY",
+        "node_type": "LINK",
+        "text_en": "Tree 4: Essential treatment strategy",
+        "text_vi": "Cây 4: Chiến lược điều trị thiết yếu",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.facility_capability",
+          "value": "LIMITED_RESOURCES"
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "essential-treatment-strategy",
+        "link_target_node_key": null,
+        "display_order": 10,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "0b62f617-7cca-4b86-aedd-fe82a6fc8622",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Đái tháo đường týp 2",
+                "number": "3.7.1"
+              }
+            ],
+            "locator": "Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)",
+            "locator_detail": "Exit point of the \"not at target\" branch: continue the essential treatment strategy (limited-resource facility).",
+            "printed_page_numbers": [
+              32
+            ],
+            "pdf_page_numbers": [
+              34
+            ],
+            "reference_note": "Điểm thoát của nhánh \"chưa đạt đích\": tiếp tục chiến lược điều trị thiết yếu.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T8_LINK_B_OPTIMAL_TREATMENT_STRATEGY": {
+        "id": "31bd32b3-6acc-4654-9f8e-fc68e7f395d9",
+        "node_key": "T8_LINK_B_OPTIMAL_TREATMENT_STRATEGY",
+        "node_type": "LINK",
+        "text_en": "Tree 5: Optimal treatment strategy",
+        "text_vi": "Cây 5: Chiến lược điều trị tối ưu",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.facility_capability",
+          "value": "FULL_RESOURCES"
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "optimal-treatment-strategy",
+        "link_target_node_key": null,
+        "display_order": 11,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "13c7c96e-e889-442c-9a22-e0701d23e901",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp và Đái tháo đường týp 2",
+                "number": "3.7.1"
+              }
+            ],
+            "locator": "Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)",
+            "locator_detail": "Exit point of the \"not at target\" branch: continue the optimal treatment strategy (full-resource facility).",
+            "printed_page_numbers": [
+              32
+            ],
+            "pdf_page_numbers": [
+              34
+            ],
+            "reference_note": "Điểm thoát của nhánh \"chưa đạt đích\": tiếp tục chiến lược điều trị tối ưu.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T8_START_BP_TARGET_STATUS": {
+        "id": "edc2fa79-a2e7-46fe-b08b-72d652082cec",
+        "node_key": "T8_START_BP_TARGET_STATUS",
+        "node_type": "START",
+        "text_en": "Tree 3: Blood pressure threshold and treatment target",
+        "text_vi": "Cây 3: Ngưỡng huyết áp và đích điều trị",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 0,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "7aea5a7f-9a02-4e20-ba3f-fe8b621eb2f8",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Phân tầng nguy cơ tim mạch trong tăng huyết áp",
+                "number": "1.5"
+              }
+            ],
+            "locator": "Bảng 2. Phân tầng nguy cơ trong tăng huyết áp (2)",
+            "locator_detail": "Background risk-stratification context carried over from Tree 3, before branching into the diabetes-specific Bảng 18 strategy.",
+            "printed_page_numbers": [
+              11
+            ],
+            "pdf_page_numbers": [
+              11
+            ],
+            "reference_note": "Tiếp nối bối cảnh phân tầng nguy cơ từ Cây 3.",
+            "reference_order": 1
+          },
+          {
+            "id": "d0fe9b61-ab25-420d-b7d0-d00afa6bd5cf",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Ngưỡng huyết áp ban đầu cần điều trị và ranh giới đích điều trị tăng huyết áp",
+                "number": "3.1"
+              }
+            ],
+            "locator": "Bảng 6. Ngưỡng huyết áp phòng khám cho điều trị tăng huyết áp theo nhóm tuổi",
+            "locator_detail": "General clinic-BP treatment threshold by age, inherited from Tree 3 before this diabetes-specific branch.",
+            "printed_page_numbers": [
+              15
+            ],
+            "pdf_page_numbers": [
+              17
+            ],
+            "reference_note": "Ngưỡng điều trị chung theo nhóm tuổi, kế thừa từ Cây 3.",
+            "reference_order": 2
+          },
+          {
+            "id": "d95d722c-555c-4faf-a684-0b96335fa126",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Ngưỡng huyết áp ban đầu cần điều trị và ranh giới đích điều trị tăng huyết áp",
+                "number": "3.1"
+              }
+            ],
+            "locator": "Bảng 7. Mục tiêu huyết áp phòng khám trong điều trị tăng huyết áp theo nhóm tuổi",
+            "locator_detail": "General clinic-BP treatment target by age, inherited from Tree 3 before this diabetes-specific branch.",
+            "printed_page_numbers": [
+              16
+            ],
+            "pdf_page_numbers": [
+              18
+            ],
+            "reference_note": "Đích điều trị chung theo nhóm tuổi, kế thừa từ Cây 3.",
+            "reference_order": 3
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "f3fcd1fa-65f9-4207-ab6a-e07369f6b0f3",
+            "traversal_order": 1,
+            "to_node_key": "T8_C_BELOW_TARGET",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 130
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 85
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "dccabbf2-fbc6-4f16-b5f4-05aa5140caf3",
+            "traversal_order": 2,
+            "to_node_key": "T8_C_ABOVE_TARGET",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 130
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 85
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "edges": [
+      {
+        "id": "5ef7806e-ad6c-43a2-9b3d-7b6fd484c715",
+        "from_node_key": "T8_C_ABOVE_TARGET",
+        "to_node_key": "T8_INF_REGIMEN_OPTIONS",
+        "traversal_order": 1
+      },
+      {
+        "id": "a71f14dc-d476-4353-89ae-4aacef57f840",
+        "from_node_key": "T8_C_BELOW_TARGET",
+        "to_node_key": "T8_LINK_A_ESSENTIAL_TREATMENT_STRATEGY",
+        "traversal_order": 1
+      },
+      {
+        "id": "7ff3ec4b-80dc-4a72-97c6-c7b7cd5e6287",
+        "from_node_key": "T8_C_BELOW_TARGET",
+        "to_node_key": "T8_LINK_A_OPTIMAL_TREATMENT_STRATEGY",
+        "traversal_order": 2
+      },
+      {
+        "id": "d9b67463-7ae1-41cc-b508-f3928c710f31",
+        "from_node_key": "T8_C_HAS_CV_RISK",
+        "to_node_key": "T8_INF_ADD_SGLT2I_GLP1RA",
+        "traversal_order": 1
+      },
+      {
+        "id": "668194a9-4326-42af-afba-ee9a11bf73b2",
+        "from_node_key": "T8_C_NO_CV_RISK",
+        "to_node_key": "T8_INF_MAINTAIN_REGIMEN",
+        "traversal_order": 1
+      },
+      {
+        "id": "73fbf622-a00b-45e4-96f4-e8bfa30be9a2",
+        "from_node_key": "T8_INF_ADD_SGLT2I_GLP1RA",
+        "to_node_key": "T8_LINK_B_ESSENTIAL_TREATMENT_STRATEGY",
+        "traversal_order": 1
+      },
+      {
+        "id": "11a5ea21-2561-4f47-a5fa-f55191b5ef6b",
+        "from_node_key": "T8_INF_ADD_SGLT2I_GLP1RA",
+        "to_node_key": "T8_LINK_B_OPTIMAL_TREATMENT_STRATEGY",
+        "traversal_order": 2
+      },
+      {
+        "id": "4aea4df0-6a55-4fdc-9f3b-5ecb3c82bdc9",
+        "from_node_key": "T8_INF_MAINTAIN_REGIMEN",
+        "to_node_key": "T8_LINK_B_ESSENTIAL_TREATMENT_STRATEGY",
+        "traversal_order": 1
+      },
+      {
+        "id": "694f2d3f-53eb-40b5-b632-70b569ef0390",
+        "from_node_key": "T8_INF_MAINTAIN_REGIMEN",
+        "to_node_key": "T8_LINK_B_OPTIMAL_TREATMENT_STRATEGY",
+        "traversal_order": 2
+      },
+      {
+        "id": "22498c75-387a-4483-b205-53638ccf0f80",
+        "from_node_key": "T8_INF_REGIMEN_OPTIONS",
+        "to_node_key": "T8_C_HAS_CV_RISK",
+        "traversal_order": 1
+      },
+      {
+        "id": "0878b552-bb3c-4839-9d61-062adbe891ad",
+        "from_node_key": "T8_INF_REGIMEN_OPTIONS",
+        "to_node_key": "T8_C_NO_CV_RISK",
+        "traversal_order": 2
+      },
+      {
+        "id": "f3fcd1fa-65f9-4207-ab6a-e07369f6b0f3",
+        "from_node_key": "T8_START_BP_TARGET_STATUS",
+        "to_node_key": "T8_C_BELOW_TARGET",
+        "traversal_order": 1
+      },
+      {
+        "id": "dccabbf2-fbc6-4f16-b5f4-05aa5140caf3",
+        "from_node_key": "T8_START_BP_TARGET_STATUS",
+        "to_node_key": "T8_C_ABOVE_TARGET",
+        "traversal_order": 2
+      }
+    ],
+    "layout": null
+  },
+  "counts": {
+    "nodes": 13,
+    "edges": 13,
+    "references": 15,
+    "layouts": 0
+  }
+}

@@ -1,0 +1,516 @@
+{
+  "format": "cdss-traversal-graph",
+  "format_version": 1,
+  "source": "backups/seed.sql",
+  "traversal_semantics": {
+    "entry": "entry_node_keys",
+    "node_lookup": "trees[].nodes[node_key]",
+    "branch_priority": "transitions sorted by traversal_order ascending",
+    "branch_condition": "condition_definition on the target node; copied to candidate_condition",
+    "cross_tree_jump": "LINK nodes use link_target_tree_key and optional link_target_node_key"
+  },
+  "document_type": "decision_tree",
+  "tree": {
+    "id": "812adc37-8380-4f46-ba92-2d48f582e5da",
+    "tree_key": "hypertension-older-adults",
+    "name_en": "Hypertension in Older Adults",
+    "name_vi": "Cây 7: THA Người cao tuổi",
+    "created_at": "2026-07-25 11:46:28.205822+00:00",
+    "updated_at": "2026-07-25 11:46:28.205822+00:00",
+    "entry_node_keys": [
+      "T7_START"
+    ],
+    "root_node_keys": [
+      "T7_G_DRUGS",
+      "T7_START"
+    ],
+    "global_node_keys": [
+      "T7_G_DRUGS"
+    ],
+    "nodes": {
+      "T7_A_CLASSIFY": {
+        "id": "e281b92f-39f7-404a-b2b3-8134c7df2865",
+        "node_key": "T7_A_CLASSIFY",
+        "node_type": "INFERENCE",
+        "text_en": "Classify hypertension in elderly and very elderly patients",
+        "text_vi": "Phân loại THA bệnh nhân cao tuổi và bệnh nhân rất già",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "CLASSIFY_ELDERLY_PATIENT"
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 2,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "50e9d818-78ad-407f-9226-d8eced2400b5",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Các trường hợp tăng huyết áp đặc biệt",
+              "3.6.3. Tăng huyết áp ở người cao tuổi"
+            ],
+            "locator": "3.6.3. Tăng huyết áp ở người cao tuổi",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              31
+            ],
+            "pdf_page_numbers": [
+              33
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "b545486b-09e3-4319-9284-dd5be1f546ed",
+            "traversal_order": 1,
+            "to_node_key": "T7_C_AGE_70_79",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "gte",
+                  "path": "input.age",
+                  "value": 70
+                },
+                {
+                  "op": "lte",
+                  "path": "input.age",
+                  "value": 79
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "b898ef78-001b-461d-b268-90b5d3af4fed",
+            "traversal_order": 2,
+            "to_node_key": "T7_C_AGE_80_PLUS",
+            "candidate_condition": {
+              "op": "gte",
+              "path": "input.age",
+              "value": 80
+            }
+          }
+        ]
+      },
+      "T7_C_AGE_70_79": {
+        "id": "cdcd1de6-9367-43ea-ac81-7ecf282c62a9",
+        "node_key": "T7_C_AGE_70_79",
+        "node_type": "CONDITION",
+        "text_en": "Patient age is in range 70-79",
+        "text_vi": "Tuổi bệnh nhân thuộc khoảng 70-79",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "gte",
+              "path": "input.age",
+              "value": 70
+            },
+            {
+              "op": "lte",
+              "path": "input.age",
+              "value": 79
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 3,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "46984a95-b8ea-4e6c-b9e3-495f20931de4",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Các trường hợp tăng huyết áp đặc biệt",
+              "3.6.3. Tăng huyết áp ở người cao tuổi"
+            ],
+            "locator": "3.6.3. Tăng huyết áp ở người cao tuổi",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              31
+            ],
+            "pdf_page_numbers": [
+              33
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "8c6aff7b-b625-4fff-97a9-2e305d65005b",
+            "traversal_order": 1,
+            "to_node_key": "T7_I_DC_70_79",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T7_C_AGE_80_PLUS": {
+        "id": "e951a670-b220-4ef0-8034-24f1928808a1",
+        "node_key": "T7_C_AGE_80_PLUS",
+        "node_type": "CONDITION",
+        "text_en": "Patient age >= 80 (very elderly)",
+        "text_vi": "Tuổi bệnh nhân >=80",
+        "condition_definition": {
+          "op": "gte",
+          "path": "input.age",
+          "value": 80
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 4,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "04d3fe24-dc7c-41da-be52-80fd22b01540",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Các trường hợp tăng huyết áp đặc biệt",
+              "3.6.3. Tăng huyết áp ở người cao tuổi"
+            ],
+            "locator": "3.6.3. Tăng huyết áp ở người cao tuổi",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              31
+            ],
+            "pdf_page_numbers": [
+              33
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "7ae66ffe-8132-4f96-8aea-0a8b2904cb88",
+            "traversal_order": 1,
+            "to_node_key": "T7_LINK_ESSENTIAL",
+            "candidate_condition": null
+          },
+          {
+            "edge_id": "ffb5fdae-ae48-47b4-8cdb-f5e0da4cfe2b",
+            "traversal_order": 2,
+            "to_node_key": "T7_LINK_OPTIMAL",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T7_G_DRUGS": {
+        "id": "a19f31da-7fc5-439a-bffc-34aaddbba2dd",
+        "node_key": "T7_G_DRUGS",
+        "node_type": "GLOBAL",
+        "text_en": "First-line drugs: D (thiazide-like) + C. Add A or MRA when necessary",
+        "text_vi": "Thuốc chỉ định hàng đầu: D (thiazide-like) + C. Thêm A hoặc MRA khi cần",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": {
+          "drug_classes": {
+            "A": {
+              "label": "Ức chế hệ RAS",
+              "subtypes": [
+                "UCMC: Ức chế men chuyển",
+                "CTTA: chẹn thụ thể angiotensin II",
+                "ARNI: chẹn thụ thể Angiotensine-neprisyline"
+              ]
+            },
+            "B": {
+              "label": "Chẹn Beta",
+              "subtypes": [
+                "CB"
+              ]
+            },
+            "C": {
+              "label": "Chẹn kênh Canxi",
+              "subtypes": [
+                "CKCa"
+              ]
+            },
+            "D": {
+              "label": "Lợi tiểu",
+              "subtypes": [
+                "LT"
+              ]
+            },
+            "MRA": {
+              "label": "Thuốc đối kháng thụ thể mineral coticoid"
+            },
+            "SGLT2i": {
+              "label": "dapagliflozin / empagliflozin"
+            }
+          }
+        },
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 8,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "3a08445b-2130-4aea-b619-ec6b5c4ef1b3",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Các trường hợp tăng huyết áp đặc biệt",
+              "3.6.3. Tăng huyết áp ở người cao tuổi"
+            ],
+            "locator": "3.6.3. Tăng huyết áp ở người cao tuổi",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              31
+            ],
+            "pdf_page_numbers": [
+              33
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T7_I_DC_70_79": {
+        "id": "8dee04a9-d059-4004-bc44-2bdf62d04469",
+        "node_key": "T7_I_DC_70_79",
+        "node_type": "INFERENCE",
+        "text_en": "Prescribe D + C combination, prioritize thiazide-like D",
+        "text_vi": "Chỉ định điều trị thuốc D + C, Ưu tiên D thiazide-like",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "drugs": [
+            "D_THIAZIDE_LIKE",
+            "C"
+          ],
+          "action_type": "PRESCRIBE_D_C_THIAZIDE_PRIORITY"
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 5,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "dfff6f50-6ed1-48d3-b069-24c760162a92",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Các trường hợp tăng huyết áp đặc biệt",
+              "3.6.3. Tăng huyết áp ở người cao tuổi"
+            ],
+            "locator": "3.6.3. Tăng huyết áp ở người cao tuổi",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              31
+            ],
+            "pdf_page_numbers": [
+              33
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "c328a523-91f8-4193-bcf6-3a55b58ea11b",
+            "traversal_order": 1,
+            "to_node_key": "T7_LINK_ESSENTIAL",
+            "candidate_condition": null
+          },
+          {
+            "edge_id": "17cb147e-0dcc-4b9d-bc7d-10e1ccadae71",
+            "traversal_order": 2,
+            "to_node_key": "T7_LINK_OPTIMAL",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T7_LINK_ESSENTIAL": {
+        "id": "537e515a-56ae-4e09-a235-20420f20806b",
+        "node_key": "T7_LINK_ESSENTIAL",
+        "node_type": "LINK",
+        "text_en": "Tree 4: Essential Treatment Strategy",
+        "text_vi": "Cây 4: Chiến lược điều trị thiết yếu",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "essential-treatment-strategy",
+        "link_target_node_key": null,
+        "display_order": 6,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "1feb5cb7-19f4-42c4-b99f-331e6033d6d1",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Các trường hợp tăng huyết áp đặc biệt",
+              "3.6.3. Tăng huyết áp ở người cao tuổi"
+            ],
+            "locator": "3.6.3. Tăng huyết áp ở người cao tuổi",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              31
+            ],
+            "pdf_page_numbers": [
+              33
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T7_LINK_OPTIMAL": {
+        "id": "29abe152-42d2-48ea-9780-a0062e2010fc",
+        "node_key": "T7_LINK_OPTIMAL",
+        "node_type": "LINK",
+        "text_en": "Tree 5: Optimal Treatment Strategy",
+        "text_vi": "Cây 5: Chiến lược điều trị tối ưu",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "optimal-treatment-strategy",
+        "link_target_node_key": null,
+        "display_order": 7,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "1d2c58ff-da6a-4689-abf1-8b57f7e5987b",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Các trường hợp tăng huyết áp đặc biệt",
+              "3.6.3. Tăng huyết áp ở người cao tuổi"
+            ],
+            "locator": "3.6.3. Tăng huyết áp ở người cao tuổi",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              31
+            ],
+            "pdf_page_numbers": [
+              33
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T7_START": {
+        "id": "63aeac94-609f-4799-baaf-6aff6229e8c3",
+        "node_key": "T7_START",
+        "node_type": "START",
+        "text_en": "Tree 3: Blood Pressure Thresholds and Targets",
+        "text_vi": "Cây 3 Ngưỡng huyết áp và đích điều trị",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 1,
+        "created_at": "2026-07-25 11:46:28.205822+00:00",
+        "updated_at": "2026-07-25 11:46:28.205822+00:00",
+        "references": [
+          {
+            "id": "8d59975d-04ae-4a70-841c-c7295dc546d0",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Các trường hợp tăng huyết áp đặc biệt",
+              "3.6.3. Tăng huyết áp ở người cao tuổi"
+            ],
+            "locator": "3.6.3. Tăng huyết áp ở người cao tuổi",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              31
+            ],
+            "pdf_page_numbers": [
+              33
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "8130c9b9-08ae-4c62-9930-166b0cf69c0b",
+            "traversal_order": 1,
+            "to_node_key": "T7_A_CLASSIFY",
+            "candidate_condition": null
+          }
+        ]
+      }
+    },
+    "edges": [
+      {
+        "id": "b545486b-09e3-4319-9284-dd5be1f546ed",
+        "from_node_key": "T7_A_CLASSIFY",
+        "to_node_key": "T7_C_AGE_70_79",
+        "traversal_order": 1
+      },
+      {
+        "id": "b898ef78-001b-461d-b268-90b5d3af4fed",
+        "from_node_key": "T7_A_CLASSIFY",
+        "to_node_key": "T7_C_AGE_80_PLUS",
+        "traversal_order": 2
+      },
+      {
+        "id": "8c6aff7b-b625-4fff-97a9-2e305d65005b",
+        "from_node_key": "T7_C_AGE_70_79",
+        "to_node_key": "T7_I_DC_70_79",
+        "traversal_order": 1
+      },
+      {
+        "id": "7ae66ffe-8132-4f96-8aea-0a8b2904cb88",
+        "from_node_key": "T7_C_AGE_80_PLUS",
+        "to_node_key": "T7_LINK_ESSENTIAL",
+        "traversal_order": 1
+      },
+      {
+        "id": "ffb5fdae-ae48-47b4-8cdb-f5e0da4cfe2b",
+        "from_node_key": "T7_C_AGE_80_PLUS",
+        "to_node_key": "T7_LINK_OPTIMAL",
+        "traversal_order": 2
+      },
+      {
+        "id": "c328a523-91f8-4193-bcf6-3a55b58ea11b",
+        "from_node_key": "T7_I_DC_70_79",
+        "to_node_key": "T7_LINK_ESSENTIAL",
+        "traversal_order": 1
+      },
+      {
+        "id": "17cb147e-0dcc-4b9d-bc7d-10e1ccadae71",
+        "from_node_key": "T7_I_DC_70_79",
+        "to_node_key": "T7_LINK_OPTIMAL",
+        "traversal_order": 2
+      },
+      {
+        "id": "8130c9b9-08ae-4c62-9930-166b0cf69c0b",
+        "from_node_key": "T7_START",
+        "to_node_key": "T7_A_CLASSIFY",
+        "traversal_order": 1
+      }
+    ],
+    "layout": null
+  },
+  "counts": {
+    "nodes": 8,
+    "edges": 8,
+    "references": 8,
+    "layouts": 0
+  }
+}

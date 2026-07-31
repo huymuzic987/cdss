@@ -1,0 +1,3210 @@
+{
+  "format": "cdss-traversal-graph",
+  "format_version": 1,
+  "source": "backups/seed.sql",
+  "traversal_semantics": {
+    "entry": "entry_node_keys",
+    "node_lookup": "trees[].nodes[node_key]",
+    "branch_priority": "transitions sorted by traversal_order ascending",
+    "branch_condition": "condition_definition on the target node; copied to candidate_condition",
+    "cross_tree_jump": "LINK nodes use link_target_tree_key and optional link_target_node_key"
+  },
+  "document_type": "decision_tree",
+  "tree": {
+    "id": "723b3d9d-5052-a626-1ab8-5f3a2145173e",
+    "tree_key": "treatment-threshold-and-bp-target",
+    "name_en": "Treatment Threshold and BP Target",
+    "name_vi": "Ngưỡng Huyết Áp và Đích điều trị",
+    "created_at": "2026-06-27 10:16:47.509980+00:00",
+    "updated_at": "2026-06-27 15:51:59.041846+00:00",
+    "entry_node_keys": [
+      "T3_START_BP_AND_AGE_INFORMATION"
+    ],
+    "root_node_keys": [
+      "T3_GLOBAL_AGE_80_THRESHOLD_NOTE",
+      "T3_START_BP_AND_AGE_INFORMATION"
+    ],
+    "global_node_keys": [
+      "T3_GLOBAL_AGE_80_THRESHOLD_NOTE"
+    ],
+    "nodes": {
+      "T3_ACTION_18_69_COMORBIDITY_LIFESTYLE_AND_FOLLOW_UP": {
+        "id": "b03048ca-27aa-09c2-bff4-ee361ac09378",
+        "node_key": "T3_ACTION_18_69_COMORBIDITY_LIFESTYLE_AND_FOLLOW_UP",
+        "node_type": "ACTION",
+        "text_en": "Lifestyle modification and continued monitoring",
+        "text_vi": "Thay đổi lối sống và tiếp tục theo dõi",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "LIFESTYLE_AND_CONTINUED_MONITORING",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "restart_tree_key": "hypertension-diagnosis",
+          "follow_up_required": true
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 15,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "9e4a52fe-913c-bc3f-1cc3-ccc2fed327e9",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T3_ACTION_18_69_NO_COMORBIDITY_LIFESTYLE_AND_FOLLOW_UP": {
+        "id": "0c92a137-09dd-cc40-8d65-a16871ae8176",
+        "node_key": "T3_ACTION_18_69_NO_COMORBIDITY_LIFESTYLE_AND_FOLLOW_UP",
+        "node_type": "ACTION",
+        "text_en": "Lifestyle modification and continued monitoring",
+        "text_vi": "Thay đổi lối sống và tiếp tục theo dõi",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "LIFESTYLE_AND_CONTINUED_MONITORING",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "restart_tree_key": "hypertension-diagnosis",
+          "follow_up_required": true
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 9,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "bc1f6961-f7a8-9b54-35bb-c59543cd5134",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T3_ACTION_70_79_LIFESTYLE_AND_FOLLOW_UP": {
+        "id": "314a95d2-649f-4168-ffca-5ae74bd586c4",
+        "node_key": "T3_ACTION_70_79_LIFESTYLE_AND_FOLLOW_UP",
+        "node_type": "ACTION",
+        "text_en": "Lifestyle modification and continued monitoring",
+        "text_vi": "Thay đổi lối sống và tiếp tục theo dõi",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "LIFESTYLE_AND_CONTINUED_MONITORING",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "restart_tree_key": "hypertension-diagnosis",
+          "follow_up_required": true
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 25,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "a426b026-284e-361f-cb58-662d94ce3157",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T3_ACTION_80_OR_HIGHER_LIFESTYLE_AND_FOLLOW_UP": {
+        "id": "9261e551-a1e4-f52d-776f-256476cde602",
+        "node_key": "T3_ACTION_80_OR_HIGHER_LIFESTYLE_AND_FOLLOW_UP",
+        "node_type": "ACTION",
+        "text_en": "Lifestyle modification and continued monitoring",
+        "text_vi": "Thay đổi lối sống và tiếp tục theo dõi",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "LIFESTYLE_AND_CONTINUED_MONITORING",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "restart_tree_key": "hypertension-diagnosis",
+          "follow_up_required": true
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 28,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "fda12520-0a10-3d3c-2b45-46d18211cb4a",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T3_ACTION_LIFESTYLE_FOLLOW_UP_CONTINUE_MONITORING": {
+        "id": "0a1a022d-3fba-8a24-a6ca-602eb97b1936",
+        "node_key": "T3_ACTION_LIFESTYLE_FOLLOW_UP_CONTINUE_MONITORING",
+        "node_type": "ACTION",
+        "text_en": "Continue lifestyle management and monitoring",
+        "text_vi": "Tiếp tục thay đổi lối sống và theo dõi",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "CONTINUE_LIFESTYLE_AND_MONITORING",
+          "rule_origin": "LOCAL_PROJECT_POLICY",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "restart_tree_key": "hypertension-diagnosis",
+          "follow_up_required": true,
+          "lifestyle_response_threshold_mmhg": {
+            "require_both": true,
+            "minimum_dbp_reduction": 10,
+            "minimum_sbp_reduction": 15
+          }
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 8,
+        "created_at": "2026-06-27 15:49:12.978633+00:00",
+        "updated_at": "2026-06-27 15:49:12.978633+00:00",
+        "references": [
+          {
+            "id": "e4b2e707-9900-d3b5-8eaf-e95c4dab1737",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Chiến lược điều trị tăng huyết áp",
+                "number": "3.2"
+              }
+            ],
+            "locator": "Hình 3. Sơ đồ điều trị tăng huyết áp thiết yếu VSH/VNHA 2022",
+            "locator_detail": "Follow-up after lifestyle change; medication consideration when BP remains uncontrolled after lifestyle management.",
+            "printed_page_numbers": [
+              17
+            ],
+            "pdf_page_numbers": [
+              19
+            ],
+            "reference_note": "The 15 mmHg SBP and 10 mmHg DBP thresholds are local project policy, not numeric thresholds stated in the guideline figure.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T3_C_18_69_COMORBIDITY_AT_OR_ABOVE_THRESHOLD": {
+        "id": "aac650db-813f-8d02-d74f-52d83aec84f9",
+        "node_key": "T3_C_18_69_COMORBIDITY_AT_OR_ABOVE_THRESHOLD",
+        "node_type": "CONDITION",
+        "text_en": "SBP ≥130 mmHg OR DBP ≥90 mmHg",
+        "text_vi": "HATT >= 130 HOẶC HATTr >= 90",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "gte",
+              "path": "input.current_clinic_sbp",
+              "value": 130
+            },
+            {
+              "op": "gte",
+              "path": "input.current_clinic_dbp",
+              "value": 90
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 14,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "77a8814e-6730-a4eb-5c1c-8455810161d9",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          },
+          {
+            "id": "ec7f280e-d0e7-f954-3eaf-e6a2bbdc14e3",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Bảng 6. Ngưỡng huyết áp khởi trị theo tuổi và bệnh đồng mắc",
+            "locator_detail": "Treatment-threshold classification used by Tree 3.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": null,
+            "reference_order": 2
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "e6398cd1-5a0d-0151-00c6-9ff1f01c6eb0",
+            "traversal_order": 1,
+            "to_node_key": "T3_INF_18_69_COMORBIDITY_BP_TARGET",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T3_C_18_69_COMORBIDITY_BELOW_THRESHOLD": {
+        "id": "7cee6dc2-7420-d2db-e172-43e3cb73ebf8",
+        "node_key": "T3_C_18_69_COMORBIDITY_BELOW_THRESHOLD",
+        "node_type": "CONDITION",
+        "text_en": "SBP <130 mmHg AND DBP <90 mmHg",
+        "text_vi": "HATT < 130 VÀ HATTr < 90",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value": 130
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value": 90
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 13,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "3aed4640-f325-63a7-90c5-c12cf61a492a",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "5be8ebfb-bbaf-e1a5-ff80-eb55d0445b6e",
+            "traversal_order": 1,
+            "to_node_key": "T3_C_18_69_COMORBIDITY_DBP_85_TO_89_TREATMENT",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 130
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 85
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "7f2772c3-a498-a26b-e079-6d88039627c7",
+            "traversal_order": 2,
+            "to_node_key": "T3_C_18_69_COMORBIDITY_DBP_BELOW_85_LIFESTYLE",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 130
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 85
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T3_C_18_69_COMORBIDITY_DBP_85_TO_89_TREATMENT": {
+        "id": "24fd4dc9-e461-86fe-73ee-72f28c410793",
+        "node_key": "T3_C_18_69_COMORBIDITY_DBP_85_TO_89_TREATMENT",
+        "node_type": "CONDITION",
+        "text_en": "SBP below 130 mmHg and DBP 85–89 mmHg",
+        "text_vi": "HATT <130 VÀ HATTr 85–89",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value": 130
+            },
+            {
+              "op": "gte",
+              "path": "input.current_clinic_dbp",
+              "value": 85
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value": 90
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 38,
+        "created_at": "2026-06-27 14:53:38.863300+00:00",
+        "updated_at": "2026-06-27 14:53:38.863300+00:00",
+        "references": [
+          {
+            "id": "06600c37-587d-62f8-5a52-19200752fb17",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Ngưỡng huyết áp ban đầu cần điều trị và ranh giới đích điều trị tăng huyết áp",
+                "number": "3.1"
+              }
+            ],
+            "locator": "Bảng 6. Ngưỡng huyết áp phòng khám cho điều trị tăng huyết áp theo nhóm tuổi",
+            "locator_detail": "Age 18–69 with comorbidity: DBP treatment threshold is 85 mmHg.",
+            "printed_page_numbers": [
+              15
+            ],
+            "pdf_page_numbers": [
+              17
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "5b6ba9f8-a257-d4ba-7941-ac12a453390d",
+            "traversal_order": 1,
+            "to_node_key": "T3_INF_18_69_COMORBIDITY_BP_TARGET",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T3_C_18_69_COMORBIDITY_DBP_BELOW_85_LIFESTYLE": {
+        "id": "1cd09c61-8f8a-ef32-ef53-eb47481b78c8",
+        "node_key": "T3_C_18_69_COMORBIDITY_DBP_BELOW_85_LIFESTYLE",
+        "node_type": "CONDITION",
+        "text_en": "SBP below 130 mmHg and DBP below 85 mmHg",
+        "text_vi": "HATT <130 VÀ HATTr <85",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value": 130
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value": 85
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 39,
+        "created_at": "2026-06-27 14:53:38.863300+00:00",
+        "updated_at": "2026-06-27 14:53:38.863300+00:00",
+        "references": [
+          {
+            "id": "be553db4-d638-7651-8d74-b6ff2259972f",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Ngưỡng huyết áp ban đầu cần điều trị và ranh giới đích điều trị tăng huyết áp",
+                "number": "3.1"
+              }
+            ],
+            "locator": "Bảng 6. Ngưỡng huyết áp phòng khám cho điều trị tăng huyết áp theo nhóm tuổi",
+            "locator_detail": "Age 18–69 with comorbidity: DBP treatment threshold is 85 mmHg.",
+            "printed_page_numbers": [
+              15
+            ],
+            "pdf_page_numbers": [
+              17
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "fe2be24f-e103-4139-f66c-ba4dd3990d80",
+            "traversal_order": 1,
+            "to_node_key": "T3_ACTION_18_69_COMORBIDITY_LIFESTYLE_AND_FOLLOW_UP",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T3_C_18_69_NO_COMORBIDITY_AT_OR_ABOVE_THRESHOLD": {
+        "id": "86deea06-0fd7-f7d1-052f-80aadbd34f2d",
+        "node_key": "T3_C_18_69_NO_COMORBIDITY_AT_OR_ABOVE_THRESHOLD",
+        "node_type": "CONDITION",
+        "text_en": "SBP ≥140 mmHg OR DBP ≥90 mmHg",
+        "text_vi": "HATT >= 140 HOẶC HATTr >= 90",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "gte",
+              "path": "input.current_clinic_sbp",
+              "value": 140
+            },
+            {
+              "op": "gte",
+              "path": "input.current_clinic_dbp",
+              "value": 90
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 8,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "0b9a74c3-2100-cc0a-16e5-b17fcdb6ce22",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          },
+          {
+            "id": "302f70e6-3756-1c9a-1f83-bc0bc09f85c7",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Bảng 6. Ngưỡng huyết áp khởi trị theo tuổi và bệnh đồng mắc",
+            "locator_detail": "Treatment-threshold classification used by Tree 3.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": null,
+            "reference_order": 2
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "aa3e7f7c-07f8-6a7a-c87f-26870234ada6",
+            "traversal_order": 1,
+            "to_node_key": "T3_INF_18_69_NO_COMORBIDITY_BP_TARGET",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD": {
+        "id": "a568efbe-4123-a88c-7824-dce7c9f4744c",
+        "node_key": "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD",
+        "node_type": "CONDITION",
+        "text_en": "SBP <140 mmHg AND DBP <90 mmHg",
+        "text_vi": "HATT < 140 VÀ HATTr < 90",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value": 140
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value": 90
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 7,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "2ee5f4f9-d1d6-8d91-e960-9711b1585f15",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "732a9fa5-2d95-39c4-a5fb-60cb82bef5b4",
+            "traversal_order": 1,
+            "to_node_key": "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD_HIGH_RISK_HABTC",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 140
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                },
+                {
+                  "op": "eq",
+                  "path": "context.risk.level",
+                  "value": "HIGH"
+                },
+                {
+                  "any": [
+                    {
+                      "op": "gte",
+                      "path": "input.current_clinic_sbp",
+                      "value": 130
+                    },
+                    {
+                      "op": "gte",
+                      "path": "input.current_clinic_dbp",
+                      "value": 85
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "652b8535-95fc-437d-92e5-be2f516ed890",
+            "traversal_order": 2,
+            "to_node_key": "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD_NOT_HIGH_RISK_HABTC",
+            "candidate_condition": {
+              "not": {
+                "all": [
+                  {
+                    "op": "lt",
+                    "path": "input.current_clinic_sbp",
+                    "value": 140
+                  },
+                  {
+                    "op": "lt",
+                    "path": "input.current_clinic_dbp",
+                    "value": 90
+                  },
+                  {
+                    "op": "eq",
+                    "path": "context.risk.level",
+                    "value": "HIGH"
+                  },
+                  {
+                    "any": [
+                      {
+                        "op": "gte",
+                        "path": "input.current_clinic_sbp",
+                        "value": 130
+                      },
+                      {
+                        "op": "gte",
+                        "path": "input.current_clinic_dbp",
+                        "value": 85
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "edge_id": "dc265fb0-4440-3672-7040-caec51b2d872",
+            "traversal_order": 3,
+            "to_node_key": "T3_ACTION_18_69_NO_COMORBIDITY_LIFESTYLE_AND_FOLLOW_UP",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD_HIGH_RISK_HABTC": {
+        "id": "012c8740-0d0a-ffa9-93ff-41f19bf24ee7",
+        "node_key": "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD_HIGH_RISK_HABTC",
+        "node_type": "CONDITION",
+        "text_en": "High-normal BP and high risk",
+        "text_vi": "HABTC và nguy cơ cao",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value": 140
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value": 90
+            },
+            {
+              "op": "eq",
+              "path": "context.risk.level",
+              "value": "HIGH"
+            },
+            {
+              "any": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 130
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 85
+                }
+              ]
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 35,
+        "created_at": "2026-06-27 13:26:06.240489+00:00",
+        "updated_at": "2026-06-27 14:53:38.863300+00:00",
+        "references": [
+          {
+            "id": "1b72c1e6-c409-9674-b85e-72624ff61038",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Ngưỡng huyết áp ban đầu cần điều trị và ranh giới đích điều trị tăng huyết áp",
+                "number": "3.1"
+              }
+            ],
+            "locator": "Hình 2. Tóm tắt ngưỡng huyết áp ban đầu & đích huyết áp phòng khám ở THA người lớn",
+            "locator_detail": "High-normal BP with high cardiovascular risk enters the medication-treatment pathway.",
+            "printed_page_numbers": [
+              14
+            ],
+            "pdf_page_numbers": [
+              16
+            ],
+            "reference_note": "Tree 3 patch: high-risk HABTC is not lifestyle-only.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "cac9a75d-8d43-ef4e-9b68-9858a7b2285c",
+            "traversal_order": 1,
+            "to_node_key": "T3_INF_18_69_NO_COMORBIDITY_HIGH_RISK_HABTC_BP_TARGET",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD_NOT_HIGH_RISK_HABTC": {
+        "id": "d49ed998-c9d4-c06f-9859-ebd4459f4457",
+        "node_key": "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD_NOT_HIGH_RISK_HABTC",
+        "node_type": "CONDITION",
+        "text_en": "Below 140/90 without high-risk high-normal BP",
+        "text_vi": "HATT <140 VÀ HATTr <90, không thuộc HABTC nguy cơ cao",
+        "condition_definition": {
+          "not": {
+            "all": [
+              {
+                "op": "lt",
+                "path": "input.current_clinic_sbp",
+                "value": 140
+              },
+              {
+                "op": "lt",
+                "path": "input.current_clinic_dbp",
+                "value": 90
+              },
+              {
+                "op": "eq",
+                "path": "context.risk.level",
+                "value": "HIGH"
+              },
+              {
+                "any": [
+                  {
+                    "op": "gte",
+                    "path": "input.current_clinic_sbp",
+                    "value": 130
+                  },
+                  {
+                    "op": "gte",
+                    "path": "input.current_clinic_dbp",
+                    "value": 85
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 36,
+        "created_at": "2026-06-27 13:26:06.240489+00:00",
+        "updated_at": "2026-06-27 14:53:38.863300+00:00",
+        "references": [
+          {
+            "id": "35acebc5-c7e3-af53-7727-6add2ab19df6",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Ngưỡng huyết áp ban đầu cần điều trị và ranh giới đích điều trị tăng huyết áp",
+                "number": "3.1"
+              }
+            ],
+            "locator": "Hình 2. Tóm tắt ngưỡng huyết áp ban đầu & đích huyết áp phòng khám ở THA người lớn",
+            "locator_detail": "High-normal BP with high cardiovascular risk enters the medication-treatment pathway.",
+            "printed_page_numbers": [
+              14
+            ],
+            "pdf_page_numbers": [
+              16
+            ],
+            "reference_note": "Tree 3 patch: high-risk HABTC is not lifestyle-only.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "b9e80076-4ba6-124c-dc52-296437ace7da",
+            "traversal_order": 1,
+            "to_node_key": "T3_ACTION_18_69_NO_COMORBIDITY_LIFESTYLE_AND_FOLLOW_UP",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T3_C_70_79_AT_OR_ABOVE_THRESHOLD": {
+        "id": "fc6394bc-6d70-5ab1-f750-1a26069ac9b7",
+        "node_key": "T3_C_70_79_AT_OR_ABOVE_THRESHOLD",
+        "node_type": "CONDITION",
+        "text_en": "SBP ≥140 mmHg OR DBP ≥90 mmHg",
+        "text_vi": "HATT >= 140 HOẶC HATTr >= 90",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "gte",
+              "path": "input.current_clinic_sbp",
+              "value": 140
+            },
+            {
+              "op": "gte",
+              "path": "input.current_clinic_dbp",
+              "value": 90
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 24,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "b1a1025b-4cda-a671-93d3-21a55181e0a7",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          },
+          {
+            "id": "067a420c-bc99-c9eb-bc74-584e6e40cbc4",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Bảng 6. Ngưỡng huyết áp khởi trị theo tuổi và bệnh đồng mắc",
+            "locator_detail": "Treatment-threshold classification used by Tree 3.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": null,
+            "reference_order": 2
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "b429d36a-803f-d921-020d-003aa8f98790",
+            "traversal_order": 1,
+            "to_node_key": "T3_INF_AGE_70_OR_HIGHER_BP_TARGET",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T3_C_70_79_BELOW_THRESHOLD": {
+        "id": "c10efb3e-1efc-6aa1-e0c1-b2e799e2c77b",
+        "node_key": "T3_C_70_79_BELOW_THRESHOLD",
+        "node_type": "CONDITION",
+        "text_en": "SBP <140 mmHg AND DBP <90 mmHg",
+        "text_vi": "HATT < 140 VÀ HATTr < 90",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value": 140
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value": 90
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 23,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "02df737e-50f8-59a5-0fd1-df54ead1115f",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "1a196840-07a3-79a4-e6cd-d6c03d0379d3",
+            "traversal_order": 1,
+            "to_node_key": "T3_ACTION_70_79_LIFESTYLE_AND_FOLLOW_UP",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T3_C_80_OR_HIGHER_AT_OR_ABOVE_THRESHOLD": {
+        "id": "e3a963b3-778c-bd6c-6346-31ef75b22c12",
+        "node_key": "T3_C_80_OR_HIGHER_AT_OR_ABOVE_THRESHOLD",
+        "node_type": "CONDITION",
+        "text_en": "SBP ≥160 mmHg OR DBP ≥90 mmHg",
+        "text_vi": "HATT >= 160 HOẶC HATTr >= 90",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "gte",
+              "path": "input.current_clinic_sbp",
+              "value": 160
+            },
+            {
+              "op": "gte",
+              "path": "input.current_clinic_dbp",
+              "value": 90
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 27,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "a633afd9-2154-ef7a-d9d8-f69ee0360716",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          },
+          {
+            "id": "bb97ffbf-91ff-9399-5774-463e6c34377a",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Bảng 6. Ngưỡng huyết áp khởi trị theo tuổi và bệnh đồng mắc",
+            "locator_detail": "Treatment-threshold classification used by Tree 3.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": null,
+            "reference_order": 2
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "385f3a9d-3b2f-bd53-dba6-e8dd396a8896",
+            "traversal_order": 1,
+            "to_node_key": "T3_INF_AGE_70_OR_HIGHER_BP_TARGET",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T3_C_80_OR_HIGHER_BELOW_THRESHOLD": {
+        "id": "d8ed1b7c-c4d6-ffab-aa92-f41a3acac47b",
+        "node_key": "T3_C_80_OR_HIGHER_BELOW_THRESHOLD",
+        "node_type": "CONDITION",
+        "text_en": "SBP <160 mmHg AND DBP <90 mmHg",
+        "text_vi": "HATT < 160 VÀ HATTr < 90",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value": 160
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value": 90
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 26,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "1061dbd9-a224-f827-681e-e8b98d861215",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "11133cee-270a-50ef-bfaf-542c329386f0",
+            "traversal_order": 1,
+            "to_node_key": "T3_ACTION_80_OR_HIGHER_LIFESTYLE_AND_FOLLOW_UP",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T3_C_AGE_18_TO_69": {
+        "id": "b2658dcd-838f-ca57-50d3-0ad0e007dcc4",
+        "node_key": "T3_C_AGE_18_TO_69",
+        "node_type": "CONDITION",
+        "text_en": "Age group 18–69",
+        "text_vi": "Nhóm Tuổi 18 - 69",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "gte",
+              "path": "input.age",
+              "value": 18
+            },
+            {
+              "op": "lte",
+              "path": "input.age",
+              "value": 69
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 3,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "7208160c-9c55-17d6-bb07-ca8ac825b956",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "8ac61a34-c7ba-8317-9a02-bd808bd13c4e",
+            "traversal_order": 1,
+            "to_node_key": "T3_C_NO_COMORBIDITY",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.has_coronary_artery_disease",
+                  "value": false
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_type_2_diabetes",
+                  "value": false
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_heart_failure",
+                  "value": false
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_ckd",
+                  "value": false
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "24ba355a-253e-a150-20df-850de2bf9f5a",
+            "traversal_order": 2,
+            "to_node_key": "T3_C_COMORBIDITY_PRESENT",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "eq",
+                  "path": "input.has_coronary_artery_disease",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_type_2_diabetes",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_heart_failure",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "input.has_ckd",
+                  "value": true
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T3_C_AGE_70_OR_HIGHER": {
+        "id": "b9153f61-98ce-673a-b1bf-9bcb80671d62",
+        "node_key": "T3_C_AGE_70_OR_HIGHER",
+        "node_type": "CONDITION",
+        "text_en": "Age group ≥70",
+        "text_vi": "Nhóm tuổi >= 70",
+        "condition_definition": {
+          "op": "gte",
+          "path": "input.age",
+          "value": 70
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 4,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "67b07d50-d4f9-91d8-df53-bae1157d9961",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "1f114dc1-48fe-0dda-eb8d-30efbaaf6ae8",
+            "traversal_order": 1,
+            "to_node_key": "T3_C_AGE_70_TO_79",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "gte",
+                  "path": "input.age",
+                  "value": 70
+                },
+                {
+                  "op": "lte",
+                  "path": "input.age",
+                  "value": 79
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "059c31d4-7b63-1336-8168-c6fe5486379c",
+            "traversal_order": 2,
+            "to_node_key": "T3_C_AGE_80_OR_HIGHER",
+            "candidate_condition": {
+              "op": "gte",
+              "path": "input.age",
+              "value": 80
+            }
+          }
+        ]
+      },
+      "T3_C_AGE_70_TO_79": {
+        "id": "d61ccc11-d575-6482-9c9b-231f43424ab1",
+        "node_key": "T3_C_AGE_70_TO_79",
+        "node_type": "CONDITION",
+        "text_en": "Age group 70–79",
+        "text_vi": "Nhóm tuổi 70 đến 79",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "gte",
+              "path": "input.age",
+              "value": 70
+            },
+            {
+              "op": "lte",
+              "path": "input.age",
+              "value": 79
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 21,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "fc1bccb1-07b7-d298-e74a-cf8a4d9c35d9",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "edf81cfa-84cb-6ec4-4c27-4d65a9febac0",
+            "traversal_order": 1,
+            "to_node_key": "T3_C_70_79_BELOW_THRESHOLD",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 140
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "a8f2824d-4d1d-0896-2bd7-291b30107394",
+            "traversal_order": 2,
+            "to_node_key": "T3_C_70_79_AT_OR_ABOVE_THRESHOLD",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 140
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T3_C_AGE_80_OR_HIGHER": {
+        "id": "e9e05195-a8f6-b2bd-e31e-6cfa937d1d56",
+        "node_key": "T3_C_AGE_80_OR_HIGHER",
+        "node_type": "CONDITION",
+        "text_en": "Age group ≥80",
+        "text_vi": "Nhóm tuổi >= 80",
+        "condition_definition": {
+          "op": "gte",
+          "path": "input.age",
+          "value": 80
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 22,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "9637bce8-0a6d-2158-ca2f-0baac0e51999",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "410fe7bb-1ffc-3744-ae77-180577dceeba",
+            "traversal_order": 1,
+            "to_node_key": "T3_C_80_OR_HIGHER_BELOW_THRESHOLD",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 160
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "9758b265-bbd7-b704-734a-49b62e0160cb",
+            "traversal_order": 2,
+            "to_node_key": "T3_C_80_OR_HIGHER_AT_OR_ABOVE_THRESHOLD",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 160
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T3_C_COMORBIDITY_PRESENT": {
+        "id": "24dbca8b-981c-416b-e3c9-3189ff36c8d7",
+        "node_key": "T3_C_COMORBIDITY_PRESENT",
+        "node_type": "CONDITION",
+        "text_en": "Comorbidity present",
+        "text_vi": "Có bệnh đồng mắc",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "eq",
+              "path": "input.has_coronary_artery_disease",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_type_2_diabetes",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_heart_failure",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "input.has_ckd",
+              "value": true
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 6,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "d14997b0-a04a-3988-8a47-608d117e51d9",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "772a00da-612e-a7df-af77-77f2bfd1130c",
+            "traversal_order": 1,
+            "to_node_key": "T3_C_18_69_COMORBIDITY_BELOW_THRESHOLD",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 130
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "e861c69c-e649-f38e-6bfc-4cb31717fcaf",
+            "traversal_order": 2,
+            "to_node_key": "T3_C_18_69_COMORBIDITY_AT_OR_ABOVE_THRESHOLD",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 130
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T3_C_INITIAL_ENCOUNTER": {
+        "id": "c8edac54-9f97-7fd4-3867-9e14861e3ba2",
+        "node_key": "T3_C_INITIAL_ENCOUNTER",
+        "node_type": "CONDITION",
+        "text_en": "Initial encounter or non-follow-up encounter",
+        "text_vi": "Lần khám đầu tiên hoặc không phải lần tái khám",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "eq",
+              "path": "input.is_medication_follow_up",
+              "value": false
+            },
+            {
+              "op": "eq",
+              "path": "input.is_lifestyle_follow_up",
+              "value": false
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 5,
+        "created_at": "2026-06-27 15:49:12.978633+00:00",
+        "updated_at": "2026-06-27 15:49:12.978633+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "85aff0b8-181d-fa6c-84c1-3e2a0c084a10",
+            "traversal_order": 1,
+            "to_node_key": "T3_C_AGE_18_TO_69",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "gte",
+                  "path": "input.age",
+                  "value": 18
+                },
+                {
+                  "op": "lte",
+                  "path": "input.age",
+                  "value": 69
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "6a27cc99-d9fa-60f6-1b1c-362abbdb23ec",
+            "traversal_order": 2,
+            "to_node_key": "T3_C_AGE_70_OR_HIGHER",
+            "candidate_condition": {
+              "op": "gte",
+              "path": "input.age",
+              "value": 70
+            }
+          }
+        ]
+      },
+      "T3_C_IS_LIFESTYLE_FOLLOW_UP": {
+        "id": "377554d0-1f57-6179-b0ee-6f03230ff8b0",
+        "node_key": "T3_C_IS_LIFESTYLE_FOLLOW_UP",
+        "node_type": "CONDITION",
+        "text_en": "Lifestyle-management follow-up visit",
+        "text_vi": "Tái khám sau thay đổi lối sống",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "eq",
+              "path": "input.is_medication_follow_up",
+              "value": false
+            },
+            {
+              "op": "eq",
+              "path": "input.is_lifestyle_follow_up",
+              "value": true
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 4,
+        "created_at": "2026-06-27 15:49:12.978633+00:00",
+        "updated_at": "2026-06-27 15:49:12.978633+00:00",
+        "references": [
+          {
+            "id": "ba97bcec-eb9a-b102-1190-84e80951e9e7",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Chiến lược điều trị tăng huyết áp",
+                "number": "3.2"
+              }
+            ],
+            "locator": "Hình 3. Sơ đồ điều trị tăng huyết áp thiết yếu VSH/VNHA 2022",
+            "locator_detail": "Follow-up after lifestyle change; medication consideration when BP remains uncontrolled after lifestyle management.",
+            "printed_page_numbers": [
+              17
+            ],
+            "pdf_page_numbers": [
+              19
+            ],
+            "reference_note": "The 15 mmHg SBP and 10 mmHg DBP thresholds are local project policy, not numeric thresholds stated in the guideline figure.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "c74a538a-eb4a-5b9c-7e45-9d555916451e",
+            "traversal_order": 1,
+            "to_node_key": "T3_C_LIFESTYLE_RESPONSE_ADEQUATE",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "gte",
+                  "left": {
+                    "left_path": "input.previous_sbp",
+                    "expression": "subtract",
+                    "right_path": "input.current_clinic_sbp"
+                  },
+                  "value": 15
+                },
+                {
+                  "op": "gte",
+                  "left": {
+                    "left_path": "input.previous_dbp",
+                    "expression": "subtract",
+                    "right_path": "input.current_clinic_dbp"
+                  },
+                  "value": 10
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "992b78aa-2320-332c-439f-f06a7649ac75",
+            "traversal_order": 2,
+            "to_node_key": "T3_C_LIFESTYLE_RESPONSE_INADEQUATE",
+            "candidate_condition": {
+              "not": {
+                "all": [
+                  {
+                    "op": "gte",
+                    "left": {
+                      "left_path": "input.previous_sbp",
+                      "expression": "subtract",
+                      "right_path": "input.current_clinic_sbp"
+                    },
+                    "value": 15
+                  },
+                  {
+                    "op": "gte",
+                    "left": {
+                      "left_path": "input.previous_dbp",
+                      "expression": "subtract",
+                      "right_path": "input.current_clinic_dbp"
+                    },
+                    "value": 10
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "T3_C_IS_MEDICATION_FOLLOW_UP": {
+        "id": "b262908e-c083-362b-db10-0d10ca4ed024",
+        "node_key": "T3_C_IS_MEDICATION_FOLLOW_UP",
+        "node_type": "CONDITION",
+        "text_en": "Medication follow-up visit",
+        "text_vi": "Tái khám sau điều trị thuốc",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "eq",
+              "path": "input.is_medication_follow_up",
+              "value": true
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 3,
+        "created_at": "2026-06-27 15:49:12.978633+00:00",
+        "updated_at": "2026-06-27 15:49:12.978633+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "8ede9d5d-cff4-6d2e-597b-a2fe3ba6d77c",
+            "traversal_order": 1,
+            "to_node_key": "T3_INF_RESTORE_ACTIVE_BP_TARGET",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T3_C_LIFESTYLE_RESPONSE_ADEQUATE": {
+        "id": "98253717-e67b-66a9-3791-fafcd2bedf4c",
+        "node_key": "T3_C_LIFESTYLE_RESPONSE_ADEQUATE",
+        "node_type": "CONDITION",
+        "text_en": "Lifestyle BP response adequate",
+        "text_vi": "Đáp ứng thay đổi lối sống đạt yêu cầu",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "gte",
+              "left": {
+                "left_path": "input.previous_sbp",
+                "expression": "subtract",
+                "right_path": "input.current_clinic_sbp"
+              },
+              "value": 15
+            },
+            {
+              "op": "gte",
+              "left": {
+                "left_path": "input.previous_dbp",
+                "expression": "subtract",
+                "right_path": "input.current_clinic_dbp"
+              },
+              "value": 10
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 6,
+        "created_at": "2026-06-27 15:49:12.978633+00:00",
+        "updated_at": "2026-06-27 15:49:12.978633+00:00",
+        "references": [
+          {
+            "id": "520d32c0-a388-08b9-e6c9-c9fc2908f14f",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Chiến lược điều trị tăng huyết áp",
+                "number": "3.2"
+              }
+            ],
+            "locator": "Hình 3. Sơ đồ điều trị tăng huyết áp thiết yếu VSH/VNHA 2022",
+            "locator_detail": "Follow-up after lifestyle change; medication consideration when BP remains uncontrolled after lifestyle management.",
+            "printed_page_numbers": [
+              17
+            ],
+            "pdf_page_numbers": [
+              19
+            ],
+            "reference_note": "The 15 mmHg SBP and 10 mmHg DBP thresholds are local project policy, not numeric thresholds stated in the guideline figure.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "c4339a18-7ca1-db09-88bb-9afef69a3b7e",
+            "traversal_order": 1,
+            "to_node_key": "T3_ACTION_LIFESTYLE_FOLLOW_UP_CONTINUE_MONITORING",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T3_C_LIFESTYLE_RESPONSE_INADEQUATE": {
+        "id": "82d39f73-488c-3113-49e7-b92795bd4623",
+        "node_key": "T3_C_LIFESTYLE_RESPONSE_INADEQUATE",
+        "node_type": "CONDITION",
+        "text_en": "Lifestyle BP response inadequate",
+        "text_vi": "Đáp ứng thay đổi lối sống chưa đạt yêu cầu",
+        "condition_definition": {
+          "not": {
+            "all": [
+              {
+                "op": "gte",
+                "left": {
+                  "left_path": "input.previous_sbp",
+                  "expression": "subtract",
+                  "right_path": "input.current_clinic_sbp"
+                },
+                "value": 15
+              },
+              {
+                "op": "gte",
+                "left": {
+                  "left_path": "input.previous_dbp",
+                  "expression": "subtract",
+                  "right_path": "input.current_clinic_dbp"
+                },
+                "value": 10
+              }
+            ]
+          }
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 7,
+        "created_at": "2026-06-27 15:49:12.978633+00:00",
+        "updated_at": "2026-06-27 15:49:12.978633+00:00",
+        "references": [
+          {
+            "id": "4b183b8e-25d5-ee92-f759-566636245518",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Chiến lược điều trị tăng huyết áp",
+                "number": "3.2"
+              }
+            ],
+            "locator": "Hình 3. Sơ đồ điều trị tăng huyết áp thiết yếu VSH/VNHA 2022",
+            "locator_detail": "Follow-up after lifestyle change; medication consideration when BP remains uncontrolled after lifestyle management.",
+            "printed_page_numbers": [
+              17
+            ],
+            "pdf_page_numbers": [
+              19
+            ],
+            "reference_note": "The 15 mmHg SBP and 10 mmHg DBP thresholds are local project policy, not numeric thresholds stated in the guideline figure.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "201230d9-2179-9af3-23c6-7c805e4f0a6b",
+            "traversal_order": 1,
+            "to_node_key": "T3_LINK_ESSENTIAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "LIMITED_RESOURCES"
+            }
+          },
+          {
+            "edge_id": "4ed791bf-709b-45b1-97de-ee89ce67696b",
+            "traversal_order": 2,
+            "to_node_key": "T3_LINK_OPTIMAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "FULL_RESOURCES"
+            }
+          }
+        ]
+      },
+      "T3_C_NO_COMORBIDITY": {
+        "id": "a8e8f94a-73e3-90e0-bb13-d5391d228a46",
+        "node_key": "T3_C_NO_COMORBIDITY",
+        "node_type": "CONDITION",
+        "text_en": "No comorbidity",
+        "text_vi": "Không có bệnh đồng mắc",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "eq",
+              "path": "input.has_coronary_artery_disease",
+              "value": false
+            },
+            {
+              "op": "eq",
+              "path": "input.has_type_2_diabetes",
+              "value": false
+            },
+            {
+              "op": "eq",
+              "path": "input.has_heart_failure",
+              "value": false
+            },
+            {
+              "op": "eq",
+              "path": "input.has_ckd",
+              "value": false
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 5,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "2bc4abf8-c49c-f5ab-0483-020be25b58b7",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "f8d871fa-a947-f09b-1aec-57906007a3c8",
+            "traversal_order": 1,
+            "to_node_key": "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value": 140
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "12f86a13-0918-4792-af21-1825f8ec70f2",
+            "traversal_order": 2,
+            "to_node_key": "T3_C_18_69_NO_COMORBIDITY_AT_OR_ABOVE_THRESHOLD",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value": 140
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value": 90
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "T3_GLOBAL_AGE_80_THRESHOLD_NOTE": {
+        "id": "bc44960d-3c0a-ffd7-6949-e4da0dc6d7f4",
+        "node_key": "T3_GLOBAL_AGE_80_THRESHOLD_NOTE",
+        "node_type": "GLOBAL",
+        "text_en": "At age ≥80, comorbidity status does not affect the treatment threshold. Above-threshold blood pressure should be treated.",
+        "text_vi": ">= 80 tuổi không cần care tới có bệnh đồng mắc hay không, trên ngưỡng huyết áp thì điều trị (same cho cả có bệnh đồng mắc và không có bệnh đồng mắc)",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": {
+          "scope": "AGE_AT_LEAST_80",
+          "purpose": "Comorbidity-independent treatment threshold for patients aged 80 years or older."
+        },
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 2,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "de9ddc3c-37cc-eca0-e958-a8c45620d142",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T3_INF_18_69_COMORBIDITY_BP_TARGET": {
+        "id": "95569744-0278-46a5-b937-6c519a461eec",
+        "node_key": "T3_INF_18_69_COMORBIDITY_BP_TARGET",
+        "node_type": "INFERENCE",
+        "text_en": "Target SBP 120–<130 mmHg or lower\nTarget DBP <80 mmHg",
+        "text_vi": "Đích điều trị HATT 120 - <130 hoặc thấp hơn\nĐích điều trị HATTr <80",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment": {
+            "bp_target": {
+              "dbp": {
+                "upper_exclusive_mmhg": 80
+              },
+              "sbp": {
+                "or_lower": true,
+                "lower_reference_mmhg": 120,
+                "upper_exclusive_mmhg": 130
+              },
+              "source": "TREE_3_GENERIC"
+            }
+          },
+          "orchestration": {
+            "after_parallel_modifier_trees": {
+              "mode": "SELECT_ONE_BY_INPUT",
+              "input_path": "input.facility_capability",
+              "destinations": {
+                "FULL_RESOURCES": "optimal-treatment-strategy",
+                "LIMITED_RESOURCES": "essential-treatment-strategy"
+              }
+            }
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 16,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "aff36608-b1cd-f8b8-b8fb-ed4a258bfb78",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          },
+          {
+            "id": "77b95227-4ddc-2eca-bc47-b6b04d733d73",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Bảng 7. Đích điều trị huyết áp theo tuổi và bệnh đồng mắc",
+            "locator_detail": "Generic blood-pressure treatment target before any applicable modifier tree overrides or supplements it.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": null,
+            "reference_order": 2
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "d8f3ba4e-236d-0f63-5f28-4b76650a805f",
+            "traversal_order": 1,
+            "to_node_key": "T3_LINK_18_69_HEART_FAILURE_MODIFIER",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.has_heart_failure",
+              "value": true
+            }
+          },
+          {
+            "edge_id": "64969dea-e925-b8e2-d1b1-7725e468f033",
+            "traversal_order": 2,
+            "to_node_key": "T3_LINK_18_69_CORONARY_ARTERY_DISEASE_MODIFIER",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.has_coronary_artery_disease",
+              "value": true
+            }
+          },
+          {
+            "edge_id": "e3111be4-af9f-5f3d-2a89-00d1c5a9cf80",
+            "traversal_order": 3,
+            "to_node_key": "T3_LINK_18_69_TYPE_2_DIABETES_MODIFIER",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.has_type_2_diabetes",
+              "value": true
+            }
+          },
+          {
+            "edge_id": "46098767-77c9-e2ac-634a-6f43e975ada9",
+            "traversal_order": 4,
+            "to_node_key": "T3_LINK_18_69_CHRONIC_KIDNEY_DISEASE_MODIFIER",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.has_ckd",
+              "value": true
+            }
+          }
+        ]
+      },
+      "T3_INF_18_69_NO_COMORBIDITY_BP_TARGET": {
+        "id": "732bb6a9-f802-9e67-8377-bec03ab0ccab",
+        "node_key": "T3_INF_18_69_NO_COMORBIDITY_BP_TARGET",
+        "node_type": "INFERENCE",
+        "text_en": "Target SBP 120–<140 mmHg or lower\nTarget DBP <80 mmHg",
+        "text_vi": "Đích điều trị HATT 120 - < 140 mmHg hoặc thấp hơn\nĐích điều trị HATTr <80",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment": {
+            "bp_target": {
+              "dbp": {
+                "upper_exclusive_mmhg": 80
+              },
+              "sbp": {
+                "or_lower": true,
+                "lower_reference_mmhg": 120,
+                "upper_exclusive_mmhg": 140
+              },
+              "source": "TREE_3_GENERIC"
+            }
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 10,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "eded1a7d-ec4e-9f8c-c6f6-07b33f3d5cd7",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          },
+          {
+            "id": "853b8b47-e82f-b759-d93c-8e4142c17096",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Bảng 7. Đích điều trị huyết áp theo tuổi và bệnh đồng mắc",
+            "locator_detail": "Generic blood-pressure treatment target before any applicable modifier tree overrides or supplements it.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": null,
+            "reference_order": 2
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "0b1bb767-ce06-3c0c-7dbc-16563b8b33ac",
+            "traversal_order": 1,
+            "to_node_key": "T3_LINK_ESSENTIAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "LIMITED_RESOURCES"
+            }
+          },
+          {
+            "edge_id": "d41dbf0e-1859-66c5-5ed3-014571d61ada",
+            "traversal_order": 2,
+            "to_node_key": "T3_LINK_OPTIMAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "FULL_RESOURCES"
+            }
+          }
+        ]
+      },
+      "T3_INF_18_69_NO_COMORBIDITY_HIGH_RISK_HABTC_BP_TARGET": {
+        "id": "cfb91d03-1e28-26a1-acc8-44e033cac052",
+        "node_key": "T3_INF_18_69_NO_COMORBIDITY_HIGH_RISK_HABTC_BP_TARGET",
+        "node_type": "INFERENCE",
+        "text_en": "Target SBP 120–<130 mmHg or lower\nTarget DBP <80 mmHg",
+        "text_vi": "Đích điều trị HATT 120 - <130 hoặc thấp hơn\nĐích điều trị HATTr <80",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment": {
+            "bp_target": {
+              "dbp": {
+                "upper_exclusive_mmhg": 80
+              },
+              "sbp": {
+                "or_lower": true,
+                "lower_reference_mmhg": 120,
+                "upper_exclusive_mmhg": 130
+              },
+              "source": "TREE_3_HIGH_NORMAL_HIGH_RISK"
+            }
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 37,
+        "created_at": "2026-06-27 13:26:06.240489+00:00",
+        "updated_at": "2026-06-27 13:26:06.240489+00:00",
+        "references": [
+          {
+            "id": "54f3f25b-1e6b-b595-2736-774e81669285",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Ngưỡng huyết áp ban đầu cần điều trị và ranh giới đích điều trị tăng huyết áp",
+                "number": "3.1"
+              }
+            ],
+            "locator": "Hình 2. Tóm tắt ngưỡng huyết áp ban đầu & đích huyết áp phòng khám ở THA người lớn",
+            "locator_detail": "High-normal BP with high cardiovascular risk enters the medication-treatment pathway.",
+            "printed_page_numbers": [
+              14
+            ],
+            "pdf_page_numbers": [
+              16
+            ],
+            "reference_note": "Tree 3 patch: high-risk HABTC is not lifestyle-only.",
+            "reference_order": 1
+          },
+          {
+            "id": "eaf58956-6717-8de1-9251-a06b4f925c75",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "III"
+              },
+              {
+                "title": "Ngưỡng huyết áp ban đầu cần điều trị và ranh giới đích điều trị tăng huyết áp",
+                "number": "3.1"
+              }
+            ],
+            "locator": "Bảng 7. Mục tiêu huyết áp phòng khám trong điều trị tăng huyết áp theo nhóm tuổi",
+            "locator_detail": "Treatment target for high-normal BP with high cardiovascular risk.",
+            "printed_page_numbers": [
+              16
+            ],
+            "pdf_page_numbers": [
+              18
+            ],
+            "reference_note": null,
+            "reference_order": 2
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "1e33d0c7-202a-5bb2-6fb6-e4d7f9698cdb",
+            "traversal_order": 1,
+            "to_node_key": "T3_LINK_ESSENTIAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "LIMITED_RESOURCES"
+            }
+          },
+          {
+            "edge_id": "5bddd1d5-4fc8-c798-dd82-6a0dc4fc126a",
+            "traversal_order": 2,
+            "to_node_key": "T3_LINK_OPTIMAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "FULL_RESOURCES"
+            }
+          }
+        ]
+      },
+      "T3_INF_AGE_70_OR_HIGHER_BP_TARGET": {
+        "id": "c9e3529b-2291-4756-1e9c-13b00c5fdd0f",
+        "node_key": "T3_INF_AGE_70_OR_HIGHER_BP_TARGET",
+        "node_type": "INFERENCE",
+        "text_en": "Target SBP <140 mmHg, or <130 mmHg if tolerated\nTarget DBP <80 mmHg",
+        "text_vi": "Đích điều trị HATT <140 hoặc <130 nếu dung nạp được\nĐích điều trị HATTr <80",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment": {
+            "bp_target": {
+              "dbp": {
+                "upper_exclusive_mmhg": 80
+              },
+              "sbp": {
+                "upper_exclusive_mmhg": 140,
+                "preferred_upper_exclusive_if_tolerated_mmhg": 130
+              },
+              "source": "TREE_3_GENERIC"
+            }
+          },
+          "orchestration": {
+            "after_parallel_modifier_trees": {
+              "mode": "SELECT_ONE_BY_INPUT",
+              "input_path": "input.facility_capability",
+              "destinations": {
+                "FULL_RESOURCES": "optimal-treatment-strategy",
+                "LIMITED_RESOURCES": "essential-treatment-strategy"
+              }
+            }
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 29,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [
+          {
+            "id": "96722b49-ca24-2659-2c04-672204739974",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Hình 2. Ngưỡng huyết áp khởi trị và đích điều trị theo tuổi, huyết áp và bệnh đồng mắc",
+            "locator_detail": "Tree 3 age group routing, comorbidity routing, lifestyle action path, and treatment-target routing.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": "Digitized according to the approved Tree 3 diagram.",
+            "reference_order": 1
+          },
+          {
+            "id": "2dea4c23-d94d-9124-bfb8-6b2d40701557",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị tăng huyết áp",
+                "number": "II"
+              }
+            ],
+            "locator": "Bảng 7. Đích điều trị huyết áp theo tuổi và bệnh đồng mắc",
+            "locator_detail": "Generic blood-pressure treatment target before any applicable modifier tree overrides or supplements it.",
+            "printed_page_numbers": null,
+            "pdf_page_numbers": null,
+            "reference_note": null,
+            "reference_order": 2
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "6a0d8c84-d5f7-f00d-cb49-fc969215a8d1",
+            "traversal_order": 1,
+            "to_node_key": "T3_LINK_AGE_70_OR_HIGHER_HEART_FAILURE_MODIFIER",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.has_heart_failure",
+              "value": true
+            }
+          },
+          {
+            "edge_id": "4628c36a-92d3-ae81-0e00-4feb514bde6f",
+            "traversal_order": 2,
+            "to_node_key": "T3_LINK_AGE_70_OR_HIGHER_OLDER_ADULT_MODIFIER",
+            "candidate_condition": null
+          },
+          {
+            "edge_id": "1bb1c96c-cd99-4d08-dae5-f2bfcf75326d",
+            "traversal_order": 3,
+            "to_node_key": "T3_LINK_AGE_70_OR_HIGHER_CORONARY_ARTERY_DISEASE_MODIFIER",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.has_coronary_artery_disease",
+              "value": true
+            }
+          },
+          {
+            "edge_id": "3296256e-fda4-c9e9-47b8-6610f64ec10b",
+            "traversal_order": 4,
+            "to_node_key": "T3_LINK_AGE_70_OR_HIGHER_TYPE_2_DIABETES_MODIFIER",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.has_type_2_diabetes",
+              "value": true
+            }
+          },
+          {
+            "edge_id": "1e1865a9-680a-ab84-7474-9b03f0123175",
+            "traversal_order": 5,
+            "to_node_key": "T3_LINK_AGE_70_OR_HIGHER_CHRONIC_KIDNEY_DISEASE_MODIFIER",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.has_ckd",
+              "value": true
+            }
+          }
+        ]
+      },
+      "T3_INF_RESTORE_ACTIVE_BP_TARGET": {
+        "id": "fe2929b6-a17a-269e-7ffd-23d3ce77c5b5",
+        "node_key": "T3_INF_RESTORE_ACTIVE_BP_TARGET",
+        "node_type": "INFERENCE",
+        "text_en": "Restore active BP target from medication follow-up input",
+        "text_vi": "Khôi phục đích huyết áp đang áp dụng từ thông tin tái khám điều trị thuốc",
+        "condition_definition": null,
+        "context_patch": {
+          "operations": [
+            {
+              "op": "COPY_PATH",
+              "to_path": "context.treatment.bp_target",
+              "required": true,
+              "from_path": "input.active_bp_target"
+            }
+          ]
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 9,
+        "created_at": "2026-06-27 15:51:59.041846+00:00",
+        "updated_at": "2026-06-27 15:51:59.041846+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "f7ea0c58-cbff-3efa-ca81-a0e1ab2fc6a5",
+            "traversal_order": 1,
+            "to_node_key": "T3_LINK_ESSENTIAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "LIMITED_RESOURCES"
+            }
+          },
+          {
+            "edge_id": "0debc439-2266-f749-6e93-966c7f796107",
+            "traversal_order": 2,
+            "to_node_key": "T3_LINK_OPTIMAL_TREATMENT_STRATEGY",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "FULL_RESOURCES"
+            }
+          }
+        ]
+      },
+      "T3_LINK_18_69_CHRONIC_KIDNEY_DISEASE_MODIFIER": {
+        "id": "06acb6f1-4511-0d26-6ba7-19820b066b76",
+        "node_key": "T3_LINK_18_69_CHRONIC_KIDNEY_DISEASE_MODIFIER",
+        "node_type": "LINK",
+        "text_en": "Hypertension and Chronic Kidney Disease Tree",
+        "text_vi": "Cây THA + Bệnh thận mạn",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.has_ckd",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "hypertension-chronic-kidney-disease",
+        "link_target_node_key": null,
+        "display_order": 20,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T3_LINK_18_69_CORONARY_ARTERY_DISEASE_MODIFIER": {
+        "id": "b7e4c349-510a-fc5e-2729-5a95584e8f6d",
+        "node_key": "T3_LINK_18_69_CORONARY_ARTERY_DISEASE_MODIFIER",
+        "node_type": "LINK",
+        "text_en": "Hypertension and Coronary Artery Disease Tree",
+        "text_vi": "Cây THA + bệnh mạch vành",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.has_coronary_artery_disease",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "hypertension-coronary-artery-disease",
+        "link_target_node_key": null,
+        "display_order": 18,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T3_LINK_18_69_HEART_FAILURE_MODIFIER": {
+        "id": "4d190229-83b8-5716-5df3-ac5e80e502a0",
+        "node_key": "T3_LINK_18_69_HEART_FAILURE_MODIFIER",
+        "node_type": "LINK",
+        "text_en": "Hypertension and Heart Failure Tree",
+        "text_vi": "Cây THA + suy tim",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.has_heart_failure",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "hypertension-heart-failure",
+        "link_target_node_key": null,
+        "display_order": 17,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T3_LINK_18_69_TYPE_2_DIABETES_MODIFIER": {
+        "id": "db629483-4764-0a45-10a7-56515b08c8be",
+        "node_key": "T3_LINK_18_69_TYPE_2_DIABETES_MODIFIER",
+        "node_type": "LINK",
+        "text_en": "Hypertension and Type 2 Diabetes Tree",
+        "text_vi": "Cây THA + Đái tháo đường type 2",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.has_type_2_diabetes",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "hypertension-type-2-diabetes",
+        "link_target_node_key": null,
+        "display_order": 19,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T3_LINK_AGE_70_OR_HIGHER_CHRONIC_KIDNEY_DISEASE_MODIFIER": {
+        "id": "6d654d4f-aa3a-6835-0c2c-65b55413c439",
+        "node_key": "T3_LINK_AGE_70_OR_HIGHER_CHRONIC_KIDNEY_DISEASE_MODIFIER",
+        "node_type": "LINK",
+        "text_en": "Hypertension and Chronic Kidney Disease Tree",
+        "text_vi": "Cây THA + Bệnh thận mạn",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.has_ckd",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "hypertension-chronic-kidney-disease",
+        "link_target_node_key": null,
+        "display_order": 34,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T3_LINK_AGE_70_OR_HIGHER_CORONARY_ARTERY_DISEASE_MODIFIER": {
+        "id": "33827fa5-414a-7753-525f-a350e9ab9532",
+        "node_key": "T3_LINK_AGE_70_OR_HIGHER_CORONARY_ARTERY_DISEASE_MODIFIER",
+        "node_type": "LINK",
+        "text_en": "Hypertension and Coronary Artery Disease Tree",
+        "text_vi": "Cây THA + bệnh mạch vành",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.has_coronary_artery_disease",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "hypertension-coronary-artery-disease",
+        "link_target_node_key": null,
+        "display_order": 32,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T3_LINK_AGE_70_OR_HIGHER_HEART_FAILURE_MODIFIER": {
+        "id": "68fa1969-490f-f26f-97a2-9923fbd618e7",
+        "node_key": "T3_LINK_AGE_70_OR_HIGHER_HEART_FAILURE_MODIFIER",
+        "node_type": "LINK",
+        "text_en": "Hypertension and Heart Failure Tree",
+        "text_vi": "Cây THA + suy tim",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.has_heart_failure",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "hypertension-heart-failure",
+        "link_target_node_key": null,
+        "display_order": 30,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T3_LINK_AGE_70_OR_HIGHER_OLDER_ADULT_MODIFIER": {
+        "id": "87e3c582-d29b-2cf0-c6a0-19e728f05f05",
+        "node_key": "T3_LINK_AGE_70_OR_HIGHER_OLDER_ADULT_MODIFIER",
+        "node_type": "LINK",
+        "text_en": "Hypertension in Older Adults Tree",
+        "text_vi": "Cây THA người cao tuổi",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "hypertension-older-adults",
+        "link_target_node_key": null,
+        "display_order": 31,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T3_LINK_AGE_70_OR_HIGHER_TYPE_2_DIABETES_MODIFIER": {
+        "id": "956d7df4-6501-0c1b-0bf0-78db627ce19e",
+        "node_key": "T3_LINK_AGE_70_OR_HIGHER_TYPE_2_DIABETES_MODIFIER",
+        "node_type": "LINK",
+        "text_en": "Hypertension and Type 2 Diabetes Tree",
+        "text_vi": "Cây THA + Đái tháo đường type 2",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.has_type_2_diabetes",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "hypertension-type-2-diabetes",
+        "link_target_node_key": null,
+        "display_order": 33,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T3_LINK_ESSENTIAL_TREATMENT_STRATEGY": {
+        "id": "07c0033a-c673-f236-3f59-093f5e236863",
+        "node_key": "T3_LINK_ESSENTIAL_TREATMENT_STRATEGY",
+        "node_type": "LINK",
+        "text_en": "Essential Treatment Strategy Tree",
+        "text_vi": "Cây Chiến lược điều trị thiết yếu",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.facility_capability",
+          "value": "LIMITED_RESOURCES"
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "essential-treatment-strategy",
+        "link_target_node_key": null,
+        "display_order": 11,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T3_LINK_OPTIMAL_TREATMENT_STRATEGY": {
+        "id": "38bf4156-78bc-b9f5-2bb4-3ad381e87a28",
+        "node_key": "T3_LINK_OPTIMAL_TREATMENT_STRATEGY",
+        "node_type": "LINK",
+        "text_en": "Optimal Treatment Strategy Tree",
+        "text_vi": "Cây Chiến lược điều trị tối ưu",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.facility_capability",
+          "value": "FULL_RESOURCES"
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "optimal-treatment-strategy",
+        "link_target_node_key": null,
+        "display_order": 12,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T3_START_BP_AND_AGE_INFORMATION": {
+        "id": "1e4d5cba-38ba-630f-2597-8590c916e1d4",
+        "node_key": "T3_START_BP_AND_AGE_INFORMATION",
+        "node_type": "START",
+        "text_en": "Patient blood-pressure and age information",
+        "text_vi": "Thông tin huyết áp bệnh nhân và tuổi",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 1,
+        "created_at": "2026-06-27 10:16:47.509980+00:00",
+        "updated_at": "2026-06-27 10:16:47.509980+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "42da0175-1e8e-c682-98b5-6fbc7f006199",
+            "traversal_order": 1,
+            "to_node_key": "T3_C_IS_MEDICATION_FOLLOW_UP",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.is_medication_follow_up",
+                  "value": true
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "f9b829f1-805a-2c86-3f1e-e8104efce9e3",
+            "traversal_order": 2,
+            "to_node_key": "T3_C_IS_LIFESTYLE_FOLLOW_UP",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.is_medication_follow_up",
+                  "value": false
+                },
+                {
+                  "op": "eq",
+                  "path": "input.is_lifestyle_follow_up",
+                  "value": true
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "d332d692-1252-eda4-e428-5cc56e0e53c4",
+            "traversal_order": 3,
+            "to_node_key": "T3_C_INITIAL_ENCOUNTER",
+            "candidate_condition": {
+              "all": [
+                {
+                  "op": "eq",
+                  "path": "input.is_medication_follow_up",
+                  "value": false
+                },
+                {
+                  "op": "eq",
+                  "path": "input.is_lifestyle_follow_up",
+                  "value": false
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "edges": [
+      {
+        "id": "e6398cd1-5a0d-0151-00c6-9ff1f01c6eb0",
+        "from_node_key": "T3_C_18_69_COMORBIDITY_AT_OR_ABOVE_THRESHOLD",
+        "to_node_key": "T3_INF_18_69_COMORBIDITY_BP_TARGET",
+        "traversal_order": 1
+      },
+      {
+        "id": "5be8ebfb-bbaf-e1a5-ff80-eb55d0445b6e",
+        "from_node_key": "T3_C_18_69_COMORBIDITY_BELOW_THRESHOLD",
+        "to_node_key": "T3_C_18_69_COMORBIDITY_DBP_85_TO_89_TREATMENT",
+        "traversal_order": 1
+      },
+      {
+        "id": "7f2772c3-a498-a26b-e079-6d88039627c7",
+        "from_node_key": "T3_C_18_69_COMORBIDITY_BELOW_THRESHOLD",
+        "to_node_key": "T3_C_18_69_COMORBIDITY_DBP_BELOW_85_LIFESTYLE",
+        "traversal_order": 2
+      },
+      {
+        "id": "5b6ba9f8-a257-d4ba-7941-ac12a453390d",
+        "from_node_key": "T3_C_18_69_COMORBIDITY_DBP_85_TO_89_TREATMENT",
+        "to_node_key": "T3_INF_18_69_COMORBIDITY_BP_TARGET",
+        "traversal_order": 1
+      },
+      {
+        "id": "fe2be24f-e103-4139-f66c-ba4dd3990d80",
+        "from_node_key": "T3_C_18_69_COMORBIDITY_DBP_BELOW_85_LIFESTYLE",
+        "to_node_key": "T3_ACTION_18_69_COMORBIDITY_LIFESTYLE_AND_FOLLOW_UP",
+        "traversal_order": 1
+      },
+      {
+        "id": "aa3e7f7c-07f8-6a7a-c87f-26870234ada6",
+        "from_node_key": "T3_C_18_69_NO_COMORBIDITY_AT_OR_ABOVE_THRESHOLD",
+        "to_node_key": "T3_INF_18_69_NO_COMORBIDITY_BP_TARGET",
+        "traversal_order": 1
+      },
+      {
+        "id": "732a9fa5-2d95-39c4-a5fb-60cb82bef5b4",
+        "from_node_key": "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD",
+        "to_node_key": "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD_HIGH_RISK_HABTC",
+        "traversal_order": 1
+      },
+      {
+        "id": "652b8535-95fc-437d-92e5-be2f516ed890",
+        "from_node_key": "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD",
+        "to_node_key": "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD_NOT_HIGH_RISK_HABTC",
+        "traversal_order": 2
+      },
+      {
+        "id": "dc265fb0-4440-3672-7040-caec51b2d872",
+        "from_node_key": "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD",
+        "to_node_key": "T3_ACTION_18_69_NO_COMORBIDITY_LIFESTYLE_AND_FOLLOW_UP",
+        "traversal_order": 3
+      },
+      {
+        "id": "cac9a75d-8d43-ef4e-9b68-9858a7b2285c",
+        "from_node_key": "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD_HIGH_RISK_HABTC",
+        "to_node_key": "T3_INF_18_69_NO_COMORBIDITY_HIGH_RISK_HABTC_BP_TARGET",
+        "traversal_order": 1
+      },
+      {
+        "id": "b9e80076-4ba6-124c-dc52-296437ace7da",
+        "from_node_key": "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD_NOT_HIGH_RISK_HABTC",
+        "to_node_key": "T3_ACTION_18_69_NO_COMORBIDITY_LIFESTYLE_AND_FOLLOW_UP",
+        "traversal_order": 1
+      },
+      {
+        "id": "b429d36a-803f-d921-020d-003aa8f98790",
+        "from_node_key": "T3_C_70_79_AT_OR_ABOVE_THRESHOLD",
+        "to_node_key": "T3_INF_AGE_70_OR_HIGHER_BP_TARGET",
+        "traversal_order": 1
+      },
+      {
+        "id": "1a196840-07a3-79a4-e6cd-d6c03d0379d3",
+        "from_node_key": "T3_C_70_79_BELOW_THRESHOLD",
+        "to_node_key": "T3_ACTION_70_79_LIFESTYLE_AND_FOLLOW_UP",
+        "traversal_order": 1
+      },
+      {
+        "id": "385f3a9d-3b2f-bd53-dba6-e8dd396a8896",
+        "from_node_key": "T3_C_80_OR_HIGHER_AT_OR_ABOVE_THRESHOLD",
+        "to_node_key": "T3_INF_AGE_70_OR_HIGHER_BP_TARGET",
+        "traversal_order": 1
+      },
+      {
+        "id": "11133cee-270a-50ef-bfaf-542c329386f0",
+        "from_node_key": "T3_C_80_OR_HIGHER_BELOW_THRESHOLD",
+        "to_node_key": "T3_ACTION_80_OR_HIGHER_LIFESTYLE_AND_FOLLOW_UP",
+        "traversal_order": 1
+      },
+      {
+        "id": "8ac61a34-c7ba-8317-9a02-bd808bd13c4e",
+        "from_node_key": "T3_C_AGE_18_TO_69",
+        "to_node_key": "T3_C_NO_COMORBIDITY",
+        "traversal_order": 1
+      },
+      {
+        "id": "24ba355a-253e-a150-20df-850de2bf9f5a",
+        "from_node_key": "T3_C_AGE_18_TO_69",
+        "to_node_key": "T3_C_COMORBIDITY_PRESENT",
+        "traversal_order": 2
+      },
+      {
+        "id": "1f114dc1-48fe-0dda-eb8d-30efbaaf6ae8",
+        "from_node_key": "T3_C_AGE_70_OR_HIGHER",
+        "to_node_key": "T3_C_AGE_70_TO_79",
+        "traversal_order": 1
+      },
+      {
+        "id": "059c31d4-7b63-1336-8168-c6fe5486379c",
+        "from_node_key": "T3_C_AGE_70_OR_HIGHER",
+        "to_node_key": "T3_C_AGE_80_OR_HIGHER",
+        "traversal_order": 2
+      },
+      {
+        "id": "edf81cfa-84cb-6ec4-4c27-4d65a9febac0",
+        "from_node_key": "T3_C_AGE_70_TO_79",
+        "to_node_key": "T3_C_70_79_BELOW_THRESHOLD",
+        "traversal_order": 1
+      },
+      {
+        "id": "a8f2824d-4d1d-0896-2bd7-291b30107394",
+        "from_node_key": "T3_C_AGE_70_TO_79",
+        "to_node_key": "T3_C_70_79_AT_OR_ABOVE_THRESHOLD",
+        "traversal_order": 2
+      },
+      {
+        "id": "410fe7bb-1ffc-3744-ae77-180577dceeba",
+        "from_node_key": "T3_C_AGE_80_OR_HIGHER",
+        "to_node_key": "T3_C_80_OR_HIGHER_BELOW_THRESHOLD",
+        "traversal_order": 1
+      },
+      {
+        "id": "9758b265-bbd7-b704-734a-49b62e0160cb",
+        "from_node_key": "T3_C_AGE_80_OR_HIGHER",
+        "to_node_key": "T3_C_80_OR_HIGHER_AT_OR_ABOVE_THRESHOLD",
+        "traversal_order": 2
+      },
+      {
+        "id": "772a00da-612e-a7df-af77-77f2bfd1130c",
+        "from_node_key": "T3_C_COMORBIDITY_PRESENT",
+        "to_node_key": "T3_C_18_69_COMORBIDITY_BELOW_THRESHOLD",
+        "traversal_order": 1
+      },
+      {
+        "id": "e861c69c-e649-f38e-6bfc-4cb31717fcaf",
+        "from_node_key": "T3_C_COMORBIDITY_PRESENT",
+        "to_node_key": "T3_C_18_69_COMORBIDITY_AT_OR_ABOVE_THRESHOLD",
+        "traversal_order": 2
+      },
+      {
+        "id": "85aff0b8-181d-fa6c-84c1-3e2a0c084a10",
+        "from_node_key": "T3_C_INITIAL_ENCOUNTER",
+        "to_node_key": "T3_C_AGE_18_TO_69",
+        "traversal_order": 1
+      },
+      {
+        "id": "6a27cc99-d9fa-60f6-1b1c-362abbdb23ec",
+        "from_node_key": "T3_C_INITIAL_ENCOUNTER",
+        "to_node_key": "T3_C_AGE_70_OR_HIGHER",
+        "traversal_order": 2
+      },
+      {
+        "id": "c74a538a-eb4a-5b9c-7e45-9d555916451e",
+        "from_node_key": "T3_C_IS_LIFESTYLE_FOLLOW_UP",
+        "to_node_key": "T3_C_LIFESTYLE_RESPONSE_ADEQUATE",
+        "traversal_order": 1
+      },
+      {
+        "id": "992b78aa-2320-332c-439f-f06a7649ac75",
+        "from_node_key": "T3_C_IS_LIFESTYLE_FOLLOW_UP",
+        "to_node_key": "T3_C_LIFESTYLE_RESPONSE_INADEQUATE",
+        "traversal_order": 2
+      },
+      {
+        "id": "8ede9d5d-cff4-6d2e-597b-a2fe3ba6d77c",
+        "from_node_key": "T3_C_IS_MEDICATION_FOLLOW_UP",
+        "to_node_key": "T3_INF_RESTORE_ACTIVE_BP_TARGET",
+        "traversal_order": 1
+      },
+      {
+        "id": "c4339a18-7ca1-db09-88bb-9afef69a3b7e",
+        "from_node_key": "T3_C_LIFESTYLE_RESPONSE_ADEQUATE",
+        "to_node_key": "T3_ACTION_LIFESTYLE_FOLLOW_UP_CONTINUE_MONITORING",
+        "traversal_order": 1
+      },
+      {
+        "id": "201230d9-2179-9af3-23c6-7c805e4f0a6b",
+        "from_node_key": "T3_C_LIFESTYLE_RESPONSE_INADEQUATE",
+        "to_node_key": "T3_LINK_ESSENTIAL_TREATMENT_STRATEGY",
+        "traversal_order": 1
+      },
+      {
+        "id": "4ed791bf-709b-45b1-97de-ee89ce67696b",
+        "from_node_key": "T3_C_LIFESTYLE_RESPONSE_INADEQUATE",
+        "to_node_key": "T3_LINK_OPTIMAL_TREATMENT_STRATEGY",
+        "traversal_order": 2
+      },
+      {
+        "id": "f8d871fa-a947-f09b-1aec-57906007a3c8",
+        "from_node_key": "T3_C_NO_COMORBIDITY",
+        "to_node_key": "T3_C_18_69_NO_COMORBIDITY_BELOW_THRESHOLD",
+        "traversal_order": 1
+      },
+      {
+        "id": "12f86a13-0918-4792-af21-1825f8ec70f2",
+        "from_node_key": "T3_C_NO_COMORBIDITY",
+        "to_node_key": "T3_C_18_69_NO_COMORBIDITY_AT_OR_ABOVE_THRESHOLD",
+        "traversal_order": 2
+      },
+      {
+        "id": "d8f3ba4e-236d-0f63-5f28-4b76650a805f",
+        "from_node_key": "T3_INF_18_69_COMORBIDITY_BP_TARGET",
+        "to_node_key": "T3_LINK_18_69_HEART_FAILURE_MODIFIER",
+        "traversal_order": 1
+      },
+      {
+        "id": "64969dea-e925-b8e2-d1b1-7725e468f033",
+        "from_node_key": "T3_INF_18_69_COMORBIDITY_BP_TARGET",
+        "to_node_key": "T3_LINK_18_69_CORONARY_ARTERY_DISEASE_MODIFIER",
+        "traversal_order": 2
+      },
+      {
+        "id": "e3111be4-af9f-5f3d-2a89-00d1c5a9cf80",
+        "from_node_key": "T3_INF_18_69_COMORBIDITY_BP_TARGET",
+        "to_node_key": "T3_LINK_18_69_TYPE_2_DIABETES_MODIFIER",
+        "traversal_order": 3
+      },
+      {
+        "id": "46098767-77c9-e2ac-634a-6f43e975ada9",
+        "from_node_key": "T3_INF_18_69_COMORBIDITY_BP_TARGET",
+        "to_node_key": "T3_LINK_18_69_CHRONIC_KIDNEY_DISEASE_MODIFIER",
+        "traversal_order": 4
+      },
+      {
+        "id": "0b1bb767-ce06-3c0c-7dbc-16563b8b33ac",
+        "from_node_key": "T3_INF_18_69_NO_COMORBIDITY_BP_TARGET",
+        "to_node_key": "T3_LINK_ESSENTIAL_TREATMENT_STRATEGY",
+        "traversal_order": 1
+      },
+      {
+        "id": "d41dbf0e-1859-66c5-5ed3-014571d61ada",
+        "from_node_key": "T3_INF_18_69_NO_COMORBIDITY_BP_TARGET",
+        "to_node_key": "T3_LINK_OPTIMAL_TREATMENT_STRATEGY",
+        "traversal_order": 2
+      },
+      {
+        "id": "1e33d0c7-202a-5bb2-6fb6-e4d7f9698cdb",
+        "from_node_key": "T3_INF_18_69_NO_COMORBIDITY_HIGH_RISK_HABTC_BP_TARGET",
+        "to_node_key": "T3_LINK_ESSENTIAL_TREATMENT_STRATEGY",
+        "traversal_order": 1
+      },
+      {
+        "id": "5bddd1d5-4fc8-c798-dd82-6a0dc4fc126a",
+        "from_node_key": "T3_INF_18_69_NO_COMORBIDITY_HIGH_RISK_HABTC_BP_TARGET",
+        "to_node_key": "T3_LINK_OPTIMAL_TREATMENT_STRATEGY",
+        "traversal_order": 2
+      },
+      {
+        "id": "6a0d8c84-d5f7-f00d-cb49-fc969215a8d1",
+        "from_node_key": "T3_INF_AGE_70_OR_HIGHER_BP_TARGET",
+        "to_node_key": "T3_LINK_AGE_70_OR_HIGHER_HEART_FAILURE_MODIFIER",
+        "traversal_order": 1
+      },
+      {
+        "id": "4628c36a-92d3-ae81-0e00-4feb514bde6f",
+        "from_node_key": "T3_INF_AGE_70_OR_HIGHER_BP_TARGET",
+        "to_node_key": "T3_LINK_AGE_70_OR_HIGHER_OLDER_ADULT_MODIFIER",
+        "traversal_order": 2
+      },
+      {
+        "id": "1bb1c96c-cd99-4d08-dae5-f2bfcf75326d",
+        "from_node_key": "T3_INF_AGE_70_OR_HIGHER_BP_TARGET",
+        "to_node_key": "T3_LINK_AGE_70_OR_HIGHER_CORONARY_ARTERY_DISEASE_MODIFIER",
+        "traversal_order": 3
+      },
+      {
+        "id": "3296256e-fda4-c9e9-47b8-6610f64ec10b",
+        "from_node_key": "T3_INF_AGE_70_OR_HIGHER_BP_TARGET",
+        "to_node_key": "T3_LINK_AGE_70_OR_HIGHER_TYPE_2_DIABETES_MODIFIER",
+        "traversal_order": 4
+      },
+      {
+        "id": "1e1865a9-680a-ab84-7474-9b03f0123175",
+        "from_node_key": "T3_INF_AGE_70_OR_HIGHER_BP_TARGET",
+        "to_node_key": "T3_LINK_AGE_70_OR_HIGHER_CHRONIC_KIDNEY_DISEASE_MODIFIER",
+        "traversal_order": 5
+      },
+      {
+        "id": "f7ea0c58-cbff-3efa-ca81-a0e1ab2fc6a5",
+        "from_node_key": "T3_INF_RESTORE_ACTIVE_BP_TARGET",
+        "to_node_key": "T3_LINK_ESSENTIAL_TREATMENT_STRATEGY",
+        "traversal_order": 1
+      },
+      {
+        "id": "0debc439-2266-f749-6e93-966c7f796107",
+        "from_node_key": "T3_INF_RESTORE_ACTIVE_BP_TARGET",
+        "to_node_key": "T3_LINK_OPTIMAL_TREATMENT_STRATEGY",
+        "traversal_order": 2
+      },
+      {
+        "id": "42da0175-1e8e-c682-98b5-6fbc7f006199",
+        "from_node_key": "T3_START_BP_AND_AGE_INFORMATION",
+        "to_node_key": "T3_C_IS_MEDICATION_FOLLOW_UP",
+        "traversal_order": 1
+      },
+      {
+        "id": "f9b829f1-805a-2c86-3f1e-e8104efce9e3",
+        "from_node_key": "T3_START_BP_AND_AGE_INFORMATION",
+        "to_node_key": "T3_C_IS_LIFESTYLE_FOLLOW_UP",
+        "traversal_order": 2
+      },
+      {
+        "id": "d332d692-1252-eda4-e428-5cc56e0e53c4",
+        "from_node_key": "T3_START_BP_AND_AGE_INFORMATION",
+        "to_node_key": "T3_C_INITIAL_ENCOUNTER",
+        "traversal_order": 3
+      }
+    ],
+    "layout": null
+  },
+  "counts": {
+    "nodes": 46,
+    "edges": 53,
+    "references": 39,
+    "layouts": 0
+  }
+}
