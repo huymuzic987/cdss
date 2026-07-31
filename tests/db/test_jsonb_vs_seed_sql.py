@@ -4,6 +4,7 @@ import json
 import re
 import uuid
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -21,7 +22,7 @@ SEED_SQL_PATH = PROJECT_ROOT / "backups" / "seed.sql"
 JSONB_DIR = PROJECT_ROOT / "backups" / "DecisionTreeJSONB"
 
 
-def parse_sql_literal(val_str: str):
+def parse_sql_literal(val_str: str) -> Any:
     """Parse a single SQL column value from an INSERT statement VALUES tuple."""
     val_str = val_str.strip()
     if val_str.upper() == "NULL":
