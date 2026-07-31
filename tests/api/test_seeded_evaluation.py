@@ -148,6 +148,7 @@ def test_seeded_pregnancy_third_follow_up_reaches_postpartum_branch(
         "minimum_follow_ups_completed": True,
         "next_follow_up_number": 4,
         "next_follow_up_required": True,
+        "previous_visit_date": "2026-02-16",
     }
     entered = {
         (entry["tree_key"], entry["node_key"])

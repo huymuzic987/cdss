@@ -5472,7 +5472,14 @@ USING public.decision_nodes n
 WHERE r.node_id = n.id
   AND n.node_key IN ('T14_LINK_HEART_FAILURE', 'T14_LINK_CORONARY_ARTERY_DISEASE',
                      'T14_LINK_PREGNANCY', 'T14_END_REFER_STROKE_MANAGEMENT');
-DELETE FROM public.decision_nodes
+-- Retain retired rows as GLOBAL metadata so historical references remain
+-- foreign-key safe, while they are excluded from executable reachability.
+UPDATE public.decision_nodes
+SET node_type = 'GLOBAL'::public.node_type,
+    link_target_tree_key = NULL,
+    link_target_node_key = NULL,
+    condition_definition = NULL,
+    action_payload = NULL
 WHERE tree_id = (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency')
   AND node_key IN ('T14_LINK_HEART_FAILURE', 'T14_LINK_CORONARY_ARTERY_DISEASE',
                    'T14_LINK_PREGNANCY', 'T14_END_REFER_STROKE_MANAGEMENT');
