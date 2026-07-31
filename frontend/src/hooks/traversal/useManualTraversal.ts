@@ -2,7 +2,8 @@ import { useCallback } from 'react'
 import type { JsonObject } from '../../api/types'
 import type { DrugToleranceResult } from '../../panels/DrugToleranceCheckbox'
 import { updateBundleClinicalFlag } from './bundleFlags'
-import { enteredEntries, highlightedByTree, isDrugToleranceEntry, lastEntered, replaceRemainingEntries } from './trace'
+import { enteredEntries, hasDrugToleranceSelection, hasEmergencyScenarioSelection, highlightedByTree, isDrugToleranceEntry, isEmergencyCheckpoint, lastEntered, replaceRemainingEntries } from './trace'
+import type { EmergencyScenarioFlags } from '../../panels/EmergencyScenarioCheckbox'
 import type { EvaluationRunner, TraversalDependencies } from './useEvaluationRunner'
 import type { TraversalStore } from './useTraversalStore'
 
@@ -19,6 +20,7 @@ export function useManualTraversal(
     store.setActiveTraversalTreeKey(startTreeKey)
     dependencies.setError(null)
     store.setShowModal(false)
+    store.setCheckpointPending(false)
     store.setManualMode(false)
     store.setManualStepIndex(0)
     store.manualStartTreeKeyRef.current = startTreeKey
@@ -36,6 +38,23 @@ export function useManualTraversal(
     store.setManualStepIndex(0)
     store.setManualMode(true)
   }, [dependencies, runEvaluation, store])
+
+  const handleEmergencyScenarioConfirm = useCallback(async (flags: EmergencyScenarioFlags) => {
+    store.setShowDrugTolerancePopup(false)
+    let input = store.manualInputRef.current
+    for (const [key, value] of Object.entries(flags)) input = updateBundleClinicalFlag(input, key, value)
+    store.manualInputRef.current = input
+    const runId = ++store.runIdRef.current
+    const evaluation = await runEvaluation(runId, store.manualStartTreeKeyRef.current, input)
+    if (!evaluation) return
+    store.setCheckpointPending(false)
+    store.manualEntriesRef.current = replaceRemainingEntries(store.manualEntriesRef.current, store.manualStepIndex, evaluation.traceLog)
+    store.manualFinalRef.current = { result: evaluation.result, partial: evaluation.partial }
+    if (store.manualStepIndex >= store.manualEntriesRef.current.length) {
+      store.setManualMode(false)
+      store.finish(evaluation.result, evaluation.partial)
+    }
+  }, [runEvaluation, store])
 
   const handleManualStep = useCallback(() => {
     if (!store.manualMode || store.showDrugTolerancePopup) return
@@ -55,7 +74,15 @@ export function useManualTraversal(
 
     const nextIndex = store.manualStepIndex + 1
     store.setManualStepIndex(nextIndex)
-    if (isDrugToleranceEntry(entry)) {
+    if (isDrugToleranceEntry(entry) && !hasDrugToleranceSelection(store.manualInputRef.current)) {
+      store.setCheckpointKind('resistant')
+      store.setCheckpointPending(true)
+      store.setShowDrugTolerancePopup(true)
+      return
+    }
+    if (isEmergencyCheckpoint(entry) && !hasEmergencyScenarioSelection(store.manualInputRef.current)) {
+      store.setCheckpointKind('emergency')
+      store.setCheckpointPending(true)
       store.setShowDrugTolerancePopup(true)
       return
     }
@@ -82,6 +109,7 @@ export function useManualTraversal(
     const currentTreeKey = store.activeTraversalTreeKey
     const evaluation = await runEvaluation(runId, store.manualStartTreeKeyRef.current, input)
     if (!evaluation) return
+    store.setCheckpointPending(false)
     if (currentTreeKey) dependencies.setActiveTreeKey(currentTreeKey)
 
     if (!store.manualMode) {
@@ -116,6 +144,7 @@ export function useManualTraversal(
     handleManualStep,
     handleDrugToleranceChange,
     handleDrugToleranceConfirm,
+    handleEmergencyScenarioConfirm,
     handleDrugToleranceCancel: () => store.setShowDrugTolerancePopup(false),
   }
 }

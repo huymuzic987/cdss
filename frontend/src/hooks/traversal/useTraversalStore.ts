@@ -12,6 +12,8 @@ export function useTraversalStore() {
   const [modalPartial, setModalPartial] = useState<ApiErrorResponse | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [showDrugTolerancePopup, setShowDrugTolerancePopup] = useState(false)
+  const [checkpointKind, setCheckpointKind] = useState<'resistant' | 'emergency'>('resistant')
+  const [checkpointPending, setCheckpointPending] = useState(false)
   const [manualMode, setManualMode] = useState(false)
   const [manualStepIndex, setManualStepIndex] = useState(0)
 
@@ -38,6 +40,8 @@ export function useTraversalStore() {
     activeTraversalTreeKey, setActiveTraversalTreeKey,
     modalResult, modalPartial, showModal, setShowModal,
     showDrugTolerancePopup, setShowDrugTolerancePopup,
+    checkpointKind, setCheckpointKind,
+    checkpointPending, setCheckpointPending,
     manualMode, setManualMode,
     manualStepIndex, setManualStepIndex,
     manualEntriesRef, manualFinalRef, manualStartTreeKeyRef, manualInputRef, runIdRef,

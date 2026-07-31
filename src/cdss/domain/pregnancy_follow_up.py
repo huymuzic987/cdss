@@ -33,6 +33,7 @@ class PregnancyFollowUpSummary:
     minimum_follow_ups_completed: bool
     next_follow_up_number: int | None
     next_follow_up_required: bool
+    previous_visit_date: str | None
 
 
 def pregnancy_follow_up_entry_node(runtime_input: Mapping[str, Any]) -> str | None:
@@ -62,6 +63,7 @@ def summarize_pregnancy_follow_up(
     *,
     patient_id: str,
     encounter_ids: Sequence[str],
+    encounter_dates: Sequence[str] = (),
     actions: Sequence[ExecutedAction],
 ) -> PregnancyFollowUpSummary | None:
     """Describe the pregnancy episode carried by a canonical longitudinal Bundle."""
@@ -97,6 +99,9 @@ def summarize_pregnancy_follow_up(
         minimum_follow_ups_completed=follow_up_number >= MINIMUM_PREGNANCY_FOLLOW_UPS,
         next_follow_up_number=follow_up_number + 1 if next_required else None,
         next_follow_up_required=next_required,
+        previous_visit_date=(
+            encounter_dates[-2] if follow_up_number > 0 and len(encounter_dates) >= 2 else None
+        ),
     )
 
 

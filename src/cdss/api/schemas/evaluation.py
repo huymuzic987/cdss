@@ -37,6 +37,7 @@ class PregnancyFollowUpResponse(ApiModel):
     minimum_follow_ups_completed: bool
     next_follow_up_number: int | None
     next_follow_up_required: bool
+    previous_visit_date: str | None
 
     @classmethod
     def from_summary(cls, summary: PregnancyFollowUpSummary) -> PregnancyFollowUpResponse:
