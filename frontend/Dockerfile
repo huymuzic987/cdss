@@ -2,8 +2,8 @@
 # reverse-proxies API calls to the backend container. Build context is
 # ./frontend.
 
-FROM node:20-alpine AS builder
-RUN corepack enable && corepack prepare pnpm@9 --activate
+FROM node:24.18.1-alpine AS builder
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 WORKDIR /app
 

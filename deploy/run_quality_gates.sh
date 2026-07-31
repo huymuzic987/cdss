@@ -30,7 +30,11 @@ SCHEMA_TEST_DB_NAME=cdss_schema_test
 # libatomic.so.1. The full Bookworm image provides it; the slim variant does
 # not, causing Pyright to exit 127 before type checking starts.
 UV_IMAGE="ghcr.io/astral-sh/uv:python3.12-bookworm"
-NODE_IMAGE="node:20-alpine"
+# Vite 8/jsdom 30/undici 8 require modern Node APIs that are unavailable in
+# Node 20 (notably worker_threads.markAsUncloneable). Pin the tested runtime
+# instead of following a moving major tag.
+NODE_IMAGE="node:24.18.1-alpine"
+PNPM_VERSION="9.15.9"
 
 HOST_UID="$(id -u)"
 HOST_GID="$(id -g)"
@@ -139,7 +143,14 @@ docker run --rm \
     sh -c "
         set -e
         corepack enable
-        corepack prepare pnpm@9 --activate
+        corepack prepare pnpm@${PNPM_VERSION} --activate
+        node -e \"
+            if (typeof require('node:worker_threads').markAsUncloneable !== 'function') {
+                throw new Error('Node runtime lacks worker_threads.markAsUncloneable')
+            }
+        \"
+        node --version
+        pnpm --version
         pnpm config set store-dir /tmp/pnpm-store
         pnpm install --frozen-lockfile
         pnpm test
