@@ -28,29 +28,227 @@
       "T6_GLOBAL_CONTRAINDICATION_REFERENCE_TABLE"
     ],
     "nodes": {
-      "T6_ACTION_ADJUST_REGIMEN": {
-        "id": "e4bf6aee-e795-4eab-8bc2-dfc5613a06da",
-        "node_key": "T6_ACTION_ADJUST_REGIMEN",
-        "node_type": "INFERENCE",
-        "text_en": "Adjust regimen",
-        "text_vi": "Điều chỉnh phác đồ",
+      "T6_START_PATIENT_INFO_AND_PRESCRIPTIONS": {
+        "id": "e3b9491f-a5db-4d53-942e-0834fa0f25a0",
+        "node_key": "T6_START_PATIENT_INFO_AND_PRESCRIPTIONS",
+        "node_type": "START",
+        "text_en": "Patient information + prescribed medications",
+        "text_vi": "Thông tin bệnh nhân + Các đơn thuốc chỉ định",
         "condition_definition": null,
-        "context_patch": {
-          "treatment": {
-            "status": "ADJUST_REGIMEN"
-          }
-        },
+        "context_patch": null,
         "action_payload": null,
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 9,
+        "display_order": 0,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "39b30073-e941-481c-861d-89f935346c4f",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị Tăng huyết áp bằng thuốc",
+                "number": "3.4"
+              }
+            ],
+            "locator": "Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc",
+            "locator_detail": "Entry point of the drug-combination tree.",
+            "printed_page_numbers": [
+              20
+            ],
+            "pdf_page_numbers": [
+              22
+            ],
+            "reference_note": "Điểm vào của quy trình phối hợp thuốc.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "923acbb9-422c-4ddd-b1b7-26bef040f0ba",
+            "traversal_order": 1,
+            "to_node_key": "T6_C_FIRST_VISIT",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.is_medication_follow_up",
+              "value": false
+            }
+          },
+          {
+            "edge_id": "ccdf8c11-671b-4014-b5bc-0950f62433d5",
+            "traversal_order": 2,
+            "to_node_key": "T6_C_FOLLOW_UP_VISIT",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.is_medication_follow_up",
+              "value": true
+            }
+          }
+        ]
+      },
+      "T6_C_FIRST_VISIT": {
+        "id": "749bb74c-d4df-4e72-a946-df93f71e960f",
+        "node_key": "T6_C_FIRST_VISIT",
+        "node_type": "CONDITION",
+        "text_en": "First visit",
+        "text_vi": "Khám lần đầu",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.is_medication_follow_up",
+          "value": false
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 1,
         "created_at": "2026-07-25 11:46:28.021853+00:00",
         "updated_at": "2026-07-25 11:46:28.021853+00:00",
         "references": [],
         "transitions": [
           {
-            "edge_id": "e79a8a91-b8d2-439b-a27d-6023d1e66ce6",
+            "edge_id": "c35c399f-392b-4134-9366-110b96da0a60",
+            "traversal_order": 1,
+            "to_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_C_FOLLOW_UP_VISIT": {
+        "id": "8134a5b7-29c2-4a22-bf6c-2d9976e340eb",
+        "node_key": "T6_C_FOLLOW_UP_VISIT",
+        "node_type": "CONDITION",
+        "text_en": "Follow-up visit",
+        "text_vi": "Tái khám",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.is_medication_follow_up",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 2,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "0aa46c7c-e1a2-4c66-acc3-dc10645af309",
+            "traversal_order": 1,
+            "to_node_key": "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS": {
+        "id": "e6ce4a56-4b14-433f-b8fd-5c04096f103e",
+        "node_key": "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
+        "node_type": "INFERENCE",
+        "text_en": "Determine whether a prior prescription exists",
+        "text_vi": "Xác định có đơn thuốc trước đó hay không",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment": {
+            "has_prior_prescription": true
+          },
+          "operations": [
+            {
+              "op": "COPY_PATH",
+              "to_path": "context.treatment.has_prior_prescription",
+              "required": false,
+              "from_path": "input.has_prior_prescription"
+            }
+          ]
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 3,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "c0133fe6-932d-495a-9f75-e40a289a6ea2",
+            "traversal_order": 1,
+            "to_node_key": "T6_C_HAS_PRIOR_PRESCRIPTION",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "context.treatment.has_prior_prescription",
+              "value": true
+            }
+          },
+          {
+            "edge_id": "33535156-a740-45c6-a7e4-60556e07028a",
+            "traversal_order": 2,
+            "to_node_key": "T6_C_NO_PRIOR_PRESCRIPTION",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "context.treatment.has_prior_prescription",
+              "value": false
+            }
+          }
+        ]
+      },
+      "T6_C_HAS_PRIOR_PRESCRIPTION": {
+        "id": "1f779704-25f9-4894-9210-6c34167af7af",
+        "node_key": "T6_C_HAS_PRIOR_PRESCRIPTION",
+        "node_type": "CONDITION",
+        "text_en": "Has prior prescription",
+        "text_vi": "Có đơn thuốc trước đó",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.has_prior_prescription",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 4,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "17ae5cb4-aa0a-4327-b4bf-352dc54e6a3b",
+            "traversal_order": 1,
+            "to_node_key": "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_C_NO_PRIOR_PRESCRIPTION": {
+        "id": "5570eaf9-e0ba-4144-a77b-56579f6c0a0a",
+        "node_key": "T6_C_NO_PRIOR_PRESCRIPTION",
+        "node_type": "CONDITION",
+        "text_en": "No prior prescription",
+        "text_vi": "Không có đơn thuốc trước đó",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.has_prior_prescription",
+          "value": false
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 5,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "4ceeef05-33ba-4a9b-83a3-0de63dc75bb8",
             "traversal_order": 1,
             "to_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
             "candidate_condition": null
@@ -108,42 +306,469 @@
           }
         ]
       },
-      "T6_ACTION_KEEP_ONE_DRUG": {
-        "id": "1d806eec-96f8-45e5-ac29-0ba677bea528",
-        "node_key": "T6_ACTION_KEEP_ONE_DRUG",
+      "T6_C_DOSAGE_ADJUSTMENT_REQUESTED": {
+        "id": "2e194809-a5d8-4c47-a42f-f938b0391772",
+        "node_key": "T6_C_DOSAGE_ADJUSTMENT_REQUESTED",
+        "node_type": "CONDITION",
+        "text_en": "Dosage adjustment requested in current prescription",
+        "text_vi": "Có yêu cầu điều chỉnh liều lượng trong đơn thuốc hiện tại",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.has_dosage_adjustment_request",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 7,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "799b7cd8-b5a2-4b5f-8b16-c7122bba6015",
+            "traversal_order": 1,
+            "to_node_key": "T6_ACTION_ADJUST_REGIMEN",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_C_NO_DOSAGE_ADJUSTMENT_REQUESTED": {
+        "id": "1459f200-6322-4b81-bda0-a959b39a41d5",
+        "node_key": "T6_C_NO_DOSAGE_ADJUSTMENT_REQUESTED",
+        "node_type": "CONDITION",
+        "text_en": "No dosage adjustment requested in current prescription",
+        "text_vi": "Không có yêu cầu điều chỉnh liều lượng trong đơn thuốc hiện tại",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.has_dosage_adjustment_request",
+          "value": false
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 8,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "00c80789-c420-4aa2-974d-678c344853ab",
+            "traversal_order": 1,
+            "to_node_key": "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_ACTION_ADJUST_REGIMEN": {
+        "id": "e4bf6aee-e795-4eab-8bc2-dfc5613a06da",
+        "node_key": "T6_ACTION_ADJUST_REGIMEN",
         "node_type": "INFERENCE",
-        "text_en": "Keep only 1 drug",
-        "text_vi": "Chỉ giữ lại 1 thuốc",
+        "text_en": "Adjust regimen",
+        "text_vi": "Điều chỉnh phác đồ",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment": {
+            "status": "ADJUST_REGIMEN"
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 9,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "e79a8a91-b8d2-439b-a27d-6023d1e66ce6",
+            "traversal_order": 1,
+            "to_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT": {
+        "id": "5dd8e03f-953a-40e4-a2f5-eae62f0353d2",
+        "node_key": "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT",
+        "node_type": "INFERENCE",
+        "text_en": "Maintain regimen",
+        "text_vi": "Duy trì phác đồ",
         "condition_definition": null,
         "context_patch": null,
         "action_payload": null,
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 19,
+        "display_order": 10,
         "created_at": "2026-07-25 11:46:28.021853+00:00",
         "updated_at": "2026-07-25 11:46:28.021853+00:00",
         "references": [],
         "transitions": [
           {
-            "edge_id": "cb27582d-dd82-4271-a09d-4e1872160500",
+            "edge_id": "f9fea92e-c64c-48da-a6c1-494be04d0cc6",
             "traversal_order": 1,
-            "to_node_key": "T6_C_IS_FIRST_VISIT_FOR_REGIMEN",
+            "to_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_INF_DETERMINE_CONTRAINDICATIONS": {
+        "id": "dbf3fc69-278c-4e51-9487-242f9de4a9cc",
+        "node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
+        "node_type": "INFERENCE",
+        "text_en": "Determine contraindicated drug classes based on patient information and current regimen",
+        "text_vi": "Xác định thuốc chống chỉ định dựa trên thông tin bệnh nhân và phác đồ hiện tại",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment": {
+            "has_duplicate_drug_class": false,
+            "has_duplicate_ras_inhibitor": false
+          },
+          "operations": [
+            {
+              "op": "COPY_PATH",
+              "to_path": "context.treatment.contraindicated_drug_classes",
+              "required": false,
+              "from_path": "input.contraindicated_drug_classes"
+            },
+            {
+              "op": "COPY_PATH",
+              "to_path": "context.treatment.has_duplicate_drug_class",
+              "required": false,
+              "from_path": "input.has_duplicate_drug_class"
+            },
+            {
+              "op": "COPY_PATH",
+              "to_path": "context.treatment.has_duplicate_ras_inhibitor",
+              "required": false,
+              "from_path": "input.has_duplicate_ras_inhibitor"
+            }
+          ]
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 11,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "ffc2dadf-0752-460f-971d-19c2851e57c7",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chiến lược điều trị phối hợp thuốc",
+                "number": "3.5"
+              }
+            ],
+            "locator": "Bảng 11. Chống chỉ định của các nhóm thuốc điều trị tăng huyết áp chính (1)",
+            "locator_detail": "Carries forward the pre-computed contraindicated-drug-class map; full table on the GLOBAL reference node.",
+            "printed_page_numbers": [
+              23
+            ],
+            "pdf_page_numbers": [
+              25
+            ],
+            "reference_note": "Chống chỉ định bắt buộc/tương đối theo nhóm thuốc.",
+            "reference_order": 1
+          },
+          {
+            "id": "44c2e430-20a1-4ad7-b29d-8f1b98965cd5",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Điều trị Tăng huyết áp bằng thuốc",
+                "number": "3.4"
+              }
+            ],
+            "locator": "Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc",
+            "locator_detail": "Dual RAS-inhibitor blockade is not recommended (Class III, Level A).",
+            "printed_page_numbers": [
+              20
+            ],
+            "pdf_page_numbers": [
+              22
+            ],
+            "reference_note": "Việc phối hợp hai nhóm thuốc ức chế hệ renin-angiotensin không được khuyến cáo.",
+            "reference_order": 2
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "5264dce7-0104-4bf5-8dea-ee9fe312d623",
+            "traversal_order": 1,
+            "to_node_key": "T6_C_HAS_DUPLICATE_DRUG_CLASS",
             "candidate_condition": {
               "op": "eq",
-              "path": "input.is_medication_follow_up",
-              "value": false
+              "path": "context.treatment.has_duplicate_drug_class",
+              "value": true
             }
           },
           {
-            "edge_id": "fd2021f4-18f7-4888-85f8-913535cf3e4a",
+            "edge_id": "afae3b41-3100-4b18-b9a6-d2153f5cbcb3",
             "traversal_order": 2,
-            "to_node_key": "T6_C_IS_FOLLOW_UP_FOR_REGIMEN",
+            "to_node_key": "T6_C_NO_DUPLICATE_DRUG_CLASS",
             "candidate_condition": {
               "op": "eq",
-              "path": "input.is_medication_follow_up",
+              "path": "context.treatment.has_duplicate_drug_class",
+              "value": false
+            }
+          }
+        ]
+      },
+      "T6_GLOBAL_CONTRAINDICATION_REFERENCE_TABLE": {
+        "id": "52d3b005-e25a-4240-a3b9-6cf05642eaa5",
+        "node_key": "T6_GLOBAL_CONTRAINDICATION_REFERENCE_TABLE",
+        "node_type": "GLOBAL",
+        "text_en": "Drug-class contraindication reference table (Bảng 11)",
+        "text_vi": "Bảng chống chỉ định theo nhóm thuốc (Bảng 11)",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": {
+          "kind": "REFERENCE_LIST",
+          "table": {
+            "ARB": {
+              "absolute": [
+                "pregnancy",
+                "hyperkalemia_gt_5_5",
+                "bilateral_renal_artery_stenosis"
+              ],
+              "relative": [
+                "woman_of_childbearing_age_without_contraception"
+              ]
+            },
+            "MRA": {
+              "absolute": [
+                "pregnancy",
+                "hyperkalemia",
+                "severe_acute_renal_failure_egfr_lt_30"
+              ]
+            },
+            "BETA_BLOCKER": {
+              "absolute": [
+                "asthma",
+                "sinoatrial_or_high_grade_av_block",
+                "bradycardia_lt_60"
+              ],
+              "relative": [
+                "metabolic_syndrome",
+                "glucose_intolerance",
+                "athlete"
+              ]
+            },
+            "ACE_INHIBITOR": {
+              "absolute": [
+                "pregnancy",
+                "angioedema_history",
+                "hyperkalemia_gt_5_5",
+                "bilateral_renal_artery_stenosis"
+              ],
+              "relative": [
+                "woman_of_childbearing_age_without_contraception"
+              ]
+            },
+            "DIHYDROPYRIDINE_CCB": {
+              "relative": [
+                "tachyarrhythmia",
+                "heart_failure_reduced_ef_nyha_3_or_4",
+                "severe_leg_edema_history"
+              ]
+            },
+            "THIAZIDE_LIKE_DIURETIC": {
+              "absolute": [
+                "gout"
+              ],
+              "relative": [
+                "metabolic_syndrome",
+                "glucose_intolerance",
+                "pregnancy",
+                "hypercalcemia",
+                "hypokalemia"
+              ]
+            },
+            "NON_DIHYDROPYRIDINE_CCB": {
+              "absolute": [
+                "sinoatrial_or_high_grade_av_block",
+                "severe_lv_dysfunction_lvef_lt_40",
+                "bradycardia_lt_60"
+              ],
+              "relative": [
+                "constipation"
+              ]
+            },
+            "DIRECT_RENIN_INHIBITOR_OR_VASODILATOR": {
+              "absolute": [
+                "pregnancy"
+              ]
+            }
+          },
+          "purpose": "Chống chỉ định bắt buộc/tương đối theo nhóm thuốc, dùng để tính input.contraindicated_drug_classes trước khi vào Cây 6.",
+          "input_path": "input.contraindicated_drug_classes"
+        },
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 12,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "a13ea051-3c42-4ed9-9dd3-881b5e90dabf",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chiến lược điều trị phối hợp thuốc",
+                "number": "3.5"
+              }
+            ],
+            "locator": "Bảng 11. Chống chỉ định của các nhóm thuốc điều trị tăng huyết áp chính (1)",
+            "locator_detail": "Full absolute/relative contraindication table by drug class, including direct renin inhibitor/vasodilator.",
+            "printed_page_numbers": [
+              23
+            ],
+            "pdf_page_numbers": [
+              25
+            ],
+            "reference_note": "Bảng chống chỉ định đầy đủ theo nhóm thuốc.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T6_C_HAS_DUPLICATE_DRUG_CLASS": {
+        "id": "31ecadcc-6279-4b3f-9a9b-2f2d38931c49",
+        "node_key": "T6_C_HAS_DUPLICATE_DRUG_CLASS",
+        "node_type": "CONDITION",
+        "text_en": "Has duplicate drug class (e.g. 2 drugs of the same class)",
+        "text_vi": "Có nhiều thuốc trùng nhóm (VD 2 thuốc cùng nhóm ƯCMC)",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.has_duplicate_drug_class",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 14,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "65fbd9f5-5bbe-40d8-8b07-dd3c35a680f5",
+            "traversal_order": 1,
+            "to_node_key": "T6_C_DUPLICATE_IS_RAS_INHIBITOR",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "context.treatment.has_duplicate_ras_inhibitor",
               "value": true
             }
+          },
+          {
+            "edge_id": "485bc969-ab69-46dd-8b93-70e073d3259a",
+            "traversal_order": 2,
+            "to_node_key": "T6_C_DUPLICATE_NOT_RAS_INHIBITOR",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "context.treatment.has_duplicate_ras_inhibitor",
+              "value": false
+            }
+          }
+        ]
+      },
+      "T6_C_NO_DUPLICATE_DRUG_CLASS": {
+        "id": "dc85f5d5-6dac-417f-8dba-e7e49a5abde5",
+        "node_key": "T6_C_NO_DUPLICATE_DRUG_CLASS",
+        "node_type": "CONDITION",
+        "text_en": "No duplicate drug class",
+        "text_vi": "Không có thuốc trùng nhóm",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.has_duplicate_drug_class",
+          "value": false
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 15,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "49917e4c-7d31-4e9a-b82c-1d1f075501b7",
+            "traversal_order": 1,
+            "to_node_key": "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_C_DUPLICATE_IS_RAS_INHIBITOR": {
+        "id": "f1d6e2a0-b370-4527-b02b-9dab71fb396f",
+        "node_key": "T6_C_DUPLICATE_IS_RAS_INHIBITOR",
+        "node_type": "CONDITION",
+        "text_en": "Regimen uses more than 2 RAS-inhibitor classes in parallel",
+        "text_vi": "Phác đồ dùng >2 loại ức chế RAS song song",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.has_duplicate_ras_inhibitor",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 16,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "4b5ba756-3893-4775-87bf-35e5880186c1",
+            "traversal_order": 1,
+            "to_node_key": "T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_C_DUPLICATE_NOT_RAS_INHIBITOR": {
+        "id": "760b3f49-a111-474a-90f0-7957d8b96d1c",
+        "node_key": "T6_C_DUPLICATE_NOT_RAS_INHIBITOR",
+        "node_type": "CONDITION",
+        "text_en": "Duplicate is within a single non-RAS drug class",
+        "text_vi": "Trùng nhóm không thuộc nhóm ức chế RAS",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.has_duplicate_ras_inhibitor",
+          "value": false
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 17,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "fe804a8f-ea53-4de5-94b5-e3c9579451df",
+            "traversal_order": 1,
+            "to_node_key": "T6_ACTION_KEEP_ONE_DRUG",
+            "candidate_condition": null
           }
         ]
       },
@@ -207,28 +832,42 @@
           }
         ]
       },
-      "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT": {
-        "id": "5dd8e03f-953a-40e4-a2f5-eae62f0353d2",
-        "node_key": "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT",
+      "T6_ACTION_KEEP_ONE_DRUG": {
+        "id": "1d806eec-96f8-45e5-ac29-0ba677bea528",
+        "node_key": "T6_ACTION_KEEP_ONE_DRUG",
         "node_type": "INFERENCE",
-        "text_en": "Maintain regimen",
-        "text_vi": "Duy trì phác đồ",
+        "text_en": "Keep only 1 drug",
+        "text_vi": "Chỉ giữ lại 1 thuốc",
         "condition_definition": null,
         "context_patch": null,
         "action_payload": null,
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 10,
+        "display_order": 19,
         "created_at": "2026-07-25 11:46:28.021853+00:00",
         "updated_at": "2026-07-25 11:46:28.021853+00:00",
         "references": [],
         "transitions": [
           {
-            "edge_id": "f9fea92e-c64c-48da-a6c1-494be04d0cc6",
+            "edge_id": "cb27582d-dd82-4271-a09d-4e1872160500",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
-            "candidate_condition": null
+            "to_node_key": "T6_C_IS_FIRST_VISIT_FOR_REGIMEN",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.is_medication_follow_up",
+              "value": false
+            }
+          },
+          {
+            "edge_id": "fd2021f4-18f7-4888-85f8-913535cf3e4a",
+            "traversal_order": 2,
+            "to_node_key": "T6_C_IS_FOLLOW_UP_FOR_REGIMEN",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.is_medication_follow_up",
+              "value": true
+            }
           }
         ]
       },
@@ -268,518 +907,6 @@
               "path": "input.is_medication_follow_up",
               "value": true
             }
-          }
-        ]
-      },
-      "T6_C_DOSAGE_ADJUSTMENT_REQUESTED": {
-        "id": "2e194809-a5d8-4c47-a42f-f938b0391772",
-        "node_key": "T6_C_DOSAGE_ADJUSTMENT_REQUESTED",
-        "node_type": "CONDITION",
-        "text_en": "Dosage adjustment requested in current prescription",
-        "text_vi": "Có yêu cầu điều chỉnh liều lượng trong đơn thuốc hiện tại",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.has_dosage_adjustment_request",
-          "value": true
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 7,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "799b7cd8-b5a2-4b5f-8b16-c7122bba6015",
-            "traversal_order": 1,
-            "to_node_key": "T6_ACTION_ADJUST_REGIMEN",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_DUPLICATE_IS_RAS_INHIBITOR": {
-        "id": "f1d6e2a0-b370-4527-b02b-9dab71fb396f",
-        "node_key": "T6_C_DUPLICATE_IS_RAS_INHIBITOR",
-        "node_type": "CONDITION",
-        "text_en": "Regimen uses more than 2 RAS-inhibitor classes in parallel",
-        "text_vi": "Phác đồ dùng >2 loại ức chế RAS song song",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.has_duplicate_ras_inhibitor",
-          "value": true
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 16,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "4b5ba756-3893-4775-87bf-35e5880186c1",
-            "traversal_order": 1,
-            "to_node_key": "T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_DUPLICATE_NOT_RAS_INHIBITOR": {
-        "id": "760b3f49-a111-474a-90f0-7957d8b96d1c",
-        "node_key": "T6_C_DUPLICATE_NOT_RAS_INHIBITOR",
-        "node_type": "CONDITION",
-        "text_en": "Duplicate is within a single non-RAS drug class",
-        "text_vi": "Trùng nhóm không thuộc nhóm ức chế RAS",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.has_duplicate_ras_inhibitor",
-          "value": false
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 17,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "fe804a8f-ea53-4de5-94b5-e3c9579451df",
-            "traversal_order": 1,
-            "to_node_key": "T6_ACTION_KEEP_ONE_DRUG",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_FIRST_VISIT": {
-        "id": "749bb74c-d4df-4e72-a946-df93f71e960f",
-        "node_key": "T6_C_FIRST_VISIT",
-        "node_type": "CONDITION",
-        "text_en": "First visit",
-        "text_vi": "Khám lần đầu",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.is_medication_follow_up",
-          "value": false
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 1,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "c35c399f-392b-4134-9366-110b96da0a60",
-            "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_FOLLOWUP_ESCALATED_STAGE": {
-        "id": "b5369af0-b0bc-4359-93c4-1a21e128604b",
-        "node_key": "T6_C_FOLLOWUP_ESCALATED_STAGE",
-        "node_type": "CONDITION",
-        "text_en": "Follow-up already on an escalated 3-drug regimen, still not achieved",
-        "text_vi": "Tái khám đã ở phác đồ 3 thuốc, vẫn chưa đạt đích",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.medication_follow_up_stage",
-          "value": "ESCALATED_REGIMEN"
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 38,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "c41f578b-700f-4935-8500-8b0dd00f6b6c",
-            "traversal_order": 1,
-            "to_node_key": "T6_LINK_RESISTANT_HYPERTENSION",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_FOLLOWUP_INITIAL_STAGE": {
-        "id": "2e946eea-c9f9-4e03-b9b8-5bc05acfc569",
-        "node_key": "T6_C_FOLLOWUP_INITIAL_STAGE",
-        "node_type": "CONDITION",
-        "text_en": "Follow-up on the initial regimen, target not achieved",
-        "text_vi": "Tái khám ở giai đoạn phác đồ ban đầu, chưa đạt đích",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.medication_follow_up_stage",
-          "value": "INITIAL_REGIMEN"
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 37,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "80a27155-0200-49c3-878a-afdc99596c52",
-            "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_FOLLOW_UP_VISIT": {
-        "id": "8134a5b7-29c2-4a22-bf6c-2d9976e340eb",
-        "node_key": "T6_C_FOLLOW_UP_VISIT",
-        "node_type": "CONDITION",
-        "text_en": "Follow-up visit",
-        "text_vi": "Tái khám",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.is_medication_follow_up",
-          "value": true
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 2,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "0aa46c7c-e1a2-4c66-acc3-dc10645af309",
-            "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_HAS_DUPLICATE_DRUG_CLASS": {
-        "id": "31ecadcc-6279-4b3f-9a9b-2f2d38931c49",
-        "node_key": "T6_C_HAS_DUPLICATE_DRUG_CLASS",
-        "node_type": "CONDITION",
-        "text_en": "Has duplicate drug class (e.g. 2 drugs of the same class)",
-        "text_vi": "Có nhiều thuốc trùng nhóm (VD 2 thuốc cùng nhóm ƯCMC)",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.has_duplicate_drug_class",
-          "value": true
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 14,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "65fbd9f5-5bbe-40d8-8b07-dd3c35a680f5",
-            "traversal_order": 1,
-            "to_node_key": "T6_C_DUPLICATE_IS_RAS_INHIBITOR",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "context.treatment.has_duplicate_ras_inhibitor",
-              "value": true
-            }
-          },
-          {
-            "edge_id": "485bc969-ab69-46dd-8b93-70e073d3259a",
-            "traversal_order": 2,
-            "to_node_key": "T6_C_DUPLICATE_NOT_RAS_INHIBITOR",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "context.treatment.has_duplicate_ras_inhibitor",
-              "value": false
-            }
-          }
-        ]
-      },
-      "T6_C_HAS_PRIOR_PRESCRIPTION": {
-        "id": "1f779704-25f9-4894-9210-6c34167af7af",
-        "node_key": "T6_C_HAS_PRIOR_PRESCRIPTION",
-        "node_type": "CONDITION",
-        "text_en": "Has prior prescription",
-        "text_vi": "Có đơn thuốc trước đó",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.has_prior_prescription",
-          "value": true
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 4,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "17ae5cb4-aa0a-4327-b4bf-352dc54e6a3b",
-            "traversal_order": 1,
-            "to_node_key": "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION": {
-        "id": "26bbd0c2-0892-4a12-bf29-f7d6ce9c7fcc",
-        "node_key": "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION",
-        "node_type": "CONDITION",
-        "text_en": "Has specific clinical situation (heart failure, angina, post-MI, atrial fibrillation, tachycardia, or pregnancy)",
-        "text_vi": "CÓ CÁC TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU: SUY TIM, ĐAU THẮT NGỰC, SAU NMCT, RUNG NHĨ, NHỊP TIM NHANH, THAI KỲ",
-        "condition_definition": {
-          "any": [
-            {
-              "op": "eq",
-              "path": "input.has_heart_failure",
-              "value": true
-            },
-            {
-              "op": "eq",
-              "path": "context.treatment.has_angina",
-              "value": true
-            },
-            {
-              "op": "eq",
-              "path": "context.treatment.has_prior_mi",
-              "value": true
-            },
-            {
-              "op": "eq",
-              "path": "context.treatment.has_atrial_fibrillation",
-              "value": true
-            },
-            {
-              "op": "eq",
-              "path": "context.treatment.has_tachycardia",
-              "value": true
-            },
-            {
-              "op": "eq",
-              "path": "context.treatment.is_pregnant",
-              "value": true
-            }
-          ]
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 29,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [
-          {
-            "id": "d0a8b00b-4e4c-42d5-b9f0-f258c5c81154",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chiến lược điều trị phối hợp thuốc",
-                "number": "3.5"
-              }
-            ],
-            "locator": "Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc",
-            "locator_detail": "Beta-blocker recommended in combination with any other main drug class for specific clinical situations (Class I).",
-            "printed_page_numbers": [
-              20
-            ],
-            "pdf_page_numbers": [
-              22
-            ],
-            "reference_note": "Chẹn Beta được khuyến cáo phối hợp khi có tình huống lâm sàng đặc hiệu: đau thắt ngực, sau NMCT, suy tim hoặc kiểm soát nhịp tim.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "b655f2db-db39-4c55-a2d8-602586019249",
-            "traversal_order": 1,
-            "to_node_key": "T6_INF_ADD_BETA_BLOCKER",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION": {
-        "id": "6967695d-669f-4cb2-baec-e8ff9d9b50fa",
-        "node_key": "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION",
-        "node_type": "CONDITION",
-        "text_en": "Has specific clinical situation (escalation tier)",
-        "text_vi": "CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc leo thang)",
-        "condition_definition": {
-          "any": [
-            {
-              "op": "eq",
-              "path": "input.has_heart_failure",
-              "value": true
-            },
-            {
-              "op": "eq",
-              "path": "context.treatment.has_angina",
-              "value": true
-            },
-            {
-              "op": "eq",
-              "path": "context.treatment.has_prior_mi",
-              "value": true
-            },
-            {
-              "op": "eq",
-              "path": "context.treatment.has_atrial_fibrillation",
-              "value": true
-            },
-            {
-              "op": "eq",
-              "path": "context.treatment.has_tachycardia",
-              "value": true
-            },
-            {
-              "op": "eq",
-              "path": "context.treatment.is_pregnant",
-              "value": true
-            }
-          ]
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 261,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [
-          {
-            "id": "90edf759-75bb-4cfd-9ed1-03d55f67f493",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chiến lược điều trị phối hợp thuốc",
-                "number": "3.5"
-              }
-            ],
-            "locator": "Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc",
-            "locator_detail": "The specific-clinical-situation/beta-blocker check must gate every regimen tier (1, 2, or 3 drugs), not only the 2-drug tier, before the final regimen is given to the patient.",
-            "printed_page_numbers": [
-              20
-            ],
-            "pdf_page_numbers": [
-              22
-            ],
-            "reference_note": "Chẹn Beta được khuyến cáo phối hợp khi có tình huống lâm sàng đặc hiệu, áp dụng cho mọi bậc điều trị (1, 2, hoặc 3 thuốc).",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "18402157-c98b-4503-8f16-d4399d624a4e",
-            "traversal_order": 1,
-            "to_node_key": "T6_INF_ESCALATE_ADD_BETA_BLOCKER",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY": {
-        "id": "8f28660a-6643-482f-b2fa-b801fa6f8e02",
-        "node_key": "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY",
-        "node_type": "CONDITION",
-        "text_en": "Has specific clinical situation (monotherapy tier)",
-        "text_vi": "CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc đơn trị)",
-        "condition_definition": {
-          "any": [
-            {
-              "op": "eq",
-              "path": "input.has_heart_failure",
-              "value": true
-            },
-            {
-              "op": "eq",
-              "path": "context.treatment.has_angina",
-              "value": true
-            },
-            {
-              "op": "eq",
-              "path": "context.treatment.has_prior_mi",
-              "value": true
-            },
-            {
-              "op": "eq",
-              "path": "context.treatment.has_atrial_fibrillation",
-              "value": true
-            },
-            {
-              "op": "eq",
-              "path": "context.treatment.has_tachycardia",
-              "value": true
-            },
-            {
-              "op": "eq",
-              "path": "context.treatment.is_pregnant",
-              "value": true
-            }
-          ]
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 251,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [
-          {
-            "id": "b7a6c22f-b58d-4e14-a2a0-1d48f3be141e",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chiến lược điều trị phối hợp thuốc",
-                "number": "3.5"
-              }
-            ],
-            "locator": "Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc",
-            "locator_detail": "The specific-clinical-situation/beta-blocker check must gate every regimen tier (1, 2, or 3 drugs), not only the 2-drug tier, before the final regimen is given to the patient.",
-            "printed_page_numbers": [
-              20
-            ],
-            "pdf_page_numbers": [
-              22
-            ],
-            "reference_note": "Chẹn Beta được khuyến cáo phối hợp khi có tình huống lâm sàng đặc hiệu, áp dụng cho mọi bậc điều trị (1, 2, hoặc 3 thuốc).",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "e1f6967d-6a67-4069-96c6-3aa3feb74ac0",
-            "traversal_order": 1,
-            "to_node_key": "T6_INF_MONOTHERAPY_ADD_BETA_BLOCKER",
-            "candidate_condition": null
           }
         ]
       },
@@ -917,318 +1044,6 @@
           }
         ]
       },
-      "T6_C_NOT_SPECIAL_POPULATION": {
-        "id": "0e9d7de8-1104-4c68-a267-193a7556328f",
-        "node_key": "T6_C_NOT_SPECIAL_POPULATION",
-        "node_type": "CONDITION",
-        "text_en": "Not a special population",
-        "text_vi": "BỆNH NHÂN KHÔNG THUỘC NHÓM ĐẶC BIỆT",
-        "condition_definition": {
-          "not": {
-            "any": [
-              {
-                "op": "eq",
-                "path": "input.is_lifestyle_follow_up",
-                "value": true
-              },
-              {
-                "op": "gte",
-                "path": "input.age",
-                "value": 80
-              },
-              {
-                "op": "eq",
-                "path": "input.has_frailty_syndrome",
-                "value": true
-              }
-            ]
-          }
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 24,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "a896d15b-f58c-44ef-b615-97329faa2b3f",
-            "traversal_order": 1,
-            "to_node_key": "T6_INF_INITIATE_TWO_DRUG_LOW_DOSE",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_NO_DOSAGE_ADJUSTMENT_REQUESTED": {
-        "id": "1459f200-6322-4b81-bda0-a959b39a41d5",
-        "node_key": "T6_C_NO_DOSAGE_ADJUSTMENT_REQUESTED",
-        "node_type": "CONDITION",
-        "text_en": "No dosage adjustment requested in current prescription",
-        "text_vi": "Không có yêu cầu điều chỉnh liều lượng trong đơn thuốc hiện tại",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.has_dosage_adjustment_request",
-          "value": false
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 8,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "00c80789-c420-4aa2-974d-678c344853ab",
-            "traversal_order": 1,
-            "to_node_key": "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_NO_DUPLICATE_DRUG_CLASS": {
-        "id": "dc85f5d5-6dac-417f-8dba-e7e49a5abde5",
-        "node_key": "T6_C_NO_DUPLICATE_DRUG_CLASS",
-        "node_type": "CONDITION",
-        "text_en": "No duplicate drug class",
-        "text_vi": "Không có thuốc trùng nhóm",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.has_duplicate_drug_class",
-          "value": false
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 15,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "49917e4c-7d31-4e9a-b82c-1d1f075501b7",
-            "traversal_order": 1,
-            "to_node_key": "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_NO_PRIOR_PRESCRIPTION": {
-        "id": "5570eaf9-e0ba-4144-a77b-56579f6c0a0a",
-        "node_key": "T6_C_NO_PRIOR_PRESCRIPTION",
-        "node_type": "CONDITION",
-        "text_en": "No prior prescription",
-        "text_vi": "Không có đơn thuốc trước đó",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.has_prior_prescription",
-          "value": false
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 5,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "4ceeef05-33ba-4a9b-83a3-0de63dc75bb8",
-            "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_NO_SPECIFIC_CLINICAL_SITUATION": {
-        "id": "66f9169d-4cff-485d-a4b1-03595a6b73fd",
-        "node_key": "T6_C_NO_SPECIFIC_CLINICAL_SITUATION",
-        "node_type": "CONDITION",
-        "text_en": "No specific clinical situation",
-        "text_vi": "KHÔNG CÓ CÁC TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU",
-        "condition_definition": {
-          "not": {
-            "any": [
-              {
-                "op": "eq",
-                "path": "input.has_heart_failure",
-                "value": true
-              },
-              {
-                "op": "eq",
-                "path": "context.treatment.has_angina",
-                "value": true
-              },
-              {
-                "op": "eq",
-                "path": "context.treatment.has_prior_mi",
-                "value": true
-              },
-              {
-                "op": "eq",
-                "path": "context.treatment.has_atrial_fibrillation",
-                "value": true
-              },
-              {
-                "op": "eq",
-                "path": "context.treatment.has_tachycardia",
-                "value": true
-              },
-              {
-                "op": "eq",
-                "path": "context.treatment.is_pregnant",
-                "value": true
-              }
-            ]
-          }
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 30,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "a5ef2feb-8756-4389-a9c8-19615d14a2e3",
-            "traversal_order": 1,
-            "to_node_key": "T6_END_INITIAL_TWO_DRUG",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_NO_SPECIFIC_CLINICAL_SITUATION_ESCALATION": {
-        "id": "33ab6f43-a6bc-416c-9fe9-72eb2bbb3bc1",
-        "node_key": "T6_C_NO_SPECIFIC_CLINICAL_SITUATION_ESCALATION",
-        "node_type": "CONDITION",
-        "text_en": "No specific clinical situation (escalation tier)",
-        "text_vi": "KHÔNG CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc leo thang)",
-        "condition_definition": {
-          "not": {
-            "any": [
-              {
-                "op": "eq",
-                "path": "input.has_heart_failure",
-                "value": true
-              },
-              {
-                "op": "eq",
-                "path": "context.treatment.has_angina",
-                "value": true
-              },
-              {
-                "op": "eq",
-                "path": "context.treatment.has_prior_mi",
-                "value": true
-              },
-              {
-                "op": "eq",
-                "path": "context.treatment.has_atrial_fibrillation",
-                "value": true
-              },
-              {
-                "op": "eq",
-                "path": "context.treatment.has_tachycardia",
-                "value": true
-              },
-              {
-                "op": "eq",
-                "path": "context.treatment.is_pregnant",
-                "value": true
-              }
-            ]
-          }
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 262,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "d087b6f4-0f18-4009-9d0d-71009096ba9c",
-            "traversal_order": 1,
-            "to_node_key": "T6_END_ESCALATE_REGIMEN",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_NO_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY": {
-        "id": "4272f994-cbfc-4040-b6ca-7b1c05404ef0",
-        "node_key": "T6_C_NO_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY",
-        "node_type": "CONDITION",
-        "text_en": "No specific clinical situation (monotherapy tier)",
-        "text_vi": "KHÔNG CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc đơn trị)",
-        "condition_definition": {
-          "not": {
-            "any": [
-              {
-                "op": "eq",
-                "path": "input.has_heart_failure",
-                "value": true
-              },
-              {
-                "op": "eq",
-                "path": "context.treatment.has_angina",
-                "value": true
-              },
-              {
-                "op": "eq",
-                "path": "context.treatment.has_prior_mi",
-                "value": true
-              },
-              {
-                "op": "eq",
-                "path": "context.treatment.has_atrial_fibrillation",
-                "value": true
-              },
-              {
-                "op": "eq",
-                "path": "context.treatment.has_tachycardia",
-                "value": true
-              },
-              {
-                "op": "eq",
-                "path": "context.treatment.is_pregnant",
-                "value": true
-              }
-            ]
-          }
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 252,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "f66dfb44-f67d-49ad-aa5a-1949b85aaf25",
-            "traversal_order": 1,
-            "to_node_key": "T6_END_INITIAL_MONOTHERAPY",
-            "candidate_condition": null
-          }
-        ]
-      },
       "T6_C_SPECIAL_POPULATION": {
         "id": "b671f1b7-c554-49f0-b066-a7adc4deabda",
         "node_key": "T6_C_SPECIAL_POPULATION",
@@ -1293,37 +1108,84 @@
           }
         ]
       },
-      "T6_C_TARGET_ACHIEVED": {
-        "id": "32c801c0-624b-40dd-b2b0-b9c8d7389aaa",
-        "node_key": "T6_C_TARGET_ACHIEVED",
+      "T6_C_NOT_SPECIAL_POPULATION": {
+        "id": "0e9d7de8-1104-4c68-a267-193a7556328f",
+        "node_key": "T6_C_NOT_SPECIAL_POPULATION",
         "node_type": "CONDITION",
-        "text_en": "BP target achieved on current regimen",
-        "text_vi": "Đạt đích điều trị với phác đồ hiện tại",
+        "text_en": "Not a special population",
+        "text_vi": "BỆNH NHÂN KHÔNG THUỘC NHÓM ĐẶC BIỆT",
         "condition_definition": {
-          "all": [
-            {
-              "op": "lt",
-              "path": "input.current_clinic_sbp",
-              "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
-            },
-            {
-              "op": "lt",
-              "path": "input.current_clinic_dbp",
-              "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
-            }
-          ]
+          "not": {
+            "any": [
+              {
+                "op": "eq",
+                "path": "input.is_lifestyle_follow_up",
+                "value": true
+              },
+              {
+                "op": "gte",
+                "path": "input.age",
+                "value": 80
+              },
+              {
+                "op": "eq",
+                "path": "input.has_frailty_syndrome",
+                "value": true
+              }
+            ]
+          }
         },
         "context_patch": null,
         "action_payload": null,
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 34,
+        "display_order": 24,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "a896d15b-f58c-44ef-b615-97329faa2b3f",
+            "traversal_order": 1,
+            "to_node_key": "T6_INF_INITIATE_TWO_DRUG_LOW_DOSE",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_INF_INITIATE_MONOTHERAPY": {
+        "id": "b50e184c-1830-4d00-93d4-f95a5bf02330",
+        "node_key": "T6_INF_INITIATE_MONOTHERAPY",
+        "node_type": "INFERENCE",
+        "text_en": "Drug therapy: start with 1 drug (A, C, or D)",
+        "text_vi": "Điều trị thuốc KHỞI ĐẦU BẰNG 1 THUỐC (A, C, hoặc D)",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment_preferences": {
+            "dose_strategy": "LOW_TO_USUAL_DOSE",
+            "combination_options": [
+              [
+                "A"
+              ],
+              [
+                "C"
+              ],
+              [
+                "D"
+              ]
+            ]
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 25,
         "created_at": "2026-07-25 11:46:28.021853+00:00",
         "updated_at": "2026-07-25 11:46:28.021853+00:00",
         "references": [
           {
-            "id": "e056d1f2-8af3-4105-a4a5-a3b492da54cc",
+            "id": "8e504be3-b0da-4be4-b9bc-4391550477ca",
             "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
             "section_path": [
               {
@@ -1332,181 +1194,25 @@
               }
             ],
             "locator": "Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc",
-            "locator_detail": "Dynamic BP-target comparison, mirrors T3/T4/T5's established mechanism.",
+            "locator_detail": "Monotherapy initiation for special populations; class menu (A/B/C/D, B requires indication) matches T4_ACTION_CONSIDER_MONOTHERAPY/T5_ACTION_CONSIDER_MONOTHERAPY_ONE_PILL exactly.",
             "printed_page_numbers": [
               20
             ],
             "pdf_page_numbers": [
               22
             ],
-            "reference_note": "Nếu không đạt HA mục tiêu trong vòng 1 tháng, tăng liều hoặc chuyển phối hợp 3 thuốc.",
+            "reference_note": "Điều trị thuốc khởi đầu bằng 1 thuốc (A, B, C, hoặc D; B cần có chỉ định).",
             "reference_order": 1
           }
         ],
         "transitions": [
           {
-            "edge_id": "af8184c9-9cff-4106-9ecc-edaafaa79ef6",
+            "edge_id": "a5e4e0f8-924f-4c51-977a-6c0f2af0bf97",
             "traversal_order": 1,
-            "to_node_key": "T6_END_MAINTAIN_AND_MONITOR",
+            "to_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY",
             "candidate_condition": null
           }
         ]
-      },
-      "T6_C_TARGET_NOT_ACHIEVED": {
-        "id": "2f8e22b6-cd6c-4f5d-ac45-741362c3d8db",
-        "node_key": "T6_C_TARGET_NOT_ACHIEVED",
-        "node_type": "CONDITION",
-        "text_en": "BP target not achieved on current regimen",
-        "text_vi": "Không đạt đích điều trị với phác đồ hiện tại",
-        "condition_definition": {
-          "any": [
-            {
-              "op": "gte",
-              "path": "input.current_clinic_sbp",
-              "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
-            },
-            {
-              "op": "gte",
-              "path": "input.current_clinic_dbp",
-              "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
-            }
-          ]
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 35,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "dede8ed4-1ad4-4593-b1a2-5d88c79d2bc2",
-            "traversal_order": 1,
-            "to_node_key": "T6_C_FOLLOWUP_INITIAL_STAGE",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.medication_follow_up_stage",
-              "value": "INITIAL_REGIMEN"
-            }
-          },
-          {
-            "edge_id": "a2a8c348-1821-4046-a7bd-178a4d53de36",
-            "traversal_order": 2,
-            "to_node_key": "T6_C_FOLLOWUP_ESCALATED_STAGE",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.medication_follow_up_stage",
-              "value": "ESCALATED_REGIMEN"
-            }
-          }
-        ]
-      },
-      "T6_C_WAS_NOT_ON_MONOTHERAPY": {
-        "id": "9dd09dfd-b54f-4bb4-a6ae-9ddce4b1d125",
-        "node_key": "T6_C_WAS_NOT_ON_MONOTHERAPY",
-        "node_type": "CONDITION",
-        "text_en": "Prior regimen was already a 2-drug combination",
-        "text_vi": "Phác đồ trước đó đã là phối hợp 2 thuốc",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.was_on_monotherapy",
-          "value": false
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 41,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "fa5df9bc-84ae-49fd-913a-3863e556cec1",
-            "traversal_order": 1,
-            "to_node_key": "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_C_WAS_ON_MONOTHERAPY": {
-        "id": "d08684eb-bc5d-4802-92ec-dd584cbe87f3",
-        "node_key": "T6_C_WAS_ON_MONOTHERAPY",
-        "node_type": "CONDITION",
-        "text_en": "Prior regimen was monotherapy",
-        "text_vi": "Phác đồ trước đó là đơn trị",
-        "condition_definition": {
-          "op": "eq",
-          "path": "context.treatment.was_on_monotherapy",
-          "value": true
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 40,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "1c6f975f-67c0-46d7-82d5-6f2d7ac62ff9",
-            "traversal_order": 1,
-            "to_node_key": "T6_INF_INITIATE_TWO_DRUG_LOW_DOSE",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_END_ESCALATE_REGIMEN": {
-        "id": "86d48bf7-b0e6-4a4a-82c8-d43a246eec43",
-        "node_key": "T6_END_ESCALATE_REGIMEN",
-        "node_type": "END",
-        "text_en": "Increase dose or move to 3-drug combination; reassess at next encounter",
-        "text_vi": "Tăng liều hoặc chuyển phối hợp 3 thuốc; đánh giá lại ở lần tái khám kế tiếp",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "INCREASE_DOSE_OR_THREE_DRUG_COMBINATION",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": true,
-          "next_medication_follow_up_stage": "ESCALATED_REGIMEN"
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 43,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": []
-      },
-      "T6_END_ESCALATE_REGIMEN_WITH_BETA_BLOCKER": {
-        "id": "80cb6ee6-60b8-4e3a-a1be-5e4d6c679252",
-        "node_key": "T6_END_ESCALATE_REGIMEN_WITH_BETA_BLOCKER",
-        "node_type": "END",
-        "text_en": "Increase dose or move to 3-drug combination plus beta-blocker; reassess at next encounter",
-        "text_vi": "Tăng liều hoặc chuyển phối hợp 3 thuốc kèm chẹn Beta; đánh giá lại ở lần tái khám kế tiếp",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "INCREASE_DOSE_OR_THREE_DRUG_COMBINATION",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": true,
-          "next_medication_follow_up_stage": "ESCALATED_REGIMEN"
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 264,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": []
       },
       "T6_END_INITIAL_MONOTHERAPY": {
         "id": "0ab7150b-4413-4da6-a901-dd0339c1efcb",
@@ -1531,227 +1237,25 @@
         "references": [],
         "transitions": []
       },
-      "T6_END_INITIAL_MONOTHERAPY_WITH_BETA_BLOCKER": {
-        "id": "296eaf5f-75a3-4190-9ba9-a81544b7f977",
-        "node_key": "T6_END_INITIAL_MONOTHERAPY_WITH_BETA_BLOCKER",
-        "node_type": "END",
-        "text_en": "Start beta-blocker monotherapy; reassess at next encounter",
-        "text_vi": "Bắt đầu đơn trị bằng chẹn Beta; đánh giá lại ở lần tái khám kế tiếp",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "CONSIDER_MONOTHERAPY",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": true,
-          "next_medication_follow_up_stage": "INITIAL_REGIMEN"
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 254,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": []
-      },
-      "T6_END_INITIAL_TWO_DRUG": {
-        "id": "befb1aa1-6f93-4950-81c3-1a3dedf33415",
-        "node_key": "T6_END_INITIAL_TWO_DRUG",
-        "node_type": "END",
-        "text_en": "Start 2-drug low-dose combination; reassess at next encounter",
-        "text_vi": "Bắt đầu phối hợp 2 thuốc liều thấp; đánh giá lại ở lần tái khám kế tiếp",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "INITIAL_TWO_DRUG_COMBINATION",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": true,
-          "next_medication_follow_up_stage": "INITIAL_REGIMEN"
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 33,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": []
-      },
-      "T6_END_INITIAL_TWO_DRUG_WITH_BETA_BLOCKER": {
-        "id": "b34dd726-10bb-4a65-9ae8-04e45c9e0a7d",
-        "node_key": "T6_END_INITIAL_TWO_DRUG_WITH_BETA_BLOCKER",
-        "node_type": "END",
-        "text_en": "Start 2-drug low-dose combination plus beta-blocker; reassess at next encounter",
-        "text_vi": "Bắt đầu phối hợp 2 thuốc liều thấp kèm chẹn Beta; đánh giá lại ở lần tái khám kế tiếp",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "INITIAL_TWO_DRUG_COMBINATION",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": true,
-          "next_medication_follow_up_stage": "INITIAL_REGIMEN"
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 32,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": []
-      },
-      "T6_END_MAINTAIN_AND_MONITOR": {
-        "id": "a9119f90-ae41-462e-ab81-c79045e2583a",
-        "node_key": "T6_END_MAINTAIN_AND_MONITOR",
-        "node_type": "END",
-        "text_en": "Maintain current regimen and monitor",
-        "text_vi": "Duy trì phác đồ hiện tại và theo dõi",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "MAINTAIN_CURRENT_REGIMEN",
-          "follow_up_mode": "NEW_ENCOUNTER",
-          "follow_up_required": true
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 36,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": []
-      },
-      "T6_GLOBAL_CONTRAINDICATION_REFERENCE_TABLE": {
-        "id": "52d3b005-e25a-4240-a3b9-6cf05642eaa5",
-        "node_key": "T6_GLOBAL_CONTRAINDICATION_REFERENCE_TABLE",
-        "node_type": "GLOBAL",
-        "text_en": "Drug-class contraindication reference table (Bảng 11)",
-        "text_vi": "Bảng chống chỉ định theo nhóm thuốc (Bảng 11)",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": {
-          "kind": "REFERENCE_LIST",
-          "table": {
-            "ARB": {
-              "absolute": [
-                "pregnancy",
-                "hyperkalemia_gt_5_5",
-                "bilateral_renal_artery_stenosis"
-              ],
-              "relative": [
-                "woman_of_childbearing_age_without_contraception"
-              ]
-            },
-            "MRA": {
-              "absolute": [
-                "pregnancy",
-                "hyperkalemia",
-                "severe_acute_renal_failure_egfr_lt_30"
-              ]
-            },
-            "BETA_BLOCKER": {
-              "absolute": [
-                "asthma",
-                "sinoatrial_or_high_grade_av_block",
-                "bradycardia_lt_60"
-              ],
-              "relative": [
-                "metabolic_syndrome",
-                "glucose_intolerance",
-                "athlete"
-              ]
-            },
-            "ACE_INHIBITOR": {
-              "absolute": [
-                "pregnancy",
-                "angioedema_history",
-                "hyperkalemia_gt_5_5",
-                "bilateral_renal_artery_stenosis"
-              ],
-              "relative": [
-                "woman_of_childbearing_age_without_contraception"
-              ]
-            },
-            "DIHYDROPYRIDINE_CCB": {
-              "relative": [
-                "tachyarrhythmia",
-                "heart_failure_reduced_ef_nyha_3_or_4",
-                "severe_leg_edema_history"
-              ]
-            },
-            "THIAZIDE_LIKE_DIURETIC": {
-              "absolute": [
-                "gout"
-              ],
-              "relative": [
-                "metabolic_syndrome",
-                "glucose_intolerance",
-                "pregnancy",
-                "hypercalcemia",
-                "hypokalemia"
-              ]
-            },
-            "NON_DIHYDROPYRIDINE_CCB": {
-              "absolute": [
-                "sinoatrial_or_high_grade_av_block",
-                "severe_lv_dysfunction_lvef_lt_40",
-                "bradycardia_lt_60"
-              ],
-              "relative": [
-                "constipation"
-              ]
-            },
-            "DIRECT_RENIN_INHIBITOR_OR_VASODILATOR": {
-              "absolute": [
-                "pregnancy"
-              ]
-            }
-          },
-          "purpose": "Chống chỉ định bắt buộc/tương đối theo nhóm thuốc, dùng để tính input.contraindicated_drug_classes trước khi vào Cây 6.",
-          "input_path": "input.contraindicated_drug_classes"
-        },
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 12,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [
-          {
-            "id": "a13ea051-3c42-4ed9-9dd3-881b5e90dabf",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chiến lược điều trị phối hợp thuốc",
-                "number": "3.5"
-              }
-            ],
-            "locator": "Bảng 11. Chống chỉ định của các nhóm thuốc điều trị tăng huyết áp chính (1)",
-            "locator_detail": "Full absolute/relative contraindication table by drug class, including direct renin inhibitor/vasodilator.",
-            "printed_page_numbers": [
-              23
-            ],
-            "pdf_page_numbers": [
-              25
-            ],
-            "reference_note": "Bảng chống chỉ định đầy đủ theo nhóm thuốc.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": []
-      },
-      "T6_INF_ADD_BETA_BLOCKER": {
-        "id": "bfa41aac-49c8-4783-a749-c16d1ab6630b",
-        "node_key": "T6_INF_ADD_BETA_BLOCKER",
+      "T6_INF_INITIATE_TWO_DRUG_LOW_DOSE": {
+        "id": "5543a801-eb27-49fd-ac53-d66968aa5d85",
+        "node_key": "T6_INF_INITIATE_TWO_DRUG_LOW_DOSE",
         "node_type": "INFERENCE",
-        "text_en": "Add beta-blocker",
-        "text_vi": "Thêm thuốc chẹn Beta",
+        "text_en": "Drug therapy: start with 2 low-dose drugs (A combined with C or D)",
+        "text_vi": "Điều trị thuốc KHỞI ĐẦU BẰNG 2 THUỐC LIỀU THẤP (kết hợp A cùng C hoặc D)",
         "condition_definition": null,
         "context_patch": {
           "treatment_preferences": {
-            "additional_drug_classes": [
-              "B"
+            "dose_strategy": "LOW_DOSE",
+            "combination_options": [
+              [
+                "A",
+                "C"
+              ],
+              [
+                "A",
+                "D"
+              ]
             ]
           }
         },
@@ -1759,62 +1263,12 @@
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 31,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "f57465f2-ed23-4c17-889d-5da9b772103b",
-            "traversal_order": 1,
-            "to_node_key": "T6_END_INITIAL_TWO_DRUG_WITH_BETA_BLOCKER",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_INF_DETERMINE_CONTRAINDICATIONS": {
-        "id": "dbf3fc69-278c-4e51-9487-242f9de4a9cc",
-        "node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
-        "node_type": "INFERENCE",
-        "text_en": "Determine contraindicated drug classes based on patient information and current regimen",
-        "text_vi": "Xác định thuốc chống chỉ định dựa trên thông tin bệnh nhân và phác đồ hiện tại",
-        "condition_definition": null,
-        "context_patch": {
-          "treatment": {
-            "has_duplicate_drug_class": false,
-            "has_duplicate_ras_inhibitor": false
-          },
-          "operations": [
-            {
-              "op": "COPY_PATH",
-              "to_path": "context.treatment.contraindicated_drug_classes",
-              "required": false,
-              "from_path": "input.contraindicated_drug_classes"
-            },
-            {
-              "op": "COPY_PATH",
-              "to_path": "context.treatment.has_duplicate_drug_class",
-              "required": false,
-              "from_path": "input.has_duplicate_drug_class"
-            },
-            {
-              "op": "COPY_PATH",
-              "to_path": "context.treatment.has_duplicate_ras_inhibitor",
-              "required": false,
-              "from_path": "input.has_duplicate_ras_inhibitor"
-            }
-          ]
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 11,
+        "display_order": 27,
         "created_at": "2026-07-25 11:46:28.021853+00:00",
         "updated_at": "2026-07-25 11:46:28.021853+00:00",
         "references": [
           {
-            "id": "ffc2dadf-0752-460f-971d-19c2851e57c7",
+            "id": "6a5bc9d3-3984-4df4-89d5-bad10f6243ed",
             "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
             "section_path": [
               {
@@ -1822,160 +1276,24 @@
                 "number": "3.5"
               }
             ],
-            "locator": "Bảng 11. Chống chỉ định của các nhóm thuốc điều trị tăng huyết áp chính (1)",
-            "locator_detail": "Carries forward the pre-computed contraindicated-drug-class map; full table on the GLOBAL reference node.",
-            "printed_page_numbers": [
-              23
-            ],
-            "pdf_page_numbers": [
-              25
-            ],
-            "reference_note": "Chống chỉ định bắt buộc/tương đối theo nhóm thuốc.",
-            "reference_order": 1
-          },
-          {
-            "id": "44c2e430-20a1-4ad7-b29d-8f1b98965cd5",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Điều trị Tăng huyết áp bằng thuốc",
-                "number": "3.4"
-              }
-            ],
             "locator": "Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc",
-            "locator_detail": "Dual RAS-inhibitor blockade is not recommended (Class III, Level A).",
+            "locator_detail": "Optimal initial therapy: 2 drugs preferring A+C or A+D, fixed-dose combination at low dose (half the usual dose).",
             "printed_page_numbers": [
               20
             ],
             "pdf_page_numbers": [
               22
             ],
-            "reference_note": "Việc phối hợp hai nhóm thuốc ức chế hệ renin-angiotensin không được khuyến cáo.",
-            "reference_order": 2
+            "reference_note": "Khuyến cáo điều trị ban đầu tối ưu với 2 thuốc ưu tiên A+C hoặc D, liều thấp (1/2 liều thông thường).",
+            "reference_order": 1
           }
         ],
         "transitions": [
           {
-            "edge_id": "5264dce7-0104-4bf5-8dea-ee9fe312d623",
+            "edge_id": "c6fa9f2d-9281-482a-9b3d-09f48ad585b2",
             "traversal_order": 1,
-            "to_node_key": "T6_C_HAS_DUPLICATE_DRUG_CLASS",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "context.treatment.has_duplicate_drug_class",
-              "value": true
-            }
-          },
-          {
-            "edge_id": "afae3b41-3100-4b18-b9a6-d2153f5cbcb3",
-            "traversal_order": 2,
-            "to_node_key": "T6_C_NO_DUPLICATE_DRUG_CLASS",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "context.treatment.has_duplicate_drug_class",
-              "value": false
-            }
-          }
-        ]
-      },
-      "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS": {
-        "id": "e6ce4a56-4b14-433f-b8fd-5c04096f103e",
-        "node_key": "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
-        "node_type": "INFERENCE",
-        "text_en": "Determine whether a prior prescription exists",
-        "text_vi": "Xác định có đơn thuốc trước đó hay không",
-        "condition_definition": null,
-        "context_patch": {
-          "treatment": {
-            "has_prior_prescription": true
-          },
-          "operations": [
-            {
-              "op": "COPY_PATH",
-              "to_path": "context.treatment.has_prior_prescription",
-              "required": false,
-              "from_path": "input.has_prior_prescription"
-            }
-          ]
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 3,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "c0133fe6-932d-495a-9f75-e40a289a6ea2",
-            "traversal_order": 1,
-            "to_node_key": "T6_C_HAS_PRIOR_PRESCRIPTION",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "context.treatment.has_prior_prescription",
-              "value": true
-            }
-          },
-          {
-            "edge_id": "33535156-a740-45c6-a7e4-60556e07028a",
-            "traversal_order": 2,
-            "to_node_key": "T6_C_NO_PRIOR_PRESCRIPTION",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "context.treatment.has_prior_prescription",
-              "value": false
-            }
-          }
-        ]
-      },
-      "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY": {
-        "id": "94fda433-bcf3-4f59-9f9f-19a26e18ea1f",
-        "node_key": "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY",
-        "node_type": "INFERENCE",
-        "text_en": "Determine whether the prior regimen was monotherapy or a 2-drug combination",
-        "text_vi": "Xác định phác đồ trước đó là đơn trị hay phối hợp 2 thuốc",
-        "condition_definition": null,
-        "context_patch": {
-          "treatment": {
-            "was_on_monotherapy": false
-          },
-          "operations": [
-            {
-              "op": "COPY_PATH",
-              "to_path": "context.treatment.was_on_monotherapy",
-              "required": false,
-              "from_path": "input.was_on_monotherapy"
-            }
-          ]
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 39,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [],
-        "transitions": [
-          {
-            "edge_id": "ca64459f-e350-4a64-a13a-497a231fda6f",
-            "traversal_order": 1,
-            "to_node_key": "T6_C_WAS_ON_MONOTHERAPY",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "context.treatment.was_on_monotherapy",
-              "value": true
-            }
-          },
-          {
-            "edge_id": "b3aa749c-0e03-4846-9b98-b4d6d6f64a1b",
-            "traversal_order": 2,
-            "to_node_key": "T6_C_WAS_NOT_ON_MONOTHERAPY",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "context.treatment.was_on_monotherapy",
-              "value": false
-            }
+            "to_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS",
+            "candidate_condition": null
           }
         ]
       },
@@ -2118,51 +1436,430 @@
           }
         ]
       },
-      "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION": {
-        "id": "fa4f7d03-e5d2-4dc5-b57b-224aec159421",
-        "node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION",
+      "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION": {
+        "id": "26bbd0c2-0892-4a12-bf29-f7d6ce9c7fcc",
+        "node_key": "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION",
+        "node_type": "CONDITION",
+        "text_en": "Has specific clinical situation (heart failure, angina, post-MI, atrial fibrillation, tachycardia, or pregnancy)",
+        "text_vi": "CÓ CÁC TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU: SUY TIM, ĐAU THẮT NGỰC, SAU NMCT, RUNG NHĨ, NHỊP TIM NHANH, THAI KỲ",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "eq",
+              "path": "input.has_heart_failure",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.treatment.has_angina",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.treatment.has_prior_mi",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.treatment.has_atrial_fibrillation",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.treatment.has_tachycardia",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.treatment.is_pregnant",
+              "value": true
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 29,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "d0a8b00b-4e4c-42d5-b9f0-f258c5c81154",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chiến lược điều trị phối hợp thuốc",
+                "number": "3.5"
+              }
+            ],
+            "locator": "Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc",
+            "locator_detail": "Beta-blocker recommended in combination with any other main drug class for specific clinical situations (Class I).",
+            "printed_page_numbers": [
+              20
+            ],
+            "pdf_page_numbers": [
+              22
+            ],
+            "reference_note": "Chẹn Beta được khuyến cáo phối hợp khi có tình huống lâm sàng đặc hiệu: đau thắt ngực, sau NMCT, suy tim hoặc kiểm soát nhịp tim.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "b655f2db-db39-4c55-a2d8-602586019249",
+            "traversal_order": 1,
+            "to_node_key": "T6_INF_ADD_BETA_BLOCKER",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_C_NO_SPECIFIC_CLINICAL_SITUATION": {
+        "id": "66f9169d-4cff-485d-a4b1-03595a6b73fd",
+        "node_key": "T6_C_NO_SPECIFIC_CLINICAL_SITUATION",
+        "node_type": "CONDITION",
+        "text_en": "No specific clinical situation",
+        "text_vi": "KHÔNG CÓ CÁC TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU",
+        "condition_definition": {
+          "not": {
+            "any": [
+              {
+                "op": "eq",
+                "path": "input.has_heart_failure",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "context.treatment.has_angina",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "context.treatment.has_prior_mi",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "context.treatment.has_atrial_fibrillation",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "context.treatment.has_tachycardia",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "context.treatment.is_pregnant",
+                "value": true
+              }
+            ]
+          }
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 30,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "a5ef2feb-8756-4389-a9c8-19615d14a2e3",
+            "traversal_order": 1,
+            "to_node_key": "T6_END_INITIAL_TWO_DRUG",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_INF_ADD_BETA_BLOCKER": {
+        "id": "bfa41aac-49c8-4783-a749-c16d1ab6630b",
+        "node_key": "T6_INF_ADD_BETA_BLOCKER",
         "node_type": "INFERENCE",
-        "text_en": "Determine specific clinical situations relevant to beta-blocker add-on (escalation tier)",
-        "text_vi": "Xác định tình huống lâm sàng đặc hiệu liên quan đến việc thêm chẹn Beta (bậc leo thang)",
+        "text_en": "Add beta-blocker",
+        "text_vi": "Thêm thuốc chẹn Beta",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment_preferences": {
+            "additional_drug_classes": [
+              "B"
+            ]
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 31,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "f57465f2-ed23-4c17-889d-5da9b772103b",
+            "traversal_order": 1,
+            "to_node_key": "T6_END_INITIAL_TWO_DRUG_WITH_BETA_BLOCKER",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_END_INITIAL_TWO_DRUG_WITH_BETA_BLOCKER": {
+        "id": "b34dd726-10bb-4a65-9ae8-04e45c9e0a7d",
+        "node_key": "T6_END_INITIAL_TWO_DRUG_WITH_BETA_BLOCKER",
+        "node_type": "END",
+        "text_en": "Start 2-drug low-dose combination plus beta-blocker; reassess at next encounter",
+        "text_vi": "Bắt đầu phối hợp 2 thuốc liều thấp kèm chẹn Beta; đánh giá lại ở lần tái khám kế tiếp",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "INITIAL_TWO_DRUG_COMBINATION",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true,
+          "next_medication_follow_up_stage": "INITIAL_REGIMEN"
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 32,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T6_END_INITIAL_TWO_DRUG": {
+        "id": "befb1aa1-6f93-4950-81c3-1a3dedf33415",
+        "node_key": "T6_END_INITIAL_TWO_DRUG",
+        "node_type": "END",
+        "text_en": "Start 2-drug low-dose combination; reassess at next encounter",
+        "text_vi": "Bắt đầu phối hợp 2 thuốc liều thấp; đánh giá lại ở lần tái khám kế tiếp",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "INITIAL_TWO_DRUG_COMBINATION",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true,
+          "next_medication_follow_up_stage": "INITIAL_REGIMEN"
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 33,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T6_C_TARGET_ACHIEVED": {
+        "id": "32c801c0-624b-40dd-b2b0-b9c8d7389aaa",
+        "node_key": "T6_C_TARGET_ACHIEVED",
+        "node_type": "CONDITION",
+        "text_en": "BP target achieved on current regimen",
+        "text_vi": "Đạt đích điều trị với phác đồ hiện tại",
+        "condition_definition": {
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 34,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "e056d1f2-8af3-4105-a4a5-a3b492da54cc",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chiến lược điều trị phối hợp thuốc",
+                "number": "3.5"
+              }
+            ],
+            "locator": "Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc",
+            "locator_detail": "Dynamic BP-target comparison, mirrors T3/T4/T5's established mechanism.",
+            "printed_page_numbers": [
+              20
+            ],
+            "pdf_page_numbers": [
+              22
+            ],
+            "reference_note": "Nếu không đạt HA mục tiêu trong vòng 1 tháng, tăng liều hoặc chuyển phối hợp 3 thuốc.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "af8184c9-9cff-4106-9ecc-edaafaa79ef6",
+            "traversal_order": 1,
+            "to_node_key": "T6_END_MAINTAIN_AND_MONITOR",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_C_TARGET_NOT_ACHIEVED": {
+        "id": "2f8e22b6-cd6c-4f5d-ac45-741362c3d8db",
+        "node_key": "T6_C_TARGET_NOT_ACHIEVED",
+        "node_type": "CONDITION",
+        "text_en": "BP target not achieved on current regimen",
+        "text_vi": "Không đạt đích điều trị với phác đồ hiện tại",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "gte",
+              "path": "input.current_clinic_sbp",
+              "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+            },
+            {
+              "op": "gte",
+              "path": "input.current_clinic_dbp",
+              "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+            }
+          ]
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 35,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "dede8ed4-1ad4-4593-b1a2-5d88c79d2bc2",
+            "traversal_order": 1,
+            "to_node_key": "T6_C_FOLLOWUP_INITIAL_STAGE",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.medication_follow_up_stage",
+              "value": "INITIAL_REGIMEN"
+            }
+          },
+          {
+            "edge_id": "a2a8c348-1821-4046-a7bd-178a4d53de36",
+            "traversal_order": 2,
+            "to_node_key": "T6_C_FOLLOWUP_ESCALATED_STAGE",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.medication_follow_up_stage",
+              "value": "ESCALATED_REGIMEN"
+            }
+          }
+        ]
+      },
+      "T6_END_MAINTAIN_AND_MONITOR": {
+        "id": "a9119f90-ae41-462e-ab81-c79045e2583a",
+        "node_key": "T6_END_MAINTAIN_AND_MONITOR",
+        "node_type": "END",
+        "text_en": "Maintain current regimen and monitor",
+        "text_vi": "Duy trì phác đồ hiện tại và theo dõi",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "MAINTAIN_CURRENT_REGIMEN",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 36,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T6_C_FOLLOWUP_INITIAL_STAGE": {
+        "id": "2e946eea-c9f9-4e03-b9b8-5bc05acfc569",
+        "node_key": "T6_C_FOLLOWUP_INITIAL_STAGE",
+        "node_type": "CONDITION",
+        "text_en": "Follow-up on the initial regimen, target not achieved",
+        "text_vi": "Tái khám ở giai đoạn phác đồ ban đầu, chưa đạt đích",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.medication_follow_up_stage",
+          "value": "INITIAL_REGIMEN"
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 37,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "80a27155-0200-49c3-878a-afdc99596c52",
+            "traversal_order": 1,
+            "to_node_key": "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_C_FOLLOWUP_ESCALATED_STAGE": {
+        "id": "b5369af0-b0bc-4359-93c4-1a21e128604b",
+        "node_key": "T6_C_FOLLOWUP_ESCALATED_STAGE",
+        "node_type": "CONDITION",
+        "text_en": "Follow-up already on an escalated 3-drug regimen, still not achieved",
+        "text_vi": "Tái khám đã ở phác đồ 3 thuốc, vẫn chưa đạt đích",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.medication_follow_up_stage",
+          "value": "ESCALATED_REGIMEN"
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 38,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "c41f578b-700f-4935-8500-8b0dd00f6b6c",
+            "traversal_order": 1,
+            "to_node_key": "T6_LINK_RESISTANT_HYPERTENSION",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY": {
+        "id": "94fda433-bcf3-4f59-9f9f-19a26e18ea1f",
+        "node_key": "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY",
+        "node_type": "INFERENCE",
+        "text_en": "Determine whether the prior regimen was monotherapy or a 2-drug combination",
+        "text_vi": "Xác định phác đồ trước đó là đơn trị hay phối hợp 2 thuốc",
         "condition_definition": null,
         "context_patch": {
           "treatment": {
-            "has_angina": false,
-            "is_pregnant": false,
-            "has_prior_mi": false,
-            "has_tachycardia": false,
-            "has_atrial_fibrillation": false
+            "was_on_monotherapy": false
           },
           "operations": [
             {
               "op": "COPY_PATH",
-              "to_path": "context.treatment.has_angina",
+              "to_path": "context.treatment.was_on_monotherapy",
               "required": false,
-              "from_path": "input.has_angina"
-            },
-            {
-              "op": "COPY_PATH",
-              "to_path": "context.treatment.has_prior_mi",
-              "required": false,
-              "from_path": "input.has_prior_mi"
-            },
-            {
-              "op": "COPY_PATH",
-              "to_path": "context.treatment.has_atrial_fibrillation",
-              "required": false,
-              "from_path": "input.has_atrial_fibrillation"
-            },
-            {
-              "op": "COPY_PATH",
-              "to_path": "context.treatment.has_tachycardia",
-              "required": false,
-              "from_path": "input.has_tachycardia"
-            },
-            {
-              "op": "COPY_PATH",
-              "to_path": "context.treatment.is_pregnant",
-              "required": false,
-              "from_path": "input.is_pregnant"
+              "from_path": "input.was_on_monotherapy"
             }
           ]
         },
@@ -2170,92 +1867,214 @@
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 260,
+        "display_order": 39,
         "created_at": "2026-07-25 11:46:28.021853+00:00",
         "updated_at": "2026-07-25 11:46:28.021853+00:00",
         "references": [],
         "transitions": [
           {
-            "edge_id": "b15b8934-aeff-45ed-8bab-ae771dcf624b",
+            "edge_id": "ca64459f-e350-4a64-a13a-497a231fda6f",
             "traversal_order": 1,
-            "to_node_key": "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION",
+            "to_node_key": "T6_C_WAS_ON_MONOTHERAPY",
             "candidate_condition": {
-              "any": [
-                {
-                  "op": "eq",
-                  "path": "input.has_heart_failure",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "context.treatment.has_angina",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "context.treatment.has_prior_mi",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "context.treatment.has_atrial_fibrillation",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "context.treatment.has_tachycardia",
-                  "value": true
-                },
-                {
-                  "op": "eq",
-                  "path": "context.treatment.is_pregnant",
-                  "value": true
-                }
-              ]
+              "op": "eq",
+              "path": "context.treatment.was_on_monotherapy",
+              "value": true
             }
           },
           {
-            "edge_id": "8a7a43c9-a250-4556-917f-4132b26a18d2",
+            "edge_id": "b3aa749c-0e03-4846-9b98-b4d6d6f64a1b",
             "traversal_order": 2,
-            "to_node_key": "T6_C_NO_SPECIFIC_CLINICAL_SITUATION_ESCALATION",
+            "to_node_key": "T6_C_WAS_NOT_ON_MONOTHERAPY",
             "candidate_condition": {
-              "not": {
-                "any": [
-                  {
-                    "op": "eq",
-                    "path": "input.has_heart_failure",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "context.treatment.has_angina",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "context.treatment.has_prior_mi",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "context.treatment.has_atrial_fibrillation",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "context.treatment.has_tachycardia",
-                    "value": true
-                  },
-                  {
-                    "op": "eq",
-                    "path": "context.treatment.is_pregnant",
-                    "value": true
-                  }
-                ]
-              }
+              "op": "eq",
+              "path": "context.treatment.was_on_monotherapy",
+              "value": false
             }
           }
         ]
+      },
+      "T6_C_WAS_ON_MONOTHERAPY": {
+        "id": "d08684eb-bc5d-4802-92ec-dd584cbe87f3",
+        "node_key": "T6_C_WAS_ON_MONOTHERAPY",
+        "node_type": "CONDITION",
+        "text_en": "Prior regimen was monotherapy",
+        "text_vi": "Phác đồ trước đó là đơn trị",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.was_on_monotherapy",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 40,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "1c6f975f-67c0-46d7-82d5-6f2d7ac62ff9",
+            "traversal_order": 1,
+            "to_node_key": "T6_INF_INITIATE_TWO_DRUG_LOW_DOSE",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_C_WAS_NOT_ON_MONOTHERAPY": {
+        "id": "9dd09dfd-b54f-4bb4-a6ae-9ddce4b1d125",
+        "node_key": "T6_C_WAS_NOT_ON_MONOTHERAPY",
+        "node_type": "CONDITION",
+        "text_en": "Prior regimen was already a 2-drug combination",
+        "text_vi": "Phác đồ trước đó đã là phối hợp 2 thuốc",
+        "condition_definition": {
+          "op": "eq",
+          "path": "context.treatment.was_on_monotherapy",
+          "value": false
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 41,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "fa5df9bc-84ae-49fd-913a-3863e556cec1",
+            "traversal_order": 1,
+            "to_node_key": "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG": {
+        "id": "1f681bf7-e18d-4a04-927e-5d0a1cf08174",
+        "node_key": "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG",
+        "node_type": "INFERENCE",
+        "text_en": "Increase dose of 2-drug combination, or move to 3-drug combination (A+C+D)",
+        "text_vi": "Tăng liều phối hợp 2 thuốc, hoặc chuyển phối hợp 3 thuốc (A+C+D)",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment_preferences": {
+            "escalation_options": [
+              {
+                "strategy": "INCREASE_DOSE_TWO_DRUG"
+              },
+              {
+                "classes": [
+                  "A",
+                  "C",
+                  "D"
+                ],
+                "strategy": "THREE_DRUG_COMBINATION"
+              }
+            ]
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 42,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "0b2dc039-8e8a-44cf-bab8-527fe5904b98",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chiến lược điều trị phối hợp thuốc",
+                "number": "3.5"
+              }
+            ],
+            "locator": "Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc",
+            "locator_detail": "If BP is not controlled with 2 low-dose drugs, increase to full dose or add a third drug (early fixed-dose triple combination A+C+D).",
+            "printed_page_numbers": [
+              20
+            ],
+            "pdf_page_numbers": [
+              22
+            ],
+            "reference_note": "Nếu HA không kiểm soát có thể tăng liều hoặc phối hợp 3 thuốc cố định liều sớm A+C+D.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "430a309e-ffc0-44c0-bc06-d483f569218a",
+            "traversal_order": 1,
+            "to_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_END_ESCALATE_REGIMEN": {
+        "id": "86d48bf7-b0e6-4a4a-82c8-d43a246eec43",
+        "node_key": "T6_END_ESCALATE_REGIMEN",
+        "node_type": "END",
+        "text_en": "Increase dose or move to 3-drug combination; reassess at next encounter",
+        "text_vi": "Tăng liều hoặc chuyển phối hợp 3 thuốc; đánh giá lại ở lần tái khám kế tiếp",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "INCREASE_DOSE_OR_THREE_DRUG_COMBINATION",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true,
+          "next_medication_follow_up_stage": "ESCALATED_REGIMEN"
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 43,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": []
+      },
+      "T6_LINK_RESISTANT_HYPERTENSION": {
+        "id": "e2b4390c-7ec9-454c-b177-020388b33592",
+        "node_key": "T6_LINK_RESISTANT_HYPERTENSION",
+        "node_type": "LINK",
+        "text_en": "Tree 14: Resistant Hypertension",
+        "text_vi": "Cây 14: THA Kháng Trị",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": "resistant-hypertension",
+        "link_target_node_key": null,
+        "display_order": 44,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "e9e03eda-d8dd-4c6d-875d-c13f369e6d45",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Tăng huyết áp kháng trị",
+                "number": "3.6.1"
+              }
+            ],
+            "locator": "Mục 3.6.1. Tăng huyết áp kháng trị",
+            "locator_detail": "Resistant hypertension: BP not controlled despite optimal 3-drug combination including a diuretic.",
+            "printed_page_numbers": [
+              24
+            ],
+            "pdf_page_numbers": [
+              26
+            ],
+            "reference_note": "THA kháng trị: không kiểm soát được HA dù đã tối ưu phối hợp 3 thuốc bao gồm lợi tiểu.",
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
       },
       "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY": {
         "id": "c76f5495-f86f-4ab5-b1c7-95367d21eaad",
@@ -2396,216 +2215,141 @@
           }
         ]
       },
-      "T6_INF_ESCALATE_ADD_BETA_BLOCKER": {
-        "id": "a115f19f-3daa-48dd-ae07-51c72fd81f35",
-        "node_key": "T6_INF_ESCALATE_ADD_BETA_BLOCKER",
-        "node_type": "INFERENCE",
-        "text_en": "Add beta-blocker to escalated regimen",
-        "text_vi": "Thêm chẹn Beta vào phác đồ leo thang",
-        "condition_definition": null,
-        "context_patch": {
-          "treatment_preferences": {
-            "additional_drug_classes": [
-              "B"
-            ]
-          }
+      "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY": {
+        "id": "8f28660a-6643-482f-b2fa-b801fa6f8e02",
+        "node_key": "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY",
+        "node_type": "CONDITION",
+        "text_en": "Has specific clinical situation (monotherapy tier)",
+        "text_vi": "CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc đơn trị)",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "eq",
+              "path": "input.has_heart_failure",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.treatment.has_angina",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.treatment.has_prior_mi",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.treatment.has_atrial_fibrillation",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.treatment.has_tachycardia",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.treatment.is_pregnant",
+              "value": true
+            }
+          ]
         },
+        "context_patch": null,
         "action_payload": null,
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 263,
+        "display_order": 251,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [
+          {
+            "id": "b7a6c22f-b58d-4e14-a2a0-1d48f3be141e",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
+            "section_path": [
+              {
+                "title": "Chiến lược điều trị phối hợp thuốc",
+                "number": "3.5"
+              }
+            ],
+            "locator": "Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc",
+            "locator_detail": "The specific-clinical-situation/beta-blocker check must gate every regimen tier (1, 2, or 3 drugs), not only the 2-drug tier, before the final regimen is given to the patient.",
+            "printed_page_numbers": [
+              20
+            ],
+            "pdf_page_numbers": [
+              22
+            ],
+            "reference_note": "Chẹn Beta được khuyến cáo phối hợp khi có tình huống lâm sàng đặc hiệu, áp dụng cho mọi bậc điều trị (1, 2, hoặc 3 thuốc).",
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "e1f6967d-6a67-4069-96c6-3aa3feb74ac0",
+            "traversal_order": 1,
+            "to_node_key": "T6_INF_MONOTHERAPY_ADD_BETA_BLOCKER",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_C_NO_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY": {
+        "id": "4272f994-cbfc-4040-b6ca-7b1c05404ef0",
+        "node_key": "T6_C_NO_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY",
+        "node_type": "CONDITION",
+        "text_en": "No specific clinical situation (monotherapy tier)",
+        "text_vi": "KHÔNG CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc đơn trị)",
+        "condition_definition": {
+          "not": {
+            "any": [
+              {
+                "op": "eq",
+                "path": "input.has_heart_failure",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "context.treatment.has_angina",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "context.treatment.has_prior_mi",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "context.treatment.has_atrial_fibrillation",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "context.treatment.has_tachycardia",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "context.treatment.is_pregnant",
+                "value": true
+              }
+            ]
+          }
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 252,
         "created_at": "2026-07-25 11:46:28.021853+00:00",
         "updated_at": "2026-07-25 11:46:28.021853+00:00",
         "references": [],
         "transitions": [
           {
-            "edge_id": "fc086152-b737-42d5-b842-e197f00589d5",
+            "edge_id": "f66dfb44-f67d-49ad-aa5a-1949b85aaf25",
             "traversal_order": 1,
-            "to_node_key": "T6_END_ESCALATE_REGIMEN_WITH_BETA_BLOCKER",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG": {
-        "id": "1f681bf7-e18d-4a04-927e-5d0a1cf08174",
-        "node_key": "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG",
-        "node_type": "INFERENCE",
-        "text_en": "Increase dose of 2-drug combination, or move to 3-drug combination (A+C+D)",
-        "text_vi": "Tăng liều phối hợp 2 thuốc, hoặc chuyển phối hợp 3 thuốc (A+C+D)",
-        "condition_definition": null,
-        "context_patch": {
-          "treatment_preferences": {
-            "escalation_options": [
-              {
-                "strategy": "INCREASE_DOSE_TWO_DRUG"
-              },
-              {
-                "classes": [
-                  "A",
-                  "C",
-                  "D"
-                ],
-                "strategy": "THREE_DRUG_COMBINATION"
-              }
-            ]
-          }
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 42,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [
-          {
-            "id": "0b2dc039-8e8a-44cf-bab8-527fe5904b98",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chiến lược điều trị phối hợp thuốc",
-                "number": "3.5"
-              }
-            ],
-            "locator": "Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc",
-            "locator_detail": "If BP is not controlled with 2 low-dose drugs, increase to full dose or add a third drug (early fixed-dose triple combination A+C+D).",
-            "printed_page_numbers": [
-              20
-            ],
-            "pdf_page_numbers": [
-              22
-            ],
-            "reference_note": "Nếu HA không kiểm soát có thể tăng liều hoặc phối hợp 3 thuốc cố định liều sớm A+C+D.",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "430a309e-ffc0-44c0-bc06-d483f569218a",
-            "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_INF_INITIATE_MONOTHERAPY": {
-        "id": "b50e184c-1830-4d00-93d4-f95a5bf02330",
-        "node_key": "T6_INF_INITIATE_MONOTHERAPY",
-        "node_type": "INFERENCE",
-        "text_en": "Drug therapy: start with 1 drug (A, C, or D)",
-        "text_vi": "Điều trị thuốc KHỞI ĐẦU BẰNG 1 THUỐC (A, C, hoặc D)",
-        "condition_definition": null,
-        "context_patch": {
-          "treatment_preferences": {
-            "dose_strategy": "LOW_TO_USUAL_DOSE",
-            "combination_options": [
-              [
-                "A"
-              ],
-              [
-                "C"
-              ],
-              [
-                "D"
-              ]
-            ]
-          }
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 25,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [
-          {
-            "id": "8e504be3-b0da-4be4-b9bc-4391550477ca",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chiến lược điều trị phối hợp thuốc",
-                "number": "3.5"
-              }
-            ],
-            "locator": "Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc",
-            "locator_detail": "Monotherapy initiation for special populations; class menu (A/B/C/D, B requires indication) matches T4_ACTION_CONSIDER_MONOTHERAPY/T5_ACTION_CONSIDER_MONOTHERAPY_ONE_PILL exactly.",
-            "printed_page_numbers": [
-              20
-            ],
-            "pdf_page_numbers": [
-              22
-            ],
-            "reference_note": "Điều trị thuốc khởi đầu bằng 1 thuốc (A, B, C, hoặc D; B cần có chỉ định).",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "a5e4e0f8-924f-4c51-977a-6c0f2af0bf97",
-            "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T6_INF_INITIATE_TWO_DRUG_LOW_DOSE": {
-        "id": "5543a801-eb27-49fd-ac53-d66968aa5d85",
-        "node_key": "T6_INF_INITIATE_TWO_DRUG_LOW_DOSE",
-        "node_type": "INFERENCE",
-        "text_en": "Drug therapy: start with 2 low-dose drugs (A combined with C or D)",
-        "text_vi": "Điều trị thuốc KHỞI ĐẦU BẰNG 2 THUỐC LIỀU THẤP (kết hợp A cùng C hoặc D)",
-        "condition_definition": null,
-        "context_patch": {
-          "treatment_preferences": {
-            "dose_strategy": "LOW_DOSE",
-            "combination_options": [
-              [
-                "A",
-                "C"
-              ],
-              [
-                "A",
-                "D"
-              ]
-            ]
-          }
-        },
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 27,
-        "created_at": "2026-07-25 11:46:28.021853+00:00",
-        "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [
-          {
-            "id": "6a5bc9d3-3984-4df4-89d5-bad10f6243ed",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Chiến lược điều trị phối hợp thuốc",
-                "number": "3.5"
-              }
-            ],
-            "locator": "Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc",
-            "locator_detail": "Optimal initial therapy: 2 drugs preferring A+C or A+D, fixed-dose combination at low dose (half the usual dose).",
-            "printed_page_numbers": [
-              20
-            ],
-            "pdf_page_numbers": [
-              22
-            ],
-            "reference_note": "Khuyến cáo điều trị ban đầu tối ưu với 2 thuốc ưu tiên A+C hoặc D, liều thấp (1/2 liều thông thường).",
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "c6fa9f2d-9281-482a-9b3d-09f48ad585b2",
-            "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS",
+            "to_node_key": "T6_END_INITIAL_MONOTHERAPY",
             "candidate_condition": null
           }
         ]
@@ -2643,474 +2387,361 @@
           }
         ]
       },
-      "T6_LINK_RESISTANT_HYPERTENSION": {
-        "id": "e2b4390c-7ec9-454c-b177-020388b33592",
-        "node_key": "T6_LINK_RESISTANT_HYPERTENSION",
-        "node_type": "LINK",
-        "text_en": "Tree 14: Resistant Hypertension",
-        "text_vi": "Cây 14: THA Kháng Trị",
+      "T6_END_INITIAL_MONOTHERAPY_WITH_BETA_BLOCKER": {
+        "id": "296eaf5f-75a3-4190-9ba9-a81544b7f977",
+        "node_key": "T6_END_INITIAL_MONOTHERAPY_WITH_BETA_BLOCKER",
+        "node_type": "END",
+        "text_en": "Start beta-blocker monotherapy; reassess at next encounter",
+        "text_vi": "Bắt đầu đơn trị bằng chẹn Beta; đánh giá lại ở lần tái khám kế tiếp",
         "condition_definition": null,
         "context_patch": null,
-        "action_payload": null,
+        "action_payload": {
+          "action_type": "CONSIDER_MONOTHERAPY",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true,
+          "next_medication_follow_up_stage": "INITIAL_REGIMEN"
+        },
         "global_config": null,
-        "link_target_tree_key": "resistant-hypertension",
+        "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 44,
+        "display_order": 254,
         "created_at": "2026-07-25 11:46:28.021853+00:00",
         "updated_at": "2026-07-25 11:46:28.021853+00:00",
-        "references": [
-          {
-            "id": "e9e03eda-d8dd-4c6d-875d-c13f369e6d45",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
-            "section_path": [
-              {
-                "title": "Tăng huyết áp kháng trị",
-                "number": "3.6.1"
-              }
-            ],
-            "locator": "Mục 3.6.1. Tăng huyết áp kháng trị",
-            "locator_detail": "Resistant hypertension: BP not controlled despite optimal 3-drug combination including a diuretic.",
-            "printed_page_numbers": [
-              24
-            ],
-            "pdf_page_numbers": [
-              26
-            ],
-            "reference_note": "THA kháng trị: không kiểm soát được HA dù đã tối ưu phối hợp 3 thuốc bao gồm lợi tiểu.",
-            "reference_order": 1
-          }
-        ],
+        "references": [],
         "transitions": []
       },
-      "T6_START_PATIENT_INFO_AND_PRESCRIPTIONS": {
-        "id": "e3b9491f-a5db-4d53-942e-0834fa0f25a0",
-        "node_key": "T6_START_PATIENT_INFO_AND_PRESCRIPTIONS",
-        "node_type": "START",
-        "text_en": "Patient information + prescribed medications",
-        "text_vi": "Thông tin bệnh nhân + Các đơn thuốc chỉ định",
+      "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION": {
+        "id": "fa4f7d03-e5d2-4dc5-b57b-224aec159421",
+        "node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION",
+        "node_type": "INFERENCE",
+        "text_en": "Determine specific clinical situations relevant to beta-blocker add-on (escalation tier)",
+        "text_vi": "Xác định tình huống lâm sàng đặc hiệu liên quan đến việc thêm chẹn Beta (bậc leo thang)",
         "condition_definition": null,
+        "context_patch": {
+          "treatment": {
+            "has_angina": false,
+            "is_pregnant": false,
+            "has_prior_mi": false,
+            "has_tachycardia": false,
+            "has_atrial_fibrillation": false
+          },
+          "operations": [
+            {
+              "op": "COPY_PATH",
+              "to_path": "context.treatment.has_angina",
+              "required": false,
+              "from_path": "input.has_angina"
+            },
+            {
+              "op": "COPY_PATH",
+              "to_path": "context.treatment.has_prior_mi",
+              "required": false,
+              "from_path": "input.has_prior_mi"
+            },
+            {
+              "op": "COPY_PATH",
+              "to_path": "context.treatment.has_atrial_fibrillation",
+              "required": false,
+              "from_path": "input.has_atrial_fibrillation"
+            },
+            {
+              "op": "COPY_PATH",
+              "to_path": "context.treatment.has_tachycardia",
+              "required": false,
+              "from_path": "input.has_tachycardia"
+            },
+            {
+              "op": "COPY_PATH",
+              "to_path": "context.treatment.is_pregnant",
+              "required": false,
+              "from_path": "input.is_pregnant"
+            }
+          ]
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 260,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "b15b8934-aeff-45ed-8bab-ae771dcf624b",
+            "traversal_order": 1,
+            "to_node_key": "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION",
+            "candidate_condition": {
+              "any": [
+                {
+                  "op": "eq",
+                  "path": "input.has_heart_failure",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "context.treatment.has_angina",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "context.treatment.has_prior_mi",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "context.treatment.has_atrial_fibrillation",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "context.treatment.has_tachycardia",
+                  "value": true
+                },
+                {
+                  "op": "eq",
+                  "path": "context.treatment.is_pregnant",
+                  "value": true
+                }
+              ]
+            }
+          },
+          {
+            "edge_id": "8a7a43c9-a250-4556-917f-4132b26a18d2",
+            "traversal_order": 2,
+            "to_node_key": "T6_C_NO_SPECIFIC_CLINICAL_SITUATION_ESCALATION",
+            "candidate_condition": {
+              "not": {
+                "any": [
+                  {
+                    "op": "eq",
+                    "path": "input.has_heart_failure",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "context.treatment.has_angina",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "context.treatment.has_prior_mi",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "context.treatment.has_atrial_fibrillation",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "context.treatment.has_tachycardia",
+                    "value": true
+                  },
+                  {
+                    "op": "eq",
+                    "path": "context.treatment.is_pregnant",
+                    "value": true
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION": {
+        "id": "6967695d-669f-4cb2-baec-e8ff9d9b50fa",
+        "node_key": "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION",
+        "node_type": "CONDITION",
+        "text_en": "Has specific clinical situation (escalation tier)",
+        "text_vi": "CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc leo thang)",
+        "condition_definition": {
+          "any": [
+            {
+              "op": "eq",
+              "path": "input.has_heart_failure",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.treatment.has_angina",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.treatment.has_prior_mi",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.treatment.has_atrial_fibrillation",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.treatment.has_tachycardia",
+              "value": true
+            },
+            {
+              "op": "eq",
+              "path": "context.treatment.is_pregnant",
+              "value": true
+            }
+          ]
+        },
         "context_patch": null,
         "action_payload": null,
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 0,
+        "display_order": 261,
         "created_at": "2026-07-25 11:46:28.021853+00:00",
         "updated_at": "2026-07-25 11:46:28.021853+00:00",
         "references": [
           {
-            "id": "39b30073-e941-481c-861d-89f935346c4f",
+            "id": "90edf759-75bb-4cfd-9ed1-03d55f67f493",
             "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về Chẩn đoán & Điều trị Tăng huyết áp 2022 (Tóm tắt)",
             "section_path": [
               {
-                "title": "Điều trị Tăng huyết áp bằng thuốc",
-                "number": "3.4"
+                "title": "Chiến lược điều trị phối hợp thuốc",
+                "number": "3.5"
               }
             ],
             "locator": "Bảng 9. Chiến lược điều trị tăng huyết áp bằng thuốc",
-            "locator_detail": "Entry point of the drug-combination tree.",
+            "locator_detail": "The specific-clinical-situation/beta-blocker check must gate every regimen tier (1, 2, or 3 drugs), not only the 2-drug tier, before the final regimen is given to the patient.",
             "printed_page_numbers": [
               20
             ],
             "pdf_page_numbers": [
               22
             ],
-            "reference_note": "Điểm vào của quy trình phối hợp thuốc.",
+            "reference_note": "Chẹn Beta được khuyến cáo phối hợp khi có tình huống lâm sàng đặc hiệu, áp dụng cho mọi bậc điều trị (1, 2, hoặc 3 thuốc).",
             "reference_order": 1
           }
         ],
         "transitions": [
           {
-            "edge_id": "923acbb9-422c-4ddd-b1b7-26bef040f0ba",
+            "edge_id": "18402157-c98b-4503-8f16-d4399d624a4e",
             "traversal_order": 1,
-            "to_node_key": "T6_C_FIRST_VISIT",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.is_medication_follow_up",
-              "value": false
-            }
-          },
-          {
-            "edge_id": "ccdf8c11-671b-4014-b5bc-0950f62433d5",
-            "traversal_order": 2,
-            "to_node_key": "T6_C_FOLLOW_UP_VISIT",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.is_medication_follow_up",
-              "value": true
-            }
+            "to_node_key": "T6_INF_ESCALATE_ADD_BETA_BLOCKER",
+            "candidate_condition": null
           }
         ]
+      },
+      "T6_C_NO_SPECIFIC_CLINICAL_SITUATION_ESCALATION": {
+        "id": "33ab6f43-a6bc-416c-9fe9-72eb2bbb3bc1",
+        "node_key": "T6_C_NO_SPECIFIC_CLINICAL_SITUATION_ESCALATION",
+        "node_type": "CONDITION",
+        "text_en": "No specific clinical situation (escalation tier)",
+        "text_vi": "KHÔNG CÓ TÌNH HUỐNG LÂM SÀNG ĐẶC HIỆU (bậc leo thang)",
+        "condition_definition": {
+          "not": {
+            "any": [
+              {
+                "op": "eq",
+                "path": "input.has_heart_failure",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "context.treatment.has_angina",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "context.treatment.has_prior_mi",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "context.treatment.has_atrial_fibrillation",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "context.treatment.has_tachycardia",
+                "value": true
+              },
+              {
+                "op": "eq",
+                "path": "context.treatment.is_pregnant",
+                "value": true
+              }
+            ]
+          }
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 262,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "d087b6f4-0f18-4009-9d0d-71009096ba9c",
+            "traversal_order": 1,
+            "to_node_key": "T6_END_ESCALATE_REGIMEN",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_INF_ESCALATE_ADD_BETA_BLOCKER": {
+        "id": "a115f19f-3daa-48dd-ae07-51c72fd81f35",
+        "node_key": "T6_INF_ESCALATE_ADD_BETA_BLOCKER",
+        "node_type": "INFERENCE",
+        "text_en": "Add beta-blocker to escalated regimen",
+        "text_vi": "Thêm chẹn Beta vào phác đồ leo thang",
+        "condition_definition": null,
+        "context_patch": {
+          "treatment_preferences": {
+            "additional_drug_classes": [
+              "B"
+            ]
+          }
+        },
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 263,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": [
+          {
+            "edge_id": "fc086152-b737-42d5-b842-e197f00589d5",
+            "traversal_order": 1,
+            "to_node_key": "T6_END_ESCALATE_REGIMEN_WITH_BETA_BLOCKER",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T6_END_ESCALATE_REGIMEN_WITH_BETA_BLOCKER": {
+        "id": "80cb6ee6-60b8-4e3a-a1be-5e4d6c679252",
+        "node_key": "T6_END_ESCALATE_REGIMEN_WITH_BETA_BLOCKER",
+        "node_type": "END",
+        "text_en": "Increase dose or move to 3-drug combination plus beta-blocker; reassess at next encounter",
+        "text_vi": "Tăng liều hoặc chuyển phối hợp 3 thuốc kèm chẹn Beta; đánh giá lại ở lần tái khám kế tiếp",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "INCREASE_DOSE_OR_THREE_DRUG_COMBINATION",
+          "follow_up_mode": "NEW_ENCOUNTER",
+          "follow_up_required": true,
+          "next_medication_follow_up_stage": "ESCALATED_REGIMEN"
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 264,
+        "created_at": "2026-07-25 11:46:28.021853+00:00",
+        "updated_at": "2026-07-25 11:46:28.021853+00:00",
+        "references": [],
+        "transitions": []
       }
-    },
-    "edges": [
-      {
-        "id": "e79a8a91-b8d2-439b-a27d-6023d1e66ce6",
-        "from_node_key": "T6_ACTION_ADJUST_REGIMEN",
-        "to_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
-        "traversal_order": 1
-      },
-      {
-        "id": "a1a1f1a7-641a-4e2d-a7a3-ac250536b18f",
-        "from_node_key": "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION",
-        "to_node_key": "T6_C_DOSAGE_ADJUSTMENT_REQUESTED",
-        "traversal_order": 1
-      },
-      {
-        "id": "7e31b8a2-c250-459a-a9ab-4f68a7b6f217",
-        "from_node_key": "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION",
-        "to_node_key": "T6_C_NO_DOSAGE_ADJUSTMENT_REQUESTED",
-        "traversal_order": 2
-      },
-      {
-        "id": "cb27582d-dd82-4271-a09d-4e1872160500",
-        "from_node_key": "T6_ACTION_KEEP_ONE_DRUG",
-        "to_node_key": "T6_C_IS_FIRST_VISIT_FOR_REGIMEN",
-        "traversal_order": 1
-      },
-      {
-        "id": "fd2021f4-18f7-4888-85f8-913535cf3e4a",
-        "from_node_key": "T6_ACTION_KEEP_ONE_DRUG",
-        "to_node_key": "T6_C_IS_FOLLOW_UP_FOR_REGIMEN",
-        "traversal_order": 2
-      },
-      {
-        "id": "4870ffa7-9554-4d08-885b-efcd2976c941",
-        "from_node_key": "T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH",
-        "to_node_key": "T6_C_IS_FIRST_VISIT_FOR_REGIMEN",
-        "traversal_order": 1
-      },
-      {
-        "id": "469a46c6-8bd1-479e-b311-aa31e73e8ccd",
-        "from_node_key": "T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH",
-        "to_node_key": "T6_C_IS_FOLLOW_UP_FOR_REGIMEN",
-        "traversal_order": 2
-      },
-      {
-        "id": "f9fea92e-c64c-48da-a6c1-494be04d0cc6",
-        "from_node_key": "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT",
-        "to_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
-        "traversal_order": 1
-      },
-      {
-        "id": "855b721f-0d7e-40b6-ad59-258674a420f0",
-        "from_node_key": "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE",
-        "to_node_key": "T6_C_IS_FIRST_VISIT_FOR_REGIMEN",
-        "traversal_order": 1
-      },
-      {
-        "id": "438a073d-4528-44d4-bf42-8b0e6b5378f4",
-        "from_node_key": "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE",
-        "to_node_key": "T6_C_IS_FOLLOW_UP_FOR_REGIMEN",
-        "traversal_order": 2
-      },
-      {
-        "id": "799b7cd8-b5a2-4b5f-8b16-c7122bba6015",
-        "from_node_key": "T6_C_DOSAGE_ADJUSTMENT_REQUESTED",
-        "to_node_key": "T6_ACTION_ADJUST_REGIMEN",
-        "traversal_order": 1
-      },
-      {
-        "id": "4b5ba756-3893-4775-87bf-35e5880186c1",
-        "from_node_key": "T6_C_DUPLICATE_IS_RAS_INHIBITOR",
-        "to_node_key": "T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH",
-        "traversal_order": 1
-      },
-      {
-        "id": "fe804a8f-ea53-4de5-94b5-e3c9579451df",
-        "from_node_key": "T6_C_DUPLICATE_NOT_RAS_INHIBITOR",
-        "to_node_key": "T6_ACTION_KEEP_ONE_DRUG",
-        "traversal_order": 1
-      },
-      {
-        "id": "c35c399f-392b-4134-9366-110b96da0a60",
-        "from_node_key": "T6_C_FIRST_VISIT",
-        "to_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
-        "traversal_order": 1
-      },
-      {
-        "id": "c41f578b-700f-4935-8500-8b0dd00f6b6c",
-        "from_node_key": "T6_C_FOLLOWUP_ESCALATED_STAGE",
-        "to_node_key": "T6_LINK_RESISTANT_HYPERTENSION",
-        "traversal_order": 1
-      },
-      {
-        "id": "80a27155-0200-49c3-878a-afdc99596c52",
-        "from_node_key": "T6_C_FOLLOWUP_INITIAL_STAGE",
-        "to_node_key": "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY",
-        "traversal_order": 1
-      },
-      {
-        "id": "0aa46c7c-e1a2-4c66-acc3-dc10645af309",
-        "from_node_key": "T6_C_FOLLOW_UP_VISIT",
-        "to_node_key": "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
-        "traversal_order": 1
-      },
-      {
-        "id": "65fbd9f5-5bbe-40d8-8b07-dd3c35a680f5",
-        "from_node_key": "T6_C_HAS_DUPLICATE_DRUG_CLASS",
-        "to_node_key": "T6_C_DUPLICATE_IS_RAS_INHIBITOR",
-        "traversal_order": 1
-      },
-      {
-        "id": "485bc969-ab69-46dd-8b93-70e073d3259a",
-        "from_node_key": "T6_C_HAS_DUPLICATE_DRUG_CLASS",
-        "to_node_key": "T6_C_DUPLICATE_NOT_RAS_INHIBITOR",
-        "traversal_order": 2
-      },
-      {
-        "id": "17ae5cb4-aa0a-4327-b4bf-352dc54e6a3b",
-        "from_node_key": "T6_C_HAS_PRIOR_PRESCRIPTION",
-        "to_node_key": "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION",
-        "traversal_order": 1
-      },
-      {
-        "id": "b655f2db-db39-4c55-a2d8-602586019249",
-        "from_node_key": "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION",
-        "to_node_key": "T6_INF_ADD_BETA_BLOCKER",
-        "traversal_order": 1
-      },
-      {
-        "id": "18402157-c98b-4503-8f16-d4399d624a4e",
-        "from_node_key": "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION",
-        "to_node_key": "T6_INF_ESCALATE_ADD_BETA_BLOCKER",
-        "traversal_order": 1
-      },
-      {
-        "id": "e1f6967d-6a67-4069-96c6-3aa3feb74ac0",
-        "from_node_key": "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY",
-        "to_node_key": "T6_INF_MONOTHERAPY_ADD_BETA_BLOCKER",
-        "traversal_order": 1
-      },
-      {
-        "id": "30a879f7-3dfb-4f87-a4af-4f793d57fc60",
-        "from_node_key": "T6_C_IS_FIRST_VISIT_FOR_REGIMEN",
-        "to_node_key": "T6_C_SPECIAL_POPULATION",
-        "traversal_order": 1
-      },
-      {
-        "id": "04d4233a-cc45-4c70-88d6-93b153a477dd",
-        "from_node_key": "T6_C_IS_FIRST_VISIT_FOR_REGIMEN",
-        "to_node_key": "T6_C_NOT_SPECIAL_POPULATION",
-        "traversal_order": 2
-      },
-      {
-        "id": "450f6ca4-8655-44c8-9a9d-b9fb0a7aa277",
-        "from_node_key": "T6_C_IS_FOLLOW_UP_FOR_REGIMEN",
-        "to_node_key": "T6_C_TARGET_ACHIEVED",
-        "traversal_order": 1
-      },
-      {
-        "id": "edbd89cb-ea58-4e2e-9fc1-fa28afe2c91e",
-        "from_node_key": "T6_C_IS_FOLLOW_UP_FOR_REGIMEN",
-        "to_node_key": "T6_C_TARGET_NOT_ACHIEVED",
-        "traversal_order": 2
-      },
-      {
-        "id": "a896d15b-f58c-44ef-b615-97329faa2b3f",
-        "from_node_key": "T6_C_NOT_SPECIAL_POPULATION",
-        "to_node_key": "T6_INF_INITIATE_TWO_DRUG_LOW_DOSE",
-        "traversal_order": 1
-      },
-      {
-        "id": "00c80789-c420-4aa2-974d-678c344853ab",
-        "from_node_key": "T6_C_NO_DOSAGE_ADJUSTMENT_REQUESTED",
-        "to_node_key": "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT",
-        "traversal_order": 1
-      },
-      {
-        "id": "49917e4c-7d31-4e9a-b82c-1d1f075501b7",
-        "from_node_key": "T6_C_NO_DUPLICATE_DRUG_CLASS",
-        "to_node_key": "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE",
-        "traversal_order": 1
-      },
-      {
-        "id": "4ceeef05-33ba-4a9b-83a3-0de63dc75bb8",
-        "from_node_key": "T6_C_NO_PRIOR_PRESCRIPTION",
-        "to_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
-        "traversal_order": 1
-      },
-      {
-        "id": "a5ef2feb-8756-4389-a9c8-19615d14a2e3",
-        "from_node_key": "T6_C_NO_SPECIFIC_CLINICAL_SITUATION",
-        "to_node_key": "T6_END_INITIAL_TWO_DRUG",
-        "traversal_order": 1
-      },
-      {
-        "id": "d087b6f4-0f18-4009-9d0d-71009096ba9c",
-        "from_node_key": "T6_C_NO_SPECIFIC_CLINICAL_SITUATION_ESCALATION",
-        "to_node_key": "T6_END_ESCALATE_REGIMEN",
-        "traversal_order": 1
-      },
-      {
-        "id": "f66dfb44-f67d-49ad-aa5a-1949b85aaf25",
-        "from_node_key": "T6_C_NO_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY",
-        "to_node_key": "T6_END_INITIAL_MONOTHERAPY",
-        "traversal_order": 1
-      },
-      {
-        "id": "da4207a3-b288-4b25-8251-762f1b1d8eba",
-        "from_node_key": "T6_C_SPECIAL_POPULATION",
-        "to_node_key": "T6_INF_INITIATE_MONOTHERAPY",
-        "traversal_order": 1
-      },
-      {
-        "id": "af8184c9-9cff-4106-9ecc-edaafaa79ef6",
-        "from_node_key": "T6_C_TARGET_ACHIEVED",
-        "to_node_key": "T6_END_MAINTAIN_AND_MONITOR",
-        "traversal_order": 1
-      },
-      {
-        "id": "dede8ed4-1ad4-4593-b1a2-5d88c79d2bc2",
-        "from_node_key": "T6_C_TARGET_NOT_ACHIEVED",
-        "to_node_key": "T6_C_FOLLOWUP_INITIAL_STAGE",
-        "traversal_order": 1
-      },
-      {
-        "id": "a2a8c348-1821-4046-a7bd-178a4d53de36",
-        "from_node_key": "T6_C_TARGET_NOT_ACHIEVED",
-        "to_node_key": "T6_C_FOLLOWUP_ESCALATED_STAGE",
-        "traversal_order": 2
-      },
-      {
-        "id": "fa5df9bc-84ae-49fd-913a-3863e556cec1",
-        "from_node_key": "T6_C_WAS_NOT_ON_MONOTHERAPY",
-        "to_node_key": "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG",
-        "traversal_order": 1
-      },
-      {
-        "id": "1c6f975f-67c0-46d7-82d5-6f2d7ac62ff9",
-        "from_node_key": "T6_C_WAS_ON_MONOTHERAPY",
-        "to_node_key": "T6_INF_INITIATE_TWO_DRUG_LOW_DOSE",
-        "traversal_order": 1
-      },
-      {
-        "id": "f57465f2-ed23-4c17-889d-5da9b772103b",
-        "from_node_key": "T6_INF_ADD_BETA_BLOCKER",
-        "to_node_key": "T6_END_INITIAL_TWO_DRUG_WITH_BETA_BLOCKER",
-        "traversal_order": 1
-      },
-      {
-        "id": "5264dce7-0104-4bf5-8dea-ee9fe312d623",
-        "from_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
-        "to_node_key": "T6_C_HAS_DUPLICATE_DRUG_CLASS",
-        "traversal_order": 1
-      },
-      {
-        "id": "afae3b41-3100-4b18-b9a6-d2153f5cbcb3",
-        "from_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
-        "to_node_key": "T6_C_NO_DUPLICATE_DRUG_CLASS",
-        "traversal_order": 2
-      },
-      {
-        "id": "c0133fe6-932d-495a-9f75-e40a289a6ea2",
-        "from_node_key": "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
-        "to_node_key": "T6_C_HAS_PRIOR_PRESCRIPTION",
-        "traversal_order": 1
-      },
-      {
-        "id": "33535156-a740-45c6-a7e4-60556e07028a",
-        "from_node_key": "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
-        "to_node_key": "T6_C_NO_PRIOR_PRESCRIPTION",
-        "traversal_order": 2
-      },
-      {
-        "id": "ca64459f-e350-4a64-a13a-497a231fda6f",
-        "from_node_key": "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY",
-        "to_node_key": "T6_C_WAS_ON_MONOTHERAPY",
-        "traversal_order": 1
-      },
-      {
-        "id": "b3aa749c-0e03-4846-9b98-b4d6d6f64a1b",
-        "from_node_key": "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY",
-        "to_node_key": "T6_C_WAS_NOT_ON_MONOTHERAPY",
-        "traversal_order": 2
-      },
-      {
-        "id": "4e11e36f-387d-4717-86ba-49cb1a464641",
-        "from_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS",
-        "to_node_key": "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION",
-        "traversal_order": 1
-      },
-      {
-        "id": "06ce72e6-656b-4187-b552-fd1ed02fb1b3",
-        "from_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS",
-        "to_node_key": "T6_C_NO_SPECIFIC_CLINICAL_SITUATION",
-        "traversal_order": 2
-      },
-      {
-        "id": "b15b8934-aeff-45ed-8bab-ae771dcf624b",
-        "from_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION",
-        "to_node_key": "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_ESCALATION",
-        "traversal_order": 1
-      },
-      {
-        "id": "8a7a43c9-a250-4556-917f-4132b26a18d2",
-        "from_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION",
-        "to_node_key": "T6_C_NO_SPECIFIC_CLINICAL_SITUATION_ESCALATION",
-        "traversal_order": 2
-      },
-      {
-        "id": "ad7b8c0f-a386-4479-b82d-b0381c7d7e0e",
-        "from_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY",
-        "to_node_key": "T6_C_HAS_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY",
-        "traversal_order": 1
-      },
-      {
-        "id": "f8f5085e-78bb-4694-9c79-5de4817316a0",
-        "from_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY",
-        "to_node_key": "T6_C_NO_SPECIFIC_CLINICAL_SITUATION_MONOTHERAPY",
-        "traversal_order": 2
-      },
-      {
-        "id": "fc086152-b737-42d5-b842-e197f00589d5",
-        "from_node_key": "T6_INF_ESCALATE_ADD_BETA_BLOCKER",
-        "to_node_key": "T6_END_ESCALATE_REGIMEN_WITH_BETA_BLOCKER",
-        "traversal_order": 1
-      },
-      {
-        "id": "430a309e-ffc0-44c0-bc06-d483f569218a",
-        "from_node_key": "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG",
-        "to_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION",
-        "traversal_order": 1
-      },
-      {
-        "id": "a5e4e0f8-924f-4c51-977a-6c0f2af0bf97",
-        "from_node_key": "T6_INF_INITIATE_MONOTHERAPY",
-        "to_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY",
-        "traversal_order": 1
-      },
-      {
-        "id": "c6fa9f2d-9281-482a-9b3d-09f48ad585b2",
-        "from_node_key": "T6_INF_INITIATE_TWO_DRUG_LOW_DOSE",
-        "to_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS",
-        "traversal_order": 1
-      },
-      {
-        "id": "5821964a-0ce5-43bb-a836-af2acd92ab02",
-        "from_node_key": "T6_INF_MONOTHERAPY_ADD_BETA_BLOCKER",
-        "to_node_key": "T6_END_INITIAL_MONOTHERAPY_WITH_BETA_BLOCKER",
-        "traversal_order": 1
-      },
-      {
-        "id": "923acbb9-422c-4ddd-b1b7-26bef040f0ba",
-        "from_node_key": "T6_START_PATIENT_INFO_AND_PRESCRIPTIONS",
-        "to_node_key": "T6_C_FIRST_VISIT",
-        "traversal_order": 1
-      },
-      {
-        "id": "ccdf8c11-671b-4014-b5bc-0950f62433d5",
-        "from_node_key": "T6_START_PATIENT_INFO_AND_PRESCRIPTIONS",
-        "to_node_key": "T6_C_FOLLOW_UP_VISIT",
-        "traversal_order": 2
-      }
-    ],
-    "layout": null
-  },
-  "counts": {
-    "nodes": 54,
-    "edges": 60,
-    "references": 14,
-    "layouts": 0
+    }
   }
 }

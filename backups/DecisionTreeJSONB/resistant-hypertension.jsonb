@@ -28,6 +28,265 @@
       "T13_GLOBAL_ENHANCE_LIFESTYLE"
     ],
     "nodes": {
+      "T13_START": {
+        "id": "bb6dadda-b610-4172-8435-88e0111ee741",
+        "node_key": "T13_START",
+        "node_type": "START",
+        "text_en": "Essential Treatment Strategy Tree (Tree 4) or Optimal Treatment Strategy Tree (Tree 5)",
+        "text_vi": "Cây 4: cây chiến lược điều trị thiết yếu hoặc Cây 5: cây chiến lược điều trị tối ưu",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 1,
+        "created_at": "2026-07-04 11:03:11.134834+00:00",
+        "updated_at": "2026-07-04 11:03:11.134834+00:00",
+        "references": [
+          {
+            "id": "86c5c2a7-643c-4c8f-bbab-34d4850a6752",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
+              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
+            ],
+            "locator": "3.6.1. Tăng huyết áp kháng trị",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              24
+            ],
+            "pdf_page_numbers": [
+              26
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "7153540d-f210-47eb-9bdf-67a5b40e77b4",
+            "traversal_order": 1,
+            "to_node_key": "T13_C_LIMITED",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "LIMITED_RESOURCES"
+            }
+          },
+          {
+            "edge_id": "7f55db0f-7bde-4030-ad2f-85c335f5f718",
+            "traversal_order": 2,
+            "to_node_key": "T13_C_FULL",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.facility_capability",
+              "value": "FULL_RESOURCES"
+            }
+          }
+        ]
+      },
+      "T13_C_LIMITED": {
+        "id": "455fcd4a-e8f2-4b03-b67a-71784b796683",
+        "node_key": "T13_C_LIMITED",
+        "node_type": "CONDITION",
+        "text_en": "Essential standard",
+        "text_vi": "Tiêu chuẩn thiết yếu",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.facility_capability",
+          "value": "LIMITED_RESOURCES"
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 2,
+        "created_at": "2026-07-04 11:03:11.134834+00:00",
+        "updated_at": "2026-07-04 11:03:11.134834+00:00",
+        "references": [
+          {
+            "id": "725ccd08-03a2-4dcd-8e86-bb7764e384a2",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
+              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
+            ],
+            "locator": "3.6.1. Tăng huyết áp kháng trị",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              24
+            ],
+            "pdf_page_numbers": [
+              26
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "377d0452-46aa-44c4-883d-f159386271c9",
+            "traversal_order": 1,
+            "to_node_key": "T13_A_CHECK_MRA",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T13_GLOBAL_ENHANCE_LIFESTYLE": {
+        "id": "1c8cbbec-b833-4661-a11c-e265f826eaee",
+        "node_key": "T13_GLOBAL_ENHANCE_LIFESTYLE",
+        "node_type": "GLOBAL",
+        "text_en": "Enhance lifestyle, especially reduce salt",
+        "text_vi": "Tăng cường lối sống, đặc biệt giảm muối",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": {
+          "applies_to": [
+            "T13_C_LIMITED",
+            "T13_C_FULL"
+          ],
+          "lifestyle_changes": {
+            "salt_restriction": true
+          }
+        },
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 3,
+        "created_at": "2026-07-04 11:03:11.134834+00:00",
+        "updated_at": "2026-07-04 11:03:11.134834+00:00",
+        "references": [
+          {
+            "id": "b142117e-2912-4fea-9813-45d068679eef",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
+              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
+            ],
+            "locator": "3.6.1. Tăng huyết áp kháng trị",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              24
+            ],
+            "pdf_page_numbers": [
+              26
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": []
+      },
+      "T13_A_CHECK_MRA": {
+        "id": "583fb951-4f9f-48ef-b652-85c8d6fe7101",
+        "node_key": "T13_A_CHECK_MRA",
+        "node_type": "ACTION",
+        "text_en": "Check MRA tolerance",
+        "text_vi": "Kiểm tra khả năng dung nạp MRA",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "CHECK_MRA"
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 4,
+        "created_at": "2026-07-04 11:03:11.134834+00:00",
+        "updated_at": "2026-07-04 11:03:11.134834+00:00",
+        "references": [
+          {
+            "id": "018cecc8-3b1e-4731-84c6-8add024330c5",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
+              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
+            ],
+            "locator": "3.6.1. Tăng huyết áp kháng trị",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              24
+            ],
+            "pdf_page_numbers": [
+              26
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "6254c403-b820-4100-8c42-c040ad5f5c29",
+            "traversal_order": 1,
+            "to_node_key": "T13_C_MRA_TOLERATED",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.tolerates_mra",
+              "value": true
+            }
+          },
+          {
+            "edge_id": "c41e0028-4b25-489f-a3c8-204bdeaf1cf4",
+            "traversal_order": 2,
+            "to_node_key": "T13_C_MRA_NOT_TOLERATED",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.tolerates_mra",
+              "value": false
+            }
+          }
+        ]
+      },
+      "T13_C_MRA_TOLERATED": {
+        "id": "379b8afc-b896-410f-bb13-c2e38bef13ad",
+        "node_key": "T13_C_MRA_TOLERATED",
+        "node_type": "CONDITION",
+        "text_en": "Tolerates MRA",
+        "text_vi": "Có khả năng dung nạp MRA",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.tolerates_mra",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 5,
+        "created_at": "2026-07-04 11:03:11.134834+00:00",
+        "updated_at": "2026-07-04 11:03:11.134834+00:00",
+        "references": [
+          {
+            "id": "d3ad703f-1ea7-4963-8d7b-5f3f9656dbde",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
+              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
+            ],
+            "locator": "3.6.1. Tăng huyết áp kháng trị",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              24
+            ],
+            "pdf_page_numbers": [
+              26
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "1d339393-b1aa-407c-84f6-80d5dcae8b97",
+            "traversal_order": 1,
+            "to_node_key": "T13_A_ADD_MRA",
+            "candidate_condition": null
+          }
+        ]
+      },
       "T13_A_ADD_MRA": {
         "id": "ac540e55-906b-437f-a6af-2eccb619bbb5",
         "node_key": "T13_A_ADD_MRA",
@@ -88,26 +347,28 @@
           }
         ]
       },
-      "T13_A_ADD_SPIRONOLACTONE": {
-        "id": "8e783a9b-44d4-4246-9ab1-4bf9a9190d3b",
-        "node_key": "T13_A_ADD_SPIRONOLACTONE",
-        "node_type": "ACTION",
-        "text_en": "Add low-dose Spironolactone to current regimen",
-        "text_vi": "Thêm Spironolactone liều thấp kết hợp với liều thuốc điều trị hiện có",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "ADD_SPIRONOLACTONE"
+      "T13_C_MRA_NOT_TOLERATED": {
+        "id": "39319a8a-753e-4b85-8611-24d214b78327",
+        "node_key": "T13_C_MRA_NOT_TOLERATED",
+        "node_type": "CONDITION",
+        "text_en": "Does not tolerate MRA",
+        "text_vi": "Không có khả năng dung nạp MRA",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.tolerates_mra",
+          "value": false
         },
+        "context_patch": null,
+        "action_payload": null,
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 11,
+        "display_order": 7,
         "created_at": "2026-07-04 11:03:11.134834+00:00",
         "updated_at": "2026-07-04 11:03:11.134834+00:00",
         "references": [
           {
-            "id": "8a24a4ef-d019-4867-8624-8ecfcccb9e3c",
+            "id": "b45bb617-f0c7-4ffb-9cf4-eb26d5733ab9",
             "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
             "section_path": [
               "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
@@ -127,144 +388,10 @@
         ],
         "transitions": [
           {
-            "edge_id": "85365365-f132-4d0f-833b-088a184b5995",
+            "edge_id": "03795239-89ba-4f82-b221-15e359143cea",
             "traversal_order": 1,
-            "to_node_key": "T13_C_BP_TARGET_REACHED",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.bp_target_reached",
-              "value": true
-            }
-          },
-          {
-            "edge_id": "021e76c8-aeb2-4b15-8958-d6b354f62c0f",
-            "traversal_order": 2,
-            "to_node_key": "T13_C_BP_TARGET_NOT_REACHED",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.bp_target_reached",
-              "value": false
-            }
-          }
-        ]
-      },
-      "T13_A_ALTERNATIVES": {
-        "id": "29baba0e-818b-41db-a911-96f799a5b584",
-        "node_key": "T13_A_ALTERNATIVES",
-        "node_type": "ACTION",
-        "text_en": "Alternatives: Add K-sparing D, Increase D dose, or Add Bisoprolol/Doxazosin",
-        "text_vi": "Thêm nhóm D giữ kali, Tăng liều nhóm D, hoặc Thêm Bisoprolol/Doxazosin",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "THERAPEUTIC_ALTERNATIVES"
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 13,
-        "created_at": "2026-07-04 11:03:11.134834+00:00",
-        "updated_at": "2026-07-04 11:03:11.134834+00:00",
-        "references": [
-          {
-            "id": "0d2f7343-660f-4274-8886-609bbf7be1b7",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
-            "section_path": [
-              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
-              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
-            ],
-            "locator": "3.6.1. Tăng huyết áp kháng trị",
-            "locator_detail": null,
-            "printed_page_numbers": [
-              24
-            ],
-            "pdf_page_numbers": [
-              26
-            ],
-            "reference_note": null,
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "87ccff51-f99b-447b-a21b-644f6bd9c7af",
-            "traversal_order": 1,
-            "to_node_key": "T13_C_BP_TARGET_REACHED",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.bp_target_reached",
-              "value": true
-            }
-          },
-          {
-            "edge_id": "f9d2dce5-181f-4c69-822d-ab5038c1e402",
-            "traversal_order": 2,
-            "to_node_key": "T13_C_BP_TARGET_NOT_REACHED",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.bp_target_reached",
-              "value": false
-            }
-          }
-        ]
-      },
-      "T13_A_CHECK_MRA": {
-        "id": "583fb951-4f9f-48ef-b652-85c8d6fe7101",
-        "node_key": "T13_A_CHECK_MRA",
-        "node_type": "ACTION",
-        "text_en": "Check MRA tolerance",
-        "text_vi": "Kiểm tra khả năng dung nạp MRA",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": {
-          "action_type": "CHECK_MRA"
-        },
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 4,
-        "created_at": "2026-07-04 11:03:11.134834+00:00",
-        "updated_at": "2026-07-04 11:03:11.134834+00:00",
-        "references": [
-          {
-            "id": "018cecc8-3b1e-4731-84c6-8add024330c5",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
-            "section_path": [
-              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
-              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
-            ],
-            "locator": "3.6.1. Tăng huyết áp kháng trị",
-            "locator_detail": null,
-            "printed_page_numbers": [
-              24
-            ],
-            "pdf_page_numbers": [
-              26
-            ],
-            "reference_note": null,
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "6254c403-b820-4100-8c42-c040ad5f5c29",
-            "traversal_order": 1,
-            "to_node_key": "T13_C_MRA_TOLERATED",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.tolerates_mra",
-              "value": true
-            }
-          },
-          {
-            "edge_id": "c41e0028-4b25-489f-a3c8-204bdeaf1cf4",
-            "traversal_order": 2,
-            "to_node_key": "T13_C_MRA_NOT_TOLERATED",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.tolerates_mra",
-              "value": false
-            }
+            "to_node_key": "T13_A_CHECK_SPIRONOLACTONE",
+            "candidate_condition": null
           }
         ]
       },
@@ -328,26 +455,74 @@
           }
         ]
       },
-      "T13_A_CONSIDER_DEVICE": {
-        "id": "84342fec-0e0c-4bb5-a676-49c8df14fcc3",
-        "node_key": "T13_A_CONSIDER_DEVICE",
+      "T13_C_SPIRONOLACTONE_TOLERATED": {
+        "id": "de43bad7-f682-477d-85ab-a0627f596c6a",
+        "node_key": "T13_C_SPIRONOLACTONE_TOLERATED",
+        "node_type": "CONDITION",
+        "text_en": "Tolerates Spironolactone",
+        "text_vi": "Có khả năng dung nạp Spironolactone",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.tolerates_spironolactone",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 10,
+        "created_at": "2026-07-04 11:03:11.134834+00:00",
+        "updated_at": "2026-07-04 11:03:11.134834+00:00",
+        "references": [
+          {
+            "id": "3a8c0f64-05b4-429f-93dd-5f03b0179853",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
+              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
+            ],
+            "locator": "3.6.1. Tăng huyết áp kháng trị",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              24
+            ],
+            "pdf_page_numbers": [
+              26
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "17e6f351-1c1a-4d71-8e7b-021e432a9656",
+            "traversal_order": 1,
+            "to_node_key": "T13_A_ADD_SPIRONOLACTONE",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T13_A_ADD_SPIRONOLACTONE": {
+        "id": "8e783a9b-44d4-4246-9ab1-4bf9a9190d3b",
+        "node_key": "T13_A_ADD_SPIRONOLACTONE",
         "node_type": "ACTION",
-        "text_en": "Consider device intervention",
-        "text_vi": "Xem xét điều trị can thiệp dụng cụ",
+        "text_en": "Add low-dose Spironolactone to current regimen",
+        "text_vi": "Thêm Spironolactone liều thấp kết hợp với liều thuốc điều trị hiện có",
         "condition_definition": null,
         "context_patch": null,
         "action_payload": {
-          "action_type": "CONSIDER_DEVICE_INTERVENTION"
+          "action_type": "ADD_SPIRONOLACTONE"
         },
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 20,
+        "display_order": 11,
         "created_at": "2026-07-04 11:03:11.134834+00:00",
         "updated_at": "2026-07-04 11:03:11.134834+00:00",
         "references": [
           {
-            "id": "872f274f-44fc-4645-8df5-47343d61a67d",
+            "id": "8a24a4ef-d019-4867-8624-8ecfcccb9e3c",
             "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
             "section_path": [
               "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
@@ -367,298 +542,24 @@
         ],
         "transitions": [
           {
-            "edge_id": "845e061f-a7cf-4265-91cf-702bb5567d3d",
+            "edge_id": "85365365-f132-4d0f-833b-088a184b5995",
             "traversal_order": 1,
-            "to_node_key": "T13_END_REFER",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T13_C_BP_TARGET_NOT_REACHED": {
-        "id": "879486a4-d0bf-42f2-a772-dcb944ddbb93",
-        "node_key": "T13_C_BP_TARGET_NOT_REACHED",
-        "node_type": "CONDITION",
-        "text_en": "BP does not reach target",
-        "text_vi": "HA không đạt đích điều trị",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.bp_target_reached",
-          "value": false
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 16,
-        "created_at": "2026-07-04 11:03:11.134834+00:00",
-        "updated_at": "2026-07-04 11:03:11.134834+00:00",
-        "references": [
+            "to_node_key": "T13_C_BP_TARGET_REACHED",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.bp_target_reached",
+              "value": true
+            }
+          },
           {
-            "id": "6ada36e1-2931-40ed-b7a5-02d7256e543e",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
-            "section_path": [
-              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
-              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
-            ],
-            "locator": "3.6.1. Tăng huyết áp kháng trị",
-            "locator_detail": null,
-            "printed_page_numbers": [
-              24
-            ],
-            "pdf_page_numbers": [
-              26
-            ],
-            "reference_note": null,
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "3218e055-323b-4ca7-b5eb-7061dc4b5fe7",
-            "traversal_order": 1,
-            "to_node_key": "T13_END_REFER",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T13_C_BP_TARGET_REACHED": {
-        "id": "8b2fa240-abcb-47e8-9e3c-9b0a15cb9958",
-        "node_key": "T13_C_BP_TARGET_REACHED",
-        "node_type": "CONDITION",
-        "text_en": "BP reaches target",
-        "text_vi": "HA đạt đích điều trị",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.bp_target_reached",
-          "value": true
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 14,
-        "created_at": "2026-07-04 11:03:11.134834+00:00",
-        "updated_at": "2026-07-04 11:03:11.134834+00:00",
-        "references": [
-          {
-            "id": "f944a5b1-aa37-48a3-aa38-002121321bd5",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
-            "section_path": [
-              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
-              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
-            ],
-            "locator": "3.6.1. Tăng huyết áp kháng trị",
-            "locator_detail": null,
-            "printed_page_numbers": [
-              24
-            ],
-            "pdf_page_numbers": [
-              26
-            ],
-            "reference_note": null,
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "87ff4a86-6c52-4900-903f-6b4a900871ce",
-            "traversal_order": 1,
-            "to_node_key": "T13_END_MAINTAIN",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T13_C_FULL": {
-        "id": "b52de82a-7ee3-4efd-b12b-199031f33beb",
-        "node_key": "T13_C_FULL",
-        "node_type": "CONDITION",
-        "text_en": "Optimal standard",
-        "text_vi": "Tiêu chuẩn tối ưu",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.facility_capability",
-          "value": "FULL_RESOURCES"
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 18,
-        "created_at": "2026-07-04 11:03:11.134834+00:00",
-        "updated_at": "2026-07-04 11:03:11.134834+00:00",
-        "references": [
-          {
-            "id": "a4008906-1c08-4712-aa09-af2beeb5263a",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
-            "section_path": [
-              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
-              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
-            ],
-            "locator": "3.6.1. Tăng huyết áp kháng trị",
-            "locator_detail": null,
-            "printed_page_numbers": [
-              24
-            ],
-            "pdf_page_numbers": [
-              26
-            ],
-            "reference_note": null,
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "51a363d2-fa3d-4c1f-8dd3-d9221eb21eaf",
-            "traversal_order": 1,
-            "to_node_key": "T13_A_CONSIDER_DEVICE",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T13_C_LIMITED": {
-        "id": "455fcd4a-e8f2-4b03-b67a-71784b796683",
-        "node_key": "T13_C_LIMITED",
-        "node_type": "CONDITION",
-        "text_en": "Essential standard",
-        "text_vi": "Tiêu chuẩn thiết yếu",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.facility_capability",
-          "value": "LIMITED_RESOURCES"
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 2,
-        "created_at": "2026-07-04 11:03:11.134834+00:00",
-        "updated_at": "2026-07-04 11:03:11.134834+00:00",
-        "references": [
-          {
-            "id": "725ccd08-03a2-4dcd-8e86-bb7764e384a2",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
-            "section_path": [
-              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
-              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
-            ],
-            "locator": "3.6.1. Tăng huyết áp kháng trị",
-            "locator_detail": null,
-            "printed_page_numbers": [
-              24
-            ],
-            "pdf_page_numbers": [
-              26
-            ],
-            "reference_note": null,
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "377d0452-46aa-44c4-883d-f159386271c9",
-            "traversal_order": 1,
-            "to_node_key": "T13_A_CHECK_MRA",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T13_C_MRA_NOT_TOLERATED": {
-        "id": "39319a8a-753e-4b85-8611-24d214b78327",
-        "node_key": "T13_C_MRA_NOT_TOLERATED",
-        "node_type": "CONDITION",
-        "text_en": "Does not tolerate MRA",
-        "text_vi": "Không có khả năng dung nạp MRA",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.tolerates_mra",
-          "value": false
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 7,
-        "created_at": "2026-07-04 11:03:11.134834+00:00",
-        "updated_at": "2026-07-04 11:03:11.134834+00:00",
-        "references": [
-          {
-            "id": "b45bb617-f0c7-4ffb-9cf4-eb26d5733ab9",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
-            "section_path": [
-              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
-              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
-            ],
-            "locator": "3.6.1. Tăng huyết áp kháng trị",
-            "locator_detail": null,
-            "printed_page_numbers": [
-              24
-            ],
-            "pdf_page_numbers": [
-              26
-            ],
-            "reference_note": null,
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "03795239-89ba-4f82-b221-15e359143cea",
-            "traversal_order": 1,
-            "to_node_key": "T13_A_CHECK_SPIRONOLACTONE",
-            "candidate_condition": null
-          }
-        ]
-      },
-      "T13_C_MRA_TOLERATED": {
-        "id": "379b8afc-b896-410f-bb13-c2e38bef13ad",
-        "node_key": "T13_C_MRA_TOLERATED",
-        "node_type": "CONDITION",
-        "text_en": "Tolerates MRA",
-        "text_vi": "Có khả năng dung nạp MRA",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.tolerates_mra",
-          "value": true
-        },
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": null,
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 5,
-        "created_at": "2026-07-04 11:03:11.134834+00:00",
-        "updated_at": "2026-07-04 11:03:11.134834+00:00",
-        "references": [
-          {
-            "id": "d3ad703f-1ea7-4963-8d7b-5f3f9656dbde",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
-            "section_path": [
-              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
-              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
-            ],
-            "locator": "3.6.1. Tăng huyết áp kháng trị",
-            "locator_detail": null,
-            "printed_page_numbers": [
-              24
-            ],
-            "pdf_page_numbers": [
-              26
-            ],
-            "reference_note": null,
-            "reference_order": 1
-          }
-        ],
-        "transitions": [
-          {
-            "edge_id": "1d339393-b1aa-407c-84f6-80d5dcae8b97",
-            "traversal_order": 1,
-            "to_node_key": "T13_A_ADD_MRA",
-            "candidate_condition": null
+            "edge_id": "021e76c8-aeb2-4b15-8958-d6b354f62c0f",
+            "traversal_order": 2,
+            "to_node_key": "T13_C_BP_TARGET_NOT_REACHED",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.bp_target_reached",
+              "value": false
+            }
           }
         ]
       },
@@ -710,28 +611,26 @@
           }
         ]
       },
-      "T13_C_SPIRONOLACTONE_TOLERATED": {
-        "id": "de43bad7-f682-477d-85ab-a0627f596c6a",
-        "node_key": "T13_C_SPIRONOLACTONE_TOLERATED",
-        "node_type": "CONDITION",
-        "text_en": "Tolerates Spironolactone",
-        "text_vi": "Có khả năng dung nạp Spironolactone",
-        "condition_definition": {
-          "op": "eq",
-          "path": "input.tolerates_spironolactone",
-          "value": true
-        },
+      "T13_A_ALTERNATIVES": {
+        "id": "29baba0e-818b-41db-a911-96f799a5b584",
+        "node_key": "T13_A_ALTERNATIVES",
+        "node_type": "ACTION",
+        "text_en": "Alternatives: Add K-sparing D, Increase D dose, or Add Bisoprolol/Doxazosin",
+        "text_vi": "Thêm nhóm D giữ kali, Tăng liều nhóm D, hoặc Thêm Bisoprolol/Doxazosin",
+        "condition_definition": null,
         "context_patch": null,
-        "action_payload": null,
+        "action_payload": {
+          "action_type": "THERAPEUTIC_ALTERNATIVES"
+        },
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 10,
+        "display_order": 13,
         "created_at": "2026-07-04 11:03:11.134834+00:00",
         "updated_at": "2026-07-04 11:03:11.134834+00:00",
         "references": [
           {
-            "id": "3a8c0f64-05b4-429f-93dd-5f03b0179853",
+            "id": "0d2f7343-660f-4274-8886-609bbf7be1b7",
             "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
             "section_path": [
               "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
@@ -751,9 +650,71 @@
         ],
         "transitions": [
           {
-            "edge_id": "17e6f351-1c1a-4d71-8e7b-021e432a9656",
+            "edge_id": "87ccff51-f99b-447b-a21b-644f6bd9c7af",
             "traversal_order": 1,
-            "to_node_key": "T13_A_ADD_SPIRONOLACTONE",
+            "to_node_key": "T13_C_BP_TARGET_REACHED",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.bp_target_reached",
+              "value": true
+            }
+          },
+          {
+            "edge_id": "f9d2dce5-181f-4c69-822d-ab5038c1e402",
+            "traversal_order": 2,
+            "to_node_key": "T13_C_BP_TARGET_NOT_REACHED",
+            "candidate_condition": {
+              "op": "eq",
+              "path": "input.bp_target_reached",
+              "value": false
+            }
+          }
+        ]
+      },
+      "T13_C_BP_TARGET_REACHED": {
+        "id": "8b2fa240-abcb-47e8-9e3c-9b0a15cb9958",
+        "node_key": "T13_C_BP_TARGET_REACHED",
+        "node_type": "CONDITION",
+        "text_en": "BP reaches target",
+        "text_vi": "HA đạt đích điều trị",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.bp_target_reached",
+          "value": true
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 14,
+        "created_at": "2026-07-04 11:03:11.134834+00:00",
+        "updated_at": "2026-07-04 11:03:11.134834+00:00",
+        "references": [
+          {
+            "id": "f944a5b1-aa37-48a3-aa38-002121321bd5",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
+              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
+            ],
+            "locator": "3.6.1. Tăng huyết áp kháng trị",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              24
+            ],
+            "pdf_page_numbers": [
+              26
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "87ff4a86-6c52-4900-903f-6b4a900871ce",
+            "traversal_order": 1,
+            "to_node_key": "T13_END_MAINTAIN",
             "candidate_condition": null
           }
         ]
@@ -797,6 +758,54 @@
         ],
         "transitions": []
       },
+      "T13_C_BP_TARGET_NOT_REACHED": {
+        "id": "879486a4-d0bf-42f2-a772-dcb944ddbb93",
+        "node_key": "T13_C_BP_TARGET_NOT_REACHED",
+        "node_type": "CONDITION",
+        "text_en": "BP does not reach target",
+        "text_vi": "HA không đạt đích điều trị",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.bp_target_reached",
+          "value": false
+        },
+        "context_patch": null,
+        "action_payload": null,
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 16,
+        "created_at": "2026-07-04 11:03:11.134834+00:00",
+        "updated_at": "2026-07-04 11:03:11.134834+00:00",
+        "references": [
+          {
+            "id": "6ada36e1-2931-40ed-b7a5-02d7256e543e",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
+              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
+            ],
+            "locator": "3.6.1. Tăng huyết áp kháng trị",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              24
+            ],
+            "pdf_page_numbers": [
+              26
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "3218e055-323b-4ca7-b5eb-7061dc4b5fe7",
+            "traversal_order": 1,
+            "to_node_key": "T13_END_REFER",
+            "candidate_condition": null
+          }
+        ]
+      },
       "T13_END_REFER": {
         "id": "e2dcd8e5-7a19-4dc6-a11c-94bc504ba8a4",
         "node_key": "T13_END_REFER",
@@ -836,69 +845,28 @@
         ],
         "transitions": []
       },
-      "T13_GLOBAL_ENHANCE_LIFESTYLE": {
-        "id": "1c8cbbec-b833-4661-a11c-e265f826eaee",
-        "node_key": "T13_GLOBAL_ENHANCE_LIFESTYLE",
-        "node_type": "GLOBAL",
-        "text_en": "Enhance lifestyle, especially reduce salt",
-        "text_vi": "Tăng cường lối sống, đặc biệt giảm muối",
-        "condition_definition": null,
-        "context_patch": null,
-        "action_payload": null,
-        "global_config": {
-          "applies_to": [
-            "T13_C_LIMITED",
-            "T13_C_FULL"
-          ],
-          "lifestyle_changes": {
-            "salt_restriction": true
-          }
+      "T13_C_FULL": {
+        "id": "b52de82a-7ee3-4efd-b12b-199031f33beb",
+        "node_key": "T13_C_FULL",
+        "node_type": "CONDITION",
+        "text_en": "Optimal standard",
+        "text_vi": "Tiêu chuẩn tối ưu",
+        "condition_definition": {
+          "op": "eq",
+          "path": "input.facility_capability",
+          "value": "FULL_RESOURCES"
         },
-        "link_target_tree_key": null,
-        "link_target_node_key": null,
-        "display_order": 3,
-        "created_at": "2026-07-04 11:03:11.134834+00:00",
-        "updated_at": "2026-07-04 11:03:11.134834+00:00",
-        "references": [
-          {
-            "id": "b142117e-2912-4fea-9813-45d068679eef",
-            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
-            "section_path": [
-              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
-              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
-            ],
-            "locator": "3.6.1. Tăng huyết áp kháng trị",
-            "locator_detail": null,
-            "printed_page_numbers": [
-              24
-            ],
-            "pdf_page_numbers": [
-              26
-            ],
-            "reference_note": null,
-            "reference_order": 1
-          }
-        ],
-        "transitions": []
-      },
-      "T13_START": {
-        "id": "bb6dadda-b610-4172-8435-88e0111ee741",
-        "node_key": "T13_START",
-        "node_type": "START",
-        "text_en": "Essential Treatment Strategy Tree (Tree 4) or Optimal Treatment Strategy Tree (Tree 5)",
-        "text_vi": "Cây 4: cây chiến lược điều trị thiết yếu hoặc Cây 5: cây chiến lược điều trị tối ưu",
-        "condition_definition": null,
         "context_patch": null,
         "action_payload": null,
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
-        "display_order": 1,
+        "display_order": 18,
         "created_at": "2026-07-04 11:03:11.134834+00:00",
         "updated_at": "2026-07-04 11:03:11.134834+00:00",
         "references": [
           {
-            "id": "86c5c2a7-643c-4c8f-bbab-34d4850a6752",
+            "id": "a4008906-1c08-4712-aa09-af2beeb5263a",
             "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
             "section_path": [
               "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
@@ -918,241 +886,59 @@
         ],
         "transitions": [
           {
-            "edge_id": "7153540d-f210-47eb-9bdf-67a5b40e77b4",
+            "edge_id": "51a363d2-fa3d-4c1f-8dd3-d9221eb21eaf",
             "traversal_order": 1,
-            "to_node_key": "T13_C_LIMITED",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.facility_capability",
-              "value": "LIMITED_RESOURCES"
-            }
-          },
+            "to_node_key": "T13_A_CONSIDER_DEVICE",
+            "candidate_condition": null
+          }
+        ]
+      },
+      "T13_A_CONSIDER_DEVICE": {
+        "id": "84342fec-0e0c-4bb5-a676-49c8df14fcc3",
+        "node_key": "T13_A_CONSIDER_DEVICE",
+        "node_type": "ACTION",
+        "text_en": "Consider device intervention",
+        "text_vi": "Xem xét điều trị can thiệp dụng cụ",
+        "condition_definition": null,
+        "context_patch": null,
+        "action_payload": {
+          "action_type": "CONSIDER_DEVICE_INTERVENTION"
+        },
+        "global_config": null,
+        "link_target_tree_key": null,
+        "link_target_node_key": null,
+        "display_order": 20,
+        "created_at": "2026-07-04 11:03:11.134834+00:00",
+        "updated_at": "2026-07-04 11:03:11.134834+00:00",
+        "references": [
           {
-            "edge_id": "7f55db0f-7bde-4030-ad2f-85c335f5f718",
-            "traversal_order": 2,
-            "to_node_key": "T13_C_FULL",
-            "candidate_condition": {
-              "op": "eq",
-              "path": "input.facility_capability",
-              "value": "FULL_RESOURCES"
-            }
+            "id": "872f274f-44fc-4645-8df5-47343d61a67d",
+            "source_title": "Khuyến cáo của Phân hội Tăng huyết áp - Hội Tim mạch Quốc gia Việt Nam (VSH/VNHA) về chẩn đoán & điều trị tăng huyết áp 2022 (Tóm Tắt)",
+            "section_path": [
+              "3.6. Cu00e1c tru01b0u1eddng hu1ee3p tu0103ng huyu1ebft u00e1p u0111u1eb7c biu1ec7t",
+              "3.6.1. Tu0103ng huyu1ebft u00e1p khu00e1ng tru1ecb"
+            ],
+            "locator": "3.6.1. Tăng huyết áp kháng trị",
+            "locator_detail": null,
+            "printed_page_numbers": [
+              24
+            ],
+            "pdf_page_numbers": [
+              26
+            ],
+            "reference_note": null,
+            "reference_order": 1
+          }
+        ],
+        "transitions": [
+          {
+            "edge_id": "845e061f-a7cf-4265-91cf-702bb5567d3d",
+            "traversal_order": 1,
+            "to_node_key": "T13_END_REFER",
+            "candidate_condition": null
           }
         ]
       }
-    },
-    "edges": [
-      {
-        "id": "5511259a-0c86-44f2-a854-ec31bede5549",
-        "from_node_key": "T13_A_ADD_MRA",
-        "to_node_key": "T13_C_BP_TARGET_REACHED",
-        "traversal_order": 1
-      },
-      {
-        "id": "e1fb81f7-2959-43ac-b173-4bc037e6ece9",
-        "from_node_key": "T13_A_ADD_MRA",
-        "to_node_key": "T13_C_BP_TARGET_NOT_REACHED",
-        "traversal_order": 2
-      },
-      {
-        "id": "85365365-f132-4d0f-833b-088a184b5995",
-        "from_node_key": "T13_A_ADD_SPIRONOLACTONE",
-        "to_node_key": "T13_C_BP_TARGET_REACHED",
-        "traversal_order": 1
-      },
-      {
-        "id": "021e76c8-aeb2-4b15-8958-d6b354f62c0f",
-        "from_node_key": "T13_A_ADD_SPIRONOLACTONE",
-        "to_node_key": "T13_C_BP_TARGET_NOT_REACHED",
-        "traversal_order": 2
-      },
-      {
-        "id": "87ccff51-f99b-447b-a21b-644f6bd9c7af",
-        "from_node_key": "T13_A_ALTERNATIVES",
-        "to_node_key": "T13_C_BP_TARGET_REACHED",
-        "traversal_order": 1
-      },
-      {
-        "id": "f9d2dce5-181f-4c69-822d-ab5038c1e402",
-        "from_node_key": "T13_A_ALTERNATIVES",
-        "to_node_key": "T13_C_BP_TARGET_NOT_REACHED",
-        "traversal_order": 2
-      },
-      {
-        "id": "6254c403-b820-4100-8c42-c040ad5f5c29",
-        "from_node_key": "T13_A_CHECK_MRA",
-        "to_node_key": "T13_C_MRA_TOLERATED",
-        "traversal_order": 1
-      },
-      {
-        "id": "c41e0028-4b25-489f-a3c8-204bdeaf1cf4",
-        "from_node_key": "T13_A_CHECK_MRA",
-        "to_node_key": "T13_C_MRA_NOT_TOLERATED",
-        "traversal_order": 2
-      },
-      {
-        "id": "d0a185d4-7004-4fde-b18d-27dded426a45",
-        "from_node_key": "T13_A_CHECK_SPIRONOLACTONE",
-        "to_node_key": "T13_C_SPIRONOLACTONE_TOLERATED",
-        "traversal_order": 1
-      },
-      {
-        "id": "04b2b928-a131-46d6-b105-990b66d94507",
-        "from_node_key": "T13_A_CHECK_SPIRONOLACTONE",
-        "to_node_key": "T13_C_SPIRONOLACTONE_NOT_TOLERATED",
-        "traversal_order": 2
-      },
-      {
-        "id": "845e061f-a7cf-4265-91cf-702bb5567d3d",
-        "from_node_key": "T13_A_CONSIDER_DEVICE",
-        "to_node_key": "T13_END_REFER",
-        "traversal_order": 1
-      },
-      {
-        "id": "3218e055-323b-4ca7-b5eb-7061dc4b5fe7",
-        "from_node_key": "T13_C_BP_TARGET_NOT_REACHED",
-        "to_node_key": "T13_END_REFER",
-        "traversal_order": 1
-      },
-      {
-        "id": "87ff4a86-6c52-4900-903f-6b4a900871ce",
-        "from_node_key": "T13_C_BP_TARGET_REACHED",
-        "to_node_key": "T13_END_MAINTAIN",
-        "traversal_order": 1
-      },
-      {
-        "id": "51a363d2-fa3d-4c1f-8dd3-d9221eb21eaf",
-        "from_node_key": "T13_C_FULL",
-        "to_node_key": "T13_A_CONSIDER_DEVICE",
-        "traversal_order": 1
-      },
-      {
-        "id": "377d0452-46aa-44c4-883d-f159386271c9",
-        "from_node_key": "T13_C_LIMITED",
-        "to_node_key": "T13_A_CHECK_MRA",
-        "traversal_order": 1
-      },
-      {
-        "id": "03795239-89ba-4f82-b221-15e359143cea",
-        "from_node_key": "T13_C_MRA_NOT_TOLERATED",
-        "to_node_key": "T13_A_CHECK_SPIRONOLACTONE",
-        "traversal_order": 1
-      },
-      {
-        "id": "1d339393-b1aa-407c-84f6-80d5dcae8b97",
-        "from_node_key": "T13_C_MRA_TOLERATED",
-        "to_node_key": "T13_A_ADD_MRA",
-        "traversal_order": 1
-      },
-      {
-        "id": "c2923555-8fb0-47cb-9da3-25df8dfd371b",
-        "from_node_key": "T13_C_SPIRONOLACTONE_NOT_TOLERATED",
-        "to_node_key": "T13_A_ALTERNATIVES",
-        "traversal_order": 1
-      },
-      {
-        "id": "17e6f351-1c1a-4d71-8e7b-021e432a9656",
-        "from_node_key": "T13_C_SPIRONOLACTONE_TOLERATED",
-        "to_node_key": "T13_A_ADD_SPIRONOLACTONE",
-        "traversal_order": 1
-      },
-      {
-        "id": "7153540d-f210-47eb-9bdf-67a5b40e77b4",
-        "from_node_key": "T13_START",
-        "to_node_key": "T13_C_LIMITED",
-        "traversal_order": 1
-      },
-      {
-        "id": "7f55db0f-7bde-4030-ad2f-85c335f5f718",
-        "from_node_key": "T13_START",
-        "to_node_key": "T13_C_FULL",
-        "traversal_order": 2
-      }
-    ],
-    "layout": {
-      "id": "284d57f9-b557-4b33-9ddb-71e62941bc95",
-      "arrow_kind": "elbow",
-      "node_positions": {
-        "T13_START": {
-          "x": 356.0,
-          "y": 12.0
-        },
-        "T13_C_FULL": {
-          "x": 133.0,
-          "y": 276.0
-        },
-        "T13_A_ADD_MRA": {
-          "x": 653.0,
-          "y": 1068.0
-        },
-        "T13_C_LIMITED": {
-          "x": 568.1054637865311,
-          "y": 156.38119440914863
-        },
-        "T13_END_REFER": {
-          "x": -244.61118170266832,
-          "y": 1425.74332909784
-        },
-        "T13_A_CHECK_MRA": {
-          "x": 782.1232528589583,
-          "y": 346.0940279542567
-        },
-        "T13_END_MAINTAIN": {
-          "x": 430.0,
-          "y": 1332.0
-        },
-        "T13_A_ALTERNATIVES": {
-          "x": 133.0,
-          "y": 1068.0
-        },
-        "T13_C_MRA_TOLERATED": {
-          "x": 653.0,
-          "y": 540.0
-        },
-        "T13_A_CONSIDER_DEVICE": {
-          "x": 12.0,
-          "y": 672.0
-        },
-        "T13_GLOBAL_ENHANCE_LIFESTYLE": {
-          "x": 881.1728081321476,
-          "y": 118.58195679796694
-        },
-        "T13_C_BP_TARGET_REACHED": {
-          "x": 430.0,
-          "y": 1200.0
-        },
-        "T13_C_MRA_NOT_TOLERATED": {
-          "x": 356.0,
-          "y": 540.0
-        },
-        "T13_A_ADD_SPIRONOLACTONE": {
-          "x": 393.0,
-          "y": 1068.0
-        },
-        "T13_A_CHECK_SPIRONOLACTONE": {
-          "x": 356.0,
-          "y": 804.0
-        },
-        "T13_C_BP_TARGET_NOT_REACHED": {
-          "x": 170.0,
-          "y": 1200.0
-        },
-        "T13_C_SPIRONOLACTONE_TOLERATED": {
-          "x": 393.0,
-          "y": 936.0
-        },
-        "T13_C_SPIRONOLACTONE_NOT_TOLERATED": {
-          "x": 133.0,
-          "y": 936.0
-        }
-      },
-      "created_at": "2026-07-26 08:13:07.281244+00:00",
-      "updated_at": "2026-07-26 08:13:31.633768+00:00"
     }
-  },
-  "counts": {
-    "nodes": 18,
-    "edges": 21,
-    "references": 18,
-    "layouts": 1
   }
 }

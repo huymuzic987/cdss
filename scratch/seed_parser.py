@@ -22,7 +22,7 @@ from cdss.domain.decision_tree.graph import (  # noqa: E402
     TreeGraph,
 )
 
-SQL_PATH = Path(__file__).resolve().parent.parent / "backups" / "cdss_merged.sql"
+SQL_PATH = Path(__file__).resolve().parent.parent / "backups" / "seed.sql"
 
 
 def strip_sql_line_comments(text: str) -> str:
@@ -193,8 +193,9 @@ class RawTree:
             self.references = []
 
 
-def parse_all_trees() -> dict[str, RawTree]:
-    content = SQL_PATH.read_text(encoding="utf-8")
+def parse_all_trees(sql_path: Path | None = None) -> dict[str, RawTree]:
+    path = sql_path or SQL_PATH
+    content = path.read_text(encoding="utf-8")
     trees: dict[str, RawTree] = {}
 
     # ---- 1. COPY-style decision_trees ----
