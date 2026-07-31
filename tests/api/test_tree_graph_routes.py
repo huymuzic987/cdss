@@ -214,4 +214,3 @@ def _edge(
         from_tree_id=tree.id,
         to_tree_id=tree.id,
     )
-

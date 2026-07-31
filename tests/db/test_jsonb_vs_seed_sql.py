@@ -36,7 +36,7 @@ def parse_sql_literal(val_str: str):
         if not m:
             raise ValueError(f"Could not parse string literal: {val_str[:50]}")
         raw = m.group(1).replace("''", "'")
-        rest = val_str[m.end():].strip()
+        rest = val_str[m.end() :].strip()
         if rest.startswith("::jsonb"):
             return json.loads(raw)
         return raw
@@ -395,8 +395,7 @@ def test_jsonb_trees_match_seed_sql(sql_tree_graphs):
 
             if jn.node_type != sn.node_type:
                 discrepancies.append(
-                    f"[{tree_key}:{key}] node_type mismatch: "
-                    f"{jn.node_type} vs {sn.node_type}"
+                    f"[{tree_key}:{key}] node_type mismatch: {jn.node_type} vs {sn.node_type}"
                 )
             if jn.text_en != sn.text_en:
                 discrepancies.append(f"[{tree_key}:{key}] text_en mismatch")
