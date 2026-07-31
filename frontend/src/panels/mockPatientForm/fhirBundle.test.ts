@@ -26,7 +26,7 @@ describe('canonical FHIR patient presets', () => {
     },
   )
 
-  it('keeps aspirin prophylaxis normotensive and high-risk', () => {
+  it('keeps aspirin prophylaxis as a normotensive high-risk follow-up', () => {
     const preset = PATIENT_PRESETS.find(
       ({ id }) => id === 'pregnancy-high-preeclampsia-risk-aspirin',
     )
@@ -36,7 +36,9 @@ describe('canonical FHIR patient presets', () => {
     expect(form.current_clinic_sbp).toBe('130')
     expect(form.current_clinic_dbp).toBe('80')
     expect(form.has_high_preeclampsia_risk).toBe(true)
-    expect(form.has_hypertension_after_week_20).toBe(false)
+    expect(form.has_hypertension_after_week_20).toBe(true)
+    const entries = preset!.bundle.entry as Array<{ resource: { resourceType: string } }>
+    expect(entries.filter(({ resource }) => resource.resourceType === 'Encounter')).toHaveLength(2)
   })
 
   it('keeps Active BP Target populated for every known-stage medication follow-up preset', () => {
@@ -71,7 +73,7 @@ describe('canonical FHIR patient presets', () => {
 
     for (const preset of pregnancy) {
       expect(preset.bundle.id, preset.id).toMatch(
-        /^bundle-(?:PG\d{3}|PGF001-fu[0-3])$/,
+        /^bundle-(?:PG\d{3}(?:-fu1)?|PGF001-fu[0-3])$/,
       )
       expect(preset.bundle.timestamp, preset.id).toMatch(/T08:00:00\+07:00$/)
       const entries = preset.bundle.entry as Array<{

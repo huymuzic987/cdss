@@ -5,10 +5,10 @@
 The Patient Simulator now loads 21 committed FHIR R4 Bundles from
 `data/fhir/pregnancy_presets`:
 
-- 17 single-visit Bundles cover every reachable branch and every terminal in Tree 12.
+- 13 single-visit Bundles cover initial pregnancy assessment branches.
+- 4 targeted two-Encounter Bundles cover high-risk and postpartum follow-up branches.
 - 4 longitudinal Bundles cover the initial pregnancy visit plus follow-ups 1, 2, and 3.
-- Every preset is tested through both automatic traversal from Tree 1 and manual traversal
-  starting from Tree 12.
+- Every preset is tested through both automatic evaluation and manual trace replay.
 - The union of the presets executes every non-global node currently present in Tree 12.
 
 The presets are generated deterministically by
@@ -47,14 +47,14 @@ http://cdss.local/fhir/StructureDefinition/risk-factor-count
 The official HL7 FHIR R4 JSON schema in `tests/fhir/schema/fhir.schema.json` validates all 21
 Bundles during the backend test suite.
 
-## Single-visit preset matrix
+## Pregnancy and targeted follow-up preset matrix
 
 Open **Patient Simulator → Preset Patient → Pregnancy & Postpartum**.
 
 | Preset | Distinguishing input | Expected Tree 12 outcome |
 |---|---|---|
 | Pregnancy — Normotensive Monitoring | Clinic 120/75, home 120/75 | `T12_END_FOLLOW_UP_MONITOR` |
-| Pregnancy — High Preeclampsia Risk (Aspirin) | Normotensive + high-risk flag | `T12_END_ASPIRIN_PROPHYLAXIS` |
+| Pregnancy Follow-Up — High Preeclampsia Risk (Aspirin) | Prior hypertensive encounter; currently normotensive + high-risk flag | `T12_END_ASPIRIN_PROPHYLAXIS` |
 | Pregnancy — Pre-Existing (Chronic) Hypertension | Pre-pregnancy HTN + proteinuria persisting >6 weeks | `T12_END_PRE_EXISTING_HTN` |
 | Pregnancy — Gestational Hypertension, Mild/Moderate (Refer) | Clinic 150/95 after week 20 | `T12_END_REFER_OBGYN` |
 | Pregnancy — Gestational Hypertension via Home BP (Maintain) | Home 138/87, clinic 140/85 | `T12_END_MAINTAIN_REGIMEN_PREGNANT` |
@@ -67,9 +67,9 @@ Open **Patient Simulator → Preset Patient → Pregnancy & Postpartum**.
 | Pregnancy — Eclampsia (Emergency Delivery) | Preeclampsia + seizure, clinic 165/110 | `T12_END_EMERGENCY_DELIVERY` |
 | Pregnancy — HELLP Syndrome (Immediate Target Met) | Hemolysis + elevated liver enzymes + low platelets | `T12_END_MAINTAIN_REGIMEN_PREGNANT` |
 | Pregnancy — HELLP Syndrome (Emergency Delivery) | HELLP triad + clinic 165/110 | `T12_END_EMERGENCY_DELIVERY` |
-| Postpartum — Breastfeeding Guidance | Postpartum + breastfeeding | `T12_END_MAINTAIN_REGIMEN_POSTPARTUM` |
-| Postpartum — BP Still High | Postpartum, not breastfeeding, clinic 145/95 | `T12_END_MAINTAIN_REGIMEN_POSTPARTUM` |
-| Postpartum — BP No Longer High | Postpartum, not breastfeeding, clinic 130/80 | `T12_END_MAINTAIN_REGIMEN_POSTPARTUM` |
+| Postpartum Follow-Up — Breastfeeding Guidance | Prior hypertensive encounter; postpartum + breastfeeding | `T12_END_MAINTAIN_REGIMEN_POSTPARTUM` |
+| Postpartum Follow-Up — BP Still High | Prior hypertensive encounter; postpartum, clinic 145/95 | `T12_END_MAINTAIN_REGIMEN_POSTPARTUM` |
+| Postpartum Follow-Up — BP No Longer High | Prior hypertensive encounter; postpartum, clinic 130/80 | `T12_END_MAINTAIN_REGIMEN_POSTPARTUM` |
 
 ## Longitudinal follow-up matrix
 
@@ -113,35 +113,43 @@ Follow-up 3 therefore returns:
 3. Choose a preset from either pregnancy group.
 4. Keep **Start Tree** set to **Hypertension Diagnosis** (Tree 1).
 5. Click **Start Traversal**.
-6. Confirm that the canvas first enters Tree 1 and follows its pregnancy link into Tree 12.
+6. For a single-visit preset, confirm that the canvas enters Tree 1 and follows its pregnancy
+   link into Tree 12. For a longitudinal pregnancy follow-up, confirm that the current traversal
+   starts at the appropriate Tree 12 assessment or status node after previous-visit inference.
 7. In the result dialog, expand **Full decision path**.
 8. Compare the final node with the matrix above.
 9. For a longitudinal preset, also verify the **Pregnancy follow-up episode** section.
 
-Tree 1 treats either `is_pregnant=true` or `is_postpartum=true` as a pregnancy-related episode, so
-postpartum presets must also enter Tree 12 during automatic traversal.
+Tree 1 treats either `is_pregnant=true` or `is_postpartum=true` as a pregnancy-related episode
+while replaying the previous visit. After pregnancy follow-up is inferred, the current encounter
+starts in Tree 12. Postpartum follow-up resumes at `T12_C_POSTPARTUM`; a currently normotensive,
+high-risk pregnancy resumes at `T12_C_CURRENTLY_PREGNANT`. Acute hypertensive pregnancy
+follow-up restarts at Tree 12 START for complete reclassification.
 
 ## Test with manual traversal
 
 1. Select the same preset used for the automatic test.
-2. Set **Start Tree** to **Hypertension in Pregnancy** (Tree 12) when testing Tree 12 directly.
+2. Keep the relevant pregnancy tree visible on the canvas.
 3. Click **Manual Traverse**.
 4. Click the canvas to reveal one entered node at a time.
 5. Continue until the result dialog opens.
 6. Verify the same expected terminal as the automatic run.
 
-Manual mode uses the same evaluated FHIR Bundle and decision result as automatic mode; it only
-reveals the traversal log step by step. Therefore, the clinical path and terminal must match.
+Manual mode uses the same `/evaluate` result as automatic mode and reveals its traversal log step
+by step. The backend—not the visible canvas selection—chooses the initial or follow-up entry from
+the FHIR encounter history. Therefore, the clinical path and terminal must match.
 
 ## Important Tree 12 precedence rules
 
-The branch order is deliberate:
+Tree 12 START has exactly three branches:
 
-1. postpartum;
-2. normotensive high preeclampsia risk;
-3. home BP high;
-4. clinic BP high;
-5. clinic BP normal.
+1. home BP high;
+2. clinic BP high;
+3. clinic BP normal.
+
+Postpartum and normotensive high-risk pregnancy are follow-up status branches, not START
+shortcuts. The evaluator reaches them only after it replays the immediately previous Encounter
+and infers `PREGNANCY_FOLLOW_UP`.
 
 After a high-BP entry, classification precedence is:
 
@@ -181,7 +189,7 @@ corepack pnpm --dir frontend exec vitest run src/panels/mockPatientForm/fhirBund
 The backend test verifies:
 
 - official FHIR R4 schema compliance;
-- exact expected nodes in automatic traversal;
-- exact expected nodes in manual Tree 12 traversal;
+- exact expected nodes in automatic evaluation;
+- the same expected nodes in manual trace replay;
 - coverage of all seven Tree 12 terminals;
 - execution coverage of every reachable non-global Tree 12 node.

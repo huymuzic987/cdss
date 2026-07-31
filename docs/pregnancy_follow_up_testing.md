@@ -19,9 +19,10 @@ automatic and manual traversal use the same `/evaluate` endpoint and produce the
 result. The latest Encounter is the current visit; the Encounter immediately before it is replayed
 to infer the current workflow.
 
-Pregnancy-related postpartum visits also enter Tree 12 from Tree 1. A patient with
-`is_postpartum=true` is therefore kept in the pregnancy episode even though
-`is_pregnant=false`.
+The immediately previous visit is replayed through Tree 1 to infer pregnancy follow-up. The
+current visit then starts in Tree 12. A postpartum visit resumes at `T12_C_POSTPARTUM`; a
+currently normotensive, high-risk pregnancy resumes at `T12_C_CURRENTLY_PREGNANT`; an acute
+hypertensive pregnancy follow-up restarts at Tree 12 START for complete reclassification.
 
 ## Included presets
 
@@ -43,7 +44,8 @@ All four presets use patient `pregnancy-follow-up-demo` and episode
 2. Open the Patient Simulator.
 3. Select one of the four **Pregnancy Follow-Up Sequence** presets.
 4. Click **Start Traversal**.
-5. The canvas automatically highlights the complete path through Tree 1 and Tree 12.
+5. The canvas highlights the current Tree 12 follow-up path. The previous Tree 1 replay is used
+   for inference and is not merged into the current traversal log.
 6. In the result dialog, verify the **Pregnancy follow-up episode** section:
    - episode ID;
    - number of Encounters;
@@ -73,8 +75,7 @@ Expected follow-up 3 metadata:
 1. Select the same preset.
 2. Click **Manual Traverse**.
 3. Click the canvas once for each next node.
-4. When a link changes the active tree, continue clicking; the active canvas changes from Tree 1
-   to Tree 12 automatically.
+4. Continue clicking through the current Tree 12 follow-up path.
 5. Continue until the result dialog opens.
 6. Verify that the episode metadata and final recommendation match automatic traversal for the
    same preset.

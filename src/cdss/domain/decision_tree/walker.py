@@ -30,6 +30,7 @@ from cdss.domain.decision_tree.medicine_catalog import MedicineRepository
 from cdss.domain.decision_tree.patches import apply_context_patch
 from cdss.domain.decision_tree.validator import validate_tree_graph
 from cdss.domain.decision_tree.walker_links import LinkTraversalMixin
+from cdss.domain.decision_tree.walker_start import resolve_start_node
 from cdss.domain.decision_tree.walker_trace import TraceTraversalMixin
 from cdss.domain.decision_tree.walker_transitions import TransitionTraversalMixin
 
@@ -56,6 +57,7 @@ def walk_tree(
     graph: TreeGraph,
     runtime_input: Mapping[str, Any],
     *,
+    start_node_key: str | None = None,
     max_steps: int = DEFAULT_MAX_STEPS,
     repository: TreeGraphRepository | None = None,
     medicine_repository: MedicineRepository | None = None,
@@ -76,8 +78,10 @@ def walk_tree(
             tree_key=graph.tree.tree_key,
             details={"reason": "invalid_runtime_input"},
         ) from exc
+    start_node = resolve_start_node(graph, start_node_key, run_state)
     session = _InternalTraversal(
         graph=graph,
+        start_node=start_node,
         run_state=run_state,
         max_steps=max_steps,
         repository=repository,
@@ -98,6 +102,7 @@ class _InternalTraversal(TransitionTraversalMixin, LinkTraversalMixin, TraceTrav
         self,
         *,
         graph: TreeGraph,
+        start_node: NodeDefinition,
         run_state: RunState,
         max_steps: int,
         repository: TreeGraphRepository | None,
@@ -105,6 +110,7 @@ class _InternalTraversal(TransitionTraversalMixin, LinkTraversalMixin, TraceTrav
         links_enabled: bool,
     ) -> None:
         self.graph = graph
+        self.start_node = start_node
         self.run_state = run_state
         self.max_steps = max_steps
         self.repository = repository
@@ -132,7 +138,7 @@ class _InternalTraversal(TransitionTraversalMixin, LinkTraversalMixin, TraceTrav
                 partial_run_state=self.run_state,
             )
 
-        current = self.graph.start_node
+        current = self.start_node
         while True:
             self._check_repeated_visit(current)
             self._enter_node_budget(current)

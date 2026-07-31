@@ -27,7 +27,11 @@ from cdss.domain.follow_up import (
     has_complete_previous_bp,
     infer_follow_up,
 )
-from cdss.domain.pregnancy_follow_up import summarize_pregnancy_follow_up
+from cdss.domain.pregnancy_follow_up import (
+    PREGNANCY_TREE_KEY,
+    pregnancy_follow_up_entry_node,
+    summarize_pregnancy_follow_up,
+)
 
 router = APIRouter(tags=["evaluation"])
 router.include_router(evaluation_follow_up.router)
@@ -56,6 +60,7 @@ def evaluate(
     runtime_input = parsed.runtime_input
     inference = None
     start_tree_key = _INITIAL_VISIT_TREE_KEY
+    start_node_key = None
 
     if has_complete_previous_bp(runtime_input):
         try:
@@ -85,11 +90,15 @@ def evaluate(
             FollowUpType.MEDICATION_FOLLOW_UP,
         }:
             start_tree_key = _MEDICATION_FOLLOW_UP_TREE_KEY
+        elif inference.follow_up_type == FollowUpType.PREGNANCY_FOLLOW_UP:
+            start_tree_key = PREGNANCY_TREE_KEY
+            start_node_key = pregnancy_follow_up_entry_node(runtime_input)
 
     try:
         result = walk_tree(
             repository.get_tree(start_tree_key),
             runtime_input,
+            start_node_key=start_node_key,
             max_steps=settings.cdss_max_steps,
             repository=repository,
             medicine_repository=medicine_repository,

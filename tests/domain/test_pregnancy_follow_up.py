@@ -1,7 +1,10 @@
 from cdss.domain.decision_tree import ExecutedAction, NodeType
 from cdss.domain.pregnancy_follow_up import (
     MINIMUM_PREGNANCY_FOLLOW_UPS,
+    POSTPARTUM_FOLLOW_UP_ENTRY_NODE_KEY,
+    PREGNANT_FOLLOW_UP_ENTRY_NODE_KEY,
     PregnancyFollowUpPhase,
+    pregnancy_follow_up_entry_node,
     summarize_pregnancy_follow_up,
 )
 
@@ -61,6 +64,52 @@ def test_non_pregnancy_evaluation_has_no_pregnancy_episode() -> None:
             patient_id="patient-003",
             encounter_ids=(),
             actions=[],
+        )
+        is None
+    )
+
+
+def test_postpartum_follow_up_resumes_at_postpartum_status() -> None:
+    assert (
+        pregnancy_follow_up_entry_node(
+            {
+                "is_pregnancy_follow_up": True,
+                "is_postpartum": True,
+            }
+        )
+        == POSTPARTUM_FOLLOW_UP_ENTRY_NODE_KEY
+    )
+
+
+def test_normotensive_high_risk_follow_up_resumes_at_pregnancy_status() -> None:
+    assert (
+        pregnancy_follow_up_entry_node(
+            {
+                "is_pregnancy_follow_up": True,
+                "is_pregnant": True,
+                "has_high_preeclampsia_risk": True,
+                "current_clinic_sbp": 130,
+                "current_clinic_dbp": 80,
+                "home_sbp": 118,
+                "home_dbp": 75,
+            }
+        )
+        == PREGNANT_FOLLOW_UP_ENTRY_NODE_KEY
+    )
+
+
+def test_acute_hypertensive_pregnancy_follow_up_restarts_at_tree_root() -> None:
+    assert (
+        pregnancy_follow_up_entry_node(
+            {
+                "is_pregnancy_follow_up": True,
+                "is_pregnant": True,
+                "has_high_preeclampsia_risk": True,
+                "current_clinic_sbp": 150,
+                "current_clinic_dbp": 95,
+                "home_sbp": 140,
+                "home_dbp": 90,
+            }
         )
         is None
     )

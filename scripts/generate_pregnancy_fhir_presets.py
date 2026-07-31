@@ -60,13 +60,30 @@ def _static_cases() -> list[PresetCase]:
         ),
         PresetCase(
             "pregnancy-high-preeclampsia-risk-aspirin",
-            "Pregnancy — High Preeclampsia Risk (Aspirin)",
-            "Normotensive high-risk pregnancy; reaches aspirin prophylaxis.",
+            "Pregnancy Follow-Up — High Preeclampsia Risk (Aspirin)",
+            (
+                "A previously hypertensive pregnancy is normotensive at follow-up; "
+                "the pregnancy-status branch evaluates high preeclampsia risk and "
+                "reaches aspirin prophylaxis."
+            ),
             (130, 80),
             (118, 75),
-            ("is_pregnant", "has_high_preeclampsia_risk"),
+            (
+                "is_pregnant",
+                "has_high_preeclampsia_risk",
+                "has_hypertension_after_week_20",
+            ),
+            inputs={
+                "pregnancy_episode_id": "pregnancy-high-risk-001",
+                "pregnancy_follow_up_number": 1,
+            },
             expected_terminal="T12_END_ASPIRIN_PROPHYLAXIS",
             expected_nodes=("T12_C_HIGH_PREECLAMPSIA_RISK",),
+            category=FOLLOW_UP_CATEGORY,
+            visits=(
+                Visit("initial", "2026-01-05", 150, 95),
+                Visit("follow-up-1", "2026-01-26", 130, 80),
+            ),
         ),
         PresetCase(
             "pregnancy-chronic-htn",
@@ -268,33 +285,70 @@ def _static_cases() -> list[PresetCase]:
         ),
         PresetCase(
             "pregnancy-postpartum-breastfeeding",
-            "Postpartum — Breastfeeding Guidance",
+            "Postpartum Follow-Up — Breastfeeding Guidance",
             (
-                "Postpartum patient who is breastfeeding; reaches the "
-                "breastfeeding medication guidance."
+                "Postpartum follow-up after gestational hypertension; breastfeeding "
+                "medication guidance is evaluated from the postpartum status branch."
             ),
             (145, 95),
-            flags=("is_postpartum", "is_breastfeeding"),
+            flags=(
+                "is_postpartum",
+                "is_breastfeeding",
+                "has_hypertension_after_week_20",
+            ),
+            inputs={
+                "pregnancy_episode_id": "pregnancy-postpartum-breastfeeding-001",
+                "pregnancy_follow_up_number": 1,
+            },
             expected_terminal="T12_END_MAINTAIN_REGIMEN_POSTPARTUM",
             expected_nodes=("T12_C_POSTPARTUM", "T12_C_BREASTFEEDING"),
+            category=FOLLOW_UP_CATEGORY,
+            visits=(
+                Visit("initial", "2026-01-05", 150, 95),
+                Visit("follow-up-1", "2026-01-26", 145, 95),
+            ),
         ),
         PresetCase(
             "pregnancy-postpartum-bp-high",
-            "Postpartum — BP Still High",
-            "Postpartum BP remains at or above 140/90 and the regimen excludes methyldopa.",
+            "Postpartum Follow-Up — BP Still High",
+            (
+                "Postpartum follow-up after gestational hypertension; BP remains at "
+                "or above 140/90 and the regimen excludes methyldopa."
+            ),
             (145, 95),
-            flags=("is_postpartum",),
+            flags=("is_postpartum", "has_hypertension_after_week_20"),
+            inputs={
+                "pregnancy_episode_id": "pregnancy-postpartum-high-001",
+                "pregnancy_follow_up_number": 1,
+            },
             expected_terminal="T12_END_MAINTAIN_REGIMEN_POSTPARTUM",
             expected_nodes=("T12_C_POSTPARTUM", "T12_C_BP_STILL_HIGH"),
+            category=FOLLOW_UP_CATEGORY,
+            visits=(
+                Visit("initial", "2026-01-05", 150, 95),
+                Visit("follow-up-1", "2026-01-26", 145, 95),
+            ),
         ),
         PresetCase(
             "pregnancy-postpartum-bp-normal",
-            "Postpartum — BP No Longer High",
-            "Postpartum BP is below 140/90 and the maintenance terminal is reached directly.",
+            "Postpartum Follow-Up — BP No Longer High",
+            (
+                "Postpartum follow-up after gestational hypertension; current BP is "
+                "below 140/90 and the maintenance terminal is reached."
+            ),
             (130, 80),
-            flags=("is_postpartum",),
+            flags=("is_postpartum", "has_hypertension_after_week_20"),
+            inputs={
+                "pregnancy_episode_id": "pregnancy-postpartum-normal-001",
+                "pregnancy_follow_up_number": 1,
+            },
             expected_terminal="T12_END_MAINTAIN_REGIMEN_POSTPARTUM",
             expected_nodes=("T12_C_POSTPARTUM", "T12_C_BP_NOT_HIGH"),
+            category=FOLLOW_UP_CATEGORY,
+            visits=(
+                Visit("initial", "2026-01-05", 150, 95),
+                Visit("follow-up-1", "2026-01-26", 130, 80),
+            ),
         ),
     ]
 

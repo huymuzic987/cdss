@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -40,6 +42,7 @@ ACTIVE_BP_TARGET = {
     },
     "source": "TREE_3_GENERIC",
 }
+PREGNANCY_PRESET_DIR = Path(__file__).parents[2] / "data" / "fhir" / "pregnancy_presets"
 
 
 @dataclass(frozen=True)
@@ -147,9 +150,50 @@ def test_seeded_pregnancy_third_follow_up_reaches_postpartum_branch(
         for entry in body["traversal_log"]
         if entry["event"] == "node_entered"
     }
-    assert ("hypertension-diagnosis", "T1_C_IS_PREGNANT") in entered
     assert ("hypertension-in-pregnancy", "T12_C_POSTPARTUM") in entered
+    assert not any(tree_key == "hypertension-diagnosis" for tree_key, _ in entered)
     assert body["actions"][-1]["node_key"] == "T12_END_MAINTAIN_REGIMEN_POSTPARTUM"
+
+
+@pytest.mark.parametrize(
+    ("preset_name", "entry_node", "expected_node", "expected_terminal"),
+    [
+        (
+            "02-pregnancy-high-preeclampsia-risk-aspirin.json",
+            "T12_C_CURRENTLY_PREGNANT",
+            "T12_C_HIGH_PREECLAMPSIA_RISK",
+            "T12_END_ASPIRIN_PROPHYLAXIS",
+        ),
+        (
+            "17-pregnancy-postpartum-bp-normal.json",
+            "T12_C_POSTPARTUM",
+            "T12_C_BP_NOT_HIGH",
+            "T12_END_MAINTAIN_REGIMEN_POSTPARTUM",
+        ),
+    ],
+)
+def test_seeded_pregnancy_follow_up_resumes_at_status_branch(
+    seeded_api_context: SeededApiContext,
+    preset_name: str,
+    entry_node: str,
+    expected_node: str,
+    expected_terminal: str,
+) -> None:
+    bundle = json.loads((PREGNANCY_PRESET_DIR / preset_name).read_text(encoding="utf-8"))
+
+    response = _post_read_only(seeded_api_context, bundle=bundle)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["inferred_follow_up_type"] == "PREGNANCY_FOLLOW_UP"
+    entered = [
+        entry["node_key"]
+        for entry in body["traversal_log"]
+        if entry["event"] == "node_entered" and entry["tree_key"] == "hypertension-in-pregnancy"
+    ]
+    assert entered[0] == entry_node
+    assert expected_node in entered
+    assert entered[-1] == expected_terminal
 
 
 def _post_read_only(

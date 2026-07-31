@@ -10,6 +10,9 @@ from typing import Any
 from cdss.domain.decision_tree import ExecutedAction
 
 MINIMUM_PREGNANCY_FOLLOW_UPS = 3
+PREGNANCY_TREE_KEY = "hypertension-in-pregnancy"
+PREGNANT_FOLLOW_UP_ENTRY_NODE_KEY = "T12_C_CURRENTLY_PREGNANT"
+POSTPARTUM_FOLLOW_UP_ENTRY_NODE_KEY = "T12_C_POSTPARTUM"
 
 
 class PregnancyFollowUpPhase(StrEnum):
@@ -30,6 +33,28 @@ class PregnancyFollowUpSummary:
     minimum_follow_ups_completed: bool
     next_follow_up_number: int | None
     next_follow_up_required: bool
+
+
+def pregnancy_follow_up_entry_node(runtime_input: Mapping[str, Any]) -> str | None:
+    """Select a downstream Tree 12 entry for a confirmed pregnancy follow-up.
+
+    Postpartum encounters continue at the postpartum status branch. A pregnant,
+    currently normotensive patient with a recorded high preeclampsia risk
+    continues at the pregnancy-status branch so aspirin prophylaxis can be
+    evaluated without restoring a direct edge from Tree 12 START.
+    """
+
+    if runtime_input.get("is_pregnancy_follow_up") is not True:
+        return None
+    if runtime_input.get("is_postpartum") is True:
+        return POSTPARTUM_FOLLOW_UP_ENTRY_NODE_KEY
+    if (
+        runtime_input.get("is_pregnant") is True
+        and runtime_input.get("has_high_preeclampsia_risk") is True
+        and _is_normotensive(runtime_input)
+    ):
+        return PREGNANT_FOLLOW_UP_ENTRY_NODE_KEY
+    return None
 
 
 def summarize_pregnancy_follow_up(
@@ -85,3 +110,21 @@ def _phase(follow_up_number: int) -> PregnancyFollowUpPhase:
     if follow_up_number == 3:
         return PregnancyFollowUpPhase.FOLLOW_UP_3
     return PregnancyFollowUpPhase.CONTINUING
+
+
+def _is_normotensive(runtime_input: Mapping[str, Any]) -> bool:
+    clinic_sbp = _number(runtime_input.get("current_clinic_sbp"))
+    clinic_dbp = _number(runtime_input.get("current_clinic_dbp"))
+    home_sbp = _number(runtime_input.get("home_sbp"))
+    home_dbp = _number(runtime_input.get("home_dbp"))
+    if None in {clinic_sbp, clinic_dbp, home_sbp, home_dbp}:
+        return False
+    assert clinic_sbp is not None
+    assert clinic_dbp is not None
+    assert home_sbp is not None
+    assert home_dbp is not None
+    return clinic_sbp < 140 and clinic_dbp < 90 and home_sbp < 135 and home_dbp < 85
+
+
+def _number(value: Any) -> float | None:
+    return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None

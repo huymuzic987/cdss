@@ -1,22 +1,22 @@
 {
   "resourceType": "Bundle",
-  "id": "bundle-PG015",
+  "id": "bundle-PG015-fu1",
   "meta": {
     "tag": [
       {
         "system": "http://cdss.local/fhir/CodeSystem/preset/category",
-        "code": "pregnancy",
-        "display": "Pregnancy & Postpartum"
+        "code": "pregnancy-follow-up",
+        "display": "Pregnancy Follow-Up Sequence"
       },
       {
         "system": "http://cdss.local/fhir/CodeSystem/preset/description",
         "code": "pregnancy-postpartum-breastfeeding",
-        "display": "Postpartum patient who is breastfeeding; reaches the breastfeeding medication guidance."
+        "display": "Postpartum follow-up after gestational hypertension; breastfeeding medication guidance is evaluated from the postpartum status branch."
       },
       {
         "system": "http://cdss.local/fhir/CodeSystem/preset/label",
         "code": "pregnancy-postpartum-breastfeeding",
-        "display": "Postpartum — Breastfeeding Guidance"
+        "display": "Postpartum Follow-Up — Breastfeeding Guidance"
       },
       {
         "system": "http://cdss.local/fhir/CodeSystem/preset/expected-terminal",
@@ -37,7 +37,7 @@
     "value": "pregnancy-postpartum-breastfeeding"
   },
   "type": "collection",
-  "timestamp": "2026-01-05T08:00:00+07:00",
+  "timestamp": "2026-01-26T08:00:00+07:00",
   "entry": [
     {
       "fullUrl": "http://example.org/fhir/Patient/PG015",
@@ -58,6 +58,14 @@
           {
             "url": "http://cdss.local/fhir/StructureDefinition/input/weeks_resolved_postpartum",
             "valueInteger": 2
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/pregnancy_episode_id",
+            "valueString": "pregnancy-postpartum-breastfeeding-001"
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/pregnancy_follow_up_number",
+            "valueInteger": 1
           }
         ],
         "address": [
@@ -141,10 +149,65 @@
       }
     },
     {
-      "fullUrl": "http://example.org/fhir/Observation/PG015-clinic-sbp",
+      "fullUrl": "http://example.org/fhir/Condition/PG015-has-hypertension-after-week-20",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "PG015-has-hypertension-after-week-20",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hypertension_after_week_20"
+            }
+          ],
+          "text": "Has Hypertension After Week 20"
+        },
+        "subject": {
+          "reference": "Patient/PG015"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Encounter/PG015-initial",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "PG015-initial",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "subject": {
+          "reference": "Patient/PG015"
+        },
+        "period": {
+          "start": "2026-01-05T08:00:00+07:00",
+          "end": "2026-01-05T08:30:00+07:00"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/PG015-initial-sbp",
       "resource": {
         "resourceType": "Observation",
-        "id": "PG015-clinic-sbp",
+        "id": "PG015-initial-sbp",
         "status": "final",
         "category": [
           {
@@ -170,24 +233,21 @@
         },
         "effectiveDateTime": "2026-01-05T08:00:00+07:00",
         "valueQuantity": {
-          "value": 145,
+          "value": 150,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org",
           "code": "mm[Hg]"
         },
-        "extension": [
-          {
-            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
-            "valueCode": "current_clinic"
-          }
-        ]
+        "encounter": {
+          "reference": "Encounter/PG015-initial"
+        }
       }
     },
     {
-      "fullUrl": "http://example.org/fhir/Observation/PG015-clinic-dbp",
+      "fullUrl": "http://example.org/fhir/Observation/PG015-initial-dbp",
       "resource": {
         "resourceType": "Observation",
-        "id": "PG015-clinic-dbp",
+        "id": "PG015-initial-dbp",
         "status": "final",
         "category": [
           {
@@ -218,12 +278,109 @@
           "system": "http://unitsofmeasure.org",
           "code": "mm[Hg]"
         },
-        "extension": [
+        "encounter": {
+          "reference": "Encounter/PG015-initial"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Encounter/PG015-follow-up-1",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "PG015-follow-up-1",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "subject": {
+          "reference": "Patient/PG015"
+        },
+        "period": {
+          "start": "2026-01-26T08:00:00+07:00",
+          "end": "2026-01-26T08:30:00+07:00"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/PG015-follow-up-1-sbp",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "PG015-follow-up-1-sbp",
+        "status": "final",
+        "category": [
           {
-            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
-            "valueCode": "current_clinic"
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
           }
-        ]
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8459-0",
+              "display": "Sitting systolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/PG015"
+        },
+        "effectiveDateTime": "2026-01-26T08:00:00+07:00",
+        "valueQuantity": {
+          "value": 145,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        },
+        "encounter": {
+          "reference": "Encounter/PG015-follow-up-1"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/PG015-follow-up-1-dbp",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "PG015-follow-up-1-dbp",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4",
+              "display": "Diastolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/PG015"
+        },
+        "effectiveDateTime": "2026-01-26T08:00:00+07:00",
+        "valueQuantity": {
+          "value": 95,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        },
+        "encounter": {
+          "reference": "Encounter/PG015-follow-up-1"
+        }
       }
     },
     {
@@ -254,7 +411,7 @@
         "subject": {
           "reference": "Patient/PG015"
         },
-        "effectiveDateTime": "2026-01-05T08:00:00+07:00",
+        "effectiveDateTime": "2026-01-26T08:00:00+07:00",
         "valueQuantity": {
           "value": 120,
           "unit": "mmHg",
@@ -297,7 +454,7 @@
         "subject": {
           "reference": "Patient/PG015"
         },
-        "effectiveDateTime": "2026-01-05T08:00:00+07:00",
+        "effectiveDateTime": "2026-01-26T08:00:00+07:00",
         "valueQuantity": {
           "value": 75,
           "unit": "mmHg",
@@ -340,7 +497,7 @@
         "subject": {
           "reference": "Patient/PG015"
         },
-        "effectiveDateTime": "2026-01-05T08:00:00+07:00",
+        "effectiveDateTime": "2026-01-26T08:00:00+07:00",
         "valueQuantity": {
           "value": 50,
           "unit": "mg/24 h",
@@ -377,7 +534,7 @@
         "subject": {
           "reference": "Patient/PG015"
         },
-        "effectiveDateTime": "2026-01-05T08:00:00+07:00",
+        "effectiveDateTime": "2026-01-26T08:00:00+07:00",
         "valueQuantity": {
           "value": 5,
           "unit": "mg/mmol",

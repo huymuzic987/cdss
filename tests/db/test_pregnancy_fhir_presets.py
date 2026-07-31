@@ -13,7 +13,18 @@ from referencing import Registry, Resource
 from sqlalchemy.orm import Session
 
 from cdss.api.schemas.clinical_evaluation import parse_clinical_bundle
-from cdss.domain.decision_tree import NodeType, TraceEvent, walk_tree
+from cdss.domain.decision_tree import NodeType, TraceEvent, TraversalResult, walk_tree
+from cdss.domain.follow_up import (
+    FollowUpType,
+    build_current_visit_input,
+    build_previous_visit_input,
+    has_complete_previous_bp,
+    infer_follow_up,
+)
+from cdss.domain.pregnancy_follow_up import (
+    PREGNANCY_TREE_KEY,
+    pregnancy_follow_up_entry_node,
+)
 from cdss.infrastructure.db.decision_tree_repository import SqlAlchemyTreeGraphRepository
 
 pytestmark = pytest.mark.database
@@ -71,16 +82,9 @@ def test_pregnancy_preset_reaches_expected_nodes_in_auto_and_manual_modes(
     expected_nodes = set(_meta_codes(bundle, "expected-node"))
     expected_terminal = _single_meta_code(bundle, "expected-terminal")
 
-    auto_result = walk_tree(
-        repository.get_tree("hypertension-diagnosis"),
-        deepcopy(parsed.runtime_input),
-        repository=repository,
-    )
-    manual_result = walk_tree(
-        repository.get_tree("hypertension-in-pregnancy"),
-        deepcopy(parsed.runtime_input),
-        repository=repository,
-    )
+    auto_result = _walk_with_follow_up(repository, deepcopy(parsed.runtime_input))
+    # Manual mode replays the same server evaluation trace one node at a time.
+    manual_result = _walk_with_follow_up(repository, deepcopy(parsed.runtime_input))
 
     for mode, result in (("auto", auto_result), ("manual", manual_result)):
         entered = {
@@ -118,7 +122,7 @@ def test_pregnancy_catalog_executes_every_reachable_tree_12_node(
     entered: set[str] = set()
     for path in PRESET_FILES:
         runtime_input = parse_clinical_bundle(_load(path)).runtime_input
-        result = walk_tree(graph, runtime_input, repository=repository)
+        result = _walk_with_follow_up(repository, runtime_input)
         entered.update(
             entry.node_key
             for entry in result.trace
@@ -132,6 +136,32 @@ def test_pregnancy_catalog_executes_every_reachable_tree_12_node(
         if node.node_type is not NodeType.GLOBAL
     }
     assert executable <= entered, f"Uncovered Tree 12 nodes: {sorted(executable - entered)}"
+
+
+def _walk_with_follow_up(
+    repository: SqlAlchemyTreeGraphRepository,
+    runtime_input: dict[str, Any],
+) -> TraversalResult:
+    tree_key = "hypertension-diagnosis"
+    start_node_key = None
+    if has_complete_previous_bp(runtime_input):
+        previous_result = walk_tree(
+            repository.get_tree(tree_key),
+            build_previous_visit_input(runtime_input),
+            repository=repository,
+        )
+        inference = infer_follow_up(previous_result)
+        runtime_input = build_current_visit_input(runtime_input, inference)
+        if inference.follow_up_type == FollowUpType.PREGNANCY_FOLLOW_UP:
+            tree_key = PREGNANCY_TREE_KEY
+            start_node_key = pregnancy_follow_up_entry_node(runtime_input)
+
+    return walk_tree(
+        repository.get_tree(tree_key),
+        runtime_input,
+        start_node_key=start_node_key,
+        repository=repository,
+    )
 
 
 def _load(path: Path) -> dict[str, Any]:
