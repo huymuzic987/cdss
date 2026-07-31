@@ -926,7 +926,7 @@ VALUES ('04b4e1d5-11ab-4d25-9f07-13d058f2fe9d', (SELECT id FROM public.decision_
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-VALUES ('36028c0b-d677-4efd-9d89-6868f677300f', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-in-pregnancy'), 'T12_INF_METHYLDOPA', 'INFERENCE'::public.node_type, 'Mild/moderate treatment options — choose one: Methyldopa', 'Lựa chọn điều trị nhẹ/trung bình — chọn một: Methyldopa', NULL, '{"treatment_options": {"methyldopa": true}}'::jsonb, NULL, NULL, NULL, NULL, 20, '2026-07-25 11:46:28.101935+00:00', '2026-07-25 11:46:28.101935+00:00')
+VALUES ('36028c0b-d677-4efd-9d89-6868f677300f', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-in-pregnancy'), 'T12_INF_METHYLDOPA', 'INFERENCE'::public.node_type, 'Combination (Methyldopa) OR (oral Labetalol) OR (Nifedipine [avoid capsule form] OR Nicardipine [dihydropyridine CCB])', 'Phối hợp (Methyldopa) HOẶC (Labetalol uống [Chẹn Beta]) HOẶC (Nifedipine [trừ viên dạng nang] HOẶC Nicardipine [CKCa-Dihydropyridine])', NULL, '{"treatment_options": {"methyldopa": true, "labetalol_oral": true, "nifedipine_or_nicardipine": true}}'::jsonb, NULL, NULL, NULL, NULL, 20, '2026-07-25 11:46:28.101935+00:00', '2026-07-25 11:46:28.101935+00:00')
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
@@ -944,7 +944,7 @@ ARNI', NULL, '{"treatment": {"absolute_contraindications": ["ƯCMC (ức chế m
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-VALUES ('35f6bea4-1c2c-46b8-a0a3-d0f08fecebcd', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-in-pregnancy'), 'T12_INF_SEVERE_DRUG_OPTIONS', 'INFERENCE'::public.node_type, 'Methyldopa oral, or Nifedipine/Nicardipine, or IV Labetalol/Nicardipine, or Esmolol, Hydralazine, Urapidil', 'Methyldopa uống
+VALUES ('35f6bea4-1c2c-46b8-a0a3-d0f08fecebcd', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-in-pregnancy'), 'T12_INF_SEVERE_DRUG_OPTIONS', 'INFERENCE'::public.node_type, 'Methyldopa oral OR Nifedipine (avoid capsule form) OR Nicardipine OR IV Labetalol OR IV Nicardipine OR Esmolol (beta blocker) OR Hydralazine (vasodilator) OR Urapidil', 'Methyldopa uống
 hoặc (CKCa-Dihydropyridine) Nifedipine [trừ viên dạng nang] hoặc Nicardipine
 hoặc Labetalol tĩnh mạch
 hoặc Nicardipine tĩnh mạch
@@ -970,8 +970,7 @@ VALUES ('a604674f-7384-4fb2-a663-bc3944337246', (SELECT id FROM public.decision_
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-VALUES ('d5af70df-5c22-4524-96e9-a6fd37acfaff', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-in-pregnancy'), 'T12_INF_LABETALOL_MGSO4', 'INFERENCE'::public.node_type, 'Choose one regimen — Option 1: Labetalol + Magnesium Sulfate', 'Chọn một phác đồ — Lựa chọn 1: Labetalol (Chẹn Beta) +
-Magnesium Sulfate', NULL, NULL, NULL, NULL, NULL, NULL, 29, '2026-07-25 11:46:28.101935+00:00', '2026-07-25 11:46:28.101935+00:00')
+VALUES ('d5af70df-5c22-4524-96e9-a6fd37acfaff', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-in-pregnancy'), 'T12_INF_LABETALOL_MGSO4', 'INFERENCE'::public.node_type, 'Combination (Labetalol + Magnesium Sulfate) OR (Nicardipine + Magnesium Sulfate)', 'Phối hợp (Labetalol [Chẹn Beta] + Magnesium Sulfate) HOẶC (Nicardipine [CKCa] + Magnesium Sulfate)', NULL, '{"treatment_options": {"labetalol_plus_magnesium_sulfate": true, "nicardipine_plus_magnesium_sulfate": true}}'::jsonb, NULL, NULL, NULL, NULL, 29, '2026-07-25 11:46:28.101935+00:00', '2026-07-25 11:46:28.101935+00:00')
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
@@ -980,16 +979,24 @@ Magnesium Sulfate', NULL, NULL, NULL, NULL, NULL, NULL, 30, '2026-07-25 11:46:28
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-VALUES ('dbe4c15b-a6ef-452d-a318-b050d1bf9d5d', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-in-pregnancy'), 'T12_C_IMMEDIATE_TARGET', 'INFERENCE'::public.node_type, 'Immediate treatment target: SBP<160 mmHg and DBP<105 mmHg', 'Đích điều trị
+VALUES ('dbe4c15b-a6ef-452d-a318-b050d1bf9d5d', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-in-pregnancy'), 'T12_C_IMMEDIATE_TARGET', 'ACTION'::public.node_type, 'Immediate treatment target: SBP<160 mmHg and DBP<105 mmHg', 'Đích điều trị
 Ngay lập tức hạ HA
 HATT < 160 mmHg
 và
 HATTr < 105 mmHg', NULL, '{"treatment": {"target_timing": "IMMEDIATE", "target_sbp_upper_mmhg": 160, "target_dbp_upper_mmhg": 105}}'::jsonb, NULL, NULL, NULL, NULL, 31, '2026-07-25 11:46:28.101935+00:00', '2026-07-25 11:46:28.101935+00:00')
-ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
+ON CONFLICT (tree_id, node_key) DO UPDATE SET node_type = EXCLUDED.node_type, text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
 VALUES ('ef92df48-2219-45a1-a5e8-818b052a6b60', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-in-pregnancy'), 'T12_C_TARGET_NOT_MET', 'CONDITION'::public.node_type, 'If target not reached, or visual disturbance / coagulopathy present [exact timing text illegible in source image]', 'Nếu không đạt được đích điều trị,
 hoặc có rối loạn thị giác, rối loạn đông cầm máu', '{"any": [{"op": "gte", "path": "input.current_clinic_sbp", "value": 160}, {"op": "gte", "path": "input.current_clinic_dbp", "value": 105}, {"op": "eq", "path": "input.is_treatment_target_not_achieved", "value": true}, {"op": "eq", "path": "input.has_visual_disturbance", "value": true}, {"op": "eq", "path": "input.has_coagulopathy", "value": true}]}'::jsonb, NULL, NULL, NULL, NULL, NULL, 32, '2026-07-25 11:46:28.101935+00:00', '2026-07-25 11:46:28.101935+00:00')
+ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
+
+INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
+VALUES ('f873c404-af35-4c83-b912-178ad24e5f57', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-in-pregnancy'), 'T12_C_TARGET_MET', 'CONDITION'::public.node_type, 'Target reached: SBP<160 mmHg AND DBP<105 mmHg, without visual disturbance or coagulopathy', 'Đạt đích điều trị:
+HATT < 160 mmHg
+và
+HATTr < 105 mmHg,
+không có rối loạn thị giác hoặc rối loạn đông cầm máu', '{"all": [{"op": "lt", "path": "input.current_clinic_sbp", "value": 160}, {"op": "lt", "path": "input.current_clinic_dbp", "value": 105}, {"op": "eq", "path": "input.is_treatment_target_not_achieved", "value": false}, {"op": "eq", "path": "input.has_visual_disturbance", "value": false}, {"op": "eq", "path": "input.has_coagulopathy", "value": false}]}'::jsonb, NULL, NULL, NULL, NULL, NULL, 32, '2026-07-31 00:00:00+00:00', '2026-07-31 00:00:00+00:00')
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
@@ -2539,6 +2546,14 @@ INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order
 VALUES ('4da9327a-b69b-56ca-a9e1-30e035facb51', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-heart-failure' AND n.node_key = 'T10_START'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-heart-failure' AND n.node_key = 'T10_C_BP2'), 2)
 ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
 
+-- Clear existing Tree 12 edges before replaying its legacy edge statements.
+-- A final canonical rebuild below replaces these with the intended relationships.
+DELETE FROM public.decision_edges e
+USING public.decision_nodes n, public.decision_trees t
+WHERE e.from_node_id = n.id
+  AND n.tree_id = t.id
+  AND t.tree_key = 'hypertension-in-pregnancy';
+
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('d071d4b0-d8f0-4572-89bf-f07e4ee5281d', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-in-pregnancy' AND n.node_key = 'T12_C_HOME_BP_HIGH'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-in-pregnancy' AND n.node_key = 'T12_C_CHRONIC_HTN'), 5)
 ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
@@ -2810,6 +2825,101 @@ ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('a27d6e7c-c91f-4514-9e7e-87a5139bd679', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-in-pregnancy' AND n.node_key = 'T12_START_PREGNANCY_HTN_SEQUENCE'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-in-pregnancy' AND n.node_key = 'T12_C_CLINIC_BP_NORMAL'), 4)
 ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
+
+-- Rebuild only the branch relationships for Tree 12.
+DELETE FROM public.decision_edges e
+USING public.decision_nodes n, public.decision_trees t
+WHERE e.from_node_id = n.id
+  AND n.tree_id = t.id
+  AND t.tree_key = 'hypertension-in-pregnancy';
+
+WITH edge_spec (from_key, to_key, traversal_order) AS (
+  VALUES
+    ('T12_START_PREGNANCY_HTN_SEQUENCE', 'T12_C_HOME_BP_HIGH', 1),
+    ('T12_START_PREGNANCY_HTN_SEQUENCE', 'T12_C_CLINIC_BP_HIGH', 2),
+    ('T12_START_PREGNANCY_HTN_SEQUENCE', 'T12_C_CLINIC_BP_NORMAL', 3),
+
+    ('T12_C_HOME_BP_HIGH', 'T12_C_CHRONIC_HTN', 1),
+    ('T12_C_HOME_BP_HIGH', 'T12_C_GESTATIONAL_HTN', 2),
+    ('T12_C_HOME_BP_HIGH', 'T12_C_PREECLAMPSIA_PROTEINURIA', 3),
+    ('T12_C_HOME_BP_HIGH', 'T12_C_PREECLAMPSIA_RISK_FACTOR', 4),
+    ('T12_C_HOME_BP_HIGH', 'T12_C_SEVERE_SIGNS', 5),
+    ('T12_C_HOME_BP_HIGH', 'T12_C_HELLP_SIGNS', 6),
+    ('T12_C_CLINIC_BP_HIGH', 'T12_C_CHRONIC_HTN', 1),
+    ('T12_C_CLINIC_BP_HIGH', 'T12_C_GESTATIONAL_HTN', 2),
+    ('T12_C_CLINIC_BP_HIGH', 'T12_C_PREECLAMPSIA_PROTEINURIA', 3),
+    ('T12_C_CLINIC_BP_HIGH', 'T12_C_PREECLAMPSIA_RISK_FACTOR', 4),
+    ('T12_C_CLINIC_BP_HIGH', 'T12_C_SEVERE_SIGNS', 5),
+    ('T12_C_CLINIC_BP_HIGH', 'T12_C_HELLP_SIGNS', 6),
+    ('T12_C_CLINIC_BP_NORMAL', 'T12_END_FOLLOW_UP_MONITOR', 1),
+
+    ('T12_C_CHRONIC_HTN', 'T12_END_PRE_EXISTING_HTN', 1),
+    ('T12_C_GESTATIONAL_HTN', 'T12_INF_GESTATIONAL_HTN_CLASSIFICATION', 1),
+    ('T12_INF_GESTATIONAL_HTN_CLASSIFICATION', 'T12_C_BP_MILD_MODERATE', 1),
+    ('T12_INF_GESTATIONAL_HTN_CLASSIFICATION', 'T12_C_BP_SEVERE', 2),
+    ('T12_C_PREECLAMPSIA_PROTEINURIA', 'T12_INF_PREECLAMPSIA_CLASSIFICATION', 1),
+    ('T12_C_PREECLAMPSIA_RISK_FACTOR', 'T12_INF_PREECLAMPSIA_CLASSIFICATION', 1),
+    ('T12_C_SEVERE_SIGNS', 'T12_INF_ECLAMPSIA_CLASSIFICATION', 1),
+    ('T12_C_HELLP_SIGNS', 'T12_INF_HELLP_SYNDROME_CLASSIFICATION', 1),
+
+    ('T12_C_BP_MILD_MODERATE', 'T12_INF_MILD_MODERATE_SEVERITY', 1),
+    ('T12_INF_MILD_MODERATE_SEVERITY', 'T12_INF_METHYLDOPA', 1),
+    ('T12_INF_METHYLDOPA', 'T12_INF_ABSOLUTE_CONTRAINDICATIONS', 1),
+
+    ('T12_C_BP_SEVERE', 'T12_INF_SEVERE_SEVERITY', 1),
+    ('T12_INF_SEVERE_SEVERITY', 'T12_INF_SEVERE_DRUG_OPTIONS', 1),
+    ('T12_INF_SEVERE_DRUG_OPTIONS', 'T12_C_HYPERTENSIVE_CRISIS', 1),
+    ('T12_INF_SEVERE_DRUG_OPTIONS', 'T12_C_PULMONARY_EDEMA', 2),
+    ('T12_C_HYPERTENSIVE_CRISIS', 'T12_INF_IV_NITROGLYCERIN', 1),
+    ('T12_C_PULMONARY_EDEMA', 'T12_INF_MAGNESIUM_SUPPLEMENT', 1),
+    ('T12_INF_IV_NITROGLYCERIN', 'T12_C_CURRENTLY_PREGNANT', 1),
+    ('T12_INF_IV_NITROGLYCERIN', 'T12_C_POSTPARTUM', 2),
+    ('T12_INF_MAGNESIUM_SUPPLEMENT', 'T12_C_CURRENTLY_PREGNANT', 1),
+    ('T12_INF_MAGNESIUM_SUPPLEMENT', 'T12_C_POSTPARTUM', 2),
+
+    ('T12_INF_PREECLAMPSIA_CLASSIFICATION', 'T12_INF_LABETALOL_MGSO4', 1),
+    ('T12_INF_ECLAMPSIA_CLASSIFICATION', 'T12_INF_LABETALOL_MGSO4', 1),
+    ('T12_INF_HELLP_SYNDROME_CLASSIFICATION', 'T12_INF_LABETALOL_MGSO4', 1),
+    ('T12_INF_LABETALOL_MGSO4', 'T12_C_IMMEDIATE_TARGET', 1),
+    ('T12_C_IMMEDIATE_TARGET', 'T12_C_TARGET_MET', 1),
+    ('T12_C_IMMEDIATE_TARGET', 'T12_C_TARGET_NOT_MET', 2),
+    ('T12_C_TARGET_MET', 'T12_INF_GESTATIONAL_HTN_CLASSIFICATION', 1),
+    ('T12_C_TARGET_NOT_MET', 'T12_END_EMERGENCY_DELIVERY', 1),
+
+    ('T12_INF_ABSOLUTE_CONTRAINDICATIONS', 'T12_C_CURRENTLY_PREGNANT', 1),
+    ('T12_INF_ABSOLUTE_CONTRAINDICATIONS', 'T12_C_POSTPARTUM', 2),
+    ('T12_C_CURRENTLY_PREGNANT', 'T12_C_HIGH_PREECLAMPSIA_RISK', 1),
+    ('T12_C_CURRENTLY_PREGNANT', 'T12_C_BP_TARGET_ACHIEVED', 2),
+    ('T12_C_CURRENTLY_PREGNANT', 'T12_C_BP_TARGET_NOT_ACHIEVED', 3),
+    ('T12_C_HIGH_PREECLAMPSIA_RISK', 'T12_END_ASPIRIN_PROPHYLAXIS', 1),
+    ('T12_C_BP_TARGET_ACHIEVED', 'T12_END_MAINTAIN_REGIMEN_PREGNANT', 1),
+    ('T12_C_BP_TARGET_NOT_ACHIEVED', 'T12_END_REFER_OBGYN', 1),
+
+    ('T12_C_POSTPARTUM', 'T12_C_BREASTFEEDING', 1),
+    ('T12_C_POSTPARTUM', 'T12_C_BP_STILL_HIGH', 2),
+    ('T12_C_POSTPARTUM', 'T12_C_BP_NOT_HIGH', 3),
+    ('T12_C_BREASTFEEDING', 'T12_INF_BREASTFEEDING_DRUG_GUIDANCE', 1),
+    ('T12_INF_BREASTFEEDING_DRUG_GUIDANCE', 'T12_END_MAINTAIN_REGIMEN_POSTPARTUM', 1),
+    ('T12_C_BP_STILL_HIGH', 'T12_INF_CHANGE_REGIMEN_NO_METHYLDOPA', 1),
+    ('T12_INF_CHANGE_REGIMEN_NO_METHYLDOPA', 'T12_END_MAINTAIN_REGIMEN_POSTPARTUM', 1),
+    ('T12_C_BP_NOT_HIGH', 'T12_END_MAINTAIN_REGIMEN_POSTPARTUM', 1)
+)
+INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
+SELECT md5('T12:' || edge_spec.from_key || '->' || edge_spec.to_key)::uuid,
+       from_node.id,
+       to_node.id,
+       edge_spec.traversal_order
+FROM edge_spec
+JOIN public.decision_trees tree
+  ON tree.tree_key = 'hypertension-in-pregnancy'
+JOIN public.decision_nodes from_node
+  ON from_node.tree_id = tree.id
+ AND from_node.node_key = edge_spec.from_key
+JOIN public.decision_nodes to_node
+  ON to_node.tree_id = tree.id
+ AND to_node.node_key = edge_spec.to_key
+ON CONFLICT (from_node_id, to_node_id)
+DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('b545486b-09e3-4319-9284-dd5be1f546ed', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-older-adults' AND n.node_key = 'T7_A_CLASSIFY'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-older-adults' AND n.node_key = 'T7_C_AGE_70_79'), 1)
@@ -5210,5 +5320,55 @@ ON CONFLICT (symptom_id) DO UPDATE SET type = EXCLUDED.type, subgroup = EXCLUDED
 INSERT INTO public.symptoms (symptom_id, type, subgroup, name_vn, name_en, description_vn, description_en, source, icd10_code, snomed_code, loinc_code, loinc_common_name, decision_tree_vn, decision_tree_en)
 VALUES ('SYM0086', 'Tình trạng sinh lý', 'Khác', 'Người cao tuổi', 'Older Adult', 'Nhóm bệnh nhân cao tuổi.', 'The older-adult patient group.', 'Mục 3.7.1., mục 3.6.7.', NULL, NULL, '30525-0', 'Age', 'Ngưỡng và đích điều trị, Điều trị thiết yếu, Điều trị tối ưu, THA người cao tuổi', 'Treatment Threshold and BP Target, Essential treatment strategy, Optimal treatment strategy, Hypertension older adults')
 ON CONFLICT (symptom_id) DO UPDATE SET type = EXCLUDED.type, subgroup = EXCLUDED.subgroup, name_vn = EXCLUDED.name_vn, name_en = EXCLUDED.name_en, description_vn = EXCLUDED.description_vn, description_en = EXCLUDED.description_en, source = EXCLUDED.source, icd10_code = EXCLUDED.icd10_code, snomed_code = EXCLUDED.snomed_code, loinc_code = EXCLUDED.loinc_code, loinc_common_name = EXCLUDED.loinc_common_name, decision_tree_vn = EXCLUDED.decision_tree_vn, decision_tree_en = EXCLUDED.decision_tree_en;
+
+-- Remove Tree 12 nodes consolidated into the surviving combination nodes.
+DELETE FROM public.node_source_references
+WHERE node_id IN (
+  SELECT n.id
+  FROM public.decision_nodes n
+  JOIN public.decision_trees t ON t.id = n.tree_id
+  WHERE t.tree_key = 'hypertension-in-pregnancy'
+    AND n.node_key IN (
+      'T12_INF_LABETALOL_ORAL',
+      'T12_INF_NIFEDIPINE_OR_NICARDIPINE',
+      'T12_INF_NICARDIPINE_MGSO4'
+    )
+);
+
+DELETE FROM public.decision_edges
+WHERE from_node_id IN (
+    SELECT n.id
+    FROM public.decision_nodes n
+    JOIN public.decision_trees t ON t.id = n.tree_id
+    WHERE t.tree_key = 'hypertension-in-pregnancy'
+      AND n.node_key IN (
+        'T12_INF_LABETALOL_ORAL',
+        'T12_INF_NIFEDIPINE_OR_NICARDIPINE',
+        'T12_INF_NICARDIPINE_MGSO4'
+      )
+  )
+   OR to_node_id IN (
+    SELECT n.id
+    FROM public.decision_nodes n
+    JOIN public.decision_trees t ON t.id = n.tree_id
+    WHERE t.tree_key = 'hypertension-in-pregnancy'
+      AND n.node_key IN (
+        'T12_INF_LABETALOL_ORAL',
+        'T12_INF_NIFEDIPINE_OR_NICARDIPINE',
+        'T12_INF_NICARDIPINE_MGSO4'
+      )
+  );
+
+DELETE FROM public.decision_nodes
+WHERE tree_id = (
+    SELECT id
+    FROM public.decision_trees
+    WHERE tree_key = 'hypertension-in-pregnancy'
+  )
+  AND node_key IN (
+    'T12_INF_LABETALOL_ORAL',
+    'T12_INF_NIFEDIPINE_OR_NICARDIPINE',
+    'T12_INF_NICARDIPINE_MGSO4'
+  );
 
 COMMIT;
