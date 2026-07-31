@@ -134,9 +134,12 @@ def _drug_class_details(
         medicines: list[JsonObject] = []
         if isinstance(raw_medicines, list):
             for index, raw in enumerate(raw_medicines):
-                if (not isinstance(raw, dict) or raw.get("available") is False
-                        or _medicine_name(raw) in excluded
-                        or _is_negated(_medicine_name(raw), blocked_text)):
+                if (
+                    not isinstance(raw, dict)
+                    or raw.get("available") is False
+                    or _medicine_name(raw) in excluded
+                    or _is_negated(_medicine_name(raw), blocked_text)
+                ):
                     continue
                 name = _string(raw.get("name"), _string(raw.get("drug_name")))
                 if not name:
@@ -202,7 +205,7 @@ def _is_negated(name: str, text: str) -> bool:
     position = text.find(name)
     if position < 0:
         return False
-    prefix = text[max(0, position - 72):position]
+    prefix = text[max(0, position - 72) : position]
     markers = ("do not", "don't", "avoid", "contraind", "not use", "exclude")
     return any(marker in prefix for marker in markers)
 

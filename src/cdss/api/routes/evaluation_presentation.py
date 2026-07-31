@@ -145,7 +145,7 @@ def _negated_medication(name: str, text: str) -> bool:
         position = lowered.find(needle, start)
         if position < 0:
             return False
-        prefix = lowered[max(0, position - 72):position]
+        prefix = lowered[max(0, position - 72) : position]
         markers = ("do not", "don't", "avoid", "contraind", "not use", "exclude")
         if not any(marker in prefix for marker in markers):
             return False

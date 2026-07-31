@@ -9,13 +9,15 @@ from cdss.domain.decision_tree.contracts import NodeType
 from cdss.domain.decision_tree.graph import EdgeDefinition, NodeDefinition
 
 _CONTINUATION_TREES = frozenset({"essential-treatment-strategy", "optimal-treatment-strategy"})
-_CONTINUATION_NODES = frozenset({
-    ("hypertension-in-pregnancy", "T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM"),
-    ("hypertension-in-pregnancy", "T12_C_IMMEDIATE_TARGET"),
-    ("resistant-hypertension", "T13_A_CHECK_MRA"),
-    ("resistant-hypertension", "T13_A_CHECK_SPIRONOLACTONE"),
-    ("hypertensive-emergency", "T14_ACTION_ADMIT_AND_DETERMINE_TARGET_ORGAN"),
-})
+_CONTINUATION_NODES = frozenset(
+    {
+        ("hypertension-in-pregnancy", "T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM"),
+        ("hypertension-in-pregnancy", "T12_C_IMMEDIATE_TARGET"),
+        ("resistant-hypertension", "T13_A_CHECK_MRA"),
+        ("resistant-hypertension", "T13_A_CHECK_SPIRONOLACTONE"),
+        ("hypertensive-emergency", "T14_ACTION_ADMIT_AND_DETERMINE_TARGET_ORGAN"),
+    }
+)
 
 
 def action_may_continue(

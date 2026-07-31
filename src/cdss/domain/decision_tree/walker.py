@@ -37,6 +37,7 @@ from cdss.domain.decision_tree.walker_transitions import TransitionTraversalMixi
 
 DEFAULT_MAX_STEPS = 300
 
+
 def walk_tree(
     graph: TreeGraph,
     runtime_input: Mapping[str, Any],
