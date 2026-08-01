@@ -5,7 +5,7 @@
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
-VERSION_FILE="deploy/state/.current_version"
+VERSION_FILE="deploy/.current_version"
 OLD_VERSION="$(cat "$VERSION_FILE" 2>/dev/null || true)"
 
 if [ -z "$OLD_VERSION" ]; then
@@ -13,13 +13,15 @@ if [ -z "$OLD_VERSION" ]; then
     exit 0
 fi
 
+set -a
+source .env
+set +a
+
 export VERSION="$OLD_VERSION"
-validate_dotenv_file .env
-DOTENV_BACKUP_HOST_DIR="$(dotenv_get .env BACKUP_HOST_DIR || true)"
-export BACKUP_HOST_DIR="${DOTENV_BACKUP_HOST_DIR:-./persistent-backups}"
+export BACKUP_HOST_DIR="${BACKUP_HOST_DIR:-./persistent-backups}"
 
 mkdir -p "$BACKUP_HOST_DIR"
-chmod 0700 "$BACKUP_HOST_DIR"
+chmod 0755 "$BACKUP_HOST_DIR"
 
 resolve_compose "cdss-${OLD_VERSION}"
 

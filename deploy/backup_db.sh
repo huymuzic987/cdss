@@ -7,7 +7,7 @@ set -euo pipefail
 
 BACKUP_DIR="/backups"
 RETENTION="${BACKUP_RETENTION:-10}"
-FILE_MODE="${BACKUP_FILE_MODE:-0600}"
+FILE_MODE="${BACKUP_FILE_MODE:-0644}"
 VERSION="${DEPLOY_VERSION:?DEPLOY_VERSION is required}"
 
 if ! [[ "$RETENTION" =~ ^[1-9][0-9]*$ ]]; then
@@ -22,7 +22,7 @@ create_backup() {
     temporary="${filename}.tmp.$$"
 
     mkdir -p "$BACKUP_DIR"
-    chmod 0700 "$BACKUP_DIR"
+    chmod 0755 "$BACKUP_DIR"
 
     echo "Creating database backup ${filename}..."
     if ! pg_dump \

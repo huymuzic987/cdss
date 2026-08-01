@@ -6,9 +6,6 @@ Dockerfiles, compose file, and `deploy/` scripts actually do - it is not a
 guide to setting up a new Jenkins server, just a description of the existing
 pipeline so you can read or modify it safely.
 
-Performance measurements and the before/after collection template live in
-[CI/CD performance baseline](ci-cd-baseline.md).
-
 ## Images
 
 ### `Dockerfile.backend`
@@ -36,7 +33,7 @@ Multi-stage build, context is the **repo root** (not `src/`), built with
 
 Also multi-stage:
 
-1. **`builder`** (`node:24.18.1-alpine`): enables `pnpm@9.15.9` via corepack, installs
+1. **`builder`** (`node:20-alpine`): enables `pnpm@9` via corepack, installs
    with `pnpm install --frozen-lockfile` (cached), copies source, then runs
    `pnpm build`. Two build ARGs are exported as ENV so Vite inlines them at
    *build* time: `VITE_TLDRAW_LICENSE_KEY` and `VITE_PRODUCTION` (default
@@ -96,21 +93,14 @@ in this file - `docker-compose.prod.yml` builds it internally from the
 | `CDSS_MAX_STEPS` | `300` | Traversal safety limit, same meaning as local dev. |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | `cdss` / `change-me` / `cdss` | Change the password before first real deploy. |
 | `APP_PORT` | `3000` | Public host port owned continuously by the stable `cdss-router`. **The actual Jenkins deployment overrides this to `3001`** (see below). |
-| `BACKUP_HOST_DIR` | `./persistent-backups` | Resolves through each release's symlink to `/opt/webapps/cdss/persistent-backups`. It is a real host directory outside release source and mode 0700. |
-| `BACKUP_TIMEZONE` / `BACKUP_RETENTION` / `BACKUP_FILE_MODE` | `Asia/Ho_Chi_Minh` / `10` / `0600` | Backup daemon config; SQL dumps are owner-readable only. |
+| `BACKUP_HOST_DIR` | `./persistent-backups` | Resolved relative to `/opt/webapps/cdss` on the target host. A real host directory, not a Docker volume - Jenkins' rsync deploy step excludes it from `--delete`, and files in it are readable by other SSH users on that host. |
+| `BACKUP_TIMEZONE` / `BACKUP_RETENTION` / `BACKUP_FILE_MODE` | `Asia/Ho_Chi_Minh` / `10` / `0644` | Backup daemon config, see below. |
 
 ## The Jenkins pipeline (`Jenkinsfile`)
 
 Triggered by `githubPush()` (a GitHub webhook). `disableConcurrentBuilds()`
 is set - two deployments must never provision/promote on the same host at
-once. Jenkins retains at most 50 builds for 30 days and at most 20 artifact
-sets for 14 days. The whole run is limited to 90 minutes, every stage has a
-smaller workload-specific timeout, and restart-from-stage is disabled because
-it could bypass backup, write-lock, or verification prerequisites. The Verify
-Files stage also fails early unless the agent is Linux with Docker daemon
-access and every required CLI.
-
-Target host is hardcoded (`TARGET_SERVER=192.168.1.199`,
+once. Target host is hardcoded (`TARGET_SERVER=192.168.1.199`,
 `TARGET_USER=deployer`, `DEPLOY_PATH=/opt/webapps/cdss`), `VERSION` is the
 Jenkins build number, `APP_PORT` is set to `3001` in the pipeline itself
 (comment: "3000 is already taken by another project on this host" - note
@@ -137,93 +127,35 @@ Stages, in order:
    tool is invoked directly and reports a named failing gate instead of
    pnpm's generic `ELIFECYCLE` wrapper. Any failure stops the pipeline here,
    so a broken build can never reach provisioning or promotion.
-4. **Deploy Files**: creates `/opt/webapps/cdss/releases/<version>`,
-   `/opt/webapps/cdss/shared`, and the persistent backup directory. It
-   migrates legacy flat-checkout state once, then runs `rsync -a --delete`
-   (no compression; same-LAN target) from the Jenkins workspace to only the
-   versioned release directory,
+4. **Deploy Files**: `rsync -a --delete` (no compression; same-LAN target)
+   from the Jenkins workspace to `deploy@<host>:/opt/webapps/cdss/`,
    excluding `.git`, `.venv`, `node_modules`, `frontend/dist`, `.env*`,
    logs/caches, `scratch`, and the deploy scripts' own runtime state files
-   (`deploy/.current_version`, `deploy/.deployment_state`,
-   `deploy/.build_state`, `deploy/.router_drain_pending`,
-   `deploy/.write_lock`) and `persistent-backups`. Symlinks expose the shared
-   environment, state markers, and backups at their legacy release-relative
-   paths. A single `deploy/state` directory symlink keeps atomic state-file
-   renames inside shared storage, so deploy scripts remain release-local
-   without duplicating mutable state.
-5. **Inject Environment**: streams the `cdss-prod-env` Jenkins credential
-   under remote `umask 077`, strips CRLF, sets mode 0600, and validates
-   required keys, duplicates, quoting, production mode, placeholder password,
-   numeric values, and backup mode. Only a valid `.env.new` atomically
-   replaces `shared/.env`. Deployment scripts read individual values through
-   the release's `.env` symlink as dotenv
-   data through `deploy/lib.sh`; they never source the file as shell code.
+   (`deploy/.current_version`, `deploy/.build_state`,
+   `deploy/.router_drain_pending`) and
+   `persistent-backups`.
+5. **Inject Environment**: copies the `cdss-prod-env` Jenkins credential
+   (a file) to the host as `.env.new`, strips CRLF line endings, moves it to
+   `.env`.
 6. **Ensure Live Route**: repairs and verifies the public route to the version
-   in `deploy/state/.current_version`, recreating a missing dedicated router
-   before lengthy build or migration work begins.
+   in `deploy/.current_version`, recreating a missing dedicated router before
+   lengthy build or migration work begins.
 7. **Build Images**: `deploy/build_images.sh <version>`.
 8. **Backup Current Database**: `deploy/backup_current_db.sh`.
-9. **Enable Write Lock**: reloads the stable router with selective HTTP 503
-   responses for layout writes, FHIR imports, and dashboard seed writes. Old
-   nginx workers must drain before database cloning can begin.
-10. **Provision New Stack**: `deploy/provision_stack.sh <version>`. After
-    migration and seed, it requires exactly one Alembic head, verifies the
-    database revision, authoritative minimum row counts, one START node per
-    tree, and resolvable LINK targets. For cloned production data it
-    fingerprints layouts immediately before and after seeding and requires an
-    exact match.
-11. **Promote New Stack**: `deploy/promote_stack.sh <version>`. Promotion
-    preserves the active write-lock marker.
+9. **Provision New Stack**: `deploy/provision_stack.sh <version>`.
+10. **Promote New Stack**: `deploy/promote_stack.sh <version>`.
+11. **Prune Old Stacks**: `deploy/prune_old_stacks.sh`.
 12. **Verify Public Endpoint**: checks `https://cdss.click/` and `/health`
     from the Jenkins agent and requires `X-CDSS-Release` to match the build
     number. A host-local success can therefore no longer hide an external 502.
-13. **Disable Write Lock**: reloads and verifies the promoted route without
-    write blocking. This runs only after public verification succeeds.
-14. **Prune Old Stacks**: `deploy/prune_old_stacks.sh`, followed by
-    `deploy/prune_release_dirs.sh`. The previous
-    application stack remains available until external verification succeeds
-    and writes resume on the new release. A release source directory is
-    removed only after its Compose containers are gone; the live version is
-    always retained.
-
-The write lock deliberately leaves `POST /evaluate` and all reads available.
-It blocks only the known mutating endpoints: tree-layout PUT/DELETE, FHIR
-import, and dashboard seed. Failed or aborted builds first restore a verified
-route, then disable the lock. If no healthy route can be verified, the lock
-remains enabled instead of accepting writes into an uncertain database.
 
 On success: logs `cdss running on <host>:<port> (version <version>)`. On
-failure before writes resume, cleanup uses the atomic deployment state to
-restore the previous release and database, then removes the candidate. This
-automatic rollback is allowed only while the write-lock marker exists. After
-writes resume, rollback would discard new database writes, so cleanup instead
-repairs and verifies the promoted route. Candidate containers, networks,
-volumes, and images are removed by Docker labels and IDs. `cleanWs()`
-always runs at the end.
-
-Successful promotion writes `deploy/state/.deployment_state`
-(physically `shared/.deployment_state`) atomically with the
-current and previous versions, their Git commits, the promotion timestamp, and
-status. The `deploy/state/.current_version` file is atomically replaced
-last and remains the authoritative commit point for existing scripts.
-
-### Target-host directory layout
-
-```text
-/opt/webapps/cdss/
-|-- releases/
-|   |-- <build-number>/       # immutable source for one Jenkins build
-|   |   |-- .env -> ../../shared/.env
-|   |   |-- persistent-backups -> ../../persistent-backups
-|   |   `-- deploy/state -> ../../../shared
-|   `-- ...
-|-- shared/                   # mode 0700; env and atomic deploy markers
-`-- persistent-backups/       # mode 0700; never rsynced or release-pruned
-```
-
-All build, provision, promote, recovery, and prune commands run from the
-candidate's release directory. This prevents a later rsync from changing the
-scripts or Compose file used by an in-progress or retained release.
+failure: tears down the candidate stack only when it was not promoted. A
+failure in a later stage does not tear down the version already recorded as
+live; instead, failure cleanup repairs and verifies that release's public
+route. Before removing an unpromoted candidate, cleanup first restores the
+previous promoted route. Candidate containers, networks, volumes, and images
+are then removed by Docker labels and IDs. `cleanWs()` always runs at the end.
 
 ## The blue/green deploy scripts (`deploy/`)
 
@@ -241,31 +173,17 @@ Runs first, on the Jenkins agent, before the target host is touched.
 Self-contained aside from Docker: it creates its own isolated Docker network
 and a disposable `postgres:16` container (`-p 54321`, matching the port
 `cdss.testing.database`'s safety guard requires), then runs everything else
-in ephemeral `uv`/`node` containers on that network. Network and
-PostgreSQL container names include Jenkins `BUILD_TAG`, so interrupted or
-unrelated jobs cannot remove each other's resources. Named Docker volumes
-persist the uv cache, synchronized Python environment, and pnpm content store
-across workspace cleanup.
-
-The script regenerates pregnancy FHIR catalogs, runs `alembic upgrade head`,
-and imports `backups/seed.sql` before parallel work begins. It then runs
-the backend branch (`pytest`, `ruff check`, `ruff format --check`,
-`pyright`) concurrently with the frontend branch (Vitest, Oxlint,
-TypeScript, and Vite production build). Both branches are awaited so a failure
-retains diagnostics from the other branch. Tools are invoked directly, so a
-failure identifies its actual phase instead of ending with a generic pnpm
-`ELIFECYCLE` message. A `trap ... EXIT`
+in ephemeral `uv`/`node` containers on that network. It regenerates the
+pregnancy FHIR catalogs, runs `alembic upgrade head` and `backups/seed.sql`
+against the disposable database, then runs `pytest` (including the
+database-marked tests), `ruff check`, `ruff format --check`, `pyright`, and
+the named frontend gates in `deploy/run_frontend_quality_gates.sh`: Vitest,
+Oxlint, TypeScript compilation, and the Vite production build. These tools
+are invoked directly, so a failure identifies its actual phase instead of
+ending with a generic pnpm `ELIFECYCLE` message. A `trap ... EXIT`
 always removes the container/network/`.env.test` and reclaims ownership of
 anything the (root-run, for `corepack enable`) frontend container wrote into
 `frontend/`, whether the gate passed or failed.
-
-The quality stage publishes backend and frontend JUnit XML to Jenkins. Backend
-pytest also writes coverage XML without enforcing a threshold yet, so the first
-reports establish a baseline. Detailed gate durations are stored as TSV files.
-Before `cleanWs()`, Jenkins archives only `.ci-reports` directories;
-these contain test, coverage, timing, Git/build identity, and
-`.deployment_state` evidence. Production `.env` files and Jenkins
-credential files are outside the artifact patterns.
 
 ### `build_images.sh <version>`
 
@@ -273,18 +191,12 @@ Builds only what changed. Hashes the backend's build inputs
 (`Dockerfile.backend`, `pyproject.toml`, `uv.lock`, `src/`, `alembic/`,
 `data/`, ...) and the frontend's (everything under `frontend/` excluding
 `node_modules`/`dist`, plus the two Vite build args) via `sha256sum`,
-compares against a persisted state file (`deploy/state/.build_state`). If a
+compares against a persisted state file (`deploy/.build_state`). If a
 service's hash is unchanged and its previous version's image still exists,
 it's retagged (`docker image tag`) instead of rebuilt; otherwise
 `$COMPOSE build <service>` runs. When both services changed they always build
-concurrently when the host has at least 4 GiB available memory and two CPUs;
-otherwise Compose is capped at one worker. Before a required build, the script
-fails fast unless Docker storage has 10 GiB free and the host has 2 GiB
-available memory (both thresholds are configurable), records a
-`CDSS_BUILD_CAPACITY` line, and prints `docker system df`. BuildKit plain
-progress makes cache hits and slow layers visible in Jenkins. State is written
-atomically (temp file then `mv`). The script does not automatically run a
-host-wide builder prune because the Docker daemon may serve other projects.
+concurrently, capped at two Compose workers. State is written atomically
+(temp file then `mv`).
 
 ### `backup_current_db.sh`
 
@@ -294,7 +206,7 @@ anything, by running `backup_db.sh backup-now` inside the *old* stack's
 credentials read directly from the old `db` container's own environment
 (`docker inspect`) rather than from the new `.env` - specifically so a
 credential rotation in the freshly injected `.env` can't break this final
-backup of the outgoing version. If `deploy/state/.current_version` records no
+backup of the outgoing version. If `deploy/.current_version` records no
 prior version (first-ever deploy), this is a no-op.
 
 ### `backup_db.sh [backup-now|daemon]`
@@ -313,14 +225,11 @@ Creates a fully isolated new stack **without disrupting the live one**:
 starts the new stack's `db`, waits for `pg_isready`, and - if an old
 live version is recorded - clones it via a **streamed `pg_dump` piped
 directly into the new `db`'s `psql`** (a transactionally consistent clone
-taken while the deployment write lock prevents new mutations). Then runs
-`alembic upgrade head` via a one-off `backend` container and seeds via
-`deploy/seed_database.sh`. Bounded validation requires the expected Alembic
-head, authoritative minimum row counts, exactly one START per decision tree,
-resolvable LINK targets, and unchanged operator layouts in preserve mode.
-Only then are the new `backend` and private `frontend` started. Both must
-pass internal health checks before promotion; neither binds the public host
-port.
+taken while production keeps serving traffic). Then runs
+`alembic upgrade head` via a one-off `backend` container, seeds via
+`deploy/seed_database.sh`, and finally starts both the new `backend` and its
+private `frontend`. Both must pass internal health checks before promotion;
+neither binds the public host port.
 
 Seed mode depends on whether this is a fresh install or a clone: fresh →
 `SEED_MODE=all` (`seed_database.sh` just streams the whole
@@ -328,17 +237,15 @@ Seed mode depends on whether this is a fresh install or a clone: fresh →
 
 ### `seed_database.sh <mode> [seed_file]`
 
-`all` mode: validates the transaction boundary, then `cat`s
-`backups/seed.sql` to stdout. `preserve-layouts` mode additionally
-requires exactly one ordered marker pair, then `awk`-strips the lines
-between the `-- 5. TREE LAYOUTS` and
+`all` mode: `cat`s `backups/seed.sql` straight to stdout. `preserve-layouts`
+mode: `awk`-strips the lines between the `-- 5. TREE LAYOUTS` and
 `-- 6. MEDICINES REFERENCE CATALOG` comment markers in `seed.sql` before
 emitting it - so a stack cloned from a live database (which already has
 real operator-edited canvas layouts) doesn't have them overwritten by
-whatever layout rows happen to be baked into the seed file. Missing,
-duplicated, or reordered markers fail closed. `validate_candidate_db.sh`
-then verifies the post-seed database with 30-second statement and 5-second
-lock timeouts before candidate services can start.
+whatever layout rows happen to be baked into the seed file. **This depends
+on those exact comment headers existing in `backups/seed.sql`**: if that
+file is regenerated without them, `preserve-layouts` mode silently stops
+working as intended.
 
 ### `promote_stack.sh <version>`
 
@@ -358,7 +265,7 @@ The zero-downtime cutover, with automatic rollback:
    the candidate release. On failure, the previous nginx configuration is
    restored and reloaded.
 6. On success, starts the new backup service, records
-   `deploy/state/.current_version`, waits for old nginx workers to drain, and then
+   `deploy/.current_version`, waits for old nginx workers to drain, and then
    disconnects obsolete release networks. If a long-running request is still
    active after 30 seconds, a server-local drain marker makes pruning retain
    the old release until a later run confirms that the worker has exited.
