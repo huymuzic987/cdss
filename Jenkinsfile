@@ -129,6 +129,7 @@ pipeline {
                             --exclude '.ruff_cache' \
                             --exclude 'scratch' \
                             --exclude 'deploy/.current_version' \
+                            --exclude 'deploy/.deployment_state' \
                             --exclude 'deploy/.build_state' \
                             --exclude 'deploy/.router_drain_pending' \
                             --exclude 'deploy/.write_lock' \
@@ -264,23 +265,9 @@ pipeline {
                             set -e
                             cd ${DEPLOY_PATH}
                             chmod +x deploy/promote_stack.sh deploy/render_router_config.sh
-                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/promote_stack.sh ${VERSION}
-                        "
-                    '''
-                }
-            }
-        }
-
-        stage('Prune Old Stacks') {
-            steps {
-                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
-                sshagent(['ubuntu-vm-jenkins']) {
-                    sh '''
-                        ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
-                            set -e
-                            cd ${DEPLOY_PATH}
-                            chmod +x deploy/prune_old_stacks.sh
-                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/prune_old_stacks.sh
+                            DEPLOY_GIT_COMMIT=${GIT_COMMIT} \
+                                PUBLIC_APP_PORT=${APP_PORT} \
+                                ./deploy/promote_stack.sh ${VERSION}
                         "
                     '''
                 }
@@ -334,6 +321,24 @@ pipeline {
                 }
             }
         }
+
+        // Retain the previous application stack until the new release has
+        // passed both host-local and public verification and writes resumed.
+        stage('Prune Old Stacks') {
+            steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
+                sshagent(['ubuntu-vm-jenkins']) {
+                    sh '''
+                        ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                            set -e
+                            cd ${DEPLOY_PATH}
+                            chmod +x deploy/prune_old_stacks.sh
+                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/prune_old_stacks.sh
+                        "
+                    '''
+                }
+            }
+        }
     }
 
     post {
@@ -352,9 +357,13 @@ pipeline {
                         cd ${DEPLOY_PATH} 2>/dev/null || exit 0
                         chmod +x deploy/cleanup_failed_stack.sh deploy/promote_stack.sh \
                             deploy/render_router_config.sh deploy/set_write_lock.sh
-                        PUBLIC_APP_PORT=${APP_PORT} ./deploy/cleanup_failed_stack.sh ${VERSION}
-                        PUBLIC_APP_PORT=${APP_PORT} ./deploy/set_write_lock.sh disable \
-                            || echo 'WARNING: write lock remains enabled because a healthy route could not be verified.'
+                        if PUBLIC_APP_PORT=${APP_PORT} \
+                            ./deploy/cleanup_failed_stack.sh ${VERSION}; then
+                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/set_write_lock.sh disable \
+                                || echo 'WARNING: write lock remains enabled because a healthy route could not be verified.'
+                        else
+                            echo 'WARNING: recovery failed; preserving the write lock and release stacks for diagnosis.'
+                        fi
                     "
                 '''
             }
@@ -368,9 +377,13 @@ pipeline {
                         cd ${DEPLOY_PATH} 2>/dev/null || exit 0
                         chmod +x deploy/cleanup_failed_stack.sh deploy/promote_stack.sh \
                             deploy/render_router_config.sh deploy/set_write_lock.sh
-                        PUBLIC_APP_PORT=${APP_PORT} ./deploy/cleanup_failed_stack.sh ${VERSION}
-                        PUBLIC_APP_PORT=${APP_PORT} ./deploy/set_write_lock.sh disable \
-                            || echo 'WARNING: write lock remains enabled because a healthy route could not be verified.'
+                        if PUBLIC_APP_PORT=${APP_PORT} \
+                            ./deploy/cleanup_failed_stack.sh ${VERSION}; then
+                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/set_write_lock.sh disable \
+                                || echo 'WARNING: write lock remains enabled because a healthy route could not be verified.'
+                        else
+                            echo 'WARNING: recovery failed; preserving the write lock and release stacks for diagnosis.'
+                        fi
                     "
                 '''
             }
@@ -393,9 +406,9 @@ pipeline {
                         'Enable Write Lock',
                         'Provision New Stack',
                         'Promote New Stack',
-                        'Prune Old Stacks',
                         'Verify Public Endpoint',
-                        'Disable Write Lock'
+                        'Disable Write Lock',
+                        'Prune Old Stacks'
                     ]
                     def buildResult = currentBuild.currentResult ?: 'UNKNOWN'
                     def activeStage = env.CDSS_CURRENT_STAGE ?: 'Pipeline initialization'

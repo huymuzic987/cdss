@@ -134,8 +134,9 @@ Stages, in order:
    from the Jenkins workspace to `deploy@<host>:/opt/webapps/cdss/`,
    excluding `.git`, `.venv`, `node_modules`, `frontend/dist`, `.env*`,
    logs/caches, `scratch`, and the deploy scripts' own runtime state files
-   (`deploy/.current_version`, `deploy/.build_state`,
-   `deploy/.router_drain_pending`, `deploy/.write_lock`) and
+   (`deploy/.current_version`, `deploy/.deployment_state`,
+   `deploy/.build_state`, `deploy/.router_drain_pending`,
+   `deploy/.write_lock`) and
    `persistent-backups`.
 5. **Inject Environment**: copies the `cdss-prod-env` Jenkins credential
    (a file) to the host as `.env.new`, strips CRLF line endings, moves it to
@@ -151,12 +152,14 @@ Stages, in order:
 10. **Provision New Stack**: `deploy/provision_stack.sh <version>`.
 11. **Promote New Stack**: `deploy/promote_stack.sh <version>`. Promotion
     preserves the active write-lock marker.
-12. **Prune Old Stacks**: `deploy/prune_old_stacks.sh`.
-13. **Verify Public Endpoint**: checks `https://cdss.click/` and `/health`
+12. **Verify Public Endpoint**: checks `https://cdss.click/` and `/health`
     from the Jenkins agent and requires `X-CDSS-Release` to match the build
     number. A host-local success can therefore no longer hide an external 502.
-14. **Disable Write Lock**: reloads and verifies the promoted route without
+13. **Disable Write Lock**: reloads and verifies the promoted route without
     write blocking. This runs only after public verification succeeds.
+14. **Prune Old Stacks**: `deploy/prune_old_stacks.sh`. The previous
+    application stack remains available until external verification succeeds
+    and writes resume on the new release.
 
 The write lock deliberately leaves `POST /evaluate` and all reads available.
 It blocks only the known mutating endpoints: tree-layout PUT/DELETE, FHIR
@@ -165,12 +168,18 @@ route, then disable the lock. If no healthy route can be verified, the lock
 remains enabled instead of accepting writes into an uncertain database.
 
 On success: logs `cdss running on <host>:<port> (version <version>)`. On
-failure: tears down the candidate stack only when it was not promoted. A
-failure in a later stage does not tear down the version already recorded as
-live; instead, failure cleanup repairs and verifies that release's public
-route. Before removing an unpromoted candidate, cleanup first restores the
-previous promoted route. Candidate containers, networks, volumes, and images
-are then removed by Docker labels and IDs. `cleanWs()` always runs at the end.
+failure before writes resume, cleanup uses the atomic deployment state to
+restore the previous release and database, then removes the candidate. This
+automatic rollback is allowed only while the write-lock marker exists. After
+writes resume, rollback would discard new database writes, so cleanup instead
+repairs and verifies the promoted route. Candidate containers, networks,
+volumes, and images are removed by Docker labels and IDs. `cleanWs()`
+always runs at the end.
+
+Successful promotion writes `deploy/.deployment_state` atomically with the
+current and previous versions, their Git commits, the promotion timestamp, and
+status. The legacy `deploy/.current_version` file is atomically replaced
+last and remains the authoritative commit point for existing scripts.
 
 ## The blue/green deploy scripts (`deploy/`)
 

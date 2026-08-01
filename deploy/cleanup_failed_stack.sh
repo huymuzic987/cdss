@@ -7,15 +7,44 @@ source "$(dirname "$0")/lib.sh"
 
 FAILED_VERSION="${1:?usage: cleanup_failed_stack.sh <version>}"
 VERSION_FILE="deploy/.current_version"
+STATE_FILE="deploy/.deployment_state"
+WRITE_LOCK_FILE="deploy/.write_lock"
 CURRENT_VERSION="$(cat "$VERSION_FILE" 2>/dev/null || true)"
 
 if [ "$CURRENT_VERSION" = "$FAILED_VERSION" ]; then
-    echo "Version ${FAILED_VERSION} was promoted before the later pipeline failure."
-    echo "Repairing and verifying its public route before leaving it running..."
-    if ! bash deploy/promote_stack.sh "$CURRENT_VERSION" route-only; then
-        echo "WARNING: promoted release route could not be repaired; preserving its containers for diagnosis." >&2
+    state_value() {
+        local key="$1"
+        sed -n "s/^${key}=//p" "$STATE_FILE" 2>/dev/null | head -n 1 || true
+    }
+
+    PREVIOUS_VERSION="$(state_value previous_version)"
+    PREVIOUS_GIT_COMMIT="$(state_value previous_git_commit)"
+    STATE_CURRENT_VERSION="$(state_value current_version)"
+
+    # The write lock proves no application writes have entered the promoted
+    # database yet. Only in that state is automatic database rollback safe.
+    if [ -f "$WRITE_LOCK_FILE" ] \
+        && [ "$STATE_CURRENT_VERSION" = "$FAILED_VERSION" ] \
+        && [ -n "$PREVIOUS_VERSION" ] \
+        && [ "$PREVIOUS_VERSION" != "$FAILED_VERSION" ]; then
+        echo "Promoted release ${FAILED_VERSION} failed before writes resumed."
+        echo "Rolling the stable route and current-version state back to cdss-${PREVIOUS_VERSION}..."
+        if ! DEPLOY_GIT_COMMIT="${PREVIOUS_GIT_COMMIT:-unknown}" \
+            bash deploy/promote_stack.sh "$PREVIOUS_VERSION" rollback; then
+            echo "ERROR: previous release could not be restored; preserving the write lock and both stacks." >&2
+            exit 1
+        fi
+        CURRENT_VERSION="$PREVIOUS_VERSION"
+    else
+        echo "Version ${FAILED_VERSION} was promoted before the later pipeline failure."
+        echo "Automatic rollback is unsafe after writes resume or without a previous release."
+        echo "Repairing and verifying the promoted route before leaving it running..."
+        if ! bash deploy/promote_stack.sh "$CURRENT_VERSION" route-only; then
+            echo "ERROR: promoted release route could not be repaired; preserving its containers for diagnosis." >&2
+            exit 1
+        fi
+        exit 0
     fi
-    exit 0
 fi
 
 export VERSION="$FAILED_VERSION"
