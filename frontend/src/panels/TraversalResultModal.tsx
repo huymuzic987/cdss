@@ -67,9 +67,6 @@ function ResultDialog({
   return (
     <div className="modal-overlay" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <div ref={dialogRef} className="modal-box cds-modal" role="dialog" aria-modal="true" aria-label={messages.recommendationTitle} tabIndex={-1}>
-        <header className="cds-header">
-          <button type="button" className="modal-close" onClick={onClose} aria-label={messages.cancel}>×</button>
-        </header>
         <div className="modal-body cds-modal-body">
           <ClinicalSection title={messages.alertSection} className={`cds-alert-${summary.urgency}`}>
             <div className="cds-alert-row">
