@@ -42,5 +42,8 @@ export function updateBundleClinicalFlag(bundle: JsonObject, key: string, value:
       },
     })
   }
-  return { ...bundle, entry: updatedEntries }
+  // Keep a flat mirror as well as the canonical Condition resource. This
+  // makes checkpoint re-evaluation deterministic even when a runner receives
+  // the already-normalized runtime object instead of reparsing the Bundle.
+  return { ...bundle, [key]: value, entry: updatedEntries }
 }

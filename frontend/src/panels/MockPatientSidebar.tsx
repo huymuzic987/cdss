@@ -56,9 +56,23 @@ export function MockPatientSidebar(props: MockPatientSidebarProps) {
     setValidationError(validation.error)
     if (!validation.payload) return
     const callback = manual ? props.onManualStart : props.onStart
+    // A confirmed acute scenario always outranks the ordinary diagnosis and
+    // pregnancy entry points.  Do not require the separate summary flag here:
+    // emergency presets are themselves the evidence of acute target-organ
+    // involvement, and that summary flag may be absent in imported bundles.
+    const hasEmergencyScenario = selectedPresetId.startsWith('emergency-') || (
+      form.has_hypertensive_encephalopathy
+      || form.has_acute_ischemic_stroke
+      || form.has_acute_intracerebral_hemorrhage
+      || form.has_acute_coronary_syndrome
+      || form.has_acute_cardiogenic_pulmonary_edema
+      || form.has_acute_aortic_syndrome
+      || form.has_eclampsia_severe_preeclampsia_or_hellp
+      || form.has_tma_or_acute_kidney_injury
+    )
     const startTreeKey = form.medication_follow_up_stage !== ''
       ? 'treatment-threshold-and-bp-target'
-      : 'hypertension-diagnosis'
+      : hasEmergencyScenario ? 'hypertensive-emergency' : 'hypertension-diagnosis'
     callback(startTreeKey, selectedPresetBundle ?? validation.payload)
   }
 

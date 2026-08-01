@@ -1,12 +1,13 @@
 """Export decision trees from backups/seed.sql into single JSONB files per tree.
 
-Reads backups/seed.sql (the source of truth) and writes backups/DecisionTreeJSONB/{tree_key}.jsonb
-containing the tree metadata, decision nodes, decision edges (transitions), and guideline citations (references).
+Reads backups/seed.sql (the source of truth) and writes
+backups/DecisionTreeJSONB/{tree_key}.jsonb containing the tree metadata,
+decision nodes, decision edges (transitions), and guideline citations
+(references).
 """
 
 import json
 import re
-import uuid
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -211,7 +212,8 @@ def export_trees():
 
     # 4. Parse node_source_references
     pattern_refs = re.compile(
-        r"INSERT INTO public\.node_source_references\s*\([^)]+\)\s*VALUES\s*\((.*?)\)\s*ON CONFLICT",
+        r"INSERT INTO public\.node_source_references\s*\([^)]+\)\s*VALUES\s*"
+        r"\((.*?)\)\s*ON CONFLICT",
         re.DOTALL,
     )
     for m in pattern_refs.finditer(content):
@@ -248,7 +250,7 @@ def export_trees():
         nodes = tdata["nodes"]
 
         # Sort transitions by traversal_order
-        for nkey, ndata in nodes.items():
+        for _nkey, ndata in nodes.items():
             ndata["transitions"].sort(key=lambda t: t["traversal_order"])
             ndata["references"].sort(key=lambda r: r["reference_order"])
 
@@ -264,8 +266,12 @@ def export_trees():
                 "entry": "entry_node_keys",
                 "node_lookup": "trees[].nodes[node_key]",
                 "branch_priority": "transitions sorted by traversal_order ascending",
-                "branch_condition": "condition_definition on the target node; copied to candidate_condition",
-                "cross_tree_jump": "LINK nodes use link_target_tree_key and optional link_target_node_key",
+                "branch_condition": (
+                    "condition_definition on the target node; copied to candidate_condition"
+                ),
+                "cross_tree_jump": (
+                    "LINK nodes use link_target_tree_key and optional link_target_node_key"
+                ),
             },
             "document_type": "decision_tree",
             "tree": {
