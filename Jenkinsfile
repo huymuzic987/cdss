@@ -136,6 +136,14 @@ pipeline {
                     ./deploy/run_quality_gates.sh
                 '''
             }
+            post {
+                always {
+                    junit(
+                        testResults: '.ci-reports/backend/junit.xml,frontend/.ci-reports/junit.xml',
+                        allowEmptyResults: true
+                    )
+                }
+            }
         }
 
         stage('Deploy Files') {
@@ -384,6 +392,27 @@ pipeline {
                 }
             }
         }
+
+        stage('Record Deployment Evidence') {
+            options { timeout(time: 5, unit: 'MINUTES') }
+            steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
+                sshagent(['ubuntu-vm-jenkins']) {
+                    sh '''
+                        mkdir -p .ci-reports/deployment
+                        scp ${SSH_OPTS} \
+                            ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/deploy/.deployment_state \
+                            .ci-reports/deployment/state.txt
+                        {
+                            printf 'jenkins_build=%s\n' '${BUILD_NUMBER}'
+                            printf 'git_commit=%s\n' '${GIT_COMMIT}'
+                            printf 'build_url=%s\n' '${BUILD_URL}'
+                            printf 'public_url=%s\n' '${PUBLIC_URL}'
+                        } > .ci-reports/deployment/build.txt
+                    '''
+                }
+            }
+        }
     }
 
     post {
@@ -436,6 +465,15 @@ pipeline {
 
         cleanup {
             script {
+                try {
+                    archiveArtifacts(
+                        artifacts: '.ci-reports/**/*,frontend/.ci-reports/**/*',
+                        allowEmptyArchive: true,
+                        fingerprint: false
+                    )
+                } catch (archiveError) {
+                    echo "WARNING: unable to archive CI/CD reports: ${archiveError}"
+                }
                 // Notification/reporting must never replace the real build
                 // result or prevent cleanWs() from running.
                 try {
@@ -453,7 +491,8 @@ pipeline {
                         'Promote New Stack',
                         'Verify Public Endpoint',
                         'Disable Write Lock',
-                        'Prune Old Stacks'
+                        'Prune Old Stacks',
+                        'Record Deployment Evidence'
                     ]
                     def buildResult = currentBuild.currentResult ?: 'UNKNOWN'
                     def activeStage = env.CDSS_CURRENT_STAGE ?: 'Pipeline initialization'

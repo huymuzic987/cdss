@@ -222,6 +222,14 @@ always removes the container/network/`.env.test` and reclaims ownership of
 anything the (root-run, for `corepack enable`) frontend container wrote into
 `frontend/`, whether the gate passed or failed.
 
+The quality stage publishes backend and frontend JUnit XML to Jenkins. Backend
+pytest also writes coverage XML without enforcing a threshold yet, so the first
+reports establish a baseline. Detailed gate durations are stored as TSV files.
+Before `cleanWs()`, Jenkins archives only `.ci-reports` directories;
+these contain test, coverage, timing, Git/build identity, and
+`.deployment_state` evidence. Production `.env` files and Jenkins
+credential files are outside the artifact patterns.
+
 ### `build_images.sh <version>`
 
 Builds only what changed. Hashes the backend's build inputs

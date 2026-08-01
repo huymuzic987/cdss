@@ -52,6 +52,7 @@ UV_IMAGE="ghcr.io/astral-sh/uv:python3.12-bookworm"
 # instead of following a moving major tag.
 NODE_IMAGE="node:24.18.1-alpine"
 PNPM_VERSION="9.15.9"
+CDSS_TIMING_FILE="${CDSS_TIMING_FILE:-$PWD/.ci-reports/timings.tsv}"
 
 # Emit tab-separated timing records that can be copied from the Jenkins log
 # into the deployment baseline. Keep this deliberately log-only for now so
@@ -70,6 +71,8 @@ timed() {
     finished_at="$(date +%s)"
     elapsed=$((finished_at - started_at))
     printf 'CDSS_TIMING\t%s\t%s\t%s\n' "$gate_name" "$elapsed" "$status"
+    printf '%s\t%s\t%s\n' "$gate_name" "$elapsed" "$status" \
+        >> "$CDSS_TIMING_FILE" || true
     return "$status"
 }
 
@@ -108,6 +111,8 @@ fi
 
 # Defensive cleanup also handles a retry using the same Jenkins build tag.
 cleanup
+
+mkdir -p .ci-reports/backend frontend/.ci-reports
 
 echo "Preparing persistent dependency caches..."
 docker volume create "$UV_CACHE_VOLUME" > /dev/null
@@ -184,6 +189,7 @@ timed "pregnancy-fhir-catalog-and-migration" docker run --rm --network "$NETWORK
     -v "$UV_CACHE_VOLUME":/uv-cache \
     -v "$UV_ENV_VOLUME":/venv \
     -e DATABASE_URL="$TEST_DATABASE_URL" \
+    -e CDSS_TIMING_FILE=/workspace/.ci-reports/timings.tsv \
     -e HOME=/tmp -e UV_CACHE_DIR=/uv-cache -e UV_PROJECT_ENVIRONMENT=/venv \
     --user "${HOST_UID}:${HOST_GID}" \
     "$UV_IMAGE" \
@@ -196,6 +202,8 @@ timed "pregnancy-fhir-catalog-and-migration" docker run --rm --network "$NETWORK
             if \"\$@\"; then status=0; else status=\$?; fi
             elapsed=\$((\$(date +%s) - started_at))
             printf 'CDSS_TIMING\\t%s\\t%s\\t%s\\n' \"\$gate_name\" \"\$elapsed\" \"\$status\"
+            printf '%s\\t%s\\t%s\\n' \"\$gate_name\" \"\$elapsed\" \"\$status\" \
+                >> \"\$CDSS_TIMING_FILE\" || true
             return \"\$status\"
         }
         timed catalog-dependency-sync uv sync --frozen
@@ -219,6 +227,7 @@ run_backend_quality_gates() {
     -v "$UV_CACHE_VOLUME":/uv-cache \
     -v "$UV_ENV_VOLUME":/venv \
     -e DATABASE_URL="$TEST_DATABASE_URL" \
+    -e CDSS_TIMING_FILE=/workspace/.ci-reports/timings.tsv \
     -e HOME=/tmp -e UV_CACHE_DIR=/uv-cache -e UV_PROJECT_ENVIRONMENT=/venv \
     --user "${HOST_UID}:${HOST_GID}" \
     "$UV_IMAGE" \
@@ -231,13 +240,19 @@ run_backend_quality_gates() {
             if \"\$@\"; then status=0; else status=\$?; fi
             elapsed=\$((\$(date +%s) - started_at))
             printf 'CDSS_TIMING\\t%s\\t%s\\t%s\\n' \"\$gate_name\" \"\$elapsed\" \"\$status\"
+            printf '%s\\t%s\\t%s\\n' \"\$gate_name\" \"\$elapsed\" \"\$status\" \
+                >> \"\$CDSS_TIMING_FILE\" || true
             return \"\$status\"
         }
         timed backend-dependency-sync uv sync --frozen
         # Fail quickly with a clear runtime error before spending time on the
         # test suite if Pyright's bundled Node.js cannot start.
         timed pyright-runtime-check uv run pyright --version
-        timed backend-pytest uv run pytest
+        timed backend-pytest uv run pytest \
+            --junitxml=.ci-reports/backend/junit.xml \
+            --cov=cdss \
+            --cov-report=term-missing \
+            --cov-report=xml:.ci-reports/backend/coverage.xml
         timed backend-ruff-check uv run ruff check
         timed backend-ruff-format uv run ruff format --check
         timed backend-pyright uv run pyright
@@ -253,6 +268,7 @@ run_frontend_quality_gates() {
     -e HOME=/tmp \
     -e PNPM_VERSION="$PNPM_VERSION" \
     -e PNPM_STORE_DIR=/pnpm/store \
+    -e CDSS_TIMING_FILE=/workspace/.ci-reports/timings.tsv \
     "$NODE_IMAGE" \
     sh /quality-gate.sh
 }

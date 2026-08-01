@@ -34,3 +34,12 @@ def test_backend_and_frontend_branches_run_before_either_wait() -> None:
     assert frontend_start > backend_start
     assert first_wait > frontend_start
     assert 'wait "$frontend_gate_pid"' in QUALITY_SCRIPT
+
+
+def test_quality_gates_generate_junit_and_coverage_reports() -> None:
+    assert "--junitxml=.ci-reports/backend/junit.xml" in QUALITY_SCRIPT
+    assert "--cov-report=xml:.ci-reports/backend/coverage.xml" in QUALITY_SCRIPT
+    assert "--reporter=junit" in FRONTEND_SCRIPT
+    assert "--outputFile.junit=./.ci-reports/junit.xml" in FRONTEND_SCRIPT
+    assert ".ci-reports/timings.tsv" in QUALITY_SCRIPT
+    assert ".ci-reports/timings.tsv" in FRONTEND_SCRIPT

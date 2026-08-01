@@ -20,6 +20,7 @@ def test_write_lock_spans_database_clone_through_public_verification() -> None:
         "Verify Public Endpoint",
         "Disable Write Lock",
         "Prune Old Stacks",
+        "Record Deployment Evidence",
     ]
 
     positions = [stage_position(name) for name in ordered_stages]
@@ -69,6 +70,7 @@ def test_every_stage_has_a_timeout() -> None:
         "Verify Public Endpoint",
         "Disable Write Lock",
         "Prune Old Stacks",
+        "Record Deployment Evidence",
     ]
 
     for name in stage_names:
@@ -81,3 +83,19 @@ def test_agent_capabilities_fail_fast() -> None:
     assert 'if [ "$(uname -s)" != "Linux" ]' in JENKINSFILE
     assert "docker info > /dev/null" in JENKINSFILE
     assert "rsync curl awk sed grep" in JENKINSFILE
+
+
+def test_reports_are_published_before_workspace_cleanup() -> None:
+    assert "junit(" in JENKINSFILE
+    assert ".ci-reports/backend/junit.xml" in JENKINSFILE
+    assert "frontend/.ci-reports/junit.xml" in JENKINSFILE
+    archive_position = JENKINSFILE.find("archiveArtifacts(")
+    cleanup_position = JENKINSFILE.find("cleanWs()")
+    assert archive_position >= 0
+    assert cleanup_position > archive_position
+
+
+def test_deployment_evidence_contains_no_environment_file() -> None:
+    assert "stage('Record Deployment Evidence')" in JENKINSFILE
+    assert ".ci-reports/deployment/state.txt" in JENKINSFILE
+    assert "artifacts: '.ci-reports/**/*,frontend/.ci-reports/**/*'" in JENKINSFILE
