@@ -103,7 +103,14 @@ in this file - `docker-compose.prod.yml` builds it internally from the
 
 Triggered by `githubPush()` (a GitHub webhook). `disableConcurrentBuilds()`
 is set - two deployments must never provision/promote on the same host at
-once. Target host is hardcoded (`TARGET_SERVER=192.168.1.199`,
+once. Jenkins retains at most 50 builds for 30 days and at most 20 artifact
+sets for 14 days. The whole run is limited to 90 minutes, every stage has a
+smaller workload-specific timeout, and restart-from-stage is disabled because
+it could bypass backup, write-lock, or verification prerequisites. The Verify
+Files stage also fails early unless the agent is Linux with Docker daemon
+access and every required CLI.
+
+Target host is hardcoded (`TARGET_SERVER=192.168.1.199`,
 `TARGET_USER=deployer`, `DEPLOY_PATH=/opt/webapps/cdss`), `VERSION` is the
 Jenkins build number, `APP_PORT` is set to `3001` in the pipeline itself
 (comment: "3000 is already taken by another project on this host" - note

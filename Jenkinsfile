@@ -42,12 +42,28 @@ pipeline {
         // Two deployments must never build/migrate/promote on the same host
         // at once. A queued newer build waits instead of doubling host load.
         disableConcurrentBuilds()
+        // Retain enough history for trend analysis without unbounded controller
+        // disk growth. Test/deployment artifacts receive a smaller cap.
+        buildDiscarder(logRotator(
+            daysToKeepStr: '30',
+            numToKeepStr: '50',
+            artifactDaysToKeepStr: '14',
+            artifactNumToKeepStr: '20'
+        ))
+        // A hung Docker, SSH, or database operation must not occupy the only
+        // deployment executor indefinitely.
+        timeout(time: 90, unit: 'MINUTES')
+        // Restarting midway through a stateful deployment can bypass required
+        // backup, write-lock, or verification stages.
+        disableRestartFromStage()
+        skipStagesAfterUnstable()
         timestamps()
     }
 
     stages {
 
         stage('Checkout') {
+            options { timeout(time: 5, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 echo 'Checking out source code...'
@@ -56,12 +72,29 @@ pipeline {
         }
 
         stage('Verify Files') {
+            options { timeout(time: 3, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sh '''
                     echo "=== Jenkins Build Info ==="
                     pwd
                     ls -la
+
+                    if [ "$(uname -s)" != "Linux" ]; then
+                        echo "ERROR: CDSS requires a Linux Jenkins agent." >&2
+                        exit 1
+                    fi
+                    for required_command in \
+                        bash docker git ssh scp rsync curl awk sed grep tr tail seq sha256sum; do
+                        if ! command -v "$required_command" > /dev/null 2>&1; then
+                            echo "ERROR: Jenkins agent is missing required command: $required_command" >&2
+                            exit 1
+                        fi
+                    done
+                    if ! docker info > /dev/null 2>&1; then
+                        echo "ERROR: Jenkins agent cannot access the Docker daemon." >&2
+                        exit 1
+                    fi
 
                     for f in pyproject.toml uv.lock frontend/package.json frontend/pnpm-lock.yaml \
                              Dockerfile.backend frontend/Dockerfile docker-compose.prod.yml \
@@ -95,6 +128,7 @@ pipeline {
         // the frontend's vitest/oxlint/build. A failure here stops the
         // pipeline, so promotion of a broken build is impossible.
         stage('Quality Gates') {
+            options { timeout(time: 35, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sh '''
@@ -105,6 +139,7 @@ pipeline {
         }
 
         stage('Deploy Files') {
+            options { timeout(time: 10, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
@@ -141,6 +176,7 @@ pipeline {
         }
 
         stage('Inject Environment') {
+            options { timeout(time: 5, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 withCredentials([file(credentialsId: 'cdss-prod-env', variable: 'ENV_FILE')]) {
@@ -160,6 +196,7 @@ pipeline {
         // Repair and verify the currently promoted route before a potentially
         // lengthy build. This also recreates a missing stable router.
         stage('Ensure Live Route') {
+            options { timeout(time: 5, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
@@ -180,6 +217,7 @@ pipeline {
         // source and production environment have reached the target host.
         // Provision and promotion reuse these exact images.
         stage('Build Images') {
+            options { timeout(time: 30, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
@@ -199,6 +237,7 @@ pipeline {
         // new stack is provisioned. The dump is written to the persistent
         // host backup directory, outside all per-version Docker volumes.
         stage('Backup Current Database') {
+            options { timeout(time: 20, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
@@ -217,6 +256,7 @@ pipeline {
         // Stop new mutating requests and wait for the old router workers to
         // drain before pg_dump takes the candidate database snapshot.
         stage('Enable Write Lock') {
+            options { timeout(time: 5, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
@@ -237,6 +277,7 @@ pipeline {
         // it, then migrates and seeds it without changing tree_layouts.
         // Production remains online throughout this stage.
         stage('Provision New Stack') {
+            options { timeout(time: 35, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
@@ -257,6 +298,7 @@ pipeline {
         // checks fail, promote_stack.sh restores its previous configuration
         // without stopping the old release.
         stage('Promote New Stack') {
+            options { timeout(time: 10, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
@@ -275,6 +317,7 @@ pipeline {
         }
 
         stage('Verify Public Endpoint') {
+            options { timeout(time: 5, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sh '''
@@ -306,6 +349,7 @@ pipeline {
         // Writes resume only after the promoted release is externally
         // reachable and identifies itself as this exact build.
         stage('Disable Write Lock') {
+            options { timeout(time: 5, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
@@ -325,6 +369,7 @@ pipeline {
         // Retain the previous application stack until the new release has
         // passed both host-local and public verification and writes resumed.
         stage('Prune Old Stacks') {
+            options { timeout(time: 10, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {

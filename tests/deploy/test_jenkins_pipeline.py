@@ -44,3 +44,40 @@ def test_pruning_waits_for_external_verification_and_write_resume() -> None:
 
 def test_git_commit_is_passed_to_promotion() -> None:
     assert "DEPLOY_GIT_COMMIT=${GIT_COMMIT}" in JENKINSFILE
+
+
+def test_pipeline_has_global_execution_and_retention_guards() -> None:
+    assert "timeout(time: 90, unit: 'MINUTES')" in JENKINSFILE
+    assert "buildDiscarder(logRotator(" in JENKINSFILE
+    assert "disableRestartFromStage()" in JENKINSFILE
+    assert "skipStagesAfterUnstable()" in JENKINSFILE
+
+
+def test_every_stage_has_a_timeout() -> None:
+    stage_names = [
+        "Checkout",
+        "Verify Files",
+        "Quality Gates",
+        "Deploy Files",
+        "Inject Environment",
+        "Ensure Live Route",
+        "Build Images",
+        "Backup Current Database",
+        "Enable Write Lock",
+        "Provision New Stack",
+        "Promote New Stack",
+        "Verify Public Endpoint",
+        "Disable Write Lock",
+        "Prune Old Stacks",
+    ]
+
+    for name in stage_names:
+        stage_start = stage_position(name)
+        stage_prefix = JENKINSFILE[stage_start : stage_start + 180]
+        assert "options { timeout(" in stage_prefix, f"stage has no timeout: {name}"
+
+
+def test_agent_capabilities_fail_fast() -> None:
+    assert 'if [ "$(uname -s)" != "Linux" ]' in JENKINSFILE
+    assert "docker info > /dev/null" in JENKINSFILE
+    assert "rsync curl awk sed grep" in JENKINSFILE
