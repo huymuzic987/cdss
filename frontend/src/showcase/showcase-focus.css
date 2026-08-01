@@ -1,0 +1,97 @@
+.showcase-shell {
+  grid-template-columns: 380px minmax(0, 1fr);
+  grid-template-rows: 72px minmax(0, 1fr);
+}
+
+.showcase-shell .sc-topbar {
+  grid-column: 1 / -1;
+  padding: 0 24px;
+}
+
+.sc-clinic-mark { min-width: 220px; }
+.sc-clinic-mark strong { font-size: 18px; }
+.sc-clinic-mark small { display: block; font-size: 11px; }
+.sc-mark-symbol { width: 36px; height: 36px; }
+.sc-topbar-title { display: flex; flex-direction: column; padding-left: 24px; border-left: 1px solid var(--sc-line); }
+.sc-topbar-title strong { color: var(--sc-ink); font-size: 15px; }
+.sc-topbar-title span { margin-top: 3px; color: var(--sc-muted); font-size: 12px; }
+.sc-theme-toggle {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  margin-left: auto !important;
+  place-items: center;
+  border: 1px solid var(--sc-line);
+  border-radius: 9px;
+  color: var(--sc-muted);
+  background: var(--sc-paper);
+  cursor: pointer;
+}
+.sc-theme-toggle:hover { border-color: var(--sc-teal); color: var(--sc-teal); }
+
+.showcase-shell .sc-patient-queue { grid-column: 1; grid-row: 2; }
+.showcase-shell .sc-empty-chart,.showcase-shell .sc-chart { grid-column: 2; grid-row: 2; }
+.sc-eyebrow { font-size: 11px; letter-spacing: .1em; }
+.sc-queue-heading { padding: 24px 20px 16px; }
+.sc-queue-heading h1 { font-size: 25px; }
+.sc-queue-heading div > span { font-size: 12px; }
+.sc-search { height: 42px; margin: 0 16px 14px; padding: 0 13px; }
+.sc-search input { font-size: 14px; }
+.sc-queue-list { padding: 0 10px 18px; }
+.sc-patient-card { min-height: 90px; padding: 15px 12px; }
+.sc-patient-time { top: 16px; right: 12px; font-size: 11px; }
+.sc-patient-card .sc-avatar { width: 44px; height: 44px; font-size: 12px; }
+.sc-patient-card-body { padding-right: 42px; }
+.sc-patient-card-body > strong { font-size: 16px; }
+.sc-patient-card-body > small { margin-top: 3px; font-size: 11px; }
+.sc-card-measure { margin-top: 9px; font-size: 13px; }
+.sc-card-measure small { font-size: 10px; }
+.sc-card-measure em,.sc-status { padding: 4px 7px; font-size: 10px; }
+.sc-no-results { font-size: 14px; }
+
+.sc-empty-chart > p { font-size: 15px; }
+.sc-empty-note { font-size: 12px; }
+.sc-chart-header { min-height: 100px; padding: 18px clamp(24px, 3vw, 38px); }
+.sc-chart-avatar { width: 54px; height: 54px; font-size: 14px; }
+.sc-chart-identity h1 { font-size: clamp(28px, 2.4vw, 34px); }
+.sc-chart-identity p { font-size: 12px; }
+.sc-visit-state { font-size: 12px; }
+.sc-visit-state small { font-size: 10px; }
+.sc-chart-layout { grid-template-columns: minmax(0, 1fr) minmax(280px, 320px); gap: 20px; padding: 24px clamp(24px, 3vw, 38px) 38px; }
+.sc-primary-vital > span { font-size: 11px; }
+.sc-primary-vital > strong { font-size: 32px; }
+.sc-primary-vital > small { font-size: 10px; }
+.sc-data-field > span { font-size: 11px; }
+.sc-data-field > strong { font-size: 14px; }
+.sc-data-field > strong.measure { font-size: 19px; }
+.sc-chart-section h2 { font-size: 17px; }
+.sc-chart-section header p { font-size: 11px; }
+.sc-clinical-note { font-size: 14px; line-height: 1.65; }
+.sc-flag-list span { padding: 8px 11px; font-size: 12px; }
+.sc-clear-state strong { font-size: 13px; }
+.sc-clear-state small { font-size: 11px; }
+
+.sc-review-heading strong { font-size: 16px; }
+.sc-review-heading small { font-size: 11px; }
+.sc-review-steps li { min-height: 60px; }
+.sc-review-steps strong { font-size: 13px; }
+.sc-review-steps small { margin-top: 4px; font-size: 11px; line-height: 1.35; }
+.sc-analysis-pulse { font-size: 12px; }
+.sc-review-ready p strong,.sc-review-error strong { font-size: 13px; }
+.sc-review-ready p span,.sc-review-error p { font-size: 11px; }
+.sc-review-ready button,.sc-review-error button { padding: 10px; font-size: 12px; }
+.sc-review-disclaimer { font-size: 10px; }
+
+@media (max-width: 1100px) {
+  .showcase-shell { grid-template-columns: 340px minmax(0, 1fr); }
+  .sc-chart-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 780px) {
+  .showcase-shell { grid-template-columns: 1fr; grid-template-rows: 68px auto minmax(500px, 1fr); }
+  .showcase-shell .sc-topbar { grid-column: 1; }
+  .sc-topbar-title { display: none; }
+  .sc-clinic-mark { min-width: 0; }
+  .showcase-shell .sc-patient-queue { grid-column: 1; grid-row: 2; }
+  .showcase-shell .sc-empty-chart,.showcase-shell .sc-chart { grid-column: 1; grid-row: 3; }
+}

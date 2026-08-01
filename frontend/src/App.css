@@ -1,4 +1,4 @@
-﻿@import './styles/app-shell.css';
+@import './styles/app-shell.css';
 @import './styles/canvas.css';
 @import './styles/node-details.css';
 @import './styles/scrollbars.css';
@@ -15,3 +15,4 @@
 @import './styles/drug-tolerance-shell.css';
 @import './styles/drug-tolerance-controls.css';
 @import './styles/error-boundary.css';
+@import './showcase/showcase.css';

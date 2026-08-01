@@ -9,6 +9,7 @@ import { useTreeGraphs } from './hooks/useTreeGraphs'
 import { DrugToleranceCheckbox } from './panels/DrugToleranceCheckbox'
 import { EmergencyScenarioCheckbox } from './panels/EmergencyScenarioCheckbox'
 import { TraversalResultModal } from './panels/TraversalResultModal'
+import { ShowcasePage } from './showcase/ShowcasePage'
 import './App.css'
 
 // Stable identity so an idle render (no highlighted nodes) doesn't hand
@@ -16,7 +17,7 @@ import './App.css'
 // highlight-sync effect on every unrelated App re-render.
 const EMPTY_HIGHLIGHTS: ReadonlySet<string> = new Set()
 
-function App() {
+function WorkbenchApp() {
   const { theme, toggleTheme } = useTheme()
   const [showDashboard, setShowDashboard] = useState(false)
   const graphs = useTreeGraphs()
@@ -103,6 +104,11 @@ function App() {
       )}
     </div>
   )
+}
+
+function App() {
+  const path = window.location.pathname.replace(/\/+$/, '') || '/'
+  return path === '/showcase' ? <ShowcasePage /> : <WorkbenchApp />
 }
 
 export default App
