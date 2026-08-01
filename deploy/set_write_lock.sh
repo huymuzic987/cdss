@@ -3,6 +3,7 @@
 # The marker is host-persistent and promote_stack.sh preserves it while routing
 # changes, so writes remain blocked through candidate and public verification.
 set -euo pipefail
+source "$(dirname "$0")/lib.sh"
 
 MODE="${1:?usage: set_write_lock.sh <enable|disable|status>}"
 VERSION_FILE="deploy/.current_version"
@@ -18,10 +19,9 @@ case "$MODE" in
         ;;
 esac
 
-set -a
-source .env
-set +a
-APP_PORT="${PUBLIC_APP_PORT:-${APP_PORT:-3000}}"
+validate_dotenv_file .env
+DOTENV_APP_PORT="$(dotenv_get .env APP_PORT || true)"
+APP_PORT="${PUBLIC_APP_PORT:-${DOTENV_APP_PORT:-3000}}"
 
 current_version() {
     cat "$VERSION_FILE" 2>/dev/null || true

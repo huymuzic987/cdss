@@ -44,3 +44,77 @@ run_timed() {
     printf 'CDSS_TIMING\t%s\t%s\t%s\n' "$operation_name" "$elapsed" "$status"
     return "$status"
 }
+
+# Validate the dotenv subset used by Docker Compose without executing it as
+# shell code. Duplicate keys and malformed quoting fail closed.
+validate_dotenv_file() {
+    local env_file="${1:?validate_dotenv_file <file>}"
+    local line line_number=0 key value first last
+    declare -A seen_keys=()
+
+    if [ ! -f "$env_file" ]; then
+        echo "ERROR: environment file does not exist: $env_file" >&2
+        return 1
+    fi
+
+    while IFS= read -r line || [ -n "$line" ]; do
+        line_number=$((line_number + 1))
+        line="${line%$'\r'}"
+        [ -z "$line" ] && continue
+        [[ "$line" == \#* ]] && continue
+        if [[ ! "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; then
+            echo "ERROR: malformed dotenv entry at ${env_file}:${line_number}." >&2
+            return 1
+        fi
+        key="${line%%=*}"
+        value="${line#*=}"
+        if [ -n "${seen_keys[$key]+present}" ]; then
+            echo "ERROR: duplicate dotenv key '$key' in $env_file." >&2
+            return 1
+        fi
+        seen_keys["$key"]=1
+        if [ -n "$value" ]; then
+            first="${value:0:1}"
+            last="${value: -1}"
+            if { [ "$first" = "'" ] || [ "$first" = '"' ]; } \
+                && [ "$last" != "$first" ]; then
+                echo "ERROR: unterminated quoted value for '$key' in $env_file." >&2
+                return 1
+            fi
+        fi
+    done < "$env_file"
+}
+
+dotenv_get() {
+    local env_file="${1:?dotenv_get <file> <key>}"
+    local requested_key="${2:?dotenv_get <file> <key>}"
+    local line value first last
+
+    while IFS= read -r line || [ -n "$line" ]; do
+        line="${line%$'\r'}"
+        [[ "$line" == "$requested_key="* ]] || continue
+        value="${line#*=}"
+        if [ -n "$value" ]; then
+            first="${value:0:1}"
+            last="${value: -1}"
+            if { [ "$first" = "'" ] || [ "$first" = '"' ]; } \
+                && [ "$last" = "$first" ]; then
+                value="${value:1:${#value}-2}"
+            fi
+        fi
+        printf '%s' "$value"
+        return 0
+    done < "$env_file"
+    return 1
+}
+
+dotenv_require() {
+    local env_file="$1"
+    local requested_key="$2"
+    local value
+    if ! value="$(dotenv_get "$env_file" "$requested_key")" || [ -z "$value" ]; then
+        echo "ERROR: required dotenv key '$requested_key' is missing or empty in $env_file." >&2
+        return 1
+    fi
+    printf '%s' "$value"
+}

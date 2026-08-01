@@ -21,9 +21,9 @@ VERSION_FILE="deploy/.current_version"
 OLD_VERSION="$(cat "$VERSION_FILE" 2>/dev/null || true)"
 resolve_compose "$PROJECT"
 
-set -a
-source .env
-set +a
+validate_dotenv_file .env
+POSTGRES_USER="$(dotenv_require .env POSTGRES_USER)"
+POSTGRES_DB="$(dotenv_require .env POSTGRES_DB)"
 
 echo "Provisioning new stack ${PROJECT}..."
 run_timed "candidate-database-start" $COMPOSE up -d db

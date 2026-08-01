@@ -19,10 +19,9 @@ DRAIN_FILE="deploy/.router_drain_pending"
 CURRENT_VERSION="$(cat "$VERSION_FILE" 2>/dev/null || echo "")"
 ROUTER_ID="$(docker ps -aq --filter 'name=^/cdss-router$' | head -n 1)"
 
-set -a
-source .env
-set +a
-APP_PORT="${PUBLIC_APP_PORT:-${APP_PORT:-3000}}"
+validate_dotenv_file .env
+DOTENV_APP_PORT="$(dotenv_get .env APP_PORT || true)"
+APP_PORT="${PUBLIC_APP_PORT:-${DOTENV_APP_PORT:-3000}}"
 
 remove_project_service_containers() {
     local project="$1"

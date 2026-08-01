@@ -96,8 +96,8 @@ in this file - `docker-compose.prod.yml` builds it internally from the
 | `CDSS_MAX_STEPS` | `300` | Traversal safety limit, same meaning as local dev. |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | `cdss` / `change-me` / `cdss` | Change the password before first real deploy. |
 | `APP_PORT` | `3000` | Public host port owned continuously by the stable `cdss-router`. **The actual Jenkins deployment overrides this to `3001`** (see below). |
-| `BACKUP_HOST_DIR` | `./persistent-backups` | Resolved relative to `/opt/webapps/cdss` on the target host. A real host directory, not a Docker volume - Jenkins' rsync deploy step excludes it from `--delete`, and files in it are readable by other SSH users on that host. |
-| `BACKUP_TIMEZONE` / `BACKUP_RETENTION` / `BACKUP_FILE_MODE` | `Asia/Ho_Chi_Minh` / `10` / `0644` | Backup daemon config, see below. |
+| `BACKUP_HOST_DIR` | `./persistent-backups` | Resolved relative to `/opt/webapps/cdss` on the target host. A real host directory, not a Docker volume; Jenkins excludes it from `rsync --delete`. The directory is mode 0700. |
+| `BACKUP_TIMEZONE` / `BACKUP_RETENTION` / `BACKUP_FILE_MODE` | `Asia/Ho_Chi_Minh` / `10` / `0600` | Backup daemon config; SQL dumps are owner-readable only. |
 
 ## The Jenkins pipeline (`Jenkinsfile`)
 
@@ -145,9 +145,12 @@ Stages, in order:
    `deploy/.build_state`, `deploy/.router_drain_pending`,
    `deploy/.write_lock`) and
    `persistent-backups`.
-5. **Inject Environment**: copies the `cdss-prod-env` Jenkins credential
-   (a file) to the host as `.env.new`, strips CRLF line endings, moves it to
-   `.env`.
+5. **Inject Environment**: streams the `cdss-prod-env` Jenkins credential
+   under remote `umask 077`, strips CRLF, sets mode 0600, and validates
+   required keys, duplicates, quoting, production mode, placeholder password,
+   numeric values, and backup mode. Only a valid `.env.new` atomically
+   replaces `.env`. Deployment scripts read individual values as dotenv
+   data through `deploy/lib.sh`; they never source the file as shell code.
 6. **Ensure Live Route**: repairs and verifies the public route to the version
    in `deploy/.current_version`, recreating a missing dedicated router before
    lengthy build or migration work begins.

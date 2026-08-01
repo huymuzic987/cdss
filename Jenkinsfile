@@ -107,6 +107,7 @@ pipeline {
                              deploy/ensure_live_route.sh \
                              deploy/render_router_config.sh \
                              deploy/set_write_lock.sh \
+                             deploy/validate_env.sh \
                              deploy/run_quality_gates.sh \
                              deploy/run_frontend_quality_gates.sh \
                              scripts/generate_pregnancy_fhir_presets.py; do
@@ -190,9 +191,17 @@ pipeline {
                 withCredentials([file(credentialsId: 'cdss-prod-env', variable: 'ENV_FILE')]) {
                     sshagent(['ubuntu-vm-jenkins']) {
                         sh '''
-                            scp ${SSH_OPTS} $ENV_FILE ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/.env.new
                             ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                                umask 077
+                                cat > ${DEPLOY_PATH}/.env.new
+                            " < "$ENV_FILE"
+                            ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                                set -e
                                 sed -i 's/\\r\$//' ${DEPLOY_PATH}/.env.new
+                                chmod 0600 ${DEPLOY_PATH}/.env.new
+                                cd ${DEPLOY_PATH}
+                                chmod +x deploy/validate_env.sh
+                                ./deploy/validate_env.sh .env.new
                                 mv -f ${DEPLOY_PATH}/.env.new ${DEPLOY_PATH}/.env
                             "
                         '''

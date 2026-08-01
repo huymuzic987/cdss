@@ -99,3 +99,13 @@ def test_deployment_evidence_contains_no_environment_file() -> None:
     assert "stage('Record Deployment Evidence')" in JENKINSFILE
     assert ".ci-reports/deployment/state.txt" in JENKINSFILE
     assert "artifacts: '.ci-reports/**/*,frontend/.ci-reports/**/*'" in JENKINSFILE
+
+
+def test_environment_is_private_and_validated_before_replacement() -> None:
+    private_create = JENKINSFILE.find("umask 077")
+    validate = JENKINSFILE.find("./deploy/validate_env.sh .env.new")
+    replace = JENKINSFILE.find("mv -f ${DEPLOY_PATH}/.env.new")
+
+    assert private_create >= 0
+    assert validate > private_create
+    assert replace > validate

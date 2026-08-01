@@ -12,9 +12,10 @@ export VERSION
 resolve_compose "cdss-${VERSION}"
 STATE_FILE="deploy/.build_state"
 
-set -a
-source .env
-set +a
+validate_dotenv_file .env
+VITE_TLDRAW_LICENSE_KEY="$(dotenv_get .env VITE_TLDRAW_LICENSE_KEY || true)"
+PRODUCTION="$(dotenv_get .env PRODUCTION || true)"
+PRODUCTION="${PRODUCTION:-1}"
 
 hash_files() {
     # Include relative filenames as well as contents so renames are detected.

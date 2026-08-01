@@ -31,10 +31,9 @@ DEPLOY_GIT_COMMIT="${DEPLOY_GIT_COMMIT:-unknown}"
 export VERSION="$NEW_VERSION"
 resolve_compose "$NEW_PROJECT"
 
-set -a
-source .env
-set +a
-APP_PORT="${PUBLIC_APP_PORT:-${APP_PORT:-3000}}"
+validate_dotenv_file .env
+DOTENV_APP_PORT="$(dotenv_get .env APP_PORT || true)"
+APP_PORT="${PUBLIC_APP_PORT:-${DOTENV_APP_PORT:-3000}}"
 
 find_port_containers() {
     # Matches the "0.0.0.0:3001->80/tcp, :::3001->80/tcp" style Ports column.
