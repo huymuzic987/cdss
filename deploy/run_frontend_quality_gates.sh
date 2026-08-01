@@ -5,6 +5,7 @@
 set -eu
 
 PNPM_VERSION="${PNPM_VERSION:-9.15.9}"
+PNPM_STORE_DIR="${PNPM_STORE_DIR:-/tmp/pnpm-store}"
 
 run_gate() {
     gate_name="$1"
@@ -35,7 +36,7 @@ node -e "
 
 node --version
 pnpm --version
-pnpm config set store-dir /tmp/pnpm-store
+pnpm config set store-dir "$PNPM_STORE_DIR"
 pnpm install --frozen-lockfile
 
 run_gate "Vitest unit/component tests" pnpm exec vitest run

@@ -10,8 +10,25 @@
 # on the agent directly.
 set -euo pipefail
 
-NETWORK="cdss-ci-net"
-POSTGRES_CONTAINER="cdss-ci-postgres"
+RAW_CI_RUN_ID="${BUILD_TAG:-local-$$}"
+RAW_CI_JOB_ID="${JOB_NAME:-cdss}"
+CI_RUN_ID="$(
+    printf '%s' "$RAW_CI_RUN_ID" \
+        | tr '[:upper:]' '[:lower:]' \
+        | tr -c 'a-z0-9_.-' '-' \
+        | cut -c1-48
+)"
+CI_JOB_ID="$(
+    printf '%s' "$RAW_CI_JOB_ID" \
+        | tr '[:upper:]' '[:lower:]' \
+        | tr -c 'a-z0-9_.-' '-' \
+        | cut -c1-48
+)"
+NETWORK="cdss-ci-${CI_RUN_ID}-net"
+POSTGRES_CONTAINER="cdss-ci-${CI_RUN_ID}-postgres"
+UV_CACHE_VOLUME="cdss-ci-uv-cache-py312"
+UV_ENV_VOLUME="cdss-ci-uv-env-py312"
+PNPM_STORE_VOLUME="cdss-ci-pnpm-store-v9"
 
 # Hardcoded to 54321: cdss.testing.database's fail-closed safety guard
 # rejects any test database target whose port isn't exactly this value (it
@@ -73,14 +90,52 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Defensive: clear out anything left behind by a previous run that never
-# reached its own cleanup (e.g. the agent was killed mid-build).
+# A hard-killed build can leave its detached PostgreSQL container and network.
+# Builds of this Jenkins job are non-concurrent, so job-scoped leftovers are
+# safe to remove before this build creates its own uniquely named resources.
+if [ -n "${BUILD_TAG:-}" ]; then
+    while IFS= read -r stale_container; do
+        [ -z "$stale_container" ] \
+            || docker rm -f "$stale_container" > /dev/null 2>&1 \
+            || true
+    done < <(docker ps -aq --filter "label=io.cdss.ci.job=$CI_JOB_ID")
+    while IFS= read -r stale_network; do
+        [ -z "$stale_network" ] \
+            || docker network rm "$stale_network" > /dev/null 2>&1 \
+            || true
+    done < <(docker network ls -q --filter "label=io.cdss.ci.job=$CI_JOB_ID")
+fi
+
+# Defensive cleanup also handles a retry using the same Jenkins build tag.
 cleanup
 
-docker network create "$NETWORK" > /dev/null
+echo "Preparing persistent dependency caches..."
+docker volume create "$UV_CACHE_VOLUME" > /dev/null
+docker volume create "$UV_ENV_VOLUME" > /dev/null
+docker volume create "$PNPM_STORE_VOLUME" > /dev/null
+docker run --rm \
+    -v "$UV_CACHE_VOLUME":/uv-cache \
+    -v "$UV_ENV_VOLUME":/venv \
+    -e CACHE_UID="$HOST_UID" \
+    -e CACHE_GID="$HOST_GID" \
+    alpine:3 \
+    sh -c '
+        for cache_dir in /uv-cache /venv; do
+            if [ "$(stat -c %u "$cache_dir")" != "$CACHE_UID" ]; then
+                chown -R "$CACHE_UID:$CACHE_GID" "$cache_dir"
+            fi
+        done
+    '
+
+docker network create \
+    --label "io.cdss.ci.job=$CI_JOB_ID" \
+    --label "io.cdss.ci.run=$CI_RUN_ID" \
+    "$NETWORK" > /dev/null
 
 echo "Starting disposable PostgreSQL for the database-backed test suite..."
 timed "test-postgres-start" docker run -d --name "$POSTGRES_CONTAINER" \
+    --label "io.cdss.ci.job=$CI_JOB_ID" \
+    --label "io.cdss.ci.run=$CI_RUN_ID" \
     --network "$NETWORK" --network-alias postgres \
     -e POSTGRES_USER="$PG_USER" -e POSTGRES_PASSWORD="$PG_PASSWORD" -e POSTGRES_DB="$PG_ADMIN_DB" \
     postgres:16 -p "$TEST_DB_PORT"
@@ -126,8 +181,10 @@ EOF
 echo "Generating deterministic pregnancy FHIR catalogs..."
 timed "pregnancy-fhir-catalog-and-migration" docker run --rm --network "$NETWORK" \
     -v "$PWD":/workspace -w /workspace \
+    -v "$UV_CACHE_VOLUME":/uv-cache \
+    -v "$UV_ENV_VOLUME":/venv \
     -e DATABASE_URL="$TEST_DATABASE_URL" \
-    -e HOME=/tmp -e UV_CACHE_DIR=/tmp/uv-cache -e UV_PROJECT_ENVIRONMENT=/tmp/venv \
+    -e HOME=/tmp -e UV_CACHE_DIR=/uv-cache -e UV_PROJECT_ENVIRONMENT=/venv \
     --user "${HOST_UID}:${HOST_GID}" \
     "$UV_IMAGE" \
     sh -c "
@@ -155,11 +212,14 @@ seed_test_database() {
 }
 timed "test-database-seed" seed_test_database
 
-echo "Running backend quality gates: pytest, ruff check, ruff format --check, pyright..."
-timed "backend-quality-gates-total" docker run --rm --network "$NETWORK" \
+run_backend_quality_gates() {
+    echo "Running backend quality gates: pytest, ruff check, ruff format --check, pyright..."
+    timed "backend-quality-gates-total" docker run --rm --network "$NETWORK" \
     -v "$PWD":/workspace -w /workspace \
+    -v "$UV_CACHE_VOLUME":/uv-cache \
+    -v "$UV_ENV_VOLUME":/venv \
     -e DATABASE_URL="$TEST_DATABASE_URL" \
-    -e HOME=/tmp -e UV_CACHE_DIR=/tmp/uv-cache -e UV_PROJECT_ENVIRONMENT=/tmp/venv \
+    -e HOME=/tmp -e UV_CACHE_DIR=/uv-cache -e UV_PROJECT_ENVIRONMENT=/venv \
     --user "${HOST_UID}:${HOST_GID}" \
     "$UV_IMAGE" \
     sh -c "
@@ -182,14 +242,44 @@ timed "backend-quality-gates-total" docker run --rm --network "$NETWORK" \
         timed backend-ruff-format uv run ruff format --check
         timed backend-pyright uv run pyright
     "
+}
 
-echo "Running frontend quality gates: Vitest, Oxlint, TypeScript, Vite build..."
-timed "frontend-quality-gates-total" docker run --rm \
+run_frontend_quality_gates() {
+    echo "Running frontend quality gates: Vitest, Oxlint, TypeScript, Vite build..."
+    timed "frontend-quality-gates-total" docker run --rm \
     -v "$PWD/frontend":/workspace -w /workspace \
     -v "$PWD/deploy/run_frontend_quality_gates.sh":/quality-gate.sh:ro \
+    -v "$PNPM_STORE_VOLUME":/pnpm/store \
     -e HOME=/tmp \
     -e PNPM_VERSION="$PNPM_VERSION" \
+    -e PNPM_STORE_DIR=/pnpm/store \
     "$NODE_IMAGE" \
     sh /quality-gate.sh
+}
+
+echo "Running backend and frontend quality gates concurrently..."
+run_backend_quality_gates &
+backend_gate_pid=$!
+run_frontend_quality_gates &
+frontend_gate_pid=$!
+
+backend_gate_status=0
+frontend_gate_status=0
+if wait "$backend_gate_pid"; then
+    echo "Backend quality-gate branch passed."
+else
+    backend_gate_status=$?
+    echo "ERROR: backend quality-gate branch failed with exit code $backend_gate_status." >&2
+fi
+if wait "$frontend_gate_pid"; then
+    echo "Frontend quality-gate branch passed."
+else
+    frontend_gate_status=$?
+    echo "ERROR: frontend quality-gate branch failed with exit code $frontend_gate_status." >&2
+fi
+
+if [ "$backend_gate_status" -ne 0 ] || [ "$frontend_gate_status" -ne 0 ]; then
+    exit 1
+fi
 
 echo "All quality gates passed."
