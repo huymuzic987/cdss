@@ -110,6 +110,7 @@ def test_environment_is_private_and_validated_before_replacement() -> None:
     assert private_create >= 0
     assert validate > private_create
     assert replace > validate
+    assert "withCredentials([file(credentialsId: 'cdss', variable: 'ENV_FILE')])" in JENKINSFILE
 
 
 def test_deployments_use_isolated_release_directories_and_shared_state() -> None:
@@ -118,6 +119,9 @@ def test_deployments_use_isolated_release_directories_and_shared_state() -> None
     assert f"${{TARGET_SERVER}}:{release_path}/" in JENKINSFILE
     assert JENKINSFILE.count(f"cd {release_path}") >= 9
     assert "ln -sfn ${DEPLOY_PATH}/shared/.env" in JENKINSFILE
-    assert r"\$release_path/deploy/state" in JENKINSFILE
+    assert f"{release_path}/.env" in JENKINSFILE
+    assert f"{release_path}/persistent-backups" in JENKINSFILE
+    assert f"{release_path}/deploy/state" in JENKINSFILE
+    assert r"\$release_path" not in JENKINSFILE
     assert "${DEPLOY_PATH}/shared/.deployment_state" in JENKINSFILE
     assert "./deploy/prune_release_dirs.sh" in JENKINSFILE
