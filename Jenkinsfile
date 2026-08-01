@@ -85,7 +85,8 @@ pipeline {
                         exit 1
                     fi
                     for required_command in \
-                        bash docker git ssh scp rsync curl awk sed grep tr tail seq cut sha256sum; do
+                        bash docker git ssh scp rsync curl awk sed grep tr tail seq cut \
+                        sha256sum find sort df nproc; do
                         if ! command -v "$required_command" > /dev/null 2>&1; then
                             echo "ERROR: Jenkins agent is missing required command: $required_command" >&2
                             exit 1

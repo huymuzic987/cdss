@@ -36,7 +36,7 @@ Multi-stage build, context is the **repo root** (not `src/`), built with
 
 Also multi-stage:
 
-1. **`builder`** (`node:20-alpine`): enables `pnpm@9` via corepack, installs
+1. **`builder`** (`node:24.18.1-alpine`): enables `pnpm@9.15.9` via corepack, installs
    with `pnpm install --frozen-lockfile` (cached), copies source, then runs
    `pnpm build`. Two build ARGs are exported as ENV so Vite inlines them at
    *build* time: `VITE_TLDRAW_LICENSE_KEY` and `VITE_PRODUCTION` (default
@@ -268,12 +268,18 @@ Builds only what changed. Hashes the backend's build inputs
 (`Dockerfile.backend`, `pyproject.toml`, `uv.lock`, `src/`, `alembic/`,
 `data/`, ...) and the frontend's (everything under `frontend/` excluding
 `node_modules`/`dist`, plus the two Vite build args) via `sha256sum`,
-compares against a persisted state file (`deploy/.build_state`). If a
+compares against a persisted state file (`deploy/state/.build_state`). If a
 service's hash is unchanged and its previous version's image still exists,
 it's retagged (`docker image tag`) instead of rebuilt; otherwise
 `$COMPOSE build <service>` runs. When both services changed they always build
-concurrently, capped at two Compose workers. State is written atomically
-(temp file then `mv`).
+concurrently when the host has at least 4 GiB available memory and two CPUs;
+otherwise Compose is capped at one worker. Before a required build, the script
+fails fast unless Docker storage has 10 GiB free and the host has 2 GiB
+available memory (both thresholds are configurable), records a
+`CDSS_BUILD_CAPACITY` line, and prints `docker system df`. BuildKit plain
+progress makes cache hits and slow layers visible in Jenkins. State is written
+atomically (temp file then `mv`). The script does not automatically run a
+host-wide builder prune because the Docker daemon may serve other projects.
 
 ### `backup_current_db.sh`
 
