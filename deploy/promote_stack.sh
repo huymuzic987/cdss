@@ -8,24 +8,32 @@
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
-NEW_VERSION="${1:?usage: promote_stack.sh <new_version> [promote|route-only]}"
+NEW_VERSION="${1:?usage: promote_stack.sh <new_version> [promote|rollback|route-only]}"
 MODE="${2:-promote}"
-if [ "$MODE" != "promote" ] && [ "$MODE" != "route-only" ]; then
-    echo "ERROR: mode must be promote or route-only." >&2
+if [ "$MODE" != "promote" ] \
+    && [ "$MODE" != "rollback" ] \
+    && [ "$MODE" != "route-only" ]; then
+    echo "ERROR: mode must be promote, rollback, or route-only." >&2
     exit 2
 fi
 NEW_PROJECT="cdss-${NEW_VERSION}"
-VERSION_FILE="deploy/.current_version"
-DRAIN_FILE="deploy/.router_drain_pending"
+VERSION_FILE="deploy/state/.current_version"
+STATE_FILE="deploy/state/.deployment_state"
+DRAIN_FILE="deploy/state/.router_drain_pending"
+WRITE_LOCK_FILE="deploy/state/.write_lock"
 ROUTER_NAME="cdss-router"
+OLD_VERSION="$(cat "$VERSION_FILE" 2>/dev/null || true)"
+OLD_GIT_COMMIT="$(
+    sed -n 's/^git_commit=//p' "$STATE_FILE" 2>/dev/null | head -n 1 || true
+)"
+DEPLOY_GIT_COMMIT="${DEPLOY_GIT_COMMIT:-unknown}"
 
 export VERSION="$NEW_VERSION"
 resolve_compose "$NEW_PROJECT"
 
-set -a
-source .env
-set +a
-APP_PORT="${PUBLIC_APP_PORT:-${APP_PORT:-3000}}"
+validate_dotenv_file .env
+DOTENV_APP_PORT="$(dotenv_get .env APP_PORT || true)"
+APP_PORT="${PUBLIC_APP_PORT:-${DOTENV_APP_PORT:-3000}}"
 
 find_port_containers() {
     # Matches the "0.0.0.0:3001->80/tcp, :::3001->80/tcp" style Ports column.
@@ -109,9 +117,13 @@ CONNECTED_NEW_NETWORK=false
 PROMOTION_COMPLETE=false
 OLD_CONFIG=""
 NEW_CONFIG=""
+STATE_TMP=""
+VERSION_TMP=""
 cleanup() {
     [ -z "$OLD_CONFIG" ] || rm -f "$OLD_CONFIG"
     [ -z "$NEW_CONFIG" ] || rm -f "$NEW_CONFIG"
+    [ -z "$STATE_TMP" ] || rm -f "$STATE_TMP"
+    [ -z "$VERSION_TMP" ] || rm -f "$VERSION_TMP"
     if [ "$PROMOTION_COMPLETE" != "true" ] \
         && [ "$CONNECTED_NEW_NETWORK" = "true" ]; then
         docker network disconnect "$NEW_NETWORK" "$ROUTER_NAME" > /dev/null 2>&1 || true
@@ -137,27 +149,13 @@ OLD_CONFIG="$(mktemp)"
 NEW_CONFIG="$(mktemp)"
 
 docker cp "${ROUTER_NAME}:/etc/nginx/conf.d/default.conf" "$OLD_CONFIG"
-cat > "$NEW_CONFIG" <<EOF
-server {
-    listen 80;
-    server_name _;
-    add_header X-CDSS-Release "${NEW_VERSION}" always;
-
-    # Docker's embedded DNS is queried repeatedly, so a frontend container
-    # restart does not leave nginx pinned to its former IP address.
-    resolver 127.0.0.11 ipv6=off valid=10s;
-    set \$release_upstream http://${NEW_FRONTEND_ALIAS};
-
-    location / {
-        proxy_pass \$release_upstream;
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-}
-EOF
+write_lock_enabled=false
+[ ! -f "$WRITE_LOCK_FILE" ] || write_lock_enabled=true
+bash deploy/render_router_config.sh \
+    "$NEW_VERSION" \
+    "$NEW_FRONTEND_ALIAS" \
+    "$write_lock_enabled" \
+    > "$NEW_CONFIG"
 
 rollback_router() {
     echo "Restoring the previous router configuration..."
@@ -207,8 +205,34 @@ if [ "$MODE" = "promote" ]; then
         rollback_router
         exit 1
     fi
+fi
 
-    echo "$NEW_VERSION" > "$VERSION_FILE"
+if [ "$MODE" = "promote" ] || [ "$MODE" = "rollback" ]; then
+    commit_deployment_state() {
+        local promoted_at
+        promoted_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        STATE_TMP="${STATE_FILE}.tmp.$$"
+        VERSION_TMP="${VERSION_FILE}.tmp.$$"
+        {
+            printf 'format_version=1\n'
+            printf 'current_version=%s\n' "$NEW_VERSION"
+            printf 'previous_version=%s\n' "$OLD_VERSION"
+            printf 'git_commit=%s\n' "$DEPLOY_GIT_COMMIT"
+            printf 'previous_git_commit=%s\n' "$OLD_GIT_COMMIT"
+            printf 'promoted_at=%s\n' "$promoted_at"
+            printf 'status=promoted\n'
+        } > "$STATE_TMP" || return 1
+        printf '%s\n' "$NEW_VERSION" > "$VERSION_TMP" || return 1
+        mv "$STATE_TMP" "$STATE_FILE" || return 1
+        # The legacy version file remains the commit point for existing scripts.
+        # It is replaced last, after the richer state is durable.
+        mv "$VERSION_TMP" "$VERSION_FILE"
+    }
+    if ! commit_deployment_state; then
+        echo "ERROR: could not commit deployment state; restoring the previous route." >&2
+        rollback_router
+        exit 1
+    fi
 else
     echo "Live route for cdss-${NEW_VERSION} repaired and verified."
 fi
