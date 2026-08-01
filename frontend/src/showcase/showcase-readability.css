@@ -1,0 +1,28 @@
+.sc-clinic-mark small,.sc-topbar-title span { font-size: 13px; }
+.sc-queue-heading div > span { font-size: 13px; }
+.sc-eyebrow { font-size: 12px; }
+.sc-search input { font-size: 15px; }
+
+.sc-patient-card { min-height: 98px; padding-top: 16px; padding-bottom: 16px; }
+.sc-patient-time { top: 17px; font-size: 12px; }
+.sc-patient-card-body > small { margin-top: 4px; font-size: 13px; line-height: 1.35; }
+.sc-card-measure { margin-top: 10px; font-size: 14px; }
+.sc-card-measure small { font-size: 12px; }
+.sc-card-measure em,.sc-status { font-size: 11px; }
+
+.sc-chart-identity p { font-size: 14px; line-height: 1.4; }
+.sc-visit-state { font-size: 13px; }
+.sc-visit-state small { font-size: 11px; }
+.sc-primary-vital > span { font-size: 12px; }
+.sc-primary-vital > small { font-size: 12px; }
+.sc-data-field > span { font-size: 12px; }
+.sc-data-field > strong { font-size: 15px; }
+.sc-chart-section header p { font-size: 12px; }
+.sc-flag-list span { font-size: 13px; }
+.sc-clear-state small { font-size: 12px; }
+
+.sc-review-heading small { font-size: 12px; }
+.sc-review-steps small { font-size: 12px; }
+.sc-review-ready p span,.sc-review-error p { font-size: 12px; }
+.sc-review-disclaimer { font-size: 11px; }
+

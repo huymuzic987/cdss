@@ -1,0 +1,110 @@
+.showcase-shell {
+  grid-template-columns: 64px 316px minmax(0, 1fr);
+  grid-template-rows: 64px minmax(0, 1fr);
+}
+
+.showcase-shell .sc-app-rail {
+  padding: 12px 0 16px;
+  border-right: 1px solid rgba(255, 255, 255, .06);
+}
+
+.sc-rail-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px 9px 9px 3px;
+  font-size: 20px;
+}
+
+.sc-rail-links { gap: 8px; margin-top: 30px; }
+.sc-app-rail button { width: 38px; height: 38px; border-radius: 9px; }
+.sc-app-rail button.active::before { left: -13px; height: 20px; }
+
+.showcase-shell .sc-topbar {
+  padding: 0 22px;
+  border-bottom-color: var(--sc-line);
+  box-shadow: none;
+}
+
+.sc-clinic-mark { min-width: auto; gap: 8px; }
+.sc-mark-symbol { width: 30px; height: 30px; border-radius: 8px 8px 8px 3px; }
+.sc-clinic-mark strong { font-size: 16px; }
+.sc-clinic-mark small { display: none; }
+.sc-topbar-context { margin-left: 24px; padding-left: 24px; border-left: 1px solid var(--sc-line); }
+.sc-topbar-context > span,.sc-topbar-context > svg { display: none; }
+.sc-topbar-context strong { font-size: 11px; font-weight: 650; }
+
+.sc-clinician { gap: 8px; }
+.sc-clinician > button { width: 32px; height: 32px; margin-right: 0; border-radius: 8px; }
+.sc-clinician-avatar { width: 32px; height: 32px; }
+.sc-clinician > span { margin-left: 2px; }
+
+.showcase-shell .sc-patient-queue {
+  border-right-color: var(--sc-line);
+  background: var(--sc-paper);
+}
+
+.sc-queue-heading { padding: 20px 18px 14px; }
+.sc-queue-heading > div { margin-top: 4px; }
+.sc-queue-heading h1 { font-size: 20px; font-weight: 650; }
+.sc-queue-heading div > span { font-size: 10px; }
+.sc-search { height: 36px; margin: 0 14px 12px; border-radius: 8px; background: var(--sc-canvas); }
+.sc-queue-list { padding: 0 8px 14px; }
+
+.sc-patient-card {
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 10px;
+  min-height: 76px;
+  padding: 12px 10px;
+  border-radius: 9px;
+  transition: border-color .12s ease, background .12s ease;
+}
+
+.sc-patient-card + .sc-patient-card { margin-top: 2px; }
+.sc-patient-card:hover { transform: none; background: color-mix(in srgb, var(--sc-teal) 5%, transparent); }
+.showcase-shell .sc-patient-card.selected {
+  border-color: color-mix(in srgb, var(--sc-teal) 38%, var(--sc-line));
+  background: color-mix(in srgb, var(--sc-teal) 9%, var(--sc-paper));
+  box-shadow: none;
+}
+.sc-patient-card.selected::before { display: none; }
+.sc-patient-time { position: absolute; top: 13px; right: 10px; padding: 0; font-size: 9px; }
+.sc-patient-card .sc-avatar { grid-column: 1; grid-row: 1; width: 40px; height: 40px; border-radius: 10px 10px 10px 4px; }
+.sc-patient-card-body { grid-column: 2; grid-row: 1; padding: 0 38px 0 0; }
+.sc-patient-card-body > strong { font-size: 14px; }
+.sc-patient-card-body > small { margin-top: 2px; }
+.sc-card-measure { justify-content: flex-start; gap: 9px; margin-top: 7px; }
+.sc-card-measure em { margin-left: auto; }
+.sc-card-chevron { display: none; }
+.sc-queue-foot { display: none; }
+
+.sc-chart-header { min-height: 88px; padding: 15px clamp(22px, 3vw, 34px); }
+.sc-chart-avatar { width: 48px; height: 48px; border-radius: 13px 13px 13px 4px; }
+.sc-chart-identity { margin-left: 13px; }
+.sc-chart-identity h1 { font-size: clamp(23px, 2vw, 28px); }
+.sc-chart-identity p { margin-top: 6px; }
+.showcase-shell .sc-visit-state { padding: 0; border: 0; background: transparent; }
+.sc-chart-layout { gap: 18px; padding: 20px clamp(22px, 3vw, 34px) 34px; }
+.sc-chart-content { gap: 13px; }
+.sc-vital-band { border-radius: 11px; box-shadow: none; }
+.showcase-shell .sc-primary-vital {
+  color: var(--sc-ink);
+  background: color-mix(in srgb, var(--sc-teal) 10%, var(--sc-paper));
+  box-shadow: inset 3px 0 var(--sc-teal);
+}
+.showcase-shell .sc-primary-vital > span,.showcase-shell .sc-primary-vital > small { color: var(--sc-muted); }
+.sc-chart-section { border-radius: 11px; box-shadow: none; }
+.sc-chart-section > header { padding: 13px 16px; }
+.sc-section-icon { width: 29px; height: 29px; border-radius: 8px; }
+
+@media (max-width: 1100px) {
+  .showcase-shell { grid-template-columns: 60px 292px minmax(0, 1fr); }
+}
+
+@media (max-width: 780px) {
+  .showcase-shell { grid-template-columns: 52px minmax(0, 1fr); grid-template-rows: 60px auto minmax(500px, 1fr); }
+  .sc-topbar-context { display: none; }
+  .sc-queue-heading { padding: 16px 14px 11px; }
+  .sc-patient-card { min-height: 74px; }
+  .sc-chart-header { padding: 14px 16px; }
+}
+

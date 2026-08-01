@@ -107,7 +107,8 @@ describe('TraversalResultModal', () => {
     expect(within(rows[4]!).getByText('Important decision path')).toBeTruthy()
     expect(rows.slice(0, 4).every((row) => row.hasAttribute('open'))).toBe(true)
     expect(rows[4]?.hasAttribute('open')).toBe(false)
-    expect(screen.getAllByText('⌄')).toHaveLength(5)
+    expect(document.querySelectorAll('.cds-section-chevron svg')).toHaveLength(1)
+    expect(screen.queryByRole('button', { name: 'Close' })).toBeNull()
   })
 
   it('uses urgency color and includes only route-changing patient data', () => {
