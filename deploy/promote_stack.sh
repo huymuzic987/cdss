@@ -17,6 +17,7 @@ fi
 NEW_PROJECT="cdss-${NEW_VERSION}"
 VERSION_FILE="deploy/.current_version"
 DRAIN_FILE="deploy/.router_drain_pending"
+WRITE_LOCK_FILE="deploy/.write_lock"
 ROUTER_NAME="cdss-router"
 
 export VERSION="$NEW_VERSION"
@@ -137,27 +138,13 @@ OLD_CONFIG="$(mktemp)"
 NEW_CONFIG="$(mktemp)"
 
 docker cp "${ROUTER_NAME}:/etc/nginx/conf.d/default.conf" "$OLD_CONFIG"
-cat > "$NEW_CONFIG" <<EOF
-server {
-    listen 80;
-    server_name _;
-    add_header X-CDSS-Release "${NEW_VERSION}" always;
-
-    # Docker's embedded DNS is queried repeatedly, so a frontend container
-    # restart does not leave nginx pinned to its former IP address.
-    resolver 127.0.0.11 ipv6=off valid=10s;
-    set \$release_upstream http://${NEW_FRONTEND_ALIAS};
-
-    location / {
-        proxy_pass \$release_upstream;
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-}
-EOF
+write_lock_enabled=false
+[ ! -f "$WRITE_LOCK_FILE" ] || write_lock_enabled=true
+bash deploy/render_router_config.sh \
+    "$NEW_VERSION" \
+    "$NEW_FRONTEND_ALIAS" \
+    "$write_lock_enabled" \
+    > "$NEW_CONFIG"
 
 rollback_router() {
     echo "Restoring the previous router configuration..."

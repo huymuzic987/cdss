@@ -72,6 +72,8 @@ pipeline {
                              deploy/promote_stack.sh deploy/prune_old_stacks.sh \
                              deploy/cleanup_failed_stack.sh \
                              deploy/ensure_live_route.sh \
+                             deploy/render_router_config.sh \
+                             deploy/set_write_lock.sh \
                              deploy/run_quality_gates.sh \
                              deploy/run_frontend_quality_gates.sh \
                              scripts/generate_pregnancy_fhir_presets.py; do
@@ -129,6 +131,7 @@ pipeline {
                             --exclude 'deploy/.current_version' \
                             --exclude 'deploy/.build_state' \
                             --exclude 'deploy/.router_drain_pending' \
+                            --exclude 'deploy/.write_lock' \
                             --exclude 'persistent-backups' \
                             ./ ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/
                     '''
@@ -163,7 +166,8 @@ pipeline {
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
                             cd ${DEPLOY_PATH}
-                            chmod +x deploy/ensure_live_route.sh deploy/promote_stack.sh
+                            chmod +x deploy/ensure_live_route.sh deploy/promote_stack.sh \
+                                deploy/render_router_config.sh
                             PUBLIC_APP_PORT=${APP_PORT} ./deploy/ensure_live_route.sh
                         "
                     '''
@@ -209,6 +213,25 @@ pipeline {
             }
         }
 
+        // Stop new mutating requests and wait for the old router workers to
+        // drain before pg_dump takes the candidate database snapshot.
+        stage('Enable Write Lock') {
+            steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
+                sshagent(['ubuntu-vm-jenkins']) {
+                    sh '''
+                        ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                            set -e
+                            cd ${DEPLOY_PATH}
+                            chmod +x deploy/set_write_lock.sh deploy/promote_stack.sh \
+                                deploy/render_router_config.sh
+                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/set_write_lock.sh enable
+                        "
+                    '''
+                }
+            }
+        }
+
         // Creates an isolated database volume, clones the live database into
         // it, then migrates and seeds it without changing tree_layouts.
         // Production remains online throughout this stage.
@@ -240,7 +263,7 @@ pipeline {
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
                             cd ${DEPLOY_PATH}
-                            chmod +x deploy/promote_stack.sh
+                            chmod +x deploy/promote_stack.sh deploy/render_router_config.sh
                             PUBLIC_APP_PORT=${APP_PORT} ./deploy/promote_stack.sh ${VERSION}
                         "
                     '''
@@ -292,6 +315,25 @@ pipeline {
                 '''
             }
         }
+
+        // Writes resume only after the promoted release is externally
+        // reachable and identifies itself as this exact build.
+        stage('Disable Write Lock') {
+            steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
+                sshagent(['ubuntu-vm-jenkins']) {
+                    sh '''
+                        ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                            set -e
+                            cd ${DEPLOY_PATH}
+                            chmod +x deploy/set_write_lock.sh deploy/promote_stack.sh \
+                                deploy/render_router_config.sh
+                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/set_write_lock.sh disable
+                        "
+                    '''
+                }
+            }
+        }
     }
 
     post {
@@ -308,8 +350,27 @@ pipeline {
                 sh '''
                     ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                         cd ${DEPLOY_PATH} 2>/dev/null || exit 0
-                        chmod +x deploy/cleanup_failed_stack.sh deploy/promote_stack.sh
+                        chmod +x deploy/cleanup_failed_stack.sh deploy/promote_stack.sh \
+                            deploy/render_router_config.sh deploy/set_write_lock.sh
                         PUBLIC_APP_PORT=${APP_PORT} ./deploy/cleanup_failed_stack.sh ${VERSION}
+                        PUBLIC_APP_PORT=${APP_PORT} ./deploy/set_write_lock.sh disable \
+                            || echo 'WARNING: write lock remains enabled because a healthy route could not be verified.'
+                    "
+                '''
+            }
+        }
+
+        aborted {
+            echo 'Deployment aborted - restoring a verified route and write-lock state.'
+            sshagent(['ubuntu-vm-jenkins']) {
+                sh '''
+                    ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                        cd ${DEPLOY_PATH} 2>/dev/null || exit 0
+                        chmod +x deploy/cleanup_failed_stack.sh deploy/promote_stack.sh \
+                            deploy/render_router_config.sh deploy/set_write_lock.sh
+                        PUBLIC_APP_PORT=${APP_PORT} ./deploy/cleanup_failed_stack.sh ${VERSION}
+                        PUBLIC_APP_PORT=${APP_PORT} ./deploy/set_write_lock.sh disable \
+                            || echo 'WARNING: write lock remains enabled because a healthy route could not be verified.'
                     "
                 '''
             }
@@ -329,10 +390,12 @@ pipeline {
                         'Ensure Live Route',
                         'Build Images',
                         'Backup Current Database',
+                        'Enable Write Lock',
                         'Provision New Stack',
                         'Promote New Stack',
                         'Prune Old Stacks',
-                        'Verify Public Endpoint'
+                        'Verify Public Endpoint',
+                        'Disable Write Lock'
                     ]
                     def buildResult = currentBuild.currentResult ?: 'UNKNOWN'
                     def activeStage = env.CDSS_CURRENT_STAGE ?: 'Pipeline initialization'

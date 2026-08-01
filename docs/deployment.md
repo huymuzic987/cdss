@@ -135,7 +135,7 @@ Stages, in order:
    excluding `.git`, `.venv`, `node_modules`, `frontend/dist`, `.env*`,
    logs/caches, `scratch`, and the deploy scripts' own runtime state files
    (`deploy/.current_version`, `deploy/.build_state`,
-   `deploy/.router_drain_pending`) and
+   `deploy/.router_drain_pending`, `deploy/.write_lock`) and
    `persistent-backups`.
 5. **Inject Environment**: copies the `cdss-prod-env` Jenkins credential
    (a file) to the host as `.env.new`, strips CRLF line endings, moves it to
@@ -145,12 +145,24 @@ Stages, in order:
    lengthy build or migration work begins.
 7. **Build Images**: `deploy/build_images.sh <version>`.
 8. **Backup Current Database**: `deploy/backup_current_db.sh`.
-9. **Provision New Stack**: `deploy/provision_stack.sh <version>`.
-10. **Promote New Stack**: `deploy/promote_stack.sh <version>`.
-11. **Prune Old Stacks**: `deploy/prune_old_stacks.sh`.
-12. **Verify Public Endpoint**: checks `https://cdss.click/` and `/health`
+9. **Enable Write Lock**: reloads the stable router with selective HTTP 503
+   responses for layout writes, FHIR imports, and dashboard seed writes. Old
+   nginx workers must drain before database cloning can begin.
+10. **Provision New Stack**: `deploy/provision_stack.sh <version>`.
+11. **Promote New Stack**: `deploy/promote_stack.sh <version>`. Promotion
+    preserves the active write-lock marker.
+12. **Prune Old Stacks**: `deploy/prune_old_stacks.sh`.
+13. **Verify Public Endpoint**: checks `https://cdss.click/` and `/health`
     from the Jenkins agent and requires `X-CDSS-Release` to match the build
     number. A host-local success can therefore no longer hide an external 502.
+14. **Disable Write Lock**: reloads and verifies the promoted route without
+    write blocking. This runs only after public verification succeeds.
+
+The write lock deliberately leaves `POST /evaluate` and all reads available.
+It blocks only the known mutating endpoints: tree-layout PUT/DELETE, FHIR
+import, and dashboard seed. Failed or aborted builds first restore a verified
+route, then disable the lock. If no healthy route can be verified, the lock
+remains enabled instead of accepting writes into an uncertain database.
 
 On success: logs `cdss running on <host>:<port> (version <version>)`. On
 failure: tears down the candidate stack only when it was not promoted. A
