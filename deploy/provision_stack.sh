@@ -107,12 +107,51 @@ echo "Applying Alembic migrations..."
 run_timed "candidate-alembic-migration" \
     $COMPOSE run --rm --no-deps backend alembic upgrade head
 
+mapfile -t EXPECTED_HEADS < <(
+    $COMPOSE run --rm --no-deps backend alembic heads \
+        | awk '/\(head\)$/ {print $1}'
+)
+if [ "${#EXPECTED_HEADS[@]}" -ne 1 ]; then
+    echo "ERROR: expected exactly one Alembic head, found ${#EXPECTED_HEADS[@]}." >&2
+    exit 1
+fi
+EXPECTED_HEAD="${EXPECTED_HEADS[0]}"
+
+LAYOUT_FINGERPRINT=""
+if [ "$SEED_MODE" = "preserve-layouts" ]; then
+    LAYOUT_FINGERPRINT="$(
+        $COMPOSE exec -T db psql \
+            -v ON_ERROR_STOP=1 \
+            -U "$POSTGRES_USER" \
+            -d "$POSTGRES_DB" \
+            --tuples-only \
+            --no-align \
+            --command="SELECT count(*)::text || ':' ||
+                md5(COALESCE(string_agg(
+                    id::text || ':' || node_positions::text || ':' || edge_layouts::text,
+                    '|' ORDER BY id
+                ), ''))
+                FROM tree_layouts;"
+    )"
+fi
+
 echo "Seeding data from backups/seed.sql (mode: ${SEED_MODE})..."
 seed_candidate_database() {
     bash deploy/seed_database.sh "$SEED_MODE" backups/seed.sql \
         | $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"
 }
 run_timed "candidate-database-seed" seed_candidate_database
+
+echo "Validating candidate schema, seed invariants, links, and preserved layouts..."
+validate_candidate_database() {
+    bash deploy/validate_candidate_db.sh \
+        "$EXPECTED_HEAD" "$SEED_MODE" "$LAYOUT_FINGERPRINT" \
+        | $COMPOSE exec -T db psql \
+            -v ON_ERROR_STOP=1 \
+            -U "$POSTGRES_USER" \
+            -d "$POSTGRES_DB"
+}
+run_timed "candidate-database-validation" validate_candidate_database
 
 echo "Starting backend and private frontend..."
 run_timed "candidate-services-start" \

@@ -166,7 +166,12 @@ Stages, in order:
 9. **Enable Write Lock**: reloads the stable router with selective HTTP 503
    responses for layout writes, FHIR imports, and dashboard seed writes. Old
    nginx workers must drain before database cloning can begin.
-10. **Provision New Stack**: `deploy/provision_stack.sh <version>`.
+10. **Provision New Stack**: `deploy/provision_stack.sh <version>`. After
+    migration and seed, it requires exactly one Alembic head, verifies the
+    database revision, authoritative minimum row counts, one START node per
+    tree, and resolvable LINK targets. For cloned production data it
+    fingerprints layouts immediately before and after seeding and requires an
+    exact match.
 11. **Promote New Stack**: `deploy/promote_stack.sh <version>`. Promotion
     preserves the active write-lock marker.
 12. **Verify Public Endpoint**: checks `https://cdss.click/` and `/health`
@@ -308,11 +313,14 @@ Creates a fully isolated new stack **without disrupting the live one**:
 starts the new stack's `db`, waits for `pg_isready`, and - if an old
 live version is recorded - clones it via a **streamed `pg_dump` piped
 directly into the new `db`'s `psql`** (a transactionally consistent clone
-taken while production keeps serving traffic). Then runs
-`alembic upgrade head` via a one-off `backend` container, seeds via
-`deploy/seed_database.sh`, and finally starts both the new `backend` and its
-private `frontend`. Both must pass internal health checks before promotion;
-neither binds the public host port.
+taken while the deployment write lock prevents new mutations). Then runs
+`alembic upgrade head` via a one-off `backend` container and seeds via
+`deploy/seed_database.sh`. Bounded validation requires the expected Alembic
+head, authoritative minimum row counts, exactly one START per decision tree,
+resolvable LINK targets, and unchanged operator layouts in preserve mode.
+Only then are the new `backend` and private `frontend` started. Both must
+pass internal health checks before promotion; neither binds the public host
+port.
 
 Seed mode depends on whether this is a fresh install or a clone: fresh →
 `SEED_MODE=all` (`seed_database.sh` just streams the whole
@@ -320,15 +328,17 @@ Seed mode depends on whether this is a fresh install or a clone: fresh →
 
 ### `seed_database.sh <mode> [seed_file]`
 
-`all` mode: `cat`s `backups/seed.sql` straight to stdout. `preserve-layouts`
-mode: `awk`-strips the lines between the `-- 5. TREE LAYOUTS` and
+`all` mode: validates the transaction boundary, then `cat`s
+`backups/seed.sql` to stdout. `preserve-layouts` mode additionally
+requires exactly one ordered marker pair, then `awk`-strips the lines
+between the `-- 5. TREE LAYOUTS` and
 `-- 6. MEDICINES REFERENCE CATALOG` comment markers in `seed.sql` before
 emitting it - so a stack cloned from a live database (which already has
 real operator-edited canvas layouts) doesn't have them overwritten by
-whatever layout rows happen to be baked into the seed file. **This depends
-on those exact comment headers existing in `backups/seed.sql`**: if that
-file is regenerated without them, `preserve-layouts` mode silently stops
-working as intended.
+whatever layout rows happen to be baked into the seed file. Missing,
+duplicated, or reordered markers fail closed. `validate_candidate_db.sh`
+then verifies the post-seed database with 30-second statement and 5-second
+lock timeouts before candidate services can start.
 
 ### `promote_stack.sh <version>`
 

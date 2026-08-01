@@ -110,6 +110,7 @@ pipeline {
                              deploy/render_router_config.sh \
                              deploy/set_write_lock.sh \
                              deploy/validate_env.sh \
+                             deploy/validate_candidate_db.sh \
                              deploy/run_quality_gates.sh \
                              deploy/run_frontend_quality_gates.sh \
                              scripts/generate_pregnancy_fhir_presets.py; do
