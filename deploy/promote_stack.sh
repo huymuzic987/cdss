@@ -17,10 +17,10 @@ if [ "$MODE" != "promote" ] \
     exit 2
 fi
 NEW_PROJECT="cdss-${NEW_VERSION}"
-VERSION_FILE="deploy/.current_version"
-STATE_FILE="deploy/.deployment_state"
-DRAIN_FILE="deploy/.router_drain_pending"
-WRITE_LOCK_FILE="deploy/.write_lock"
+VERSION_FILE="deploy/state/.current_version"
+STATE_FILE="deploy/state/.deployment_state"
+DRAIN_FILE="deploy/state/.router_drain_pending"
+WRITE_LOCK_FILE="deploy/state/.write_lock"
 ROUTER_NAME="cdss-router"
 OLD_VERSION="$(cat "$VERSION_FILE" 2>/dev/null || true)"
 OLD_GIT_COMMIT="$(

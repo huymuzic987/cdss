@@ -103,6 +103,7 @@ pipeline {
                              deploy/build_images.sh deploy/seed_database.sh \
                              deploy/lib.sh deploy/provision_stack.sh \
                              deploy/promote_stack.sh deploy/prune_old_stacks.sh \
+                             deploy/prune_release_dirs.sh \
                              deploy/cleanup_failed_stack.sh \
                              deploy/ensure_live_route.sh \
                              deploy/render_router_config.sh \
@@ -154,7 +155,27 @@ pipeline {
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
-                            mkdir -p ${DEPLOY_PATH}
+                            set -e
+                            mkdir -p ${DEPLOY_PATH}/releases/${VERSION} \
+                                ${DEPLOY_PATH}/shared \
+                                ${DEPLOY_PATH}/persistent-backups
+                            chmod 0700 ${DEPLOY_PATH}/shared \
+                                ${DEPLOY_PATH}/persistent-backups
+
+                            # One-time migration from the former shared checkout.
+                            for state_file in .current_version .deployment_state \
+                                .build_state .router_drain_pending .write_lock; do
+                                if [ ! -e ${DEPLOY_PATH}/shared/\$state_file ] \
+                                    && [ -f ${DEPLOY_PATH}/deploy/\$state_file ]; then
+                                    cp -p ${DEPLOY_PATH}/deploy/\$state_file \
+                                        ${DEPLOY_PATH}/shared/\$state_file
+                                fi
+                            done
+                            if [ ! -e ${DEPLOY_PATH}/shared/.env ] \
+                                && [ -f ${DEPLOY_PATH}/.env ]; then
+                                cp -p ${DEPLOY_PATH}/.env ${DEPLOY_PATH}/shared/.env
+                                chmod 0600 ${DEPLOY_PATH}/shared/.env
+                            fi
                         "
 
                         # The target is on the same LAN. Compression consumes
@@ -178,7 +199,18 @@ pipeline {
                             --exclude 'deploy/.router_drain_pending' \
                             --exclude 'deploy/.write_lock' \
                             --exclude 'persistent-backups' \
-                            ./ ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/
+                            ./ ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/releases/${VERSION}/
+
+                        ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                            set -e
+                            release_path=${DEPLOY_PATH}/releases/${VERSION}
+                            ln -sfn ${DEPLOY_PATH}/shared/.env \
+                                \$release_path/.env
+                            ln -sfn ${DEPLOY_PATH}/persistent-backups \
+                                \$release_path/persistent-backups
+                            ln -sfn ${DEPLOY_PATH}/shared \
+                                \$release_path/deploy/state
+                        "
                     '''
                 }
             }
@@ -193,16 +225,17 @@ pipeline {
                         sh '''
                             ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                                 umask 077
-                                cat > ${DEPLOY_PATH}/.env.new
+                                cat > ${DEPLOY_PATH}/shared/.env.new
                             " < "$ENV_FILE"
                             ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                                 set -e
-                                sed -i 's/\\r\$//' ${DEPLOY_PATH}/.env.new
-                                chmod 0600 ${DEPLOY_PATH}/.env.new
-                                cd ${DEPLOY_PATH}
+                                sed -i 's/\\r\$//' ${DEPLOY_PATH}/shared/.env.new
+                                chmod 0600 ${DEPLOY_PATH}/shared/.env.new
+                                cd ${DEPLOY_PATH}/releases/${VERSION}
                                 chmod +x deploy/validate_env.sh
-                                ./deploy/validate_env.sh .env.new
-                                mv -f ${DEPLOY_PATH}/.env.new ${DEPLOY_PATH}/.env
+                                ./deploy/validate_env.sh ${DEPLOY_PATH}/shared/.env.new
+                                mv -f ${DEPLOY_PATH}/shared/.env.new \
+                                    ${DEPLOY_PATH}/shared/.env
                             "
                         '''
                     }
@@ -220,7 +253,7 @@ pipeline {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
-                            cd ${DEPLOY_PATH}
+                            cd ${DEPLOY_PATH}/releases/${VERSION}
                             chmod +x deploy/ensure_live_route.sh deploy/promote_stack.sh \
                                 deploy/render_router_config.sh
                             PUBLIC_APP_PORT=${APP_PORT} ./deploy/ensure_live_route.sh
@@ -241,7 +274,7 @@ pipeline {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
-                            cd ${DEPLOY_PATH}
+                            cd ${DEPLOY_PATH}/releases/${VERSION}
                             chmod +x deploy/build_images.sh
                             ./deploy/build_images.sh ${VERSION}
                         "
@@ -261,7 +294,7 @@ pipeline {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
-                            cd ${DEPLOY_PATH}
+                            cd ${DEPLOY_PATH}/releases/${VERSION}
                             chmod +x deploy/backup_current_db.sh deploy/backup_db.sh
                             ./deploy/backup_current_db.sh
                         "
@@ -280,7 +313,7 @@ pipeline {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
-                            cd ${DEPLOY_PATH}
+                            cd ${DEPLOY_PATH}/releases/${VERSION}
                             chmod +x deploy/set_write_lock.sh deploy/promote_stack.sh \
                                 deploy/render_router_config.sh
                             PUBLIC_APP_PORT=${APP_PORT} ./deploy/set_write_lock.sh enable
@@ -301,7 +334,7 @@ pipeline {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
-                            cd ${DEPLOY_PATH}
+                            cd ${DEPLOY_PATH}/releases/${VERSION}
                             chmod +x deploy/provision_stack.sh
                             ./deploy/provision_stack.sh ${VERSION}
                         "
@@ -322,7 +355,7 @@ pipeline {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
-                            cd ${DEPLOY_PATH}
+                            cd ${DEPLOY_PATH}/releases/${VERSION}
                             chmod +x deploy/promote_stack.sh deploy/render_router_config.sh
                             DEPLOY_GIT_COMMIT=${GIT_COMMIT} \
                                 PUBLIC_APP_PORT=${APP_PORT} \
@@ -373,7 +406,7 @@ pipeline {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
-                            cd ${DEPLOY_PATH}
+                            cd ${DEPLOY_PATH}/releases/${VERSION}
                             chmod +x deploy/set_write_lock.sh deploy/promote_stack.sh \
                                 deploy/render_router_config.sh
                             PUBLIC_APP_PORT=${APP_PORT} ./deploy/set_write_lock.sh disable
@@ -393,9 +426,11 @@ pipeline {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
-                            cd ${DEPLOY_PATH}
-                            chmod +x deploy/prune_old_stacks.sh
+                            cd ${DEPLOY_PATH}/releases/${VERSION}
+                            chmod +x deploy/prune_old_stacks.sh deploy/prune_release_dirs.sh
                             PUBLIC_APP_PORT=${APP_PORT} ./deploy/prune_old_stacks.sh
+                            CDSS_RELEASES_DIR=${DEPLOY_PATH}/releases \
+                                ./deploy/prune_release_dirs.sh
                         "
                     '''
                 }
@@ -410,7 +445,7 @@ pipeline {
                     sh '''
                         mkdir -p .ci-reports/deployment
                         scp ${SSH_OPTS} \
-                            ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/deploy/.deployment_state \
+                            ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/shared/.deployment_state \
                             .ci-reports/deployment/state.txt
                         {
                             printf 'jenkins_build=%s\n' '${BUILD_NUMBER}'
@@ -437,7 +472,7 @@ pipeline {
             sshagent(['ubuntu-vm-jenkins']) {
                 sh '''
                     ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
-                        cd ${DEPLOY_PATH} 2>/dev/null || exit 0
+                        cd ${DEPLOY_PATH}/releases/${VERSION} 2>/dev/null || exit 0
                         chmod +x deploy/cleanup_failed_stack.sh deploy/promote_stack.sh \
                             deploy/render_router_config.sh deploy/set_write_lock.sh
                         if PUBLIC_APP_PORT=${APP_PORT} \
@@ -457,7 +492,7 @@ pipeline {
             sshagent(['ubuntu-vm-jenkins']) {
                 sh '''
                     ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
-                        cd ${DEPLOY_PATH} 2>/dev/null || exit 0
+                        cd ${DEPLOY_PATH}/releases/${VERSION} 2>/dev/null || exit 0
                         chmod +x deploy/cleanup_failed_stack.sh deploy/promote_stack.sh \
                             deploy/render_router_config.sh deploy/set_write_lock.sh
                         if PUBLIC_APP_PORT=${APP_PORT} \

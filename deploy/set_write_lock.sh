@@ -6,9 +6,9 @@ set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
 MODE="${1:?usage: set_write_lock.sh <enable|disable|status>}"
-VERSION_FILE="deploy/.current_version"
-WRITE_LOCK_FILE="deploy/.write_lock"
-DRAIN_FILE="deploy/.router_drain_pending"
+VERSION_FILE="deploy/state/.current_version"
+WRITE_LOCK_FILE="deploy/state/.write_lock"
+DRAIN_FILE="deploy/state/.router_drain_pending"
 PROBE_PATH="/__deployment/write-lock-probe"
 
 case "$MODE" in

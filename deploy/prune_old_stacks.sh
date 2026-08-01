@@ -14,8 +14,8 @@ set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
 KEEP_RETENTION=3
-VERSION_FILE="deploy/.current_version"
-DRAIN_FILE="deploy/.router_drain_pending"
+VERSION_FILE="deploy/state/.current_version"
+DRAIN_FILE="deploy/state/.router_drain_pending"
 CURRENT_VERSION="$(cat "$VERSION_FILE" 2>/dev/null || echo "")"
 ROUTER_ID="$(docker ps -aq --filter 'name=^/cdss-router$' | head -n 1)"
 

@@ -5,7 +5,7 @@
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
-VERSION_FILE="deploy/.current_version"
+VERSION_FILE="deploy/state/.current_version"
 OLD_VERSION="$(cat "$VERSION_FILE" 2>/dev/null || true)"
 
 if [ -z "$OLD_VERSION" ]; then

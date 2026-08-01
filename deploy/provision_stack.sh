@@ -17,7 +17,7 @@ source "$(dirname "$0")/lib.sh"
 VERSION="${1:?usage: provision_stack.sh <version>}"
 export VERSION
 PROJECT="cdss-${VERSION}"
-VERSION_FILE="deploy/.current_version"
+VERSION_FILE="deploy/state/.current_version"
 OLD_VERSION="$(cat "$VERSION_FILE" 2>/dev/null || true)"
 resolve_compose "$PROJECT"
 

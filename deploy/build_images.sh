@@ -10,7 +10,7 @@ source "$(dirname "$0")/lib.sh"
 VERSION="${1:?usage: build_images.sh <version>}"
 export VERSION
 resolve_compose "cdss-${VERSION}"
-STATE_FILE="deploy/.build_state"
+STATE_FILE="deploy/state/.build_state"
 
 validate_dotenv_file .env
 VITE_TLDRAW_LICENSE_KEY="$(dotenv_get .env VITE_TLDRAW_LICENSE_KEY || true)"

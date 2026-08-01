@@ -96,7 +96,7 @@ in this file - `docker-compose.prod.yml` builds it internally from the
 | `CDSS_MAX_STEPS` | `300` | Traversal safety limit, same meaning as local dev. |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | `cdss` / `change-me` / `cdss` | Change the password before first real deploy. |
 | `APP_PORT` | `3000` | Public host port owned continuously by the stable `cdss-router`. **The actual Jenkins deployment overrides this to `3001`** (see below). |
-| `BACKUP_HOST_DIR` | `./persistent-backups` | Resolved relative to `/opt/webapps/cdss` on the target host. A real host directory, not a Docker volume; Jenkins excludes it from `rsync --delete`. The directory is mode 0700. |
+| `BACKUP_HOST_DIR` | `./persistent-backups` | Resolves through each release's symlink to `/opt/webapps/cdss/persistent-backups`. It is a real host directory outside release source and mode 0700. |
 | `BACKUP_TIMEZONE` / `BACKUP_RETENTION` / `BACKUP_FILE_MODE` | `Asia/Ho_Chi_Minh` / `10` / `0600` | Backup daemon config; SQL dumps are owner-readable only. |
 
 ## The Jenkins pipeline (`Jenkinsfile`)
@@ -137,23 +137,30 @@ Stages, in order:
    tool is invoked directly and reports a named failing gate instead of
    pnpm's generic `ELIFECYCLE` wrapper. Any failure stops the pipeline here,
    so a broken build can never reach provisioning or promotion.
-4. **Deploy Files**: `rsync -a --delete` (no compression; same-LAN target)
-   from the Jenkins workspace to `deploy@<host>:/opt/webapps/cdss/`,
+4. **Deploy Files**: creates `/opt/webapps/cdss/releases/<version>`,
+   `/opt/webapps/cdss/shared`, and the persistent backup directory. It
+   migrates legacy flat-checkout state once, then runs `rsync -a --delete`
+   (no compression; same-LAN target) from the Jenkins workspace to only the
+   versioned release directory,
    excluding `.git`, `.venv`, `node_modules`, `frontend/dist`, `.env*`,
    logs/caches, `scratch`, and the deploy scripts' own runtime state files
    (`deploy/.current_version`, `deploy/.deployment_state`,
    `deploy/.build_state`, `deploy/.router_drain_pending`,
-   `deploy/.write_lock`) and
-   `persistent-backups`.
+   `deploy/.write_lock`) and `persistent-backups`. Symlinks expose the shared
+   environment, state markers, and backups at their legacy release-relative
+   paths. A single `deploy/state` directory symlink keeps atomic state-file
+   renames inside shared storage, so deploy scripts remain release-local
+   without duplicating mutable state.
 5. **Inject Environment**: streams the `cdss-prod-env` Jenkins credential
    under remote `umask 077`, strips CRLF, sets mode 0600, and validates
    required keys, duplicates, quoting, production mode, placeholder password,
    numeric values, and backup mode. Only a valid `.env.new` atomically
-   replaces `.env`. Deployment scripts read individual values as dotenv
+   replaces `shared/.env`. Deployment scripts read individual values through
+   the release's `.env` symlink as dotenv
    data through `deploy/lib.sh`; they never source the file as shell code.
 6. **Ensure Live Route**: repairs and verifies the public route to the version
-   in `deploy/.current_version`, recreating a missing dedicated router before
-   lengthy build or migration work begins.
+   in `deploy/state/.current_version`, recreating a missing dedicated router
+   before lengthy build or migration work begins.
 7. **Build Images**: `deploy/build_images.sh <version>`.
 8. **Backup Current Database**: `deploy/backup_current_db.sh`.
 9. **Enable Write Lock**: reloads the stable router with selective HTTP 503
@@ -167,9 +174,12 @@ Stages, in order:
     number. A host-local success can therefore no longer hide an external 502.
 13. **Disable Write Lock**: reloads and verifies the promoted route without
     write blocking. This runs only after public verification succeeds.
-14. **Prune Old Stacks**: `deploy/prune_old_stacks.sh`. The previous
+14. **Prune Old Stacks**: `deploy/prune_old_stacks.sh`, followed by
+    `deploy/prune_release_dirs.sh`. The previous
     application stack remains available until external verification succeeds
-    and writes resume on the new release.
+    and writes resume on the new release. A release source directory is
+    removed only after its Compose containers are gone; the live version is
+    always retained.
 
 The write lock deliberately leaves `POST /evaluate` and all reads available.
 It blocks only the known mutating endpoints: tree-layout PUT/DELETE, FHIR
@@ -186,10 +196,29 @@ repairs and verifies the promoted route. Candidate containers, networks,
 volumes, and images are removed by Docker labels and IDs. `cleanWs()`
 always runs at the end.
 
-Successful promotion writes `deploy/.deployment_state` atomically with the
+Successful promotion writes `deploy/state/.deployment_state`
+(physically `shared/.deployment_state`) atomically with the
 current and previous versions, their Git commits, the promotion timestamp, and
-status. The legacy `deploy/.current_version` file is atomically replaced
+status. The `deploy/state/.current_version` file is atomically replaced
 last and remains the authoritative commit point for existing scripts.
+
+### Target-host directory layout
+
+```text
+/opt/webapps/cdss/
+|-- releases/
+|   |-- <build-number>/       # immutable source for one Jenkins build
+|   |   |-- .env -> ../../shared/.env
+|   |   |-- persistent-backups -> ../../persistent-backups
+|   |   `-- deploy/state -> ../../../shared
+|   `-- ...
+|-- shared/                   # mode 0700; env and atomic deploy markers
+`-- persistent-backups/       # mode 0700; never rsynced or release-pruned
+```
+
+All build, provision, promote, recovery, and prune commands run from the
+candidate's release directory. This prevents a later rsync from changing the
+scripts or Compose file used by an in-progress or retained release.
 
 ## The blue/green deploy scripts (`deploy/`)
 
@@ -254,7 +283,7 @@ anything, by running `backup_db.sh backup-now` inside the *old* stack's
 credentials read directly from the old `db` container's own environment
 (`docker inspect`) rather than from the new `.env` - specifically so a
 credential rotation in the freshly injected `.env` can't break this final
-backup of the outgoing version. If `deploy/.current_version` records no
+backup of the outgoing version. If `deploy/state/.current_version` records no
 prior version (first-ever deploy), this is a no-op.
 
 ### `backup_db.sh [backup-now|daemon]`
@@ -313,7 +342,7 @@ The zero-downtime cutover, with automatic rollback:
    the candidate release. On failure, the previous nginx configuration is
    restored and reloaded.
 6. On success, starts the new backup service, records
-   `deploy/.current_version`, waits for old nginx workers to drain, and then
+   `deploy/state/.current_version`, waits for old nginx workers to drain, and then
    disconnects obsolete release networks. If a long-running request is still
    active after 30 seconds, a server-local drain marker makes pruning retain
    the old release until a later run confirms that the worker has exited.

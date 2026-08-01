@@ -6,9 +6,9 @@ set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
 FAILED_VERSION="${1:?usage: cleanup_failed_stack.sh <version>}"
-VERSION_FILE="deploy/.current_version"
-STATE_FILE="deploy/.deployment_state"
-WRITE_LOCK_FILE="deploy/.write_lock"
+VERSION_FILE="deploy/state/.current_version"
+STATE_FILE="deploy/state/.deployment_state"
+WRITE_LOCK_FILE="deploy/state/.write_lock"
 CURRENT_VERSION="$(cat "$VERSION_FILE" 2>/dev/null || true)"
 
 if [ "$CURRENT_VERSION" = "$FAILED_VERSION" ]; then

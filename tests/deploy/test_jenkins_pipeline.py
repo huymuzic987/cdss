@@ -30,6 +30,7 @@ def test_write_lock_spans_database_clone_through_public_verification() -> None:
 def test_write_lock_state_is_not_deleted_by_rsync() -> None:
     assert "--exclude 'deploy/.write_lock'" in JENKINSFILE
     assert "--exclude 'deploy/.deployment_state'" in JENKINSFILE
+    assert "ln -sfn ${DEPLOY_PATH}/shared" in JENKINSFILE
 
 
 def test_failure_and_abort_paths_attempt_safe_unlock() -> None:
@@ -103,9 +104,20 @@ def test_deployment_evidence_contains_no_environment_file() -> None:
 
 def test_environment_is_private_and_validated_before_replacement() -> None:
     private_create = JENKINSFILE.find("umask 077")
-    validate = JENKINSFILE.find("./deploy/validate_env.sh .env.new")
-    replace = JENKINSFILE.find("mv -f ${DEPLOY_PATH}/.env.new")
+    validate = JENKINSFILE.find("./deploy/validate_env.sh ${DEPLOY_PATH}/shared/.env.new")
+    replace = JENKINSFILE.find("mv -f ${DEPLOY_PATH}/shared/.env.new")
 
     assert private_create >= 0
     assert validate > private_create
     assert replace > validate
+
+
+def test_deployments_use_isolated_release_directories_and_shared_state() -> None:
+    release_path = "${DEPLOY_PATH}/releases/${VERSION}"
+
+    assert f"${{TARGET_SERVER}}:{release_path}/" in JENKINSFILE
+    assert JENKINSFILE.count(f"cd {release_path}") >= 9
+    assert "ln -sfn ${DEPLOY_PATH}/shared/.env" in JENKINSFILE
+    assert r"\$release_path/deploy/state" in JENKINSFILE
+    assert "${DEPLOY_PATH}/shared/.deployment_state" in JENKINSFILE
+    assert "./deploy/prune_release_dirs.sh" in JENKINSFILE
