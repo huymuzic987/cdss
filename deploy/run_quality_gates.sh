@@ -36,6 +36,26 @@ UV_IMAGE="ghcr.io/astral-sh/uv:python3.12-bookworm"
 NODE_IMAGE="node:24.18.1-alpine"
 PNPM_VERSION="9.15.9"
 
+# Emit tab-separated timing records that can be copied from the Jenkins log
+# into the deployment baseline. Keep this deliberately log-only for now so
+# measurement cannot make an otherwise healthy quality gate fail.
+timed() {
+    local gate_name="$1"
+    shift
+    local started_at finished_at elapsed status
+    started_at="$(date +%s)"
+    echo "=== Timing start: ${gate_name} ==="
+    if "$@"; then
+        status=0
+    else
+        status=$?
+    fi
+    finished_at="$(date +%s)"
+    elapsed=$((finished_at - started_at))
+    printf 'CDSS_TIMING\t%s\t%s\t%s\n' "$gate_name" "$elapsed" "$status"
+    return "$status"
+}
+
 HOST_UID="$(id -u)"
 HOST_GID="$(id -g)"
 
@@ -60,10 +80,10 @@ cleanup
 docker network create "$NETWORK" > /dev/null
 
 echo "Starting disposable PostgreSQL for the database-backed test suite..."
-docker run -d --name "$POSTGRES_CONTAINER" \
+timed "test-postgres-start" docker run -d --name "$POSTGRES_CONTAINER" \
     --network "$NETWORK" --network-alias postgres \
     -e POSTGRES_USER="$PG_USER" -e POSTGRES_PASSWORD="$PG_PASSWORD" -e POSTGRES_DB="$PG_ADMIN_DB" \
-    postgres:16 -p "$TEST_DB_PORT" > /dev/null
+    postgres:16 -p "$TEST_DB_PORT"
 
 ready=""
 for _ in $(seq 1 30); do
@@ -104,7 +124,7 @@ PRODUCTION_DATABASE_NAME=
 EOF
 
 echo "Generating deterministic pregnancy FHIR catalogs..."
-docker run --rm --network "$NETWORK" \
+timed "pregnancy-fhir-catalog-and-migration" docker run --rm --network "$NETWORK" \
     -v "$PWD":/workspace -w /workspace \
     -e DATABASE_URL="$TEST_DATABASE_URL" \
     -e HOME=/tmp -e UV_CACHE_DIR=/tmp/uv-cache -e UV_PROJECT_ENVIRONMENT=/tmp/venv \
@@ -112,18 +132,31 @@ docker run --rm --network "$NETWORK" \
     "$UV_IMAGE" \
     sh -c "
         set -e
-        uv sync --frozen
-        uv run python scripts/generate_pregnancy_fhir_presets.py
-        uv run alembic upgrade head
+        timed() {
+            gate_name=\"\$1\"
+            shift
+            started_at=\"\$(date +%s)\"
+            if \"\$@\"; then status=0; else status=\$?; fi
+            elapsed=\$((\$(date +%s) - started_at))
+            printf 'CDSS_TIMING\\t%s\\t%s\\t%s\\n' \"\$gate_name\" \"\$elapsed\" \"\$status\"
+            return \"\$status\"
+        }
+        timed catalog-dependency-sync uv sync --frozen
+        timed pregnancy-fhir-generation uv run python scripts/generate_pregnancy_fhir_presets.py
+        timed test-schema-migration uv run alembic upgrade head
     "
 echo "Pregnancy FHIR catalogs generated; disposable database migrated to head."
 
 echo "Seeding the disposable test database (trees, medicines, symptoms reference data)..."
-docker exec -i "$POSTGRES_CONTAINER" psql -p "$TEST_DB_PORT" -U "$PG_USER" -d "$TEST_DB_NAME" \
-    < backups/seed.sql > /dev/null
+seed_test_database() {
+    docker exec -i "$POSTGRES_CONTAINER" \
+        psql -p "$TEST_DB_PORT" -U "$PG_USER" -d "$TEST_DB_NAME" \
+        < backups/seed.sql > /dev/null
+}
+timed "test-database-seed" seed_test_database
 
 echo "Running backend quality gates: pytest, ruff check, ruff format --check, pyright..."
-docker run --rm --network "$NETWORK" \
+timed "backend-quality-gates-total" docker run --rm --network "$NETWORK" \
     -v "$PWD":/workspace -w /workspace \
     -e DATABASE_URL="$TEST_DATABASE_URL" \
     -e HOME=/tmp -e UV_CACHE_DIR=/tmp/uv-cache -e UV_PROJECT_ENVIRONMENT=/tmp/venv \
@@ -131,18 +164,27 @@ docker run --rm --network "$NETWORK" \
     "$UV_IMAGE" \
     sh -c "
         set -e
-        uv sync --frozen
+        timed() {
+            gate_name=\"\$1\"
+            shift
+            started_at=\"\$(date +%s)\"
+            if \"\$@\"; then status=0; else status=\$?; fi
+            elapsed=\$((\$(date +%s) - started_at))
+            printf 'CDSS_TIMING\\t%s\\t%s\\t%s\\n' \"\$gate_name\" \"\$elapsed\" \"\$status\"
+            return \"\$status\"
+        }
+        timed backend-dependency-sync uv sync --frozen
         # Fail quickly with a clear runtime error before spending time on the
         # test suite if Pyright's bundled Node.js cannot start.
-        uv run pyright --version
-        uv run pytest
-        uv run ruff check
-        uv run ruff format --check
-        uv run pyright
+        timed pyright-runtime-check uv run pyright --version
+        timed backend-pytest uv run pytest
+        timed backend-ruff-check uv run ruff check
+        timed backend-ruff-format uv run ruff format --check
+        timed backend-pyright uv run pyright
     "
 
 echo "Running frontend quality gates: Vitest, Oxlint, TypeScript, Vite build..."
-docker run --rm \
+timed "frontend-quality-gates-total" docker run --rm \
     -v "$PWD/frontend":/workspace -w /workspace \
     -v "$PWD/deploy/run_frontend_quality_gates.sh":/quality-gate.sh:ro \
     -e HOME=/tmp \

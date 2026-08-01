@@ -87,23 +87,27 @@ if [ "$backend_needs_build" = "true" ] \
     && [ "$frontend_needs_build" = "true" ]; then
     echo "Backend and frontend inputs changed; building both concurrently..."
     if $COMPOSE build --help 2>&1 | grep -q -- '--parallel'; then
-        COMPOSE_PARALLEL_LIMIT=2 DOCKER_BUILDKIT=1 \
+        COMPOSE_PARALLEL_LIMIT=2 DOCKER_BUILDKIT=1 run_timed \
+            "application-images-build" \
             $COMPOSE build --parallel backend frontend
     else
         # Compose v2 schedules multiple requested services concurrently and
         # uses COMPOSE_PARALLEL_LIMIT as its worker cap.
-        COMPOSE_PARALLEL_LIMIT=2 DOCKER_BUILDKIT=1 \
+        COMPOSE_PARALLEL_LIMIT=2 DOCKER_BUILDKIT=1 run_timed \
+            "application-images-build" \
             $COMPOSE build backend frontend
     fi
 else
     if [ "$backend_needs_build" = "true" ]; then
         echo "Backend inputs changed; building cdss-backend:${VERSION}..."
-        COMPOSE_PARALLEL_LIMIT=-1 DOCKER_BUILDKIT=1 $COMPOSE build backend
+        COMPOSE_PARALLEL_LIMIT=-1 DOCKER_BUILDKIT=1 run_timed \
+            "backend-image-build" $COMPOSE build backend
     fi
 
     if [ "$frontend_needs_build" = "true" ]; then
         echo "Frontend inputs changed; building cdss-frontend:${VERSION}..."
-        COMPOSE_PARALLEL_LIMIT=-1 DOCKER_BUILDKIT=1 $COMPOSE build frontend
+        COMPOSE_PARALLEL_LIMIT=-1 DOCKER_BUILDKIT=1 run_timed \
+            "frontend-image-build" $COMPOSE build frontend
     fi
 fi
 

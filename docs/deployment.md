@@ -6,6 +6,9 @@ Dockerfiles, compose file, and `deploy/` scripts actually do - it is not a
 guide to setting up a new Jenkins server, just a description of the existing
 pipeline so you can read or modify it safely.
 
+Performance measurements and the before/after collection template live in
+[CI/CD performance baseline](ci-cd-baseline.md).
+
 ## Images
 
 ### `Dockerfile.backend`

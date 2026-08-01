@@ -24,3 +24,23 @@ resolve_compose() {
         exit 1
     fi
 }
+
+# Log a stable, tab-separated duration record while preserving the wrapped
+# command's exit status. Jenkins can collect CDSS_TIMING lines without making
+# reporting a dependency of deployment correctness.
+run_timed() {
+    local operation_name="$1"
+    shift
+    local started_at finished_at elapsed status
+    started_at="$(date +%s)"
+    echo "=== Timing start: ${operation_name} ==="
+    if "$@"; then
+        status=0
+    else
+        status=$?
+    fi
+    finished_at="$(date +%s)"
+    elapsed=$((finished_at - started_at))
+    printf 'CDSS_TIMING\t%s\t%s\t%s\n' "$operation_name" "$elapsed" "$status"
+    return "$status"
+}

@@ -9,11 +9,16 @@ PNPM_VERSION="${PNPM_VERSION:-9.15.9}"
 run_gate() {
     gate_name="$1"
     shift
+    started_at="$(date +%s)"
     echo "=== Frontend gate: ${gate_name} ==="
     if "$@"; then
+        elapsed=$(($(date +%s) - started_at))
+        printf 'CDSS_TIMING\t%s\t%s\t0\n' "$gate_name" "$elapsed"
         echo "PASS: ${gate_name}"
     else
         gate_status=$?
+        elapsed=$(($(date +%s) - started_at))
+        printf 'CDSS_TIMING\t%s\t%s\t%s\n' "$gate_name" "$elapsed" "$gate_status"
         echo "ERROR: ${gate_name} failed with exit code ${gate_status}." >&2
         exit "$gate_status"
     fi

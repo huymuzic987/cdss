@@ -26,9 +26,10 @@ source .env
 set +a
 
 echo "Provisioning new stack ${PROJECT}..."
-$COMPOSE up -d db
+run_timed "candidate-database-start" $COMPOSE up -d db
 
 echo "Waiting for database to be ready..."
+db_ready_started_at="$(date +%s)"
 db_ready=false
 for i in $(seq 1 24); do
     if $COMPOSE exec -T db pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" > /dev/null 2>&1; then
@@ -38,10 +39,14 @@ for i in $(seq 1 24); do
     sleep 5
 done
 if [ "$db_ready" != "true" ]; then
+    printf 'CDSS_TIMING\tcandidate-database-ready\t%s\t1\n' \
+        "$(($(date +%s) - db_ready_started_at))"
     echo "ERROR: database for ${PROJECT} did not become ready" >&2
     $COMPOSE logs --tail 50 db
     exit 1
 fi
+printf 'CDSS_TIMING\tcandidate-database-ready\t%s\t0\n' \
+    "$(($(date +%s) - db_ready_started_at))"
 
 if [ -n "$OLD_VERSION" ] && [ "$OLD_VERSION" != "$VERSION" ]; then
     echo "Cloning live database from cdss-${OLD_VERSION} into ${PROJECT}..."
@@ -65,18 +70,33 @@ if [ -n "$OLD_VERSION" ] && [ "$OLD_VERSION" != "$VERSION" ]; then
         echo "ERROR: could not read credentials from cdss-${OLD_VERSION}" >&2
         exit 1
     fi
+    if source_db_size_bytes="$(
+        docker exec "$OLD_DB_CONTAINER" psql \
+            --username="$OLD_DB_USER" \
+            --dbname="$OLD_DB_NAME" \
+            --tuples-only \
+            --no-align \
+            --command='SELECT pg_database_size(current_database());'
+    )"; then
+        printf 'CDSS_METRIC\tsource-database-size-bytes\t%s\n' "$source_db_size_bytes"
+    else
+        echo "WARNING: unable to measure source database size for the CI/CD baseline." >&2
+    fi
 
     resolve_compose "$PROJECT"
-    docker exec "$OLD_DB_CONTAINER" pg_dump \
-        --username="$OLD_DB_USER" \
-        --dbname="$OLD_DB_NAME" \
-        --format=plain \
-        --no-owner \
-        --no-privileges \
-        | $COMPOSE exec -T db psql \
-            -v ON_ERROR_STOP=1 \
-            -U "$POSTGRES_USER" \
-            -d "$POSTGRES_DB"
+    clone_live_database() {
+        docker exec "$OLD_DB_CONTAINER" pg_dump \
+            --username="$OLD_DB_USER" \
+            --dbname="$OLD_DB_NAME" \
+            --format=plain \
+            --no-owner \
+            --no-privileges \
+            | $COMPOSE exec -T db psql \
+                -v ON_ERROR_STOP=1 \
+                -U "$POSTGRES_USER" \
+                -d "$POSTGRES_DB"
+    }
+    run_timed "candidate-database-clone" clone_live_database
     SEED_MODE="preserve-layouts"
 else
     echo "No live version recorded; initializing the first database from migrations."
@@ -84,19 +104,27 @@ else
 fi
 
 echo "Applying Alembic migrations..."
-$COMPOSE run --rm --no-deps backend alembic upgrade head
+run_timed "candidate-alembic-migration" \
+    $COMPOSE run --rm --no-deps backend alembic upgrade head
 
 echo "Seeding data from backups/seed.sql (mode: ${SEED_MODE})..."
-bash deploy/seed_database.sh "$SEED_MODE" backups/seed.sql \
-    | $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+seed_candidate_database() {
+    bash deploy/seed_database.sh "$SEED_MODE" backups/seed.sql \
+        | $COMPOSE exec -T db psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+}
+run_timed "candidate-database-seed" seed_candidate_database
 
 echo "Starting backend and private frontend..."
-$COMPOSE up -d --no-build backend frontend
+run_timed "candidate-services-start" \
+    $COMPOSE up -d --no-build backend frontend
 
 echo "Waiting for backend and frontend to report healthy..."
+candidate_health_started_at="$(date +%s)"
 for i in $(seq 1 30); do
     if $COMPOSE exec -T backend curl -s -f http://localhost:8000/health > /dev/null 2>&1 \
         && $COMPOSE exec -T frontend wget -qO- http://127.0.0.1/ > /dev/null 2>&1; then
+        printf 'CDSS_TIMING\tcandidate-services-healthy\t%s\t0\n' \
+            "$(($(date +%s) - candidate_health_started_at))"
         echo "Backend and frontend healthy for ${PROJECT}."
         exit 0
     fi
@@ -104,6 +132,8 @@ for i in $(seq 1 30); do
     sleep 2
 done
 
+printf 'CDSS_TIMING\tcandidate-services-healthy\t%s\t1\n' \
+    "$(($(date +%s) - candidate_health_started_at))"
 echo "ERROR: backend or frontend never became healthy for ${PROJECT}"
 $COMPOSE logs --tail 50 backend frontend
 exit 1
