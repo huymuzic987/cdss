@@ -36,6 +36,24 @@ probe_status() {
         2>/dev/null || true
 }
 
+wait_for_probe_status() {
+    local expected="$1"
+    local status=""
+    for attempt in $(seq 1 10); do
+        status="$(probe_status)"
+        if [ "$expected" = "unlocked" ]; then
+            if [ "$status" != "503" ]; then
+                return 0
+            fi
+        elif [ "$status" = "$expected" ]; then
+            return 0
+        fi
+        [ "$attempt" -eq 10 ] || sleep 1
+    done
+    echo "ERROR: write-lock probe expected ${expected}, got ${status:-unreachable}." >&2
+    return 1
+}
+
 reload_current_route() {
     local version
     version="$(current_version)"
@@ -93,7 +111,7 @@ if [ "$MODE" = "enable" ]; then
         reload_current_route || echo "WARNING: unable to restore the previous router configuration." >&2
         exit 1
     fi
-    if [ -n "$(current_version)" ] && [ "$(probe_status)" != "503" ]; then
+    if [ -n "$(current_version)" ] && ! wait_for_probe_status "503"; then
         echo "ERROR: write-lock probe was not rejected with HTTP 503." >&2
         restore_marker "$previously_enabled"
         reload_current_route || echo "WARNING: unable to restore the previous router configuration." >&2
@@ -101,7 +119,7 @@ if [ "$MODE" = "enable" ]; then
     fi
     echo "Deployment write lock enabled and old router workers drained."
 else
-    if [ -n "$(current_version)" ] && [ "$(probe_status)" = "503" ]; then
+    if [ -n "$(current_version)" ] && ! wait_for_probe_status "unlocked"; then
         echo "ERROR: write-lock probe is still blocked after disable." >&2
         restore_marker "$previously_enabled"
         reload_current_route || echo "WARNING: unable to restore the previous router configuration." >&2
