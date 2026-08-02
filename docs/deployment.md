@@ -203,11 +203,13 @@ volumes, and images are removed by Docker labels and IDs. `cleanWs()`
 always runs at the end.
 
 The Jenkins agent retains named Docker volumes for the uv environment, uv
-download cache, Pyright's Node runtime, pnpm store, and frontend
-`node_modules`. Lockfile-enforced sync/install commands still run on every
-build, but warm builds avoid repeatedly downloading and unpacking unchanged
-dependencies. SSH connection multiplexing reuses one authenticated connection
-throughout the deployment stages.
+download cache, Pyright's Node runtime, Corepack, pnpm store, and frontend
+`node_modules`. Backend dependency sync remains lockfile-enforced on every
+build. Frontend installs use a hash of `package.json` and `pnpm-lock.yaml`:
+warm builds skip pnpm's relink pass only when that hash and all required tool
+shims are present; changed or incomplete caches run a frozen install. SSH
+connection multiplexing reuses one authenticated connection throughout the
+deployment stages.
 
 Successful promotion writes `deploy/state/.deployment_state`
 (physically `shared/.deployment_state`) atomically with the

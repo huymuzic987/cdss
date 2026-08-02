@@ -30,6 +30,7 @@ UV_CACHE_VOLUME="cdss-ci-uv-cache-py312"
 UV_ENV_VOLUME="cdss-ci-uv-env-py312"
 PNPM_STORE_VOLUME="cdss-ci-pnpm-store-v9"
 PNPM_MODULES_VOLUME="cdss-ci-node-modules-v9"
+COREPACK_VOLUME="cdss-ci-corepack-pnpm9"
 PYRIGHT_CACHE_VOLUME="cdss-ci-pyright-node-py312"
 
 # Hardcoded to 54321: cdss.testing.database's fail-closed safety guard
@@ -121,6 +122,7 @@ docker volume create "$UV_CACHE_VOLUME" > /dev/null
 docker volume create "$UV_ENV_VOLUME" > /dev/null
 docker volume create "$PNPM_STORE_VOLUME" > /dev/null
 docker volume create "$PNPM_MODULES_VOLUME" > /dev/null
+docker volume create "$COREPACK_VOLUME" > /dev/null
 docker volume create "$PYRIGHT_CACHE_VOLUME" > /dev/null
 docker run --rm \
     -v "$UV_CACHE_VOLUME":/uv-cache \
@@ -252,17 +254,29 @@ run_backend_quality_gates() {
             return \"\$status\"
         }
         timed backend-dependency-sync uv sync --frozen
-        # Fail quickly with a clear runtime error before spending time on the
-        # test suite if Pyright's bundled Node.js cannot start.
-        timed pyright-runtime-check uv run pyright --version
+        # Pytest and Pyright are independent and dominate this branch's
+        # runtime. Run them together after the shared environment is synced;
+        # The former runtime preflight bootstrapped the same Node runtime
+        # twice on cold agents without providing an additional gate.
         timed backend-pytest uv run pytest \
             --junitxml=.ci-reports/backend/junit.xml \
             --cov=cdss \
             --cov-report=term-missing \
-            --cov-report=xml:.ci-reports/backend/coverage.xml
+            --cov-report=xml:.ci-reports/backend/coverage.xml &
+        pytest_pid=\$!
+        timed backend-pyright uv run pyright &
+        pyright_pid=\$!
+
+        pytest_status=0
+        pyright_status=0
+        if wait \"\$pytest_pid\"; then :; else pytest_status=\$?; fi
+        if wait \"\$pyright_pid\"; then :; else pyright_status=\$?; fi
+        if [ \"\$pytest_status\" -ne 0 ] || [ \"\$pyright_status\" -ne 0 ]; then
+            exit 1
+        fi
+
         timed backend-ruff-check uv run ruff check
         timed backend-ruff-format uv run ruff format --check
-        timed backend-pyright uv run pyright
     "
 }
 
@@ -273,7 +287,9 @@ run_frontend_quality_gates() {
     -v "$PWD/deploy/run_frontend_quality_gates.sh":/quality-gate.sh:ro \
     -v "$PNPM_STORE_VOLUME":/pnpm/store \
     -v "$PNPM_MODULES_VOLUME":/workspace/node_modules \
+    -v "$COREPACK_VOLUME":/corepack \
     -e HOME=/tmp \
+    -e COREPACK_HOME=/corepack \
     -e PNPM_VERSION="$PNPM_VERSION" \
     -e PNPM_STORE_DIR=/pnpm/store \
     -e CDSS_TIMING_FILE=/workspace/.ci-reports/timings.tsv \

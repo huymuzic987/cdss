@@ -41,7 +41,28 @@ node -e "
 node --version
 pnpm --version
 pnpm config set store-dir "$PNPM_STORE_DIR"
-pnpm install --frozen-lockfile
+
+# node_modules is a persistent Docker volume. Avoid pnpm's expensive relink
+# pass when the exact dependency inputs are already installed, while still
+# forcing a frozen install after any manifest/lockfile change or interrupted
+# install. The marker is written only after pnpm succeeds.
+dependency_key="$(
+    sha256sum package.json pnpm-lock.yaml \
+        | sha256sum \
+        | awk '{print $1}'
+)"
+dependency_marker="node_modules/.cdss-dependency-key"
+installed_key="$(cat "$dependency_marker" 2>/dev/null || true)"
+if [ "$installed_key" = "$dependency_key" ] \
+    && [ -x node_modules/.bin/vitest ] \
+    && [ -x node_modules/.bin/oxlint ] \
+    && [ -x node_modules/.bin/tsc ] \
+    && [ -x node_modules/.bin/vite ]; then
+    echo "Frontend dependency cache is current; skipping pnpm install."
+else
+    pnpm install --frozen-lockfile
+    printf '%s\n' "$dependency_key" > "$dependency_marker"
+fi
 
 mkdir -p .ci-reports
 run_gate "Vitest unit/component tests" \
