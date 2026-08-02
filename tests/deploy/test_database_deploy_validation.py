@@ -83,6 +83,23 @@ def test_candidate_validator_emits_bounded_fail_closed_sql(tmp_path: Path) -> No
     assert "tree layouts changed" in result.stdout
 
 
+def test_candidate_validator_uses_materialized_seed_counts(tmp_path: Path) -> None:
+    script = normalized_script(tmp_path, "validate_candidate_db.sh")
+
+    result = subprocess.run(
+        ["bash", script.name, "9f7c2d4a1b6e", "all"],
+        cwd=tmp_path,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "actual_node_count < 387" in result.stdout
+    assert "actual_edge_count < 428" in result.stdout
+    assert "actual_medicine_count < 66" in result.stdout
+
+
 def test_database_validation_precedes_candidate_service_start() -> None:
     provision = (REPO_ROOT / "deploy" / "provision_stack.sh").read_text(encoding="utf-8")
 
