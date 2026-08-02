@@ -76,6 +76,24 @@ describe('canonical FHIR patient presets', () => {
     }
   })
 
+  it.each([
+    ['ckd', 'medication-follow-up-ckd-001', 'has_ckd'],
+    ['type2-diabetes', 'medication-follow-up-type2-diabetes-001', 'has_type_2_diabetes'],
+    ['cad', 'medication-follow-up-cad-001', 'has_coronary_artery_disease'],
+  ])('keeps the %s comorbidity episode longitudinal and clinically flagged', (slug, patientId, flag) => {
+    const episode = PATIENT_PRESETS.filter(({ id }) => id.startsWith(`comorbidity-episode-${slug}-`))
+    expect(episode).toHaveLength(3)
+    expect(episode.filter(({ id }) => id.endsWith('-initial'))).toHaveLength(1)
+    expect(episode.filter(({ id }) => id.includes('-follow-up-'))).toHaveLength(2)
+
+    for (const preset of episode) {
+      const entries = preset.bundle.entry as Array<{ resource: Record<string, unknown> }>
+      const patient = entries.find(({ resource }) => resource.resourceType === 'Patient')!.resource
+      expect(patient.id).toBe(patientId)
+      expect(bundleToForm(preset.bundle)[flag as keyof ReturnType<typeof bundleToForm>]).toBe(true)
+    }
+  })
+
   it('keeps the eclampsia preset anchored to preeclampsia', () => {
     const preset = PATIENT_PRESETS.find(({ id }) => id === 'pregnancy-severe-eclampsia')
     expect(preset).toBeDefined()

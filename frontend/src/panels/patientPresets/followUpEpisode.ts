@@ -3,7 +3,10 @@ import { flatToBundle } from '../mockPatientForm/fhirBundle'
 
 export const REVIEW_PATIENT_ID = 'medication-follow-up-review-001'
 
-export function medicationFollowUpBundle(values: JsonObject) {
+export function medicationFollowUpBundle(
+  values: JsonObject,
+  patientId = REVIEW_PATIENT_ID,
+) {
   return flatToBundle({
     is_medication_follow_up: true,
     facility_capability: 'FULL_RESOURCES',
@@ -18,5 +21,5 @@ export function medicationFollowUpBundle(values: JsonObject) {
     age: 48,
     risk_factor_count: 0,
     ...values,
-  }, REVIEW_PATIENT_ID)
+  }, patientId)
 }
