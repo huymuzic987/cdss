@@ -1,4 +1,4 @@
-import { BpRow, Toggle } from './FormControls'
+import { Toggle } from './FormControls'
 import type { FormSectionProps } from './types'
 
 export function CareSettingSection({ form, setStr, setBool, disabled }: FormSectionProps) {
@@ -25,10 +25,6 @@ export function CareSettingSection({ form, setStr, setBool, disabled }: FormSect
           Set this to skip inference and evaluate a follow-up whose stage and BP target are already known (the only way to reach an escalated-regimen or resistant-hypertension outcome - inference from two BP readings alone can only ever conclude Initial Regimen).
         </div>
       </div>
-
-      {form.medication_follow_up_stage !== '' && (
-        <BpRow label="Active BP Target" sbpKey="target_sbp_upper" dbpKey="target_dbp_upper" form={form} onChange={setStr} disabled={disabled} />
-      )}
 
       <div className="ps-field" style={{ marginTop: 8 }}>
         <label className="ps-field-label">Facility Capability</label>

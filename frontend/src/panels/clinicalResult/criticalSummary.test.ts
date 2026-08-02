@@ -38,6 +38,27 @@ function summary(
 
 describe('deriveCriticalSummary follow-up policy', () => {
   it.each([
+    ['T13_A_CHECK_MRA', 'Check MRA tolerance'],
+    ['T13_A_CHECK_SPIRONOLACTONE', 'Check spironolactone tolerance'],
+  ])('keeps traversed resistant action %s in the clinical path', (nodeKey, text) => {
+    const treeKey = 'resistant-hypertension'
+    const result = deriveCriticalSummary({
+      log: [entered(1, nodeKey, 'ACTION', treeKey)],
+      actions: [{
+        ...action(nodeKey, { action_type: nodeKey.replace('T13_A_', '') }, treeKey),
+        text_en: text,
+      }],
+      graphs: {},
+      locale: 'en',
+      context: {},
+    })
+
+    expect(result.path.map((step) => [step.id, step.label])).toContainEqual([
+      `${treeKey}:${nodeKey}`, text,
+    ])
+  })
+
+  it.each([
     ['HIGH', 'In 2 weeks'],
     ['VERY_HIGH', 'In 2 weeks'],
     ['MODERATE', 'In 3 weeks'],

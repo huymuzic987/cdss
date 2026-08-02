@@ -17,6 +17,7 @@ the root README stays intentionally short.
 | Create a clinical decision tree | [Authoring a tree](cdss/authoring-a-tree.md) |
 | Understand condition and patch JSON | [JSON dialect](cdss/json-dialect.md) |
 | Understand exact traversal behavior | [Traversal contract](cdss/traversal-engine-contract.md) |
+| Understand follow-up behavior | [Follow-up flow](follow-up.md) |
 | Change cross-tree context fields | [Context contract](cdss/context-contract.md) |
 | Seed, restore, or troubleshoot data | [Operations](operations.md) |
 | Run database tests safely | [Testing](testing.md) |
