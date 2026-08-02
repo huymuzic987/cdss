@@ -28,6 +28,18 @@ def test_dependency_caches_persist_in_named_volumes() -> None:
     assert 'PNPM_STORE_DIR="${PNPM_STORE_DIR:-/tmp/pnpm-store}"' in FRONTEND_SCRIPT
 
 
+def test_frozen_lockfile_install_precedes_all_frontend_gates() -> None:
+    install = FRONTEND_SCRIPT.index("pnpm install --frozen-lockfile")
+
+    for gate in (
+        'run_gate "Vitest unit/component tests"',
+        'run_gate "Oxlint"',
+        'run_gate "TypeScript compilation"',
+        'run_gate "Vite production build"',
+    ):
+        assert install < FRONTEND_SCRIPT.index(gate)
+
+
 def test_backend_and_frontend_branches_run_before_either_wait() -> None:
     backend_start = QUALITY_SCRIPT.find("run_backend_quality_gates &")
     frontend_start = QUALITY_SCRIPT.find("run_frontend_quality_gates &")

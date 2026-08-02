@@ -126,3 +126,9 @@ def test_candidate_database_readiness_is_frequent_but_bounded() -> None:
     assert "for i in $(seq 1 120); do" in readiness_block
     assert "sleep 1" in readiness_block
     assert "sleep 5" not in readiness_block
+    assert "db_ready_deadline=$((db_ready_started_at + 120))" in readiness_block
+    assert 'if [ "$(date +%s)" -ge "$db_ready_deadline" ]; then' in readiness_block
+
+    probe_start = readiness_block.index("pg_isready")
+    probe_end = readiness_block.index("\n", probe_start)
+    assert "--timeout=1" in readiness_block[probe_start:probe_end]
