@@ -59,16 +59,21 @@ def test_backend_and_frontend_branches_run_before_either_wait() -> None:
     assert 'wait "$frontend_gate_pid"' in QUALITY_SCRIPT
 
 
-def test_backend_type_check_and_tests_run_concurrently_without_duplicate_bootstrap() -> None:
-    pytest_start = QUALITY_SCRIPT.find("timed backend-pytest uv run pytest")
+def test_backend_pytest_and_pyright_are_concurrent_and_status_checked() -> None:
     pyright_start = QUALITY_SCRIPT.find("timed backend-pyright uv run pyright &")
-    pytest_wait = QUALITY_SCRIPT.find(r'wait \"\$pytest_pid\"')
+    pytest_start = QUALITY_SCRIPT.find("if timed backend-pytest uv run pytest")
+    pyright_wait = QUALITY_SCRIPT.find(r'wait "\$pyright_pid"')
+    status_guard = QUALITY_SCRIPT.find(
+        r'if [ "\$pytest_status" -ne 0 ] || [ "\$pyright_status" -ne 0 ]; then'
+    )
 
-    assert pytest_start >= 0
-    assert pyright_start > pytest_start
-    assert pytest_wait > pyright_start
-    assert "pyright-runtime-check" not in QUALITY_SCRIPT
-    assert "pyright --version" not in QUALITY_SCRIPT
+    assert pyright_start >= 0
+    assert r"pyright_pid=\$!" in QUALITY_SCRIPT
+    assert pytest_start > pyright_start
+    assert pyright_wait > pytest_start
+    assert r"pytest_status=\$?" in QUALITY_SCRIPT
+    assert r"pyright_status=\$?" in QUALITY_SCRIPT
+    assert status_guard > pyright_wait
 
 
 def test_quality_gates_generate_junit_and_coverage_reports() -> None:
