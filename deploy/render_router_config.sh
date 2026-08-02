@@ -22,12 +22,21 @@ case "$WRITE_LOCK_ENABLED" in
     ~^(PUT|PATCH|DELETE):/trees/[^/]+/layout$ 1;
     ~^POST:/fhir/import$ 1;
     ~^POST:/dashboard/seed$ 1;
-    ~^POST:/__deployment/write-lock-probe$ 1;
+EOF
+)"
+        LOCK_PROBE_LOCATION="$(cat <<'EOF'
+    location = /__deployment/write-lock-probe {
+        default_type application/json;
+        add_header Retry-After "60" always;
+        add_header Cache-Control "no-store" always;
+        return 503 '{"detail":"Deployment maintenance is in progress; retry this write shortly."}';
+    }
 EOF
 )"
         ;;
     false)
         LOCK_RULES=""
+        LOCK_PROBE_LOCATION=""
         ;;
     *)
         echo "ERROR: write-lock-enabled must be true or false." >&2
@@ -48,6 +57,8 @@ server {
     listen 80;
     server_name _;
     add_header X-CDSS-Release "${RELEASE_VERSION}" always;
+
+${LOCK_PROBE_LOCATION}
 
     if (\$cdss_write_blocked = 1) {
         return 418;
@@ -96,6 +107,8 @@ server {
     listen 80;
     server_name _;
     add_header X-CDSS-Release "${RELEASE_VERSION}" always;
+
+${LOCK_PROBE_LOCATION}
 
     if (\$cdss_write_blocked = 1) {
         return 418;

@@ -255,14 +255,28 @@ run_backend_quality_gates() {
         # Fail quickly with a clear runtime error before spending time on the
         # test suite if Pyright's bundled Node.js cannot start.
         timed pyright-runtime-check uv run pyright --version
-        timed backend-pytest uv run pytest \
+        pyright_status=0
+        timed backend-pyright uv run pyright &
+        pyright_pid=\$!
+        if timed backend-pytest uv run pytest \
             --junitxml=.ci-reports/backend/junit.xml \
             --cov=cdss \
             --cov-report=term-missing \
-            --cov-report=xml:.ci-reports/backend/coverage.xml
+            --cov-report=xml:.ci-reports/backend/coverage.xml; then
+            pytest_status=0
+        else
+            pytest_status=\$?
+        fi
+        if wait "\$pyright_pid"; then
+            pyright_status=0
+        else
+            pyright_status=\$?
+        fi
         timed backend-ruff-check uv run ruff check
         timed backend-ruff-format uv run ruff format --check
-        timed backend-pyright uv run pyright
+        if [ "\$pytest_status" -ne 0 ] || [ "\$pyright_status" -ne 0 ]; then
+            exit 1
+        fi
     "
 }
 

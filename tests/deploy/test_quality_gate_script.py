@@ -24,9 +24,23 @@ def test_dependency_caches_persist_in_named_volumes() -> None:
     assert '-v "$UV_CACHE_VOLUME":/uv-cache' in QUALITY_SCRIPT
     assert '-v "$UV_ENV_VOLUME":/venv' in QUALITY_SCRIPT
     assert '-v "$PNPM_STORE_VOLUME":/pnpm/store' in QUALITY_SCRIPT
+    assert 'docker volume create "$PNPM_MODULES_VOLUME"' in QUALITY_SCRIPT
+    assert 'docker volume create "$PYRIGHT_CACHE_VOLUME"' in QUALITY_SCRIPT
     assert '-v "$PNPM_MODULES_VOLUME":/workspace/node_modules' in QUALITY_SCRIPT
     assert "-e PYRIGHT_PYTHON_CACHE_DIR=/pyright-cache" in QUALITY_SCRIPT
     assert 'PNPM_STORE_DIR="${PNPM_STORE_DIR:-/tmp/pnpm-store}"' in FRONTEND_SCRIPT
+
+
+def test_frozen_lockfile_install_precedes_all_frontend_gates() -> None:
+    install = FRONTEND_SCRIPT.index("pnpm install --frozen-lockfile")
+
+    for gate in (
+        'run_gate "Vitest unit/component tests"',
+        'run_gate "Oxlint"',
+        'run_gate "TypeScript compilation"',
+        'run_gate "Vite production build"',
+    ):
+        assert install < FRONTEND_SCRIPT.index(gate)
 
 
 def test_backend_and_frontend_branches_run_before_either_wait() -> None:
@@ -38,6 +52,23 @@ def test_backend_and_frontend_branches_run_before_either_wait() -> None:
     assert frontend_start > backend_start
     assert first_wait > frontend_start
     assert 'wait "$frontend_gate_pid"' in QUALITY_SCRIPT
+
+
+def test_backend_pytest_and_pyright_are_concurrent_and_status_checked() -> None:
+    pyright_start = QUALITY_SCRIPT.find("timed backend-pyright uv run pyright &")
+    pytest_start = QUALITY_SCRIPT.find("if timed backend-pytest uv run pytest")
+    pyright_wait = QUALITY_SCRIPT.find(r'wait "\$pyright_pid"')
+    status_guard = QUALITY_SCRIPT.find(
+        r'if [ "\$pytest_status" -ne 0 ] || [ "\$pyright_status" -ne 0 ]; then'
+    )
+
+    assert pyright_start >= 0
+    assert r"pyright_pid=\$!" in QUALITY_SCRIPT
+    assert pytest_start > pyright_start
+    assert pyright_wait > pytest_start
+    assert r"pytest_status=\$?" in QUALITY_SCRIPT
+    assert r"pyright_status=\$?" in QUALITY_SCRIPT
+    assert status_guard > pyright_wait
 
 
 def test_quality_gates_generate_junit_and_coverage_reports() -> None:
