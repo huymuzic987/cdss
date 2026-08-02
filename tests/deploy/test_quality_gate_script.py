@@ -25,6 +25,8 @@ def test_dependency_caches_persist_in_named_volumes() -> None:
     assert '-v "$UV_CACHE_VOLUME":/uv-cache' in QUALITY_SCRIPT
     assert '-v "$UV_ENV_VOLUME":/venv' in QUALITY_SCRIPT
     assert '-v "$PNPM_STORE_VOLUME":/pnpm/store' in QUALITY_SCRIPT
+    assert 'docker volume create "$PNPM_MODULES_VOLUME"' in QUALITY_SCRIPT
+    assert 'docker volume create "$PYRIGHT_CACHE_VOLUME"' in QUALITY_SCRIPT
     assert '-v "$PNPM_MODULES_VOLUME":/workspace/node_modules' in QUALITY_SCRIPT
     assert '-v "$COREPACK_VOLUME":/corepack' in QUALITY_SCRIPT
     assert "-e COREPACK_HOME=/corepack" in QUALITY_SCRIPT
