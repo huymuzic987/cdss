@@ -178,6 +178,23 @@ class _InternalTraversal(TransitionTraversalMixin, LinkTraversalMixin, TraceTrav
                 ):
                     return
 
+            candidates = tuple(
+                candidate
+                for edge in outgoing_edges
+                if (candidate := self.graph.nodes_by_id.get(edge.to_node_id)) is not None
+            )
+            # Local import avoids coupling the generic decision-tree package's
+            # import cycle to the optional medication follow-up policy.
+            from cdss.domain.follow_up import evaluate_medication_follow_up_at_bp_checkpoint
+
+            if not evaluate_medication_follow_up_at_bp_checkpoint(
+                self.graph.tree.tree_key,
+                current,
+                candidates,
+                self.run_state,
+            ):
+                return
+
             current = self._select_next_node(current, outgoing_edges)
 
     def _apply_patch(self, node: NodeDefinition) -> list[str]:

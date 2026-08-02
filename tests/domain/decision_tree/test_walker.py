@@ -241,6 +241,139 @@ def test_terminal_end_applies_context_patch() -> None:
     assert end_entry.changed_context_paths == ["context.diagnosis.status"]
 
 
+def test_medication_follow_up_gate_stops_before_bp_branch_for_drug_replacement() -> None:
+    graph = _medication_checkpoint_graph()
+
+    result = walk_tree(
+        graph,
+        _medication_follow_up_input(
+            assessment_date="2026-01-29",
+            regimen_effective_date="2026-01-01",
+            drug_replacement_required=True,
+        ),
+    )
+
+    assert _entered_node_keys(result.trace) == ["start", "regimen-checkpoint"]
+    assert result.context["medication_follow_up"] == {
+        "outcome": "REPLACE_DRUG_SAME_STAGE",
+        "should_continue_traversal": False,
+        "bp_target_reached": False,
+        "duration_sufficient": None,
+        "regimen_effective_date": "2026-01-29",
+        "next_follow_up_date": "2026-02-26",
+        "checkpoint_node_key": "regimen-checkpoint",
+    }
+    assert result.actions[0].payload["action_type"] == "REPLACE_DRUG_SAME_STAGE"
+
+
+def test_medication_follow_up_gate_stops_before_bp_branch_for_early_visit() -> None:
+    result = walk_tree(
+        _medication_checkpoint_graph(),
+        _medication_follow_up_input(
+            assessment_date="2026-03-10",
+            regimen_effective_date="2026-02-26",
+        ),
+    )
+
+    assert _entered_node_keys(result.trace) == ["start", "regimen-checkpoint"]
+    assert result.context["medication_follow_up"]["outcome"] == ("CONTINUE_UNTIL_REASSESSMENT")
+    assert result.context["medication_follow_up"]["next_follow_up_date"] == "2026-03-26"
+
+
+@pytest.mark.parametrize(
+    ("sbp", "dbp", "expected_outcome", "expected_terminal"),
+    [
+        (145, 90, "ESCALATE_REGIMEN", "not-reached-action"),
+        (125, 75, "MAINTAIN_CONTROLLED", "reached-end"),
+    ],
+)
+def test_medication_follow_up_gate_allows_existing_bp_branch(
+    sbp: int,
+    dbp: int,
+    expected_outcome: str,
+    expected_terminal: str,
+) -> None:
+    runtime_input = _medication_follow_up_input(
+        assessment_date="2026-03-26",
+        regimen_effective_date="2026-02-26",
+    )
+    runtime_input.update(current_clinic_sbp=sbp, current_clinic_dbp=dbp)
+
+    result = walk_tree(_medication_checkpoint_graph(), runtime_input)
+
+    assert result.context["medication_follow_up"]["outcome"] == expected_outcome
+    assert _entered_node_keys(result.trace)[-1] == expected_terminal
+
+
+def _medication_checkpoint_graph() -> TreeGraph:
+    start = _node(101, "start", NodeType.START)
+    checkpoint = _node(
+        102,
+        "regimen-checkpoint",
+        NodeType.CONDITION,
+        condition_definition={"path": "input.is_medication_follow_up", "op": "eq", "value": True},
+    )
+    reached = _node(
+        103,
+        "T4_C_INITIAL_REGIMEN_BP_TARGET_REACHED",
+        NodeType.CONDITION,
+        condition_definition={
+            "all": [
+                {"path": "input.current_clinic_sbp", "op": "lt", "value": 130},
+                {"path": "input.current_clinic_dbp", "op": "lt", "value": 80},
+            ]
+        },
+    )
+    not_reached = _node(
+        104,
+        "T4_C_INITIAL_REGIMEN_BP_TARGET_NOT_REACHED",
+        NodeType.CONDITION,
+        condition_definition={
+            "not": {
+                "all": [
+                    {"path": "input.current_clinic_sbp", "op": "lt", "value": 130},
+                    {"path": "input.current_clinic_dbp", "op": "lt", "value": 80},
+                ]
+            }
+        },
+    )
+    reached_end = _node(105, "reached-end", NodeType.END)
+    not_reached_action = _node(106, "not-reached-action", NodeType.ACTION)
+    return _graph(
+        [start, checkpoint, reached, not_reached, reached_end, not_reached_action],
+        [
+            _edge(110, start, checkpoint),
+            _edge(111, checkpoint, reached, 1),
+            _edge(112, checkpoint, not_reached, 2),
+            _edge(113, reached, reached_end),
+            _edge(114, not_reached, not_reached_action),
+        ],
+    )
+
+
+def _medication_follow_up_input(
+    *,
+    assessment_date: str,
+    regimen_effective_date: str,
+    drug_replacement_required: bool = False,
+) -> dict[str, Any]:
+    return {
+        "is_medication_follow_up": True,
+        "current_clinic_sbp": 145,
+        "current_clinic_dbp": 90,
+        "active_bp_target": {
+            "sbp": {"upper_exclusive_mmhg": 130},
+            "dbp": {"upper_exclusive_mmhg": 80},
+        },
+        "assessment_date": assessment_date,
+        "regimen_effective_date": regimen_effective_date,
+        "minimum_regimen_days": 28,
+        "drug_replacement_required": drug_replacement_required,
+        "adherence_adequate": True,
+        "dose_adequate": True,
+    }
+
+
 @pytest.mark.parametrize(
     "tree_key",
     ["essential-treatment-strategy", "optimal-treatment-strategy"],

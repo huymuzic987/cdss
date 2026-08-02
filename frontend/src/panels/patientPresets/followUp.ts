@@ -1,6 +1,95 @@
 import { FOLLOW_UP, MEDICATION_TARGET, type PatientPresetDefinition } from './shared'
+import { flatToBundle } from '../mockPatientForm/fhirBundle'
+import { formToPayload } from '../mockPatientForm/payload'
+import { DEFAULT_FORM } from '../mockPatientForm/types'
+
+const REVIEW_PATIENT_ID = 'medication-follow-up-review-001'
+
+function medicationFollowUpBundle(values: Record<string, string | number | boolean>) {
+  return flatToBundle({
+    is_medication_follow_up: true,
+    facility_capability: 'FULL_RESOURCES',
+    medication_follow_up_stage: 'INITIAL_REGIMEN',
+    active_bp_target_sbp_upper: 130,
+    active_bp_target_dbp_upper: 80,
+    minimum_regimen_days: 28,
+    current_regimen_drug_count: 1,
+    adherence_adequate: true,
+    dose_adequate: true,
+    age: 48,
+    risk_factor_count: 0,
+    ...values,
+  }, REVIEW_PATIENT_ID)
+}
 
 export const followUpPresets: PatientPresetDefinition[] = [
+  {
+    id: 'med-review-episode-initial-one-drug',
+    label: 'Medication Episode — Initial: One Drug',
+    category: FOLLOW_UP,
+    description: 'Initial visit for review patient medication-follow-up-review-001; intended starting state is one-drug treatment.',
+    bundle: formToPayload({
+      ...DEFAULT_FORM,
+      current_clinic_sbp: '145',
+      current_clinic_dbp: '92',
+      age: '48',
+      risk_factor_count: '0',
+      facility_capability: 'FULL_RESOURCES',
+    }, REVIEW_PATIENT_ID),
+  },
+  {
+    id: 'med-review-episode-follow-up-1-replace',
+    label: 'Medication Episode — Follow-Up 1: Replace Drug',
+    category: FOLLOW_UP,
+    description: 'BP is uncontrolled, but one drug is unusable. Stops at the initial-regimen checkpoint and replaces only that drug.',
+    bundle: medicationFollowUpBundle({
+      current_clinic_sbp: 145,
+      current_clinic_dbp: 90,
+      assessment_date: '2026-01-29',
+      regimen_effective_date: '2026-01-01',
+      drug_replacement_required: true,
+    }),
+  },
+  {
+    id: 'med-review-episode-follow-up-2-escalate',
+    label: 'Medication Episode — Follow-Up 2: Escalate to Two Drugs',
+    category: FOLLOW_UP,
+    description: 'The replacement drug has had a complete 28-day trial; BP remains above target, so normal traversal reaches the existing escalation action.',
+    bundle: medicationFollowUpBundle({
+      current_clinic_sbp: 142,
+      current_clinic_dbp: 88,
+      assessment_date: '2026-02-26',
+      regimen_effective_date: '2026-01-29',
+    }),
+  },
+  {
+    id: 'med-review-episode-follow-up-3-early',
+    label: 'Medication Episode — Follow-Up 3: Early Arrival',
+    category: FOLLOW_UP,
+    description: 'Patient is now on the two-drug/escalated stage but returns before 2026-03-26 with no drug change; traversal stops and continues the regimen.',
+    bundle: medicationFollowUpBundle({
+      medication_follow_up_stage: 'ESCALATED_REGIMEN',
+      current_regimen_drug_count: 2,
+      current_clinic_sbp: 138,
+      current_clinic_dbp: 84,
+      assessment_date: '2026-03-10',
+      regimen_effective_date: '2026-02-26',
+    }),
+  },
+  {
+    id: 'med-review-episode-follow-up-4-controlled',
+    label: 'Medication Episode — Follow-Up 4: Target Reached',
+    category: FOLLOW_UP,
+    description: 'On the scheduled reassessment date, BP is below target and normal traversal follows the escalated-regimen target-reached branch.',
+    bundle: medicationFollowUpBundle({
+      medication_follow_up_stage: 'ESCALATED_REGIMEN',
+      current_regimen_drug_count: 2,
+      current_clinic_sbp: 126,
+      current_clinic_dbp: 76,
+      assessment_date: '2026-03-26',
+      regimen_effective_date: '2026-02-26',
+    }),
+  },
   {
     id: 'lifestyle-followup',
     label: 'Lifestyle Follow-Up — BP Improved',
