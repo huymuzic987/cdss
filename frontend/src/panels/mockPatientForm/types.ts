@@ -39,7 +39,6 @@ export interface PatientFormData {
   has_hfmref: boolean
   has_hfpef: boolean
   has_lvh: boolean
-  bp_target_reached: boolean
   // Chronic kidney disease detail (hypertension-chronic-kidney-disease)
   has_kidney_transplant: boolean
   has_prior_creatinine_test: boolean
@@ -120,7 +119,6 @@ export const DEFAULT_FORM: PatientFormData = {
   has_hfmref: false,
   has_hfpef: false,
   has_lvh: false,
-  bp_target_reached: false,
   has_kidney_transplant: false,
   has_prior_creatinine_test: false,
   still_using_ras_inhibitor: false,

@@ -38,7 +38,6 @@ export function ComorbiditiesSection({ form, setStr, setBool, disabled }: FormSe
             <Toggle label="HFmrEF (mildly reduced EF)" fieldKey="has_hfmref" form={form} onChange={setBool} disabled={disabled} />
             <Toggle label="HFpEF (preserved EF)" fieldKey="has_hfpef" form={form} onChange={setBool} disabled={disabled} />
             <Toggle label="Left Ventricular Hypertrophy" fieldKey="has_lvh" form={form} onChange={setBool} disabled={disabled} />
-            <Toggle label="BP Target Reached" fieldKey="bp_target_reached" form={form} onChange={setBool} disabled={disabled} />
           </div>
         </>
       )}

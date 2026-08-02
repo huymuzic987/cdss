@@ -47,7 +47,6 @@ export const demographicPresets: PatientPresetDefinition[] = [
       age: '85', risk_factor_count: '2',
       has_frailty_syndrome: true, has_heart_failure: true,
       has_hfref: true,
-      bp_target_reached: false,
       facility_capability: 'FULL_RESOURCES',
     },
   },

@@ -86,7 +86,6 @@ export const cardioModifierPresets: PatientPresetDefinition[] = [
       age: '65', risk_factor_count: '2',
       has_heart_failure: true,
       has_hfmref: true,
-      bp_target_reached: false,
       facility_capability: 'FULL_RESOURCES',
     },
   },
