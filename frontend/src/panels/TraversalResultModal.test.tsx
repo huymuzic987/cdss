@@ -2,7 +2,7 @@
 import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { ApiErrorResponse, EvaluationResponse } from '../api/types'
+import type { ApiErrorResponse, EvaluationResponse, TreeGraphResponse } from '../api/types'
 import { TraversalResultModal } from './TraversalResultModal'
 
 const presentation = {
@@ -87,8 +87,19 @@ function trace(
   }
 }
 
-function renderModal(modalResult = result) {
-  render(<TraversalResultModal result={modalResult} partial={null} onClose={vi.fn()} locale="en" />)
+function renderModal(
+  modalResult = result,
+  graphs: Record<string, TreeGraphResponse> = {},
+) {
+  render(
+    <TraversalResultModal
+      result={modalResult}
+      partial={null}
+      graphs={graphs}
+      onClose={vi.fn()}
+      locale="en"
+    />,
+  )
 }
 
 afterEach(cleanup)
@@ -115,10 +126,147 @@ describe('TraversalResultModal', () => {
     const reasonSection = screen.getByText('Matched patient findings').closest('details') as HTMLElement
 
     expect(screen.getByRole('dialog').querySelector('.cds-alert-high')).toBeTruthy()
+    expect(document.querySelector('.cds-row-heading strong')?.textContent).toBe('Hypertension')
     expect(within(reasonSection).getByText('Pregnant')).toBeTruthy()
     expect(within(reasonSection).getByText('Is pregnant')).toBeTruthy()
     expect(screen.queryByText('Clinical decision support recommendation')).toBeNull()
     expect(screen.queryByText('Generic evidence')).toBeNull()
+  })
+
+  it('uses significant disease instead of hypertension class as the alert title', () => {
+    renderModal({
+      ...result,
+      input_snapshot: { has_type_2_diabetes: true, has_ckd: true },
+      context: {
+        diagnosis: { hypertension_class: 'HIGH_NORMAL_BP' },
+        risk: { level: 'HIGH' },
+      },
+    })
+
+    const heading = document.querySelector('.cds-row-heading strong')
+    expect(heading?.textContent).toBe('Type 2 diabetes · Chronic kidney disease')
+    expect(heading?.textContent).not.toContain('Hypertension class')
+  })
+
+  it('derives the disease title from the Tree 3 link route', () => {
+    const treeKey = 'treatment-threshold-and-bp-target'
+    const nodeKey = 'T3_LINK_18_69_TYPE_2_DIABETES_MODIFIER'
+    const graph: TreeGraphResponse = {
+      tree: { tree_key: treeKey, name_en: 'Treatment Threshold', name_vi: 'Treatment Threshold' },
+      start_node_key: 'T3_START',
+      nodes: [{
+        node_key: nodeKey, node_type: 'LINK',
+        text_en: 'Hypertension and Type 2 Diabetes Tree',
+        text_vi: 'Hypertension and Type 2 Diabetes Tree',
+        condition_definition: null, context_patch: null, action_payload: null,
+        link_target_tree_key: 'hypertension-type-2-diabetes',
+        link_target_node_key: null, display_order: 1,
+      }],
+      edges: [], global_nodes: [], references: [],
+    }
+    renderModal({
+      ...result,
+      input_snapshot: {},
+      traversal_log: [
+        ...result.traversal_log,
+        trace(5, 'node_entered', nodeKey, 'LINK', treeKey),
+      ],
+    }, { [treeKey]: graph })
+
+    expect(document.querySelector('.cds-row-heading strong')?.textContent).toBe('Type 2 diabetes')
+  })
+
+  it('prioritizes specific target-organ damage for hypertensive emergency', () => {
+    renderModal({
+      ...result,
+      input_snapshot: {
+        has_target_organ_damage: true,
+        has_acute_ischemic_stroke: true,
+        has_type_2_diabetes: true,
+      },
+    })
+
+    expect(document.querySelector('.cds-row-heading strong')?.textContent).toBe('Acute ischemic stroke')
+  })
+
+  it.each([
+    ['T12_INF_ECLAMPSIA_CLASSIFICATION', 'Eclampsia'],
+    ['T12_INF_HELLP_SYNDROME', 'HELLP syndrome'],
+  ])('uses the exact obstetric classification for %s', (nodeKey, expectedTitle) => {
+    const treeKey = 'hypertension-in-pregnancy'
+    const graph: TreeGraphResponse = {
+      tree: { tree_key: treeKey, name_en: 'Pregnancy', name_vi: 'Pregnancy' },
+      start_node_key: 'T12_START',
+      nodes: [{
+        node_key: nodeKey, node_type: 'INFERENCE',
+        text_en: expectedTitle, text_vi: expectedTitle,
+        condition_definition: null, context_patch: null, action_payload: null,
+        link_target_tree_key: null, link_target_node_key: null, display_order: 1,
+      }],
+      edges: [], global_nodes: [], references: [],
+    }
+    renderModal({
+      ...result,
+      input_snapshot: {},
+      traversal_log: [
+        ...result.traversal_log,
+        {
+          ...trace(5, 'node_entered', nodeKey, 'INFERENCE', treeKey),
+          changed_context_paths: ['context.pregnancy.classification'],
+        },
+      ],
+    }, { [treeKey]: graph })
+
+    expect(document.querySelector('.cds-row-heading strong')?.textContent).toBe(expectedTitle)
+  })
+
+  it('shows confirmed classifications as alert tags instead of finding rows', () => {
+    const treeKey = 'risk-classification'
+    const graph: TreeGraphResponse = {
+      tree: { tree_key: treeKey, name_en: 'Risk Classification', name_vi: 'Risk Classification' },
+      start_node_key: 'T2_START',
+      nodes: [{
+        node_key: 'T2_INF_MEDIUM_RISK', node_type: 'INFERENCE',
+        text_en: 'Medium risk', text_vi: 'Medium risk',
+        condition_definition: null, context_patch: null, action_payload: null,
+        link_target_tree_key: null, link_target_node_key: null, display_order: 1,
+      }, {
+        node_key: 'T2_INF_GRADE_1_CLINIC_BP', node_type: 'INFERENCE',
+        text_en: 'Grade 1 hypertension', text_vi: 'Grade 1 hypertension',
+        condition_definition: null, context_patch: null, action_payload: null,
+        link_target_tree_key: null, link_target_node_key: null, display_order: 2,
+      }],
+      edges: [], global_nodes: [], references: [],
+    }
+    const classification = {
+      ...trace(5, 'node_entered' as const, 'T2_INF_MEDIUM_RISK', 'INFERENCE', treeKey),
+      changed_context_paths: ['context.risk.level'],
+    }
+    const hypertensionClassification = {
+      ...trace(6, 'node_entered' as const, 'T2_INF_GRADE_1_CLINIC_BP', 'INFERENCE', treeKey),
+      changed_context_paths: ['context.diagnosis.hypertension_class'],
+    }
+    render(
+      <TraversalResultModal
+        result={{
+          ...result,
+          traversal_log: [...result.traversal_log, classification, hypertensionClassification],
+        }}
+        partial={null}
+        graphs={{ [treeKey]: graph }}
+        onClose={vi.fn()}
+        locale="en"
+      />,
+    )
+
+    const alert = screen.getByText('Alert').closest('details') as HTMLElement
+    const findings = screen.getByText('Matched patient findings').closest('details') as HTMLElement
+    const tag = within(alert).getByText('Medium risk')
+    expect(tag.classList.contains('cds-confirmed-tag')).toBe(true)
+    expect(tag.closest('.cds-row-heading')).toBeTruthy()
+    expect(within(alert).queryByText('Grade 1 hypertension')).toBeNull()
+    expect(within(findings).queryByText('Medium risk')).toBeNull()
+    expect(screen.queryByText('Confirmed during clinical assessment')).toBeNull()
   })
 
   it('presents recommendations and review timing without acknowledgement controls', () => {
@@ -157,8 +305,9 @@ describe('TraversalResultModal', () => {
 
     expect(within(orderRow).getByText('Combination therapy')).toBeTruthy()
     expect(within(orderRow).getByText('Low dose')).toBeTruthy()
-    expect(within(orderRow).getByText('Drug Class A')).toBeTruthy()
-    expect(within(orderRow).getByText('Drug Class C')).toBeTruthy()
+    expect(within(orderRow).getByText('A')).toBeTruthy()
+    expect(within(orderRow).getByText('C')).toBeTruthy()
+    expect(within(orderRow).queryByText(/Source node/)).toBeNull()
     expect(within(orderRow).queryByText('+ Drug Class C')).toBeNull()
     expect(within(orderRow).queryByText('Drug Class A + Drug Class C')).toBeNull()
     await userEvent.setup().hover(orderRow)
@@ -166,14 +315,47 @@ describe('TraversalResultModal', () => {
     hoverTarget.focus()
 
     const tooltip = await screen.findByRole('tooltip')
-    expect(tooltip.textContent).toContain('Drug Class A')
+    expect(tooltip.textContent).toContain('A · RAS inhibitors')
     expect(tooltip.textContent).toContain('Low dose')
     expect(tooltip.textContent).toContain('Losartan')
     expect(tooltip.textContent).toContain('25 mg')
+    expect(tooltip.textContent).not.toContain('Amlodipine')
+    expect(tooltip.textContent).not.toContain('C · Calcium channel blockers')
     expect(tooltip.textContent).toContain('Add combination therapy')
     expect(tooltip.textContent).toContain('T4_ACTION_ADD_DRUG')
     expect(tooltip.textContent).toContain('Example hypertension guideline')
     expect(tooltip.textContent).toContain('Table 4')
+  })
+
+  it('explains single-drug alternatives and shows their drug group on focus', async () => {
+    const alternatives = [{
+      id: 'furosemide', type: 'medication',
+      name_en: 'Furosemide', name_vi: 'Furosemide',
+      class_label_en: 'D', class_label_vi: 'D',
+      dose: '20 mg',
+    }, {
+      id: 'enalapril', type: 'medication',
+      name_en: 'Enalapril', name_vi: 'Enalapril',
+      class_label_en: 'ACE inhibitor', class_label_vi: 'Ức chế men chuyển',
+      dose: '5 mg',
+    }]
+    const actionWithAlternatives = {
+      ...result.actions[0]!,
+      payload: {
+        ...result.actions[0]!.payload,
+        presentation: { ...presentation, recommended_orders: alternatives },
+      },
+    }
+    renderModal({ ...result, actions: [actionWithAlternatives] })
+
+    expect(screen.getByText('Choose one of these alternatives')).toBeTruthy()
+    expect(screen.queryByText('OR')).toBeNull()
+    const firstDrug = screen.getByText('Furosemide').closest('.cds-order-row') as HTMLElement
+    firstDrug.focus()
+    const tooltip = await screen.findByRole('tooltip')
+    expect(tooltip.textContent).toContain('Drug group: D · Diuretics')
+    expect(tooltip.textContent).toContain('Furosemide')
+    expect(tooltip.textContent).toContain('20 mg')
   })
 
   it('keeps the material path collapsed by default and omits technical start nodes', async () => {

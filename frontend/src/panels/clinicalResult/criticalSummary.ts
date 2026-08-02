@@ -54,11 +54,13 @@ export function deriveCriticalSummary(input: SummaryInput): CriticalSummary {
       ? 'high'
       : risk === 'MODERATE' ? 'moderate' : 'routine'
   const path = importantPath(input, entered)
-  const direct = path.flatMap((step) => step.kind === 'trigger' && step.detail
+  const patientStats = contextPatientFindings(input.context, input.locale)
+  const direct = path.flatMap((step) => !isDuplicateClinicThreshold(step)
+    && step.kind === 'trigger' && step.detail
     ? [{ id: step.id, label: step.label, value: step.detail, treeName: step.treeName }]
     : [])
-  const patientStats = contextPatientFindings(input.context, input.locale)
-  const fallback = path.flatMap((step) => ['urgent', 'classification'].includes(step.kind)
+  const fallback = path.flatMap((step) => !isDuplicateClinicThreshold(step)
+    && ['urgent', 'classification'].includes(step.kind)
     && !MEDICATION_INFERENCE.test(`${step.label} ${step.detail ?? ''}`)
     ? [{
         id: step.id, label: step.label, value: step.detail || confirmedText(input.locale),
@@ -77,6 +79,10 @@ export function deriveCriticalSummary(input: SummaryInput): CriticalSummary {
       input.locale,
     ),
   }
+}
+
+function isDuplicateClinicThreshold(step: ImportantPathStep): boolean {
+  return step.id === 'hypertension-diagnosis:T1_C_CLINIC_1_NON_CRISIS'
 }
 
 function contextPatientFindings(

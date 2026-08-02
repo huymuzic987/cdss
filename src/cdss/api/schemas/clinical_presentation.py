@@ -58,6 +58,9 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
         return [deepcopy(item) for item in existing if isinstance(item, dict)]
     orders: list[JsonObject] = []
     medicines = payload.get("medicines")
+    class_catalog = payload.get("medicine_catalog_by_class")
+    if not isinstance(class_catalog, dict):
+        class_catalog = {}
     if isinstance(medicines, list):
         for index, raw in enumerate(medicines):
             if (
@@ -68,6 +71,15 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
                 continue
             name = _string(raw.get("name"), _string(raw.get("drug_name"), "Medication"))
             drug_id = _string(raw.get("drug_id"), _string(raw.get("id"), f"medicine-{index}"))
+            class_code = _string(raw.get("drug_class"))
+            drug_classes = _drug_class_details(
+                {"medicines": class_catalog},
+                [class_code] if class_code in {"A", "B", "C", "D"} else [],
+                "LOW_TO_USUAL_DOSE",
+                excluded,
+                blocked_text,
+            )
+            group_label = _string(raw.get("drug_class"), _string(raw.get("subgroup")))
             orders.append(
                 {
                     "id": f"{action.node_key}-medicine-{drug_id}",
@@ -79,12 +91,13 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
                         _string(raw.get("dose_low"), _string(raw.get("dose"))),
                     ),
                     "class_label_en": _string(
-                        raw.get("class_label"), _string(raw.get("drug_class"))
+                        raw.get("class_label"), group_label
                     ),
                     "class_label_vi": _string(
                         raw.get("class_label_vi"),
-                        _string(raw.get("class_label"), _string(raw.get("drug_class"))),
+                        _string(raw.get("class_label"), group_label),
                     ),
+                    "drug_classes": drug_classes,
                     "medicine_ids": [drug_id] if drug_id else [],
                     "source_data": deepcopy(raw),
                 }
@@ -99,7 +112,12 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
                 raw.get("dose_strategy"),
                 _string(payload.get("dose_strategy"), "LOW_TO_USUAL_DOSE"),
             )
-            drug_classes = _drug_class_details(raw, classes, dose_strategy, excluded, blocked_text)
+            display_option = dict(raw)
+            if class_catalog:
+                display_option["medicines"] = class_catalog
+            drug_classes = _drug_class_details(
+                display_option, classes, dose_strategy, excluded, blocked_text
+            )
             labels_en = [f"Drug Class {code}" for code in classes]
             labels_vi = [f"Nhóm thuốc {code}" for code in classes]
             orders.append(
