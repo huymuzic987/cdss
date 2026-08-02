@@ -1,6 +1,7 @@
 """Synthetic tests for the internal-tree traversal loop."""
 
 from collections.abc import Sequence
+from copy import deepcopy
 from dataclasses import replace
 from typing import Any
 from uuid import UUID
@@ -283,6 +284,44 @@ def test_medication_follow_up_gate_stops_before_bp_branch_for_early_visit() -> N
 
 
 @pytest.mark.parametrize(
+    ("quality_field", "quality_value"),
+    [("adherence_adequate", False), ("dose_adequate", False)],
+)
+def test_medication_follow_up_gate_stops_before_bp_branch_for_treatment_quality(
+    quality_field: str,
+    quality_value: bool,
+) -> None:
+    runtime_input = _medication_follow_up_input(
+        assessment_date="2026-03-26",
+        regimen_effective_date="2026-02-26",
+    )
+    runtime_input[quality_field] = quality_value
+
+    result = walk_tree(_medication_checkpoint_graph(), runtime_input)
+
+    assert _entered_node_keys(result.trace) == ["start", "regimen-checkpoint"]
+    follow_up = result.context["medication_follow_up"]
+    assert follow_up["outcome"] == "ADDRESS_ADHERENCE_OR_DOSE"
+    assert follow_up["should_continue_traversal"] is False
+    assert follow_up["current_regimen_drug_classes"] == ["A", "D"]
+
+
+def test_medication_follow_up_gate_is_stateless_and_does_not_mutate_input() -> None:
+    runtime_input = _medication_follow_up_input(
+        assessment_date="2026-03-26",
+        regimen_effective_date="2026-02-26",
+    )
+    original = deepcopy(runtime_input)
+
+    first = walk_tree(_medication_checkpoint_graph(), runtime_input)
+    second = walk_tree(_medication_checkpoint_graph(), runtime_input)
+
+    assert runtime_input == original
+    assert first.context["medication_follow_up"] == second.context["medication_follow_up"]
+    assert _entered_node_keys(first.trace) == _entered_node_keys(second.trace)
+
+
+@pytest.mark.parametrize(
     ("sbp", "dbp", "expected_outcome", "expected_terminal"),
     [
         (145, 90, "ESCALATE_REGIMEN", "not-reached-action"),
@@ -305,6 +344,55 @@ def test_medication_follow_up_gate_allows_existing_bp_branch(
 
     assert result.context["medication_follow_up"]["outcome"] == expected_outcome
     assert _entered_node_keys(result.trace)[-1] == expected_terminal
+
+
+@pytest.mark.parametrize(
+    "treatment_node_key",
+    ["T13_A_ADD_MRA", "T13_A_ADD_SPIRONOLACTONE", "T13_A_ALTERNATIVES"],
+)
+def test_resistant_hypertension_treatment_reaches_shared_follow_up_gate(
+    treatment_node_key: str,
+) -> None:
+    start = _node(121, "T13_START", NodeType.START)
+    treatment = _node(122, treatment_node_key, NodeType.ACTION)
+    reached = _node(
+        123,
+        "T13_C_BP_TARGET_REACHED",
+        NodeType.CONDITION,
+        condition_definition={"path": "input.current_clinic_sbp", "op": "lt", "value": 130},
+    )
+    not_reached = _node(
+        124,
+        "T13_C_BP_TARGET_NOT_REACHED",
+        NodeType.CONDITION,
+        condition_definition={"path": "input.current_clinic_sbp", "op": "gte", "value": 130},
+    )
+    maintain = _node(125, "T13_END_MAINTAIN", NodeType.END)
+    refer = _node(126, "T13_END_REFER", NodeType.END)
+    graph = _graph(
+        [start, treatment, reached, not_reached, maintain, refer],
+        [
+            _edge(131, start, treatment),
+            _edge(132, treatment, reached, 1),
+            _edge(133, treatment, not_reached, 2),
+            _edge(134, reached, maintain),
+            _edge(135, not_reached, refer),
+        ],
+        tree_key="resistant-hypertension",
+    )
+
+    result = walk_tree(
+        graph,
+        _medication_follow_up_input(
+            assessment_date="2026-03-26",
+            regimen_effective_date="2026-02-26",
+            drug_replacement_required=True,
+        ),
+    )
+
+    assert _entered_node_keys(result.trace) == ["T13_START", treatment_node_key]
+    assert result.context["medication_follow_up"]["outcome"] == "REPLACE_DRUG_SAME_STAGE"
+    assert result.context["medication_follow_up"]["checkpoint_node_key"] == treatment_node_key
 
 
 def _medication_checkpoint_graph() -> TreeGraph:

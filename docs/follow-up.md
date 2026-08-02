@@ -130,6 +130,38 @@ count, follow-up number, phase, minimum-follow-up completion, and whether a next
 follow-up is required. See [Pregnancy follow-up testing](pregnancy_follow_up_testing.md)
 for the FHIR requirements and preset walkthrough.
 
+## Stateless FHIR input contract
+
+Every medication follow-up Bundle must be independently evaluable. It must
+identify the patient and provide the current encounter, current clinic BP,
+current regimen, active BP target, and timing/quality values needed by the
+gate. The implementation does not read a saved node checkpoint or reconstruct
+the regimen from an earlier request.
+
+The flattened runtime fields used by the follow-up gate are:
+
+| Field | Required for the gate | Meaning |
+| --- | ---: | --- |
+| `is_medication_follow_up` | Yes | Enables medication follow-up behavior |
+| `medication_follow_up_stage` | Yes for known-stage presets | `INITIAL_REGIMEN` or `ESCALATED_REGIMEN` |
+| `current_clinic_sbp`, `current_clinic_dbp` | Yes | BP measured at this encounter |
+| `active_bp_target_sbp_upper`, `active_bp_target_dbp_upper` | Yes | Exclusive BP limits; converted to `active_bp_target` before traversal |
+| `assessment_date` | Yes | Date of the current follow-up assessment |
+| `regimen_effective_date` | Yes | Date the unchanged current regimen became effective |
+| `minimum_regimen_days` | Yes | Minimum number of days before escalation can be assessed |
+| `current_regimen_drug_classes` | Yes in presets | Current class combination, for example `A`, `A+D`, or `A+C+D` |
+| `current_regimen_drug_count` | Preset/presentation data | Number of drugs in the current regimen |
+| `drug_replacement_required` | No | One medicine is unusable and must be replaced at the same stage |
+| `adherence_adequate` | No | Defaults to adequate when not reported |
+| `dose_adequate` | No | Defaults to adequate when not reported |
+
+The simulator encodes workflow values as local FHIR input extensions and the
+three clinical quality flags as local clinical-flag Conditions. The canonical
+FHIR parser converts them into the runtime fields above. Comorbidities remain
+ordinary patient/Condition facts in the same Bundle, so after the gate permits
+continuation the original tree routing still selects the relevant CKD,
+diabetes, CAD, heart-failure, older-adult, or resistant-hypertension path.
+
 ## Tree traversal integration
 
 The walker invokes `evaluate_medication_follow_up_at_bp_checkpoint` immediately
@@ -158,24 +190,53 @@ reached/not-reached conditions. It does not introduce or select a new branch.
 For the other three outcomes, it records a terminal action and returns before
 either BP condition is entered.
 
-The frontend follow-up presets include five chronological snapshots using the
-same Patient ID, `medication-follow-up-review-001`: initial two-drug treatment,
-same-stage replacement of one unusable drug, escalation to three drugs after
-28 days, an early unchanged visit, and target reached on the scheduled
-reassessment date. These remain stateless requests; selecting them in order
-does not persist earlier results.
+The resistant-hypertension treatment actions `T13_A_ADD_MRA`,
+`T13_A_ADD_SPIRONOLACTONE`, and `T13_A_ALTERNATIVES` are explicit continuation
+nodes. This allows their outgoing BP-target checkpoints to use the same gate
+as the general treatment trees. The resistant flow therefore does not bypass
+duration, replacement, adherence, or dose checks.
 
-### Traversal popup requirement
+## Result popup
 
-The traversal popup still needs a presentation update for follow-up stops. When
-the gate returns `REPLACE_DRUG_SAME_STAGE`, `CONTINUE_UNTIL_REASSESSMENT`, or
-`ADDRESS_ADHERENCE_OR_DOSE`, the popup should explain why traversal stopped at
-that checkpoint instead of making the stop look like an incomplete tree run.
-It should display the follow-up outcome, the checkpoint node, regimen effective
-date, next follow-up date when present, BP-target result, and whether minimum
-duration was completed. The data already exists in
-`context.medication_follow_up` and in the synthetic stop action payload; this is
-a frontend presentation task and must not change traversal branching.
+The traversal popup consumes `context.medication_follow_up` and the synthetic
+stop action; this is implemented rather than pending work.
+
+- A same-stage replacement, early visit, or adherence/dose problem is added to
+  Recommended Action so the reason for stopping is visible.
+- `MAINTAIN_CONTROLLED` adds: "Blood pressure target met. Continue monitoring
+  and maintain the current regimen."
+- A calculated `next_follow_up_date` is shown only as **Reassessment date**.
+  The popup does not show a regimen-period explanation beside it.
+- If traversal did not produce a new combination, the current regimen from
+  `current_regimen_drug_classes` is still displayed in Recommended Orders.
+  If traversal did produce a new combination, that new order is displayed and
+  the current-regimen fallback is omitted to avoid duplication.
+- Follow-up details are not added to the colored alert header or Care Setting.
+
+## Preset episodes and expected outcomes
+
+Each snapshot is a complete Bundle and can be selected independently; using
+the same Patient ID only makes the intended chronology understandable. No
+result from one preset is stored for the next preset.
+
+| Episode | Visits after initial | Expected gate sequence |
+| --- | ---: | --- |
+| General review | 4 | replace, escalate, early return, controlled |
+| CKD | 3 | replace, escalate, controlled |
+| Type 2 diabetes | 3 | early return, controlled, maintain controlled |
+| Coronary artery disease | 3 | address adherence, escalate, controlled |
+| Heart failure | 3 | early return, escalate, controlled on `A+B+C+D` |
+| Older adult | 3 | replace one-drug `A` regimen, escalate from `A`, controlled |
+| Resistant hypertension | 6 | increase dose, replace drug, address adherence, move to three drugs, early return, uncontrolled adequate trial into resistant-HTN BP check |
+
+In outcome names, these sequences map respectively to
+`REPLACE_DRUG_SAME_STAGE`, `ESCALATE_REGIMEN`,
+`CONTINUE_UNTIL_REASSESSMENT`, `MAINTAIN_CONTROLLED`, and
+`ADDRESS_ADHERENCE_OR_DOSE`.
+
+The frontend test matrix has an explicit expected outcome for every medication
+episode follow-up. A coverage assertion fails if a new follow-up preset is
+added without adding its expected gate result.
 
 ## Source and tests
 
@@ -185,7 +246,18 @@ a frontend presentation task and must not change traversal branching.
 - Pregnancy episode behavior: `src/cdss/domain/pregnancy_follow_up.py`
 - Evaluation integration: `src/cdss/api/routes/evaluation.py`
 - BP-checkpoint hook: `src/cdss/domain/decision_tree/walker.py`
+- Action continuation policy, including resistant hypertension:
+  `src/cdss/domain/decision_tree/walker_policy.py`
+- Result-popup follow-up presentation:
+  `frontend/src/panels/TraversalResultModal.tsx` and
+  `frontend/src/panels/clinicalResult/medicationFollowUpMessage.ts`
+- General and comorbidity episode presets:
+  `frontend/src/panels/patientPresets/followUp.ts` and
+  `frontend/src/panels/patientPresets/followUpComorbidityEpisodes.ts`
 - Core follow-up tests: `tests/domain/test_follow_up.py`
 - Traversal-gate tests: `tests/domain/decision_tree/test_walker.py`
+- Preset FHIR contract and complete outcome matrix:
+  `frontend/src/panels/mockPatientForm/fhirBundle.test.ts`
+- Popup presentation tests: `frontend/src/panels/TraversalResultModal.test.tsx`
 - Pregnancy tests: `tests/domain/test_pregnancy_follow_up.py` and
   `tests/db/test_pregnancy_fhir_presets.py`

@@ -6,7 +6,28 @@ import {
   PREGNANCY_FOLLOW_UP,
 } from '../patientPresets/shared'
 import { bundleToForm, formToPayload } from './payload'
+import { bundleToFlat } from './fhirBundle'
 import { validatePatientForm } from './validation'
+
+const medicationEpisodePrefix = /^(?:med-review-episode|comorbidity-episode-.+)-follow-up-/
+
+function expectedMedicationOutcome(flat: Record<string, unknown>) {
+  const sbp = Number(flat.current_clinic_sbp)
+  const dbp = Number(flat.current_clinic_dbp)
+  const targetSbp = Number(flat.active_bp_target_sbp_upper)
+  const targetDbp = Number(flat.active_bp_target_dbp_upper)
+  if (sbp < targetSbp && dbp < targetDbp) return 'MAINTAIN_CONTROLLED'
+  if (flat.drug_replacement_required === true) return 'REPLACE_DRUG_SAME_STAGE'
+
+  const assessment = Date.parse(String(flat.assessment_date))
+  const effective = Date.parse(String(flat.regimen_effective_date))
+  const elapsedDays = (assessment - effective) / 86_400_000
+  if (elapsedDays < Number(flat.minimum_regimen_days)) return 'CONTINUE_UNTIL_REASSESSMENT'
+  if (flat.adherence_adequate === false || flat.dose_adequate === false) {
+    return 'ADDRESS_ADHERENCE_OR_DOSE'
+  }
+  return 'ESCALATE_REGIMEN'
+}
 
 describe('canonical FHIR patient presets', () => {
   it.each(PATIENT_PRESETS.map((preset) => [preset.id, preset] as const))(
@@ -76,15 +97,86 @@ describe('canonical FHIR patient presets', () => {
     }
   })
 
+  it('makes every medication episode follow-up independently evaluable from its FHIR Bundle', () => {
+    const followUps = PATIENT_PRESETS.filter(({ id }) => medicationEpisodePrefix.test(id))
+    expect(followUps.length).toBeGreaterThan(0)
+
+    for (const preset of followUps) {
+      const flat = bundleToFlat(preset.bundle)
+      const required = [
+        'current_clinic_sbp', 'current_clinic_dbp',
+        'active_bp_target_sbp_upper', 'active_bp_target_dbp_upper',
+        'medication_follow_up_stage', 'current_regimen_drug_classes', 'assessment_date',
+        'regimen_effective_date', 'minimum_regimen_days',
+      ]
+      for (const field of required) {
+        expect(flat[field], `${preset.id}: ${field}`).not.toBeUndefined()
+        expect(flat[field], `${preset.id}: ${field}`).not.toBe('')
+      }
+      expect(flat.is_medication_follow_up, preset.id).toBe(true)
+
+      // Reading this one Bundle supplies every gate input; no earlier episode
+      // or patient checkpoint is consulted by the decoder.
+      expect(expectedMedicationOutcome(flat), preset.id).toBeTruthy()
+    }
+  })
+
+  const medicationEpisodeOutcomes = [
+    ['med-review-episode-follow-up-1-replace', 'REPLACE_DRUG_SAME_STAGE'],
+    ['med-review-episode-follow-up-2-escalate', 'ESCALATE_REGIMEN'],
+    ['med-review-episode-follow-up-3-early', 'CONTINUE_UNTIL_REASSESSMENT'],
+    ['med-review-episode-follow-up-4-controlled', 'MAINTAIN_CONTROLLED'],
+    ['comorbidity-episode-ckd-follow-up-1-replace', 'REPLACE_DRUG_SAME_STAGE'],
+    ['comorbidity-episode-ckd-follow-up-2-escalate', 'ESCALATE_REGIMEN'],
+    ['comorbidity-episode-ckd-follow-up-3-controlled', 'MAINTAIN_CONTROLLED'],
+    ['comorbidity-episode-type2-diabetes-follow-up-1-early', 'CONTINUE_UNTIL_REASSESSMENT'],
+    ['comorbidity-episode-type2-diabetes-follow-up-2-controlled', 'MAINTAIN_CONTROLLED'],
+    ['comorbidity-episode-type2-diabetes-follow-up-3-maintain', 'MAINTAIN_CONTROLLED'],
+    ['comorbidity-episode-cad-follow-up-1-address-adherence', 'ADDRESS_ADHERENCE_OR_DOSE'],
+    ['comorbidity-episode-cad-follow-up-2-escalate', 'ESCALATE_REGIMEN'],
+    ['comorbidity-episode-cad-follow-up-3-controlled', 'MAINTAIN_CONTROLLED'],
+    ['comorbidity-episode-heart-failure-follow-up-1-early', 'CONTINUE_UNTIL_REASSESSMENT'],
+    ['comorbidity-episode-heart-failure-follow-up-2-escalate', 'ESCALATE_REGIMEN'],
+    ['comorbidity-episode-heart-failure-follow-up-3-controlled', 'MAINTAIN_CONTROLLED'],
+    ['comorbidity-episode-older-adult-follow-up-1-replace', 'REPLACE_DRUG_SAME_STAGE'],
+    ['comorbidity-episode-older-adult-follow-up-2-escalate', 'ESCALATE_REGIMEN'],
+    ['comorbidity-episode-older-adult-follow-up-3-controlled', 'MAINTAIN_CONTROLLED'],
+    ['comorbidity-episode-resistant-hypertension-follow-up-1-increase-dose', 'ADDRESS_ADHERENCE_OR_DOSE'],
+    ['comorbidity-episode-resistant-hypertension-follow-up-2-replace-drug', 'REPLACE_DRUG_SAME_STAGE'],
+    ['comorbidity-episode-resistant-hypertension-follow-up-3-address-adherence', 'ADDRESS_ADHERENCE_OR_DOSE'],
+    ['comorbidity-episode-resistant-hypertension-follow-up-4-use-three-drugs', 'ESCALATE_REGIMEN'],
+    ['comorbidity-episode-resistant-hypertension-follow-up-5-early', 'CONTINUE_UNTIL_REASSESSMENT'],
+    ['comorbidity-episode-resistant-hypertension-follow-up-6-resistant-bp-check', 'ESCALATE_REGIMEN'],
+  ] as const
+
+  it.each(medicationEpisodeOutcomes)(
+    '%s contains the FHIR inputs for %s before traversal',
+    (id, outcome) => {
+      const preset = PATIENT_PRESETS.find((candidate) => candidate.id === id)
+      expect(preset, id).toBeDefined()
+      expect(expectedMedicationOutcome(bundleToFlat(preset!.bundle))).toBe(outcome)
+    },
+  )
+
+  it('has an explicit expected gate outcome for every medication episode follow-up', () => {
+    const actualIds = PATIENT_PRESETS
+      .filter(({ id }) => medicationEpisodePrefix.test(id))
+      .map(({ id }) => id)
+      .sort()
+    const expectedIds = medicationEpisodeOutcomes.map(([id]) => id).sort()
+    expect(expectedIds).toEqual(actualIds)
+  })
+
   it.each([
     ['ckd', 'medication-follow-up-ckd-001', 'has_ckd'],
     ['type2-diabetes', 'medication-follow-up-type2-diabetes-001', 'has_type_2_diabetes'],
     ['cad', 'medication-follow-up-cad-001', 'has_coronary_artery_disease'],
+    ['heart-failure', 'medication-follow-up-heart-failure-001', 'has_heart_failure'],
   ])('keeps the %s comorbidity episode longitudinal and clinically flagged', (slug, patientId, flag) => {
     const episode = PATIENT_PRESETS.filter(({ id }) => id.startsWith(`comorbidity-episode-${slug}-`))
-    expect(episode).toHaveLength(3)
+    expect(episode).toHaveLength(4)
     expect(episode.filter(({ id }) => id.endsWith('-initial'))).toHaveLength(1)
-    expect(episode.filter(({ id }) => id.includes('-follow-up-'))).toHaveLength(2)
+    expect(episode.filter(({ id }) => id.includes('-follow-up-'))).toHaveLength(3)
 
     for (const preset of episode) {
       const entries = preset.bundle.entry as Array<{ resource: Record<string, unknown> }>
@@ -92,6 +184,79 @@ describe('canonical FHIR patient presets', () => {
       expect(patient.id).toBe(patientId)
       expect(bundleToForm(preset.bundle)[flag as keyof ReturnType<typeof bundleToForm>]).toBe(true)
     }
+  })
+
+  it.each([
+    ['older-adult', 'medication-follow-up-older-adult-001'],
+  ])('keeps the %s episode on one patient across one initial and three follow-ups', (slug, patientId) => {
+    const episode = PATIENT_PRESETS.filter(({ id }) => id.startsWith(`comorbidity-episode-${slug}-`))
+    expect(episode).toHaveLength(4)
+    expect(episode.filter(({ id }) => id.endsWith('-initial'))).toHaveLength(1)
+    expect(episode.filter(({ id }) => id.includes('-follow-up-'))).toHaveLength(3)
+
+    for (const preset of episode) {
+      const entries = preset.bundle.entry as Array<{ resource: Record<string, unknown> }>
+      const patient = entries.find(({ resource }) => resource.resourceType === 'Patient')!.resource
+      expect(patient.id).toBe(patientId)
+    }
+  })
+
+  it('keeps the resistant-hypertension progression on one patient across all six follow-ups', () => {
+    const episode = PATIENT_PRESETS.filter(
+      ({ id }) => id.startsWith('comorbidity-episode-resistant-hypertension-'),
+    )
+    expect(episode).toHaveLength(7)
+    expect(episode.filter(({ id }) => id.endsWith('-initial'))).toHaveLength(1)
+    expect(episode.filter(({ id }) => id.includes('-follow-up-'))).toHaveLength(6)
+
+    for (const preset of episode) {
+      const entries = preset.bundle.entry as Array<{ resource: Record<string, unknown> }>
+      const patient = entries.find(({ resource }) => resource.resourceType === 'Patient')!.resource
+      expect(patient.id).toBe('medication-follow-up-resistant-hypertension-001')
+    }
+
+    const followUpForm = (number: number, suffix: string) => bundleToForm(
+      PATIENT_PRESETS.find(({ id }) => id === (
+        `comorbidity-episode-resistant-hypertension-follow-up-${number}-${suffix}`
+      ))!.bundle,
+    )
+    const followUpFlag = (number: number, suffix: string, flag: string) => {
+      const preset = PATIENT_PRESETS.find(({ id }) => id === (
+        `comorbidity-episode-resistant-hypertension-follow-up-${number}-${suffix}`
+      ))!
+      return bundleToFlat(preset.bundle)[flag]
+    }
+    expect(followUpFlag(1, 'increase-dose', 'dose_adequate')).toBe(false)
+    expect(followUpFlag(2, 'replace-drug', 'drug_replacement_required')).toBe(true)
+    expect(followUpFlag(3, 'address-adherence', 'adherence_adequate')).toBe(false)
+    expect(followUpForm(4, 'use-three-drugs').medication_follow_up_stage).toBe('INITIAL_REGIMEN')
+    expect(followUpForm(5, 'early').medication_follow_up_stage).toBe('ESCALATED_REGIMEN')
+  })
+
+  it('configures resistant-hypertension follow-up 6 to reach the limited-resource MRA BP check', () => {
+    const preset = PATIENT_PRESETS.find(
+      ({ id }) => id === 'comorbidity-episode-resistant-hypertension-follow-up-6-resistant-bp-check',
+    )
+    expect(preset).toBeDefined()
+    const form = bundleToForm(preset!.bundle)
+    expect(form.facility_capability).toBe('LIMITED_RESOURCES')
+    expect(form.medication_follow_up_stage).toBe('ESCALATED_REGIMEN')
+    expect(form.current_regimen_drug_classes).toBe('A+C+D')
+    expect(form.tolerates_mra).toBe(true)
+  })
+
+  it.each([
+    ['heart-failure-follow-up-3-controlled', 4, 'A+B+C+D'],
+    ['older-adult-follow-up-1-replace', 1, 'A'],
+    ['older-adult-follow-up-2-escalate', 1, 'A'],
+  ])('keeps the current regimen accurate for %s', (suffix, count, classes) => {
+    const preset = PATIENT_PRESETS.find(
+      ({ id }) => id === `comorbidity-episode-${suffix}`,
+    )
+    expect(preset).toBeDefined()
+    const flat = bundleToFlat(preset!.bundle)
+    expect(flat.current_regimen_drug_count).toBe(count)
+    expect(flat.current_regimen_drug_classes).toBe(classes)
   })
 
   it('keeps the eclampsia preset anchored to preeclampsia', () => {
