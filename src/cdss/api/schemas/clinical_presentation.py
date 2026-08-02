@@ -90,9 +90,7 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
                         raw.get("starting_dose"),
                         _string(raw.get("dose_low"), _string(raw.get("dose"))),
                     ),
-                    "class_label_en": _string(
-                        raw.get("class_label"), group_label
-                    ),
+                    "class_label_en": _string(raw.get("class_label"), group_label),
                     "class_label_vi": _string(
                         raw.get("class_label_vi"),
                         _string(raw.get("class_label"), group_label),

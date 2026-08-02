@@ -141,8 +141,17 @@ def render(rows: list[list[str]], old: dict[str, dict[str, str | None]]) -> str:
         updates = ", ".join(
             f"{column} = EXCLUDED.{column}"
             for column in (
-                "name", "drug_class", "subgroup", "route", "dose_low", "dose_usual",
-                "dose_max", "source", "link", "available", "atc_code",
+                "name",
+                "drug_class",
+                "subgroup",
+                "route",
+                "dose_low",
+                "dose_usual",
+                "dose_max",
+                "source",
+                "link",
+                "available",
+                "atc_code",
             )
         )
         records.append(
