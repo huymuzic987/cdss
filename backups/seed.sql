@@ -182,7 +182,7 @@ DELETE FROM public.decision_nodes
 WHERE id = 'c82a074a-7873-40a8-9874-29f2f9a627a4';
 
 -- ==========================================================================
--- 2. DECISION NODES (387 nodes after graph normalization)
+-- 2. DECISION NODES (383 nodes after graph normalization)
 -- ==========================================================================
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
 VALUES ('e3b9491f-a5db-4d53-942e-0834fa0f25a0', (SELECT id FROM public.decision_trees WHERE tree_key = 'drug-combination'), 'T6_START_PATIENT_INFO_AND_PRESCRIPTIONS', 'START'::public.node_type, 'Patient information + prescribed medications', 'Thông tin bệnh nhân + Các đơn thuốc chỉ định', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2026-07-25 11:46:28.021853+00:00', '2026-07-25 11:46:28.021853+00:00')
@@ -1784,7 +1784,7 @@ ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_v
 
 
 -- ========================================================================
--- 3. DECISION EDGES (428 edges)
+-- 3. DECISION EDGES (426 edges after graph normalization)
 -- ========================================================================
 -- Rebuild the edge graph deterministically on every seed run. The edge table
 -- has independent uniqueness constraints on (from,to) and (from,traversal),
