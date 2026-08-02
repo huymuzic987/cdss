@@ -31,12 +31,12 @@ run_timed "candidate-database-start" $COMPOSE up -d db
 echo "Waiting for database to be ready..."
 db_ready_started_at="$(date +%s)"
 db_ready=false
-for i in $(seq 1 24); do
+for i in $(seq 1 120); do
     if $COMPOSE exec -T db pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" > /dev/null 2>&1; then
         db_ready=true
         break
     fi
-    sleep 5
+    sleep 1
 done
 if [ "$db_ready" != "true" ]; then
     printf 'CDSS_TIMING\tcandidate-database-ready\t%s\t1\n' \
