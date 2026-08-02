@@ -127,7 +127,9 @@ export function RecommendedOrderCard({ order, provenance, locale }: {
         onBlur={isSingleMedication ? scheduleClose : undefined}
       >
         <span className="cds-order-name">{isAbcdCombination && !isCurrentRegimen ? messages.combinationTherapy : order.name}</span>
-        <span className="cds-order-detail">{isAbcdCombination ? combinationDose : order.dose || order.classLabel}</span>
+        <span className="cds-order-detail">
+          {isCurrentRegimen ? null : isAbcdCombination ? combinationDose : order.dose || order.classLabel}
+        </span>
         {order.drugClasses?.length ? (
           <span className="cds-class-combination">
             {order.drugClasses.map((drugClass) => (

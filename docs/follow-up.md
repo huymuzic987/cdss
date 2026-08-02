@@ -188,7 +188,8 @@ For `MAINTAIN_CONTROLLED` and `ESCALATE_REGIMEN`, the hook records its result in
 `context.medication_follow_up` and lets the tree evaluate its existing
 reached/not-reached conditions. It does not introduce or select a new branch.
 For the other three outcomes, it records a terminal action and returns before
-either BP condition is entered.
+either BP condition is entered, except when a resistant-hypertension action has
+just prescribed a new fourth drug as described below.
 
 The resistant-hypertension treatment actions `T13_A_ADD_MRA`,
 `T13_A_ADD_SPIRONOLACTONE`, and `T13_A_ALTERNATIVES` are explicit continuation
@@ -196,13 +197,24 @@ nodes. This allows their outgoing BP-target checkpoints to use the same gate
 as the general treatment trees. The resistant flow therefore does not bypass
 duration, replacement, adherence, or dose checks.
 
+For `T13_A_ADD_MRA` or `T13_A_ADD_SPIRONOLACTONE`, an input with three current
+drugs means the fourth drug is newly prescribed. Traversal stops at the add-drug
+action, resets the regimen effective date to the assessment date, and returns
+the next reassessment date. On a later stateless input with four current drugs,
+the gate permits BP-target traversal only after the minimum regimen duration.
+The traversed add-drug action remains the clinical recommendation (for example,
+add low-dose spironolactone when tolerated); the gate does not append a
+synthetic “continue regimen” action that would hide that recommendation.
+
 ## Result popup
 
 The traversal popup consumes `context.medication_follow_up` and the synthetic
 stop action; this is implemented rather than pending work.
 
-- A same-stage replacement, early visit, or adherence/dose problem is added to
+- A same-stage replacement, ordinary early visit, or adherence/dose problem is added to
   Recommended Action so the reason for stopping is visible.
+- A newly prescribed resistant-hypertension drug shows the traversed T13 add-drug
+  action instead, while its reassessment date still comes from follow-up context.
 - `MAINTAIN_CONTROLLED` adds: "Blood pressure target met. Continue monitoring
   and maintain the current regimen."
 - A calculated `next_follow_up_date` is shown only as **Reassessment date**.
@@ -210,7 +222,9 @@ stop action; this is implemented rather than pending work.
 - If traversal did not produce a new combination, the current regimen from
   `current_regimen_drug_classes` is still displayed in Recommended Orders.
   If traversal did produce a new combination, that new order is displayed and
-  the current-regimen fallback is omitted to avoid duplication.
+  the current-regimen fallback is omitted to avoid duplication. Current-regimen
+  rows keep their middle detail column empty; drug-class codes appear only in
+  the class section on the right.
 - Follow-up details are not added to the colored alert header or Care Setting.
 
 ## Preset episodes and expected outcomes

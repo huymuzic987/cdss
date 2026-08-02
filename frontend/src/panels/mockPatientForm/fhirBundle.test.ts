@@ -147,6 +147,7 @@ describe('canonical FHIR patient presets', () => {
     ['comorbidity-episode-resistant-hypertension-follow-up-4-use-three-drugs', 'ESCALATE_REGIMEN'],
     ['comorbidity-episode-resistant-hypertension-follow-up-5-early', 'CONTINUE_UNTIL_REASSESSMENT'],
     ['comorbidity-episode-resistant-hypertension-follow-up-6-resistant-bp-check', 'ESCALATE_REGIMEN'],
+    ['comorbidity-episode-resistant-hypertension-follow-up-7-resistant-bp-check', 'ESCALATE_REGIMEN'],
   ] as const
 
   it.each(medicationEpisodeOutcomes)(
@@ -201,13 +202,13 @@ describe('canonical FHIR patient presets', () => {
     }
   })
 
-  it('keeps the resistant-hypertension progression on one patient across all six follow-ups', () => {
+  it('keeps the resistant-hypertension progression on one patient across all seven follow-ups', () => {
     const episode = PATIENT_PRESETS.filter(
       ({ id }) => id.startsWith('comorbidity-episode-resistant-hypertension-'),
     )
-    expect(episode).toHaveLength(7)
+    expect(episode).toHaveLength(8)
     expect(episode.filter(({ id }) => id.endsWith('-initial'))).toHaveLength(1)
-    expect(episode.filter(({ id }) => id.includes('-follow-up-'))).toHaveLength(6)
+    expect(episode.filter(({ id }) => id.includes('-follow-up-'))).toHaveLength(7)
 
     for (const preset of episode) {
       const entries = preset.bundle.entry as Array<{ resource: Record<string, unknown> }>
@@ -233,7 +234,7 @@ describe('canonical FHIR patient presets', () => {
     expect(followUpForm(5, 'early').medication_follow_up_stage).toBe('ESCALATED_REGIMEN')
   })
 
-  it('configures resistant-hypertension follow-up 6 to reach the limited-resource MRA BP check', () => {
+  it('configures resistant follow-up 6 to add MRA and follow-up 7 to reassess it', () => {
     const preset = PATIENT_PRESETS.find(
       ({ id }) => id === 'comorbidity-episode-resistant-hypertension-follow-up-6-resistant-bp-check',
     )
@@ -242,7 +243,17 @@ describe('canonical FHIR patient presets', () => {
     expect(form.facility_capability).toBe('LIMITED_RESOURCES')
     expect(form.medication_follow_up_stage).toBe('ESCALATED_REGIMEN')
     expect(form.current_regimen_drug_classes).toBe('A+C+D')
+    expect(bundleToFlat(preset!.bundle).current_regimen_drug_count).toBe(3)
     expect(form.tolerates_mra).toBe(true)
+
+    const reassessment = PATIENT_PRESETS.find(
+      ({ id }) => id === 'comorbidity-episode-resistant-hypertension-follow-up-7-resistant-bp-check',
+    )
+    expect(reassessment).toBeDefined()
+    const reassessmentFlat = bundleToFlat(reassessment!.bundle)
+    expect(reassessmentFlat.current_regimen_drug_count).toBe(4)
+    expect(reassessmentFlat.regimen_effective_date).toBe('2027-02-21')
+    expect(reassessmentFlat.assessment_date).toBe('2027-03-21')
   })
 
   it.each([

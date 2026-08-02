@@ -39,6 +39,10 @@ __all__ = [
 ]
 
 _BP_CHECKPOINT_MARKER = "_BP_TARGET_"
+_RESISTANT_ADD_DRUG_COUNTS = {
+    "T13_A_ADD_MRA": 4,
+    "T13_A_ADD_SPIRONOLACTONE": 4,
+}
 
 
 class MedicationFollowUpOutcome(StrEnum):
@@ -201,8 +205,7 @@ def evaluate_medication_follow_up_at_bp_checkpoint(
     if not isinstance(active_target, Mapping):
         raise ValueError("active BP target is required at a medication BP checkpoint")
 
-    decision = evaluate_medication_follow_up(
-        MedicationFollowUpAssessment(
+    assessment = MedicationFollowUpAssessment(
             clinic_sbp=_required_number(input_data, "current_clinic_sbp"),
             clinic_dbp=_required_number(input_data, "current_clinic_dbp"),
             active_bp_target=active_target,
@@ -214,6 +217,11 @@ def evaluate_medication_follow_up_at_bp_checkpoint(
             adherence_adequate=input_data.get("adherence_adequate", True) is True,
             dose_adequate=input_data.get("dose_adequate", True) is True,
         )
+    resistant_regimen_started = _resistant_action_adds_drug(current, input_data)
+    decision = (
+        _new_resistant_regimen_decision(assessment)
+        if resistant_regimen_started
+        else evaluate_medication_follow_up(assessment)
     )
     summary = {
         "outcome": decision.outcome.value,
@@ -233,6 +241,14 @@ def evaluate_medication_follow_up_at_bp_checkpoint(
     if decision.should_continue_traversal:
         return True
 
+    # The resistant-HTN action that was just entered is the new prescription
+    # and must remain the presented clinical recommendation. The follow-up
+    # context still supplies its newly calculated reassessment date, but a
+    # synthetic "continue regimen" action would hide ADD_MRA/ADD_SPIRONOLACTONE
+    # because non-debug responses select the last collected action.
+    if resistant_regimen_started:
+        return False
+
     run_state.actions.append(
         ExecutedAction(
             tree_key=tree_key,
@@ -244,6 +260,42 @@ def evaluate_medication_follow_up_at_bp_checkpoint(
         )
     )
     return False
+
+
+def _resistant_action_adds_drug(
+    current: NodeDefinition,
+    input_data: Mapping[str, Any],
+) -> bool:
+    """Return whether this resistant-HTN action prescribes a drug not yet taken.
+
+    The BP conditions after these actions describe a later reassessment, not the
+    current encounter. The compact FHIR contract represents MRA/spironolactone
+    through the regimen count because they are outside the A/B/C/D class codes.
+    """
+    expected_count = _RESISTANT_ADD_DRUG_COUNTS.get(current.node_key)
+    if expected_count is None:
+        return False
+    current_count = input_data.get("current_regimen_drug_count")
+    if not isinstance(current_count, int) or isinstance(current_count, bool):
+        return False
+    return current_count < expected_count
+
+
+def _new_resistant_regimen_decision(
+    assessment: MedicationFollowUpAssessment,
+) -> MedicationFollowUpDecision:
+    effective_date = assessment.assessment_date
+    return MedicationFollowUpDecision(
+        outcome=MedicationFollowUpOutcome.CONTINUE_UNTIL_REASSESSMENT,
+        should_continue_traversal=False,
+        bp_target_reached=False,
+        duration_sufficient=False,
+        regimen_effective_date=effective_date,
+        next_follow_up_date=next_regimen_follow_up_date(
+            effective_date, assessment.minimum_regimen_days
+        ),
+        current_regimen_drug_classes=assessment.current_regimen_drug_classes,
+    )
 
 
 def _required_date(values: Mapping[str, Any], name: str) -> date:

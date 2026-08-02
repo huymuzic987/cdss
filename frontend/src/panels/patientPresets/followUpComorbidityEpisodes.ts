@@ -284,8 +284,8 @@ const episodes: EpisodeDefinition[] = [
       },
       {
         slug: 'follow-up-6-resistant-bp-check',
-        label: 'Follow-Up 6: Resistant-HTN BP Check',
-        description: 'After a complete A+C+D trial with adequate dose and adherence, BP remains uncontrolled. Traversal enters the limited-resource resistant-hypertension MRA path and reaches its BP-target checkpoint before referral.',
+        label: 'Follow-Up 6: Add Resistant-HTN Drug',
+        description: 'After a complete A+C+D trial, BP remains uncontrolled. Traversal enters resistant hypertension and stops at Add MRA because the newly prescribed fourth drug has not completed its treatment period.',
         values: {
           facility_capability: 'LIMITED_RESOURCES',
           medication_follow_up_stage: 'ESCALATED_REGIMEN',
@@ -293,6 +293,20 @@ const episodes: EpisodeDefinition[] = [
           current_regimen_drug_classes: 'A+C+D',
           current_clinic_sbp: 138, current_clinic_dbp: 84,
           assessment_date: '2027-02-21', regimen_effective_date: '2027-01-24',
+          tolerates_mra: true,
+        },
+      },
+      {
+        slug: 'follow-up-7-resistant-bp-check',
+        label: 'Follow-Up 7: Resistant-HTN BP Check',
+        description: 'After 28 days on the four-drug regimen, BP remains uncontrolled. The follow-up gate now permits the resistant-hypertension BP check and traversal reaches referral.',
+        values: {
+          facility_capability: 'LIMITED_RESOURCES',
+          medication_follow_up_stage: 'ESCALATED_REGIMEN',
+          current_regimen_drug_count: 4,
+          current_regimen_drug_classes: 'A+C+D',
+          current_clinic_sbp: 137, current_clinic_dbp: 83,
+          assessment_date: '2027-03-21', regimen_effective_date: '2027-02-21',
           tolerates_mra: true,
         },
       },

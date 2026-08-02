@@ -186,6 +186,26 @@ describe('TraversalResultModal', () => {
     expect(document.querySelector('.cds-alert-action')).toBeNull()
   })
 
+  it('does not duplicate a single-class current regimen in the middle order column', () => {
+    renderModal({
+      ...result,
+      context: {
+        medication_follow_up: {
+          outcome: 'REPLACE_DRUG_SAME_STAGE',
+          should_continue_traversal: false,
+          current_regimen_drug_classes: ['A'],
+        },
+      },
+      actions: [],
+    })
+
+    const medication = screen.getByText('Medication and orders').closest('details') as HTMLElement
+    const currentRegimen = within(medication).getByText('Current regimen')
+      .closest('.cds-order-row') as HTMLElement
+    expect(currentRegimen.querySelector('.cds-order-detail')?.textContent).toBe('')
+    expect(within(currentRegimen).getAllByText('A')).toHaveLength(1)
+  })
+
   it('uses urgency color and includes only route-changing patient data', () => {
     renderModal()
     const reasonSection = screen.getByText('Matched patient findings').closest('details') as HTMLElement
