@@ -23,9 +23,9 @@ services:
     networks: [cdss_net]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 2s
+      timeout: 2s
+      retries: 30
 
   backend:
     build:
@@ -44,10 +44,10 @@ services:
     networks: [cdss_net]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 2s
 
   frontend:
     build:
@@ -69,9 +69,9 @@ services:
           - cdss-frontend-${VERSION:-latest}
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 2s
+      timeout: 2s
+      retries: 30
 
   # The fourth container only creates database backups. It writes through a
   # bind mount to a host directory that Jenkins excludes from rsync cleanup

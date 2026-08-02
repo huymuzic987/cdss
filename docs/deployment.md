@@ -26,8 +26,8 @@ Multi-stage build, context is the **repo root** (not `src/`), built with
    non-root `appuser` (uid 1000), copies `/app` from the builder stage
    `--chown=appuser:appuser`, sets `PATH="/app/.venv/bin:$PATH"`, runs as
    `appuser`. `EXPOSE 8000`.
-3. **Healthcheck:** `curl -f http://localhost:8000/health` (interval 10s,
-   timeout 5s, start-period 10s, retries 5) - this is `GET /health`, see
+3. **Healthcheck:** `curl -f http://localhost:8000/health` (interval 2s,
+   timeout 2s, start-period 2s, retries 30) - this is `GET /health`, see
    [complete API reference](api/complete-reference.md#6-health).
 4. **CMD:** `uvicorn cdss.main:app --host 0.0.0.0 --port 8000` (no
    `--reload` - that's dev-only, via `dev.sh`/`dev.ps1`).
@@ -161,8 +161,9 @@ Stages, in order:
 6. **Ensure Live Route**: repairs and verifies the public route to the version
    in `deploy/state/.current_version`, recreating a missing dedicated router
    before lengthy build or migration work begins.
-7. **Build Images**: `deploy/build_images.sh <version>`.
-8. **Backup Current Database**: `deploy/backup_current_db.sh`.
+7. **Prepare Images and Backup**: runs `deploy/build_images.sh <version>` and
+   the read-only `deploy/backup_current_db.sh` concurrently. Both must succeed
+   before the write lock is enabled.
 9. **Enable Write Lock**: reloads the stable router with selective HTTP 503
    responses for layout writes, FHIR imports, and dashboard seed writes. Old
    nginx workers must drain before database cloning can begin.
@@ -179,8 +180,8 @@ Stages, in order:
     number. A host-local success can therefore no longer hide an external 502.
 13. **Disable Write Lock**: reloads and verifies the promoted route without
     write blocking. This runs only after public verification succeeds.
-14. **Prune Old Stacks**: `deploy/prune_old_stacks.sh`, followed by
-    `deploy/prune_release_dirs.sh`. The previous
+14. **Schedule Maintenance**: starts `deploy/prune_old_stacks.sh`, followed by
+    `deploy/prune_release_dirs.sh`, asynchronously after writes resume. The previous
     application stack remains available until external verification succeeds
     and writes resume on the new release. A release source directory is
     removed only after its Compose containers are gone; the live version is
@@ -200,6 +201,13 @@ writes resume, rollback would discard new database writes, so cleanup instead
 repairs and verifies the promoted route. Candidate containers, networks,
 volumes, and images are removed by Docker labels and IDs. `cleanWs()`
 always runs at the end.
+
+The Jenkins agent retains named Docker volumes for the uv environment, uv
+download cache, Pyright's Node runtime, pnpm store, and frontend
+`node_modules`. Lockfile-enforced sync/install commands still run on every
+build, but warm builds avoid repeatedly downloading and unpacking unchanged
+dependencies. SSH connection multiplexing reuses one authenticated connection
+throughout the deployment stages.
 
 Successful promotion writes `deploy/state/.deployment_state`
 (physically `shared/.deployment_state`) atomically with the
