@@ -13,13 +13,13 @@ def stage_position(name: str) -> int:
 
 def test_write_lock_spans_database_clone_through_public_verification() -> None:
     ordered_stages = [
-        "Backup Current Database",
+        "Prepare Images and Backup",
         "Enable Write Lock",
         "Provision New Stack",
         "Promote New Stack",
         "Verify Public Endpoint",
         "Disable Write Lock",
-        "Prune Old Stacks",
+        "Schedule Maintenance",
         "Record Deployment Evidence",
     ]
 
@@ -41,7 +41,8 @@ def test_failure_and_abort_paths_attempt_safe_unlock() -> None:
 
 def test_pruning_waits_for_external_verification_and_write_resume() -> None:
     assert stage_position("Verify Public Endpoint") < stage_position("Disable Write Lock")
-    assert stage_position("Disable Write Lock") < stage_position("Prune Old Stacks")
+    assert stage_position("Disable Write Lock") < stage_position("Schedule Maintenance")
+    assert "nohup sh -c" in JENKINSFILE
 
 
 def test_git_commit_is_passed_to_promotion() -> None:
@@ -63,14 +64,13 @@ def test_every_stage_has_a_timeout() -> None:
         "Deploy Files",
         "Inject Environment",
         "Ensure Live Route",
-        "Build Images",
-        "Backup Current Database",
+        "Prepare Images and Backup",
         "Enable Write Lock",
         "Provision New Stack",
         "Promote New Stack",
         "Verify Public Endpoint",
         "Disable Write Lock",
-        "Prune Old Stacks",
+        "Schedule Maintenance",
         "Record Deployment Evidence",
     ]
 
@@ -84,6 +84,22 @@ def test_agent_capabilities_fail_fast() -> None:
     assert 'if [ "$(uname -s)" != "Linux" ]' in JENKINSFILE
     assert "docker info > /dev/null" in JENKINSFILE
     assert "rsync curl awk sed grep" in JENKINSFILE
+
+
+def test_image_build_and_database_backup_run_concurrently() -> None:
+    prepare_stage = JENKINSFILE[
+        stage_position("Prepare Images and Backup") : stage_position("Enable Write Lock")
+    ]
+    assert "parallel(" in prepare_stage
+    assert "images:" in prepare_stage
+    assert "backup:" in prepare_stage
+    assert "./deploy/build_images.sh ${VERSION}" in prepare_stage
+    assert "./deploy/backup_current_db.sh" in prepare_stage
+
+
+def test_ssh_connections_are_multiplexed() -> None:
+    assert "ControlMaster=auto" in JENKINSFILE
+    assert "ControlPersist=300" in JENKINSFILE
 
 
 def test_reports_are_published_before_workspace_cleanup() -> None:

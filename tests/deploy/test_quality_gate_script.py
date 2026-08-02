@@ -19,9 +19,13 @@ def test_dependency_caches_persist_in_named_volumes() -> None:
     assert 'UV_CACHE_VOLUME="cdss-ci-uv-cache-py312"' in QUALITY_SCRIPT
     assert 'UV_ENV_VOLUME="cdss-ci-uv-env-py312"' in QUALITY_SCRIPT
     assert 'PNPM_STORE_VOLUME="cdss-ci-pnpm-store-v9"' in QUALITY_SCRIPT
+    assert 'PNPM_MODULES_VOLUME="cdss-ci-node-modules-v9"' in QUALITY_SCRIPT
+    assert 'PYRIGHT_CACHE_VOLUME="cdss-ci-pyright-node-py312"' in QUALITY_SCRIPT
     assert '-v "$UV_CACHE_VOLUME":/uv-cache' in QUALITY_SCRIPT
     assert '-v "$UV_ENV_VOLUME":/venv' in QUALITY_SCRIPT
     assert '-v "$PNPM_STORE_VOLUME":/pnpm/store' in QUALITY_SCRIPT
+    assert '-v "$PNPM_MODULES_VOLUME":/workspace/node_modules' in QUALITY_SCRIPT
+    assert "-e PYRIGHT_PYTHON_CACHE_DIR=/pyright-cache" in QUALITY_SCRIPT
     assert 'PNPM_STORE_DIR="${PNPM_STORE_DIR:-/tmp/pnpm-store}"' in FRONTEND_SCRIPT
 
 

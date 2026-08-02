@@ -31,12 +31,12 @@ run_timed "candidate-database-start" $COMPOSE up -d db
 echo "Waiting for database to be ready..."
 db_ready_started_at="$(date +%s)"
 db_ready=false
-for i in $(seq 1 24); do
+for i in $(seq 1 120); do
     if $COMPOSE exec -T db pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" > /dev/null 2>&1; then
         db_ready=true
         break
     fi
-    sleep 5
+    sleep 1
 done
 if [ "$db_ready" != "true" ]; then
     printf 'CDSS_TIMING\tcandidate-database-ready\t%s\t1\n' \
@@ -159,7 +159,7 @@ run_timed "candidate-services-start" \
 
 echo "Waiting for backend and frontend to report healthy..."
 candidate_health_started_at="$(date +%s)"
-for i in $(seq 1 30); do
+for i in $(seq 1 60); do
     if $COMPOSE exec -T backend curl -s -f http://localhost:8000/health > /dev/null 2>&1 \
         && $COMPOSE exec -T frontend wget -qO- http://127.0.0.1/ > /dev/null 2>&1; then
         printf 'CDSS_TIMING\tcandidate-services-healthy\t%s\t0\n' \
@@ -167,8 +167,8 @@ for i in $(seq 1 30); do
         echo "Backend and frontend healthy for ${PROJECT}."
         exit 0
     fi
-    echo "Attempt $i failed. Waiting 2s..."
-    sleep 2
+    echo "Attempt $i failed. Waiting 1s..."
+    sleep 1
 done
 
 printf 'CDSS_TIMING\tcandidate-services-healthy\t%s\t1\n' \

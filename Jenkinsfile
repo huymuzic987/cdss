@@ -13,7 +13,7 @@ pipeline {
 
         // Keepalive probes stop the connection from being dropped as "idle"
         // during quiet stretches of a long remote command like a Docker build.
-        SSH_OPTS = '-o StrictHostKeyChecking=no -o ServerAliveInterval=15 -o ServerAliveCountMax=6 -o ConnectTimeout=10'
+        SSH_OPTS = '-o StrictHostKeyChecking=no -o ServerAliveInterval=15 -o ServerAliveCountMax=6 -o ConnectTimeout=10 -o ControlMaster=auto -o ControlPersist=300 -o ControlPath=/tmp/cdss-ssh-%C'
 
         // Names this deploy's isolated stack (cdss-<VERSION>) -- see
         // deploy/provision_stack.sh. BUILD_NUMBER is unique and monotonically
@@ -264,42 +264,40 @@ pipeline {
             }
         }
 
-        // Build both application images once and in parallel after the new
-        // source and production environment have reached the target host.
-        // Provision and promotion reuse these exact images.
-        stage('Build Images') {
+        // Image construction and the read-only durability backup are
+        // independent. Run them concurrently, then require both before the
+        // write lock or candidate database work can begin.
+        stage('Prepare Images and Backup') {
             options { timeout(time: 30, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
-                sshagent(['ubuntu-vm-jenkins']) {
-                    sh '''
-                        ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
-                            set -e
-                            cd ${DEPLOY_PATH}/releases/${VERSION}
-                            chmod +x deploy/build_images.sh
-                            ./deploy/build_images.sh ${VERSION}
-                        "
-                    '''
-                }
-            }
-        }
-
-        // Takes a plain-SQL dump of the currently-live database before any
-        // new stack is provisioned. The dump is written to the persistent
-        // host backup directory, outside all per-version Docker volumes.
-        stage('Backup Current Database') {
-            options { timeout(time: 20, unit: 'MINUTES') }
-            steps {
-                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
-                sshagent(['ubuntu-vm-jenkins']) {
-                    sh '''
-                        ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
-                            set -e
-                            cd ${DEPLOY_PATH}/releases/${VERSION}
-                            chmod +x deploy/backup_current_db.sh deploy/backup_db.sh
-                            ./deploy/backup_current_db.sh
-                        "
-                    '''
+                script {
+                    parallel(
+                        images: {
+                            sshagent(['ubuntu-vm-jenkins']) {
+                                sh '''
+                                    ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                                        set -e
+                                        cd ${DEPLOY_PATH}/releases/${VERSION}
+                                        chmod +x deploy/build_images.sh
+                                        ./deploy/build_images.sh ${VERSION}
+                                    "
+                                '''
+                            }
+                        },
+                        backup: {
+                            sshagent(['ubuntu-vm-jenkins']) {
+                                sh '''
+                                    ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                                        set -e
+                                        cd ${DEPLOY_PATH}/releases/${VERSION}
+                                        chmod +x deploy/backup_current_db.sh deploy/backup_db.sh
+                                        ./deploy/backup_current_db.sh
+                                    "
+                                '''
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -419,19 +417,20 @@ pipeline {
 
         // Retain the previous application stack until the new release has
         // passed both host-local and public verification and writes resumed.
-        stage('Prune Old Stacks') {
-            options { timeout(time: 10, unit: 'MINUTES') }
+        stage('Schedule Maintenance') {
+            options { timeout(time: 2, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
-                            set -e
                             cd ${DEPLOY_PATH}/releases/${VERSION}
                             chmod +x deploy/prune_old_stacks.sh deploy/prune_release_dirs.sh
-                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/prune_old_stacks.sh
-                            CDSS_RELEASES_DIR=${DEPLOY_PATH}/releases \
-                                ./deploy/prune_release_dirs.sh
+                            nohup sh -c '
+                                PUBLIC_APP_PORT=${APP_PORT} ./deploy/prune_old_stacks.sh &&
+                                CDSS_RELEASES_DIR=${DEPLOY_PATH}/releases \
+                                    ./deploy/prune_release_dirs.sh
+                            ' > ${DEPLOY_PATH}/shared/maintenance-${VERSION}.log 2>&1 &
                         "
                     '''
                 }
@@ -529,14 +528,13 @@ pipeline {
                         'Deploy Files',
                         'Inject Environment',
                         'Ensure Live Route',
-                        'Build Images',
-                        'Backup Current Database',
+                        'Prepare Images and Backup',
                         'Enable Write Lock',
                         'Provision New Stack',
                         'Promote New Stack',
                         'Verify Public Endpoint',
                         'Disable Write Lock',
-                        'Prune Old Stacks',
+                        'Schedule Maintenance',
                         'Record Deployment Evidence'
                     ]
                     def buildResult = currentBuild.currentResult ?: 'UNKNOWN'
