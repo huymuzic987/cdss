@@ -47,6 +47,11 @@
 }
 
 @media (max-width: 780px) {
+  .left-panel,
+  .side-panels {
+    transition: transform 0.2s ease;
+  }
+
   .panel-toggle-btn {
     width: 44px;
     height: 44px;

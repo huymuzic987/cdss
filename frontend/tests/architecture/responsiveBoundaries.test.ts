@@ -8,6 +8,10 @@ function read(relativePath: string): string {
   return readFileSync(join(FRONTEND_ROOT, relativePath), 'utf8')
 }
 
+function expectLaterBlock(source: string, earlierSnippet: string, laterSnippet: string) {
+  expect(source.lastIndexOf(laterSnippet)).toBeGreaterThan(source.lastIndexOf(earlierSnippet))
+}
+
 describe('frontend responsive boundaries', () => {
   it('defines the mobile workbench drawer contract', () => {
     const collapse = read('src/styles/panel-collapse.css')
@@ -30,7 +34,12 @@ describe('frontend responsive boundaries', () => {
     expect(collapse).toContain(".panel-toggle-right[aria-expanded='true'] {")
     expect(collapse).toContain('right: min(88vw, 340px) !important;')
     expect(shell).toContain('.top-tabs-bar')
+    expect(canvas).toContain('.canvas-area {')
+    expect(canvas).toContain('isolation: isolate;')
+    expect(canvas).toContain('z-index: 0;')
     expect(canvas).toContain('.canvas-toolbar')
+    expect(canvas).toContain('z-index: 300;')
+    expect(collapse).toContain('transition: transform 0.2s ease;')
     expect(appCss).toContain("@import './styles/panel-collapse.css'")
     expect(appCss).toContain("@import './styles/app-shell.css'")
     expect(appCss).toContain("@import './styles/canvas.css'")
@@ -46,10 +55,14 @@ describe('frontend responsive boundaries', () => {
     expect(shell).toContain('@media (max-width: 640px)')
     expect(metrics).toContain('.dash-card-wide')
     expect(metrics).toContain('grid-template-columns: minmax(0, 1fr)')
+    expect(metrics).toContain('.dash-efficacy-row')
     expect(filters).toContain('.dash-filters-grid')
     expect(tables).toContain('.dash-table-wrap')
     expect(tables).toContain('min-width: max-content')
     expect(modal).toContain('max-width: calc(100vw - 16px)')
+    expectLaterBlock(shell, 'flex-wrap: wrap;', 'flex-direction: column;')
+    expectLaterBlock(shell, 'min-width: 170px;', 'width: 100%;')
+    expectLaterBlock(metrics, 'margin-bottom: 12px;', 'grid-template-columns: minmax(0, 1fr)')
   })
 
   it('defines showcase phone layout contracts', () => {

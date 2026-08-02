@@ -1,12 +1,16 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { type ComponentProps } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TreeWorkspace } from './TreeWorkspace'
 
 vi.mock('../panels/MockPatientSidebar', () => ({
-  MockPatientSidebar: () => <div>Mock patient sidebar</div>,
+  MockPatientSidebar: () => (
+    <div>
+      <button type="button">Patient action</button>
+    </div>
+  ),
 }))
 
 vi.mock('../panels/Legend', () => ({
@@ -14,7 +18,11 @@ vi.mock('../panels/Legend', () => ({
 }))
 
 vi.mock('../panels/NodeDetailPanel', () => ({
-  NodeDetailPanel: () => <div>Node details</div>,
+  NodeDetailPanel: () => (
+    <div>
+      <button type="button">Details action</button>
+    </div>
+  ),
 }))
 
 vi.mock('../panels/GlobalConfigPanel', () => ({
@@ -25,7 +33,8 @@ vi.mock('../canvas/TreeCanvas', () => ({
   TreeCanvas: () => <div>Tree canvas</div>,
 }))
 
-function installMatchMedia(matches: boolean) {
+function installMatchMedia(initialMatches: boolean) {
+  let matches = initialMatches
   const listeners = new Set<(event: MediaQueryListEvent) => void>()
 
   Object.defineProperty(window, 'matchMedia', {
@@ -52,15 +61,14 @@ function installMatchMedia(matches: boolean) {
   })
 
   return {
-    emit(nextMatches: boolean) {
+    setMatches(nextMatches: boolean) {
+      matches = nextMatches
       for (const listener of listeners) {
         listener({ matches: nextMatches } as MediaQueryListEvent)
       }
     },
   }
 }
-
-const mobileMedia = installMatchMedia(true)
 
 const mobileProps: ComponentProps<typeof TreeWorkspace> = {
   graph: undefined,
@@ -85,8 +93,10 @@ const mobileProps: ComponentProps<typeof TreeWorkspace> = {
   onToggleTheme: vi.fn(),
 }
 
+let matchMediaController: ReturnType<typeof installMatchMedia>
+
 beforeEach(() => {
-  mobileMedia.emit(true)
+  matchMediaController = installMatchMedia(true)
 })
 
 afterEach(cleanup)
@@ -103,6 +113,30 @@ describe('TreeWorkspace mobile drawers', () => {
     expect(screen.getByRole('button', { name: 'Close open panel' })).toBeInTheDocument()
   })
 
+  it('keeps inactive mobile drawers hidden and moves focus into the opened drawer', async () => {
+    const user = userEvent.setup()
+
+    render(<TreeWorkspace {...mobileProps} />)
+
+    const patientPanel = document.querySelector('.left-panel')
+    const detailsPanel = document.querySelector('.side-panels')
+
+    expect(patientPanel).toHaveAttribute('aria-hidden', 'true')
+    expect(patientPanel).toHaveAttribute('inert')
+    expect(detailsPanel).toHaveAttribute('aria-hidden', 'true')
+    expect(detailsPanel).toHaveAttribute('inert')
+
+    await user.click(screen.getByRole('button', { name: 'Show patient panel' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Patient action' })).toHaveFocus()
+    })
+    expect(patientPanel).not.toHaveAttribute('aria-hidden')
+    expect(patientPanel).not.toHaveAttribute('inert')
+    expect(detailsPanel).toHaveAttribute('aria-hidden', 'true')
+    expect(detailsPanel).toHaveAttribute('inert')
+  })
+
   it('keeps only one mobile drawer open at a time', async () => {
     const user = userEvent.setup()
 
@@ -115,7 +149,7 @@ describe('TreeWorkspace mobile drawers', () => {
     expect(screen.getByRole('button', { name: 'Hide details panel' })).toHaveAttribute('aria-expanded', 'true')
   })
 
-  it('closes the active mobile drawer from the backdrop', async () => {
+  it('returns focus to the drawer toggle when the backdrop closes it', async () => {
     const user = userEvent.setup()
 
     render(<TreeWorkspace {...mobileProps} />)
@@ -123,6 +157,39 @@ describe('TreeWorkspace mobile drawers', () => {
     await user.click(screen.getByRole('button', { name: 'Show patient panel' }))
     await user.click(screen.getByRole('button', { name: 'Close open panel' }))
 
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Show patient panel' })).toHaveFocus()
+    })
     expect(screen.getByRole('button', { name: 'Show patient panel' })).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('returns focus to the details toggle when Escape closes the drawer', async () => {
+    const user = userEvent.setup()
+
+    render(<TreeWorkspace {...mobileProps} />)
+
+    await user.click(screen.getByRole('button', { name: 'Show details panel' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Details action' })).toHaveFocus()
+    })
+
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Show details panel' })).toHaveFocus()
+    })
+    expect(screen.getByRole('button', { name: 'Show details panel' })).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('leaves desktop panels accessible when the mobile layout is inactive', () => {
+    matchMediaController.setMatches(false)
+
+    render(<TreeWorkspace {...mobileProps} />)
+
+    expect(document.querySelector('.left-panel')).not.toHaveAttribute('aria-hidden')
+    expect(document.querySelector('.left-panel')).not.toHaveAttribute('inert')
+    expect(document.querySelector('.side-panels')).not.toHaveAttribute('aria-hidden')
+    expect(document.querySelector('.side-panels')).not.toHaveAttribute('inert')
   })
 })

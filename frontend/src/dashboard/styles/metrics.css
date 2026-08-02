@@ -128,18 +128,6 @@
   grid-column: span 2;
 }
 
-@media (max-width: 760px) {
-  .dash-grid,
-  .dash-kpi-row,
-  .dash-efficacy-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .dash-card-wide {
-    grid-column: span 1;
-  }
-}
-
 .dash-card-header {
   display: flex;
   align-items: flex-start;
@@ -187,4 +175,16 @@
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
   margin-bottom: 12px;
+}
+
+@media (max-width: 760px) {
+  .dash-grid,
+  .dash-kpi-row,
+  .dash-efficacy-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dash-card-wide {
+    grid-column: span 1;
+  }
 }

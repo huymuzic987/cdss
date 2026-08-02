@@ -5,6 +5,8 @@
 .canvas-area {
   flex: 1;
   position: relative;
+  z-index: 0;
+  isolation: isolate;
   min-width: 0;
   background-color: var(--bg-app);
 }
