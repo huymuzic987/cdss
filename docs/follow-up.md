@@ -151,10 +151,23 @@ For the other three outcomes, it records a terminal action and returns before
 either BP condition is entered.
 
 The frontend follow-up presets include five chronological snapshots using the
-same Patient ID, `medication-follow-up-review-001`: initial one-drug treatment,
-same-stage drug replacement, escalation after 28 days, an early unchanged
-visit, and target reached on the scheduled reassessment date. These remain
-stateless requests; selecting them in order does not persist earlier results.
+same Patient ID, `medication-follow-up-review-001`: initial two-drug treatment,
+same-stage replacement of one unusable drug, escalation to three drugs after
+28 days, an early unchanged visit, and target reached on the scheduled
+reassessment date. These remain stateless requests; selecting them in order
+does not persist earlier results.
+
+### Traversal popup requirement
+
+The traversal popup still needs a presentation update for follow-up stops. When
+the gate returns `REPLACE_DRUG_SAME_STAGE`, `CONTINUE_UNTIL_REASSESSMENT`, or
+`ADDRESS_ADHERENCE_OR_DOSE`, the popup should explain why traversal stopped at
+that checkpoint instead of making the stop look like an incomplete tree run.
+It should display the follow-up outcome, the checkpoint node, regimen effective
+date, next follow-up date when present, BP-target result, and whether minimum
+duration was completed. The data already exists in
+`context.medication_follow_up` and in the synthetic stop action payload; this is
+a frontend presentation task and must not change traversal branching.
 
 ## Source and tests
 

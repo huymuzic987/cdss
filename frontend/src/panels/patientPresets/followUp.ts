@@ -13,7 +13,7 @@ function medicationFollowUpBundle(values: Record<string, string | number | boole
     active_bp_target_sbp_upper: 130,
     active_bp_target_dbp_upper: 80,
     minimum_regimen_days: 28,
-    current_regimen_drug_count: 1,
+    current_regimen_drug_count: 2,
     adherence_adequate: true,
     dose_adequate: true,
     age: 48,
@@ -24,10 +24,10 @@ function medicationFollowUpBundle(values: Record<string, string | number | boole
 
 export const followUpPresets: PatientPresetDefinition[] = [
   {
-    id: 'med-review-episode-initial-one-drug',
-    label: 'Medication Episode — Initial: One Drug',
+    id: 'med-review-episode-initial-two-drugs',
+    label: 'Medication Episode — Initial: Two Drugs',
     category: FOLLOW_UP,
-    description: 'Initial visit for review patient medication-follow-up-review-001; intended starting state is one-drug treatment.',
+    description: 'Initial visit for review patient medication-follow-up-review-001; the current treatment tree starts with a two-drug combination.',
     bundle: formToPayload({
       ...DEFAULT_FORM,
       current_clinic_sbp: '145',
@@ -41,7 +41,7 @@ export const followUpPresets: PatientPresetDefinition[] = [
     id: 'med-review-episode-follow-up-1-replace',
     label: 'Medication Episode — Follow-Up 1: Replace Drug',
     category: FOLLOW_UP,
-    description: 'BP is uncontrolled, but one drug is unusable. Stops at the initial-regimen checkpoint and replaces only that drug.',
+    description: 'BP is uncontrolled, but one drug is unusable. Stops at the initial-regimen checkpoint and replaces only that drug while retaining the two-drug stage.',
     bundle: medicationFollowUpBundle({
       current_clinic_sbp: 145,
       current_clinic_dbp: 90,
@@ -52,9 +52,9 @@ export const followUpPresets: PatientPresetDefinition[] = [
   },
   {
     id: 'med-review-episode-follow-up-2-escalate',
-    label: 'Medication Episode — Follow-Up 2: Escalate to Two Drugs',
+    label: 'Medication Episode — Follow-Up 2: Escalate to Three Drugs',
     category: FOLLOW_UP,
-    description: 'The replacement drug has had a complete 28-day trial; BP remains above target, so normal traversal reaches the existing escalation action.',
+    description: 'The replacement drug has had a complete 28-day trial; BP remains above target, so normal traversal escalates the two-drug regimen to three drugs.',
     bundle: medicationFollowUpBundle({
       current_clinic_sbp: 142,
       current_clinic_dbp: 88,
@@ -66,10 +66,10 @@ export const followUpPresets: PatientPresetDefinition[] = [
     id: 'med-review-episode-follow-up-3-early',
     label: 'Medication Episode — Follow-Up 3: Early Arrival',
     category: FOLLOW_UP,
-    description: 'Patient is now on the two-drug/escalated stage but returns before 2026-03-26 with no drug change; traversal stops and continues the regimen.',
+    description: 'Patient is now on the three-drug/escalated stage but returns before 2026-03-26 with no drug change; traversal stops and continues the regimen.',
     bundle: medicationFollowUpBundle({
       medication_follow_up_stage: 'ESCALATED_REGIMEN',
-      current_regimen_drug_count: 2,
+      current_regimen_drug_count: 3,
       current_clinic_sbp: 138,
       current_clinic_dbp: 84,
       assessment_date: '2026-03-10',
@@ -83,7 +83,7 @@ export const followUpPresets: PatientPresetDefinition[] = [
     description: 'On the scheduled reassessment date, BP is below target and normal traversal follows the escalated-regimen target-reached branch.',
     bundle: medicationFollowUpBundle({
       medication_follow_up_stage: 'ESCALATED_REGIMEN',
-      current_regimen_drug_count: 2,
+      current_regimen_drug_count: 3,
       current_clinic_sbp: 126,
       current_clinic_dbp: 76,
       assessment_date: '2026-03-26',
