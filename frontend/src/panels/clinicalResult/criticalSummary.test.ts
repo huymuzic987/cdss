@@ -130,6 +130,90 @@ describe('deriveCriticalSummary important path', () => {
     ])
     expect(path[0]?.detail).toBe('Risk level: High')
   })
+
+  it('removes hypertension diagnosis rows from visible findings', () => {
+    const treeKey = 'hypertension-diagnosis'
+    const graph: TreeGraphResponse = {
+      tree: { tree_key: treeKey, name_en: 'Hypertension Diagnosis', name_vi: 'Hypertension Diagnosis' },
+      start_node_key: 'T1_START',
+      nodes: [
+        node('T1_START', 'START', 'Start'),
+        node('T1_C_CLINIC_1_NON_CRISIS', 'CONDITION', 'SBP < 180 mmHg AND DBP < 120 mmHg'),
+        node('T1_INF_GRADE_1_HYPERTENSION', 'INFERENCE', 'Grade 1 hypertension'),
+      ],
+      edges: [], global_nodes: [], references: [],
+    }
+    const log = [
+      entered(1, 'T1_START', 'START', treeKey),
+      {
+        ...entered(2, 'T1_START', 'START', treeKey),
+        event: 'candidate_evaluated' as const,
+        candidate_node_key: 'T1_C_CLINIC_1_NON_CRISIS',
+        condition_result: true,
+        evaluation_details: {
+          kind: 'comparison', operator: 'lt', result: true,
+          left: { kind: 'path', path: 'input.current_clinic_sbp', value: 135 },
+          right: { kind: 'literal', value: 180 },
+        },
+      },
+      entered(3, 'T1_C_CLINIC_1_NON_CRISIS', 'CONDITION', treeKey),
+      {
+        ...entered(4, 'T1_INF_GRADE_1_HYPERTENSION', 'INFERENCE', treeKey),
+        changed_context_paths: ['context.diagnosis.hypertension_class'],
+      },
+    ]
+    const result = deriveCriticalSummary({
+      log,
+      actions: [],
+      graphs: { [treeKey]: graph },
+      locale: 'en',
+      context: {
+        diagnosis: {
+          hypertension_class: 'HIGH_NORMAL_BP',
+          current_clinic_sbp: 135,
+          current_clinic_dbp: 92,
+        },
+      },
+    })
+
+    expect(result.findings.map((finding) => [finding.label, finding.value])).toEqual([
+      ['Hypertension class', 'High normal bp'],
+      ['Clinic BP', '135 / 92 mmhg'],
+      ['Grade 1 hypertension', 'Confirmed during clinical assessment'],
+    ])
+  })
+
+  it('does not repeat a structured risk level as a classification row', () => {
+    const treeKey = 'risk-classification'
+    const graph: TreeGraphResponse = {
+      tree: { tree_key: treeKey, name_en: 'Risk Classification', name_vi: 'Risk Classification' },
+      start_node_key: 'T2_START',
+      nodes: [
+        node('T2_START', 'START', 'Start'),
+        node('T2_INF_MEDIUM_RISK', 'INFERENCE', 'Medium risk'),
+      ],
+      edges: [], global_nodes: [], references: [],
+    }
+    const log = [
+      entered(1, 'T2_START', 'START', treeKey),
+      {
+        ...entered(2, 'T2_INF_MEDIUM_RISK', 'INFERENCE', treeKey),
+        changed_context_paths: ['context.risk.level'],
+      },
+    ]
+    const result = deriveCriticalSummary({
+      log,
+      actions: [],
+      graphs: { [treeKey]: graph },
+      locale: 'en',
+      context: { risk: { level: 'MEDIUM' } },
+    })
+
+    expect(result.findings.map((finding) => [finding.label, finding.value])).toEqual([
+      ['Risk level', 'Medium'],
+      ['Medium risk', 'Confirmed during clinical assessment'],
+    ])
+  })
 })
 
 function node(
