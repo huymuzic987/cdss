@@ -221,7 +221,7 @@ pipeline {
             options { timeout(time: 5, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
-                withCredentials([file(credentialsId: 'cdss', variable: 'ENV_FILE')]) {
+                withCredentials([file(credentialsId: 'cdss-prod-env', variable: 'ENV_FILE')]) {
                     sshagent(['ubuntu-vm-jenkins']) {
                         sh '''
                             ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "

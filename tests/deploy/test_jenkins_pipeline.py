@@ -110,7 +110,10 @@ def test_environment_is_private_and_validated_before_replacement() -> None:
     assert private_create >= 0
     assert validate > private_create
     assert replace > validate
-    assert "withCredentials([file(credentialsId: 'cdss', variable: 'ENV_FILE')])" in JENKINSFILE
+    assert (
+        "withCredentials([file(credentialsId: 'cdss-prod-env', variable: 'ENV_FILE')])"
+        in JENKINSFILE
+    )
 
 
 def test_deployments_use_isolated_release_directories_and_shared_state() -> None:
