@@ -3,9 +3,18 @@
 # pure makes the write-lock rules testable without touching Docker or production.
 set -euo pipefail
 
-RELEASE_VERSION="${1:?usage: render_router_config.sh <version> <frontend-alias> <write-lock-enabled>}"
-FRONTEND_ALIAS="${2:?usage: render_router_config.sh <version> <frontend-alias> <write-lock-enabled>}"
-WRITE_LOCK_ENABLED="${3:?usage: render_router_config.sh <version> <frontend-alias> <write-lock-enabled>}"
+RELEASE_VERSION="${1:?usage: render_router_config.sh <version> <frontend-alias> <write-lock-enabled> [upstream|legacy]}"
+FRONTEND_ALIAS="${2:?usage: render_router_config.sh <version> <frontend-alias> <write-lock-enabled> [upstream|legacy]}"
+WRITE_LOCK_ENABLED="${3:?usage: render_router_config.sh <version> <frontend-alias> <write-lock-enabled> [upstream|legacy]}"
+ROUTER_MODE="${4:-upstream}"
+
+case "$ROUTER_MODE" in
+    upstream|legacy) ;;
+    *)
+        echo "ERROR: router mode must be upstream or legacy." >&2
+        exit 2
+        ;;
+esac
 
 case "$WRITE_LOCK_ENABLED" in
     true)
@@ -31,7 +40,58 @@ map "\$request_method:\$uri" \$cdss_write_blocked {
     default 0;
 ${LOCK_RULES}
 }
+EOF
 
+if [ "$ROUTER_MODE" = "legacy" ]; then
+    cat <<EOF
+server {
+    listen 80;
+    server_name _;
+    add_header X-CDSS-Release "${RELEASE_VERSION}" always;
+
+    if (\$cdss_write_blocked = 1) {
+        return 418;
+    }
+
+    error_page 418 = @deployment_write_maintenance;
+    location @deployment_write_maintenance {
+        default_type application/json;
+        add_header Retry-After "60" always;
+        add_header Cache-Control "no-store" always;
+        return 503 '{"detail":"Deployment maintenance is in progress; retry this write shortly."}';
+    }
+
+    root /usr/share/nginx/html;
+    index index.html;
+    gzip on;
+
+    location = /health {
+        proxy_pass http://backend:8000/health;
+    }
+
+    location /trees {
+        proxy_pass http://backend:8000/trees;
+    }
+
+    location /evaluate {
+        proxy_pass http://backend:8000/evaluate;
+    }
+
+    location /fhir/ {
+        proxy_pass http://backend:8000/fhir/;
+    }
+
+    location /dashboard {
+        proxy_pass http://backend:8000/dashboard;
+    }
+
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+}
+EOF
+else
+    cat <<EOF
 server {
     listen 80;
     server_name _;
@@ -64,3 +124,4 @@ server {
     }
 }
 EOF
+fi

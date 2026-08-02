@@ -2,9 +2,11 @@
 # Promotes an already-healthy private frontend without releasing the public
 # host port. A stable nginx container owns APP_PORT for its entire lifetime.
 #
-# The router is a dedicated container with no Compose release labels. Nginx
-# reloads are atomic, so existing connections finish on the old configuration
-# while new connections use the selected release.
+# The steady-state router is a dedicated container with no Compose release
+# labels. During migration from the former port-published layout, the healthy
+# legacy frontend may be adopted in place before later promotions use a
+# dedicated router. Nginx reloads are atomic, so existing connections finish
+# on the old configuration while new connections use the selected release.
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
@@ -81,6 +83,7 @@ if [ -z "$NEW_NETWORK" ]; then
     exit 1
 fi
 NEW_FRONTEND_ALIAS="cdss-frontend-${NEW_VERSION}"
+LEGACY_ROUTER=false
 
 mapfile -t PORT_CONTAINERS < <(find_port_containers)
 if [ "${#PORT_CONTAINERS[@]}" -gt 1 ]; then
@@ -100,9 +103,36 @@ if [ -n "$ROUTER_ID" ]; then
         docker start "$ROUTER_ID" > /dev/null
     fi
 elif [ "${#PORT_CONTAINERS[@]}" -eq 1 ]; then
-    echo "ERROR: ${PORT_CONTAINERS[0]} owns APP_PORT ${APP_PORT}, but it is not ${ROUTER_NAME}." >&2
-    echo "Refusing to adopt a release container as the stable router." >&2
-    exit 1
+    LEGACY_PORT_CONTAINER="${PORT_CONTAINERS[0]}"
+    LEGACY_SERVICE="$({
+        docker inspect \
+            -f '{{index .Config.Labels "com.docker.compose.service"}}' \
+            "$LEGACY_PORT_CONTAINER"
+    } 2>/dev/null || true)"
+    LEGACY_PROJECT="$({
+        docker inspect \
+            -f '{{index .Config.Labels "com.docker.compose.project"}}' \
+            "$LEGACY_PORT_CONTAINER"
+    } 2>/dev/null || true)"
+    case "$LEGACY_PROJECT" in
+        cdss-[0-9]*) ;;
+        *)
+            echo "ERROR: ${LEGACY_PORT_CONTAINER} owns APP_PORT ${APP_PORT}, but it is not a CDSS release frontend." >&2
+            exit 1
+            ;;
+    esac
+    if [ "$LEGACY_SERVICE" != "frontend" ]; then
+        echo "ERROR: ${LEGACY_PORT_CONTAINER} owns APP_PORT ${APP_PORT}, but it is not a Compose frontend." >&2
+        exit 1
+    fi
+    # Migrate the pre-router deployment in place. Renaming does not restart
+    # the container, so the existing route remains available while this
+    # container is connected to the candidate network and its nginx config is
+    # reloaded below.
+    ROUTER_ID="$LEGACY_PORT_CONTAINER"
+    echo "Adopting the legacy frontend ${ROUTER_ID} as ${ROUTER_NAME}..."
+    docker rename "$ROUTER_ID" "$ROUTER_NAME"
+    LEGACY_ROUTER=true
 else
     echo "Creating dedicated stable router on host port ${APP_PORT}..."
     docker run -d \
@@ -111,6 +141,10 @@ else
         -p "${APP_PORT}:80" \
         nginx:1.27-alpine > /dev/null
     ROUTER_ID="$(docker inspect -f '{{.Id}}' "$ROUTER_NAME")"
+fi
+
+if [ "$NEW_FRONTEND_ID" = "$ROUTER_ID" ]; then
+    LEGACY_ROUTER=true
 fi
 
 CONNECTED_NEW_NETWORK=false
@@ -140,8 +174,14 @@ fi
 
 # Check the release through the exact network path the router will use before
 # touching its loaded nginx configuration.
-if ! docker exec "$ROUTER_NAME" wget -qO- "http://${NEW_FRONTEND_ALIAS}/" > /dev/null 2>&1; then
-    echo "ERROR: router cannot reach ${NEW_FRONTEND_ALIAS} on ${NEW_NETWORK}." >&2
+ROUTER_MODE="upstream"
+ROUTER_HEALTH_URL="http://${NEW_FRONTEND_ALIAS}/"
+if [ "$LEGACY_ROUTER" = "true" ]; then
+    ROUTER_MODE="legacy"
+    ROUTER_HEALTH_URL="http://127.0.0.1/"
+fi
+if ! docker exec "$ROUTER_NAME" wget -qO- "$ROUTER_HEALTH_URL" > /dev/null 2>&1; then
+    echo "ERROR: router cannot reach ${ROUTER_HEALTH_URL} on ${NEW_NETWORK}." >&2
     exit 1
 fi
 
@@ -155,6 +195,7 @@ bash deploy/render_router_config.sh \
     "$NEW_VERSION" \
     "$NEW_FRONTEND_ALIAS" \
     "$write_lock_enabled" \
+    "$ROUTER_MODE" \
     > "$NEW_CONFIG"
 
 rollback_router() {
