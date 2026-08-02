@@ -35,4 +35,20 @@ describe('frontend responsive boundaries', () => {
     expect(appCss).toContain("@import './styles/app-shell.css'")
     expect(appCss).toContain("@import './styles/canvas.css'")
   })
+
+  it('defines dashboard narrow-screen reflow contracts', () => {
+    const shell = read('src/dashboard/styles/shell.css')
+    const metrics = read('src/dashboard/styles/metrics.css')
+    const filters = read('src/dashboard/styles/filters.css')
+    const tables = read('src/dashboard/styles/tables-and-tooltips.css')
+    const modal = read('src/styles/result-modal-shell.css')
+
+    expect(shell).toContain('@media (max-width: 640px)')
+    expect(metrics).toContain('.dash-card-wide')
+    expect(metrics).toContain('grid-template-columns: minmax(0, 1fr)')
+    expect(filters).toContain('.dash-filters-grid')
+    expect(tables).toContain('.dash-table-wrap')
+    expect(tables).toContain('min-width: max-content')
+    expect(modal).toContain('max-width: calc(100vw - 16px)')
+  })
 })

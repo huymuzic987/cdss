@@ -60,3 +60,15 @@
 .dash-visit-card-body strong {
   color: var(--text-bright);
 }
+
+@media (max-width: 640px) {
+  .dash-patient-header,
+  .dash-visit-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dash-visit-card-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

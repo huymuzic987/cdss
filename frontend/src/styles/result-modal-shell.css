@@ -146,6 +146,29 @@
   margin-top: 2px;
 }
 
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 8px;
+  }
+
+  .modal-box {
+    max-width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+
+  .modal-header {
+    padding: 14px 16px;
+  }
+
+  .modal-body {
+    padding: 14px 16px;
+  }
+
+  .modal-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .modal-section {
   display: flex;
   flex-direction: column;
@@ -159,4 +182,3 @@
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
-
