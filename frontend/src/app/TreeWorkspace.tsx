@@ -1,13 +1,14 @@
 import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react'
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import type { JsonObject, TreeGraphNode, TreeGraphResponse } from '../api/types'
-import { TreeCanvas } from '../canvas/TreeCanvas'
 import type { Theme } from './useTheme'
 import { ErrorBoundary } from './ErrorBoundary'
 import { GlobalConfigPanel } from '../panels/GlobalConfigPanel'
 import { Legend } from '../panels/Legend'
 import { MockPatientSidebar } from '../panels/MockPatientSidebar'
 import { NodeDetailPanel } from '../panels/NodeDetailPanel'
+
+const TreeCanvas = lazy(() => import('../canvas/TreeCanvas').then(({ TreeCanvas: canvas }) => ({ default: canvas })))
 
 interface TreeWorkspaceProps {
   graph?: TreeGraphResponse
@@ -38,7 +39,7 @@ export function TreeWorkspace(props: TreeWorkspaceProps) {
   const { graph, theme } = props
 
   return (
-    <div className="app-body">
+    <main className="app-body">
       <div className="left-panel" style={{ width: leftCollapsed ? 0 : 280 }}>
         <MockPatientSidebar
           isRunning={props.isRunning}
@@ -64,17 +65,19 @@ export function TreeWorkspace(props: TreeWorkspaceProps) {
       <div className="canvas-area" style={{ pointerEvents: props.isResizing ? 'none' : 'auto' }}>
         {graph ? (
           <ErrorBoundary key={graph.tree.tree_key} label="tree canvas">
-            <TreeCanvas
-              graph={graph}
-              theme={theme}
-              focusNodeKey={props.focusNodeKey}
-              onSelectNode={props.onSelectNode}
-              highlightedNodeKeys={props.highlightedNodeKeys}
-              activeNodeKey={props.activeNodeKey}
-              manualMode={props.manualMode}
-              manualStepInfo={props.manualStepInfo}
-              onCanvasClick={props.onManualStep}
-            />
+            <Suspense fallback={<div className="panel-empty loading app-loading" role="status">Loading canvas…</div>}>
+              <TreeCanvas
+                graph={graph}
+                theme={theme}
+                focusNodeKey={props.focusNodeKey}
+                onSelectNode={props.onSelectNode}
+                highlightedNodeKeys={props.highlightedNodeKeys}
+                activeNodeKey={props.activeNodeKey}
+                manualMode={props.manualMode}
+                manualStepInfo={props.manualStepInfo}
+                onCanvasClick={props.onManualStep}
+              />
+            </Suspense>
           </ErrorBoundary>
         ) : <div className="panel-empty loading">Loading tree…</div>}
       </div>
@@ -107,6 +110,6 @@ export function TreeWorkspace(props: TreeWorkspaceProps) {
         />
         <GlobalConfigPanel globalNodes={graph?.global_nodes ?? []} />
       </div>
-    </div>
+    </main>
   )
 }

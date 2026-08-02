@@ -79,7 +79,7 @@
   font-size: 13px;
   color: var(--text-secondary);
   white-space: nowrap;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease;
 }
 
 .top-tab:hover {
@@ -113,4 +113,3 @@
   position: relative;
   min-height: 0;
 }
-

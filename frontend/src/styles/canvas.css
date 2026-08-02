@@ -73,7 +73,7 @@
   color: var(--text-secondary);
   font-size: 12px;
   cursor: pointer;
-  transition: background 0.1s, color 0.1s, border-color 0.1s;
+  transition: background 0.1s;
   white-space: nowrap;
 }
 
@@ -107,4 +107,3 @@
 
 .side-panels::-webkit-scrollbar { width: 4px; }
 .side-panels::-webkit-scrollbar-thumb { background: var(--accent-scroll-thumb); border-radius: 2px; }
-
