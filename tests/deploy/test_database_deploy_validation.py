@@ -109,3 +109,20 @@ def test_database_validation_precedes_candidate_service_start() -> None:
     services = provision.index('run_timed "candidate-services-start"')
 
     assert migration < seed < validation < services
+
+
+def test_candidate_database_readiness_is_frequent_but_bounded() -> None:
+    provision = (REPO_ROOT / "deploy" / "provision_stack.sh").read_text(
+        encoding="utf-8"
+    )
+    readiness_start = provision.index(
+        'echo "Waiting for database to be ready..."'
+    )
+    readiness_end = provision.index(
+        'if [ "$db_ready" != "true" ]', readiness_start
+    )
+    readiness_block = provision[readiness_start:readiness_end]
+
+    assert "for i in $(seq 1 120); do" in readiness_block
+    assert "sleep 1" in readiness_block
+    assert "sleep 5" not in readiness_block
