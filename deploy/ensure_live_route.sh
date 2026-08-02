@@ -4,7 +4,7 @@
 # image builds, database cloning, migrations, and seeding.
 set -euo pipefail
 
-VERSION_FILE="deploy/.current_version"
+VERSION_FILE="deploy/state/.current_version"
 CURRENT_VERSION="$(cat "$VERSION_FILE" 2>/dev/null || true)"
 
 if [ -z "$CURRENT_VERSION" ]; then

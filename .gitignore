@@ -5,6 +5,8 @@ __pycache__/
 .env.test
 .pytest_cache/
 .ruff_cache/
+.ci-reports/
+.coverage
 dist/
 build/
 *.egg-info/
