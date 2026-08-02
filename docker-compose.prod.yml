@@ -88,7 +88,7 @@ services:
       PGDATABASE: ${POSTGRES_DB}
       DEPLOY_VERSION: ${VERSION:-unknown}
       BACKUP_RETENTION: ${BACKUP_RETENTION:-10}
-      BACKUP_FILE_MODE: ${BACKUP_FILE_MODE:-0644}
+      BACKUP_FILE_MODE: ${BACKUP_FILE_MODE:-0600}
       TZ: ${BACKUP_TIMEZONE:-Asia/Ho_Chi_Minh}
     volumes:
       - ${BACKUP_HOST_DIR:-./persistent-backups}:/backups

@@ -2,30 +2,40 @@
 # Promotes an already-healthy private frontend without releasing the public
 # host port. A stable nginx container owns APP_PORT for its entire lifetime.
 #
-# The router is a dedicated container with no Compose release labels. Nginx
-# reloads are atomic, so existing connections finish on the old configuration
-# while new connections use the selected release.
+# The steady-state router is a dedicated container with no Compose release
+# labels. During migration from the former port-published layout, the healthy
+# legacy frontend may be adopted in place before later promotions use a
+# dedicated router. Nginx reloads are atomic, so existing connections finish
+# on the old configuration while new connections use the selected release.
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
-NEW_VERSION="${1:?usage: promote_stack.sh <new_version> [promote|route-only]}"
+NEW_VERSION="${1:?usage: promote_stack.sh <new_version> [promote|rollback|route-only]}"
 MODE="${2:-promote}"
-if [ "$MODE" != "promote" ] && [ "$MODE" != "route-only" ]; then
-    echo "ERROR: mode must be promote or route-only." >&2
+if [ "$MODE" != "promote" ] \
+    && [ "$MODE" != "rollback" ] \
+    && [ "$MODE" != "route-only" ]; then
+    echo "ERROR: mode must be promote, rollback, or route-only." >&2
     exit 2
 fi
 NEW_PROJECT="cdss-${NEW_VERSION}"
-VERSION_FILE="deploy/.current_version"
-DRAIN_FILE="deploy/.router_drain_pending"
+VERSION_FILE="deploy/state/.current_version"
+STATE_FILE="deploy/state/.deployment_state"
+DRAIN_FILE="deploy/state/.router_drain_pending"
+WRITE_LOCK_FILE="deploy/state/.write_lock"
 ROUTER_NAME="cdss-router"
+OLD_VERSION="$(cat "$VERSION_FILE" 2>/dev/null || true)"
+OLD_GIT_COMMIT="$(
+    sed -n 's/^git_commit=//p' "$STATE_FILE" 2>/dev/null | head -n 1 || true
+)"
+DEPLOY_GIT_COMMIT="${DEPLOY_GIT_COMMIT:-unknown}"
 
 export VERSION="$NEW_VERSION"
 resolve_compose "$NEW_PROJECT"
 
-set -a
-source .env
-set +a
-APP_PORT="${PUBLIC_APP_PORT:-${APP_PORT:-3000}}"
+validate_dotenv_file .env
+DOTENV_APP_PORT="$(dotenv_get .env APP_PORT || true)"
+APP_PORT="${PUBLIC_APP_PORT:-${DOTENV_APP_PORT:-3000}}"
 
 find_port_containers() {
     # Matches the "0.0.0.0:3001->80/tcp, :::3001->80/tcp" style Ports column.
@@ -73,6 +83,7 @@ if [ -z "$NEW_NETWORK" ]; then
     exit 1
 fi
 NEW_FRONTEND_ALIAS="cdss-frontend-${NEW_VERSION}"
+LEGACY_ROUTER=false
 
 mapfile -t PORT_CONTAINERS < <(find_port_containers)
 if [ "${#PORT_CONTAINERS[@]}" -gt 1 ]; then
@@ -92,9 +103,36 @@ if [ -n "$ROUTER_ID" ]; then
         docker start "$ROUTER_ID" > /dev/null
     fi
 elif [ "${#PORT_CONTAINERS[@]}" -eq 1 ]; then
-    echo "ERROR: ${PORT_CONTAINERS[0]} owns APP_PORT ${APP_PORT}, but it is not ${ROUTER_NAME}." >&2
-    echo "Refusing to adopt a release container as the stable router." >&2
-    exit 1
+    LEGACY_PORT_CONTAINER="${PORT_CONTAINERS[0]}"
+    LEGACY_SERVICE="$({
+        docker inspect \
+            -f '{{index .Config.Labels "com.docker.compose.service"}}' \
+            "$LEGACY_PORT_CONTAINER"
+    } 2>/dev/null || true)"
+    LEGACY_PROJECT="$({
+        docker inspect \
+            -f '{{index .Config.Labels "com.docker.compose.project"}}' \
+            "$LEGACY_PORT_CONTAINER"
+    } 2>/dev/null || true)"
+    case "$LEGACY_PROJECT" in
+        cdss-[0-9]*) ;;
+        *)
+            echo "ERROR: ${LEGACY_PORT_CONTAINER} owns APP_PORT ${APP_PORT}, but it is not a CDSS release frontend." >&2
+            exit 1
+            ;;
+    esac
+    if [ "$LEGACY_SERVICE" != "frontend" ]; then
+        echo "ERROR: ${LEGACY_PORT_CONTAINER} owns APP_PORT ${APP_PORT}, but it is not a Compose frontend." >&2
+        exit 1
+    fi
+    # Migrate the pre-router deployment in place. Renaming does not restart
+    # the container, so the existing route remains available while this
+    # container is connected to the candidate network and its nginx config is
+    # reloaded below.
+    ROUTER_ID="$LEGACY_PORT_CONTAINER"
+    echo "Adopting the legacy frontend ${ROUTER_ID} as ${ROUTER_NAME}..."
+    docker rename "$ROUTER_ID" "$ROUTER_NAME"
+    LEGACY_ROUTER=true
 else
     echo "Creating dedicated stable router on host port ${APP_PORT}..."
     docker run -d \
@@ -105,13 +143,21 @@ else
     ROUTER_ID="$(docker inspect -f '{{.Id}}' "$ROUTER_NAME")"
 fi
 
+if [ "$NEW_FRONTEND_ID" = "$ROUTER_ID" ]; then
+    LEGACY_ROUTER=true
+fi
+
 CONNECTED_NEW_NETWORK=false
 PROMOTION_COMPLETE=false
 OLD_CONFIG=""
 NEW_CONFIG=""
+STATE_TMP=""
+VERSION_TMP=""
 cleanup() {
     [ -z "$OLD_CONFIG" ] || rm -f "$OLD_CONFIG"
     [ -z "$NEW_CONFIG" ] || rm -f "$NEW_CONFIG"
+    [ -z "$STATE_TMP" ] || rm -f "$STATE_TMP"
+    [ -z "$VERSION_TMP" ] || rm -f "$VERSION_TMP"
     if [ "$PROMOTION_COMPLETE" != "true" ] \
         && [ "$CONNECTED_NEW_NETWORK" = "true" ]; then
         docker network disconnect "$NEW_NETWORK" "$ROUTER_NAME" > /dev/null 2>&1 || true
@@ -128,8 +174,14 @@ fi
 
 # Check the release through the exact network path the router will use before
 # touching its loaded nginx configuration.
-if ! docker exec "$ROUTER_NAME" wget -qO- "http://${NEW_FRONTEND_ALIAS}/" > /dev/null 2>&1; then
-    echo "ERROR: router cannot reach ${NEW_FRONTEND_ALIAS} on ${NEW_NETWORK}." >&2
+ROUTER_MODE="upstream"
+ROUTER_HEALTH_URL="http://${NEW_FRONTEND_ALIAS}/"
+if [ "$LEGACY_ROUTER" = "true" ]; then
+    ROUTER_MODE="legacy"
+    ROUTER_HEALTH_URL="http://127.0.0.1/"
+fi
+if ! docker exec "$ROUTER_NAME" wget -qO- "$ROUTER_HEALTH_URL" > /dev/null 2>&1; then
+    echo "ERROR: router cannot reach ${ROUTER_HEALTH_URL} on ${NEW_NETWORK}." >&2
     exit 1
 fi
 
@@ -137,27 +189,14 @@ OLD_CONFIG="$(mktemp)"
 NEW_CONFIG="$(mktemp)"
 
 docker cp "${ROUTER_NAME}:/etc/nginx/conf.d/default.conf" "$OLD_CONFIG"
-cat > "$NEW_CONFIG" <<EOF
-server {
-    listen 80;
-    server_name _;
-    add_header X-CDSS-Release "${NEW_VERSION}" always;
-
-    # Docker's embedded DNS is queried repeatedly, so a frontend container
-    # restart does not leave nginx pinned to its former IP address.
-    resolver 127.0.0.11 ipv6=off valid=10s;
-    set \$release_upstream http://${NEW_FRONTEND_ALIAS};
-
-    location / {
-        proxy_pass \$release_upstream;
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-}
-EOF
+write_lock_enabled=false
+[ ! -f "$WRITE_LOCK_FILE" ] || write_lock_enabled=true
+bash deploy/render_router_config.sh \
+    "$NEW_VERSION" \
+    "$NEW_FRONTEND_ALIAS" \
+    "$write_lock_enabled" \
+    "$ROUTER_MODE" \
+    > "$NEW_CONFIG"
 
 rollback_router() {
     echo "Restoring the previous router configuration..."
@@ -207,8 +246,34 @@ if [ "$MODE" = "promote" ]; then
         rollback_router
         exit 1
     fi
+fi
 
-    echo "$NEW_VERSION" > "$VERSION_FILE"
+if [ "$MODE" = "promote" ] || [ "$MODE" = "rollback" ]; then
+    commit_deployment_state() {
+        local promoted_at
+        promoted_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        STATE_TMP="${STATE_FILE}.tmp.$$"
+        VERSION_TMP="${VERSION_FILE}.tmp.$$"
+        {
+            printf 'format_version=1\n'
+            printf 'current_version=%s\n' "$NEW_VERSION"
+            printf 'previous_version=%s\n' "$OLD_VERSION"
+            printf 'git_commit=%s\n' "$DEPLOY_GIT_COMMIT"
+            printf 'previous_git_commit=%s\n' "$OLD_GIT_COMMIT"
+            printf 'promoted_at=%s\n' "$promoted_at"
+            printf 'status=promoted\n'
+        } > "$STATE_TMP" || return 1
+        printf '%s\n' "$NEW_VERSION" > "$VERSION_TMP" || return 1
+        mv "$STATE_TMP" "$STATE_FILE" || return 1
+        # The legacy version file remains the commit point for existing scripts.
+        # It is replaced last, after the richer state is durable.
+        mv "$VERSION_TMP" "$VERSION_FILE"
+    }
+    if ! commit_deployment_state; then
+        echo "ERROR: could not commit deployment state; restoring the previous route." >&2
+        rollback_router
+        exit 1
+    fi
 else
     echo "Live route for cdss-${NEW_VERSION} repaired and verified."
 fi

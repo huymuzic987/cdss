@@ -62,7 +62,7 @@
 .sc-no-results { margin:30px 20px; color:var(--sc-muted); font-size:12px; text-align:center; }
 .sc-queue-foot { display:flex; align-items:center; justify-content:center; gap:7px; padding:12px; border-top:1px solid var(--sc-line); color:var(--sc-muted); font-size:9px; }
 .sc-queue-foot span { width:6px; height:6px; border-radius:50%; background:#6eaca5; }
-.sc-empty-chart { grid-column:3; grid-row:2; display:flex; align-items:center; justify-content:center; flex-direction:column; padding:48px; text-align:center; background-image:linear-gradient(rgba(23,107,104,.027) 1px,transparent 1px),linear-gradient(90deg,rgba(23,107,104,.027) 1px,transparent 1px); background-size:28px 28px; }
+.sc-empty-chart { grid-column:3; grid-row:2; display:flex; min-width:0; align-items:center; justify-content:center; flex-direction:column; padding:48px; text-align:center; background-image:linear-gradient(rgba(23,107,104,.027) 1px,transparent 1px),linear-gradient(90deg,rgba(23,107,104,.027) 1px,transparent 1px); background-size:28px 28px; }
 .sc-empty-illustration { position:relative; width:160px; height:126px; margin-bottom:24px; border:1px solid #cfdcde; border-radius:16px; background:rgba(255,255,255,.78); box-shadow:12px 12px 0 #e6eeee; }
 .sc-empty-illustration span { position:absolute; top:25px; left:19px; display:grid; place-items:center; width:62px; height:62px; border-radius:50%; color:var(--sc-teal); background:var(--sc-soft-teal); }
 .sc-empty-illustration i { position:absolute; left:95px; right:18px; height:5px; border-radius:4px; background:#d6e1e3; }
@@ -83,6 +83,7 @@
 .sc-visit-state>span { width:7px; height:7px; border-radius:50%; background:#279176; box-shadow:0 0 0 3px #d9eee8; }
 .sc-visit-state small { grid-column:2; margin-top:2px; color:var(--sc-muted); font-size:8px; font-weight:500; }
 .sc-chart-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(245px,290px); align-items:start; gap:22px; max-width:1280px; margin:0 auto; padding:24px clamp(22px,3vw,42px) 42px; }
+.sc-chart-layout > * { min-width:0; }
 .sc-chart-content { display:flex; min-width:0; flex-direction:column; gap:16px; }
 .sc-vital-band { display:grid; grid-template-columns:minmax(190px,1.25fr) repeat(3,minmax(105px,.75fr)); overflow:hidden; border:1px solid var(--sc-line); border-radius:13px; background:var(--sc-paper); box-shadow:0 8px 22px rgba(30,61,67,.04); }
 .sc-primary-vital { padding:18px 20px; color:#fff; background:var(--sc-ink); }
@@ -159,10 +160,11 @@
 @media (max-width:780px) {
   body { overflow:auto; }
   .showcase-shell { grid-template-columns:54px minmax(0,1fr); grid-template-rows:64px auto minmax(500px,1fr); min-height:100vh; }
+  .showcase-shell > .sc-topbar,.showcase-shell > .sc-patient-queue,.showcase-shell > .sc-empty-chart,.showcase-shell > .sc-chart { min-width:0; }
   .sc-app-rail { grid-column:1; } .sc-topbar { grid-column:2; padding:0 14px; } .sc-clinic-mark small,.sc-clinician>span { display:none; } .sc-clinician>button { margin-right:0; }
   .sc-patient-queue { grid-column:2; grid-row:2; max-height:330px; border-right:0; border-bottom:1px solid var(--sc-line); }
   .sc-queue-heading { padding:18px 16px 12px; } .sc-queue-list { display:flex; gap:8px; overflow-x:auto; padding:0 12px 14px; }
-  .sc-patient-card { flex:0 0 262px; } .sc-patient-card+.sc-patient-card { margin-top:0; } .sc-queue-foot { display:none; }
+  .sc-patient-card { flex:0 0 262px; max-width:262px; } .sc-patient-card:hover { transform:none; } .sc-patient-card+.sc-patient-card { margin-top:0; } .sc-queue-foot { display:none; }
   .sc-empty-chart,.sc-chart { grid-column:2; grid-row:3; } .sc-empty-chart { min-height:500px; padding:30px 20px; }
   .sc-chart-header { padding:17px; } .sc-visit-state { display:none; } .sc-chart-layout { padding:16px; }
   .sc-vital-band { grid-template-columns:1fr 1fr; } .sc-vital-band .sc-data-field:nth-of-type(2) { display:none; }

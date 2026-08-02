@@ -14,7 +14,7 @@ from cdss.domain.decision_tree import (
     select_output_actions,
 )
 from cdss.domain.decision_tree.drug_classes import build_medicine_options
-from cdss.domain.decision_tree.medicine_catalog import MedicineRepository
+from cdss.domain.decision_tree.medicine_catalog import Medicine, MedicineRepository
 
 _PREGNANCY_TREE_KEY = "hypertension-in-pregnancy"
 _PREGNANCY_MONITOR_NODE_KEY = "T12_ACTION_MONITOR_PREGNANCY_POSTPARTUM"
@@ -116,24 +116,54 @@ def enrich_inferred_medications(
             payload["medicine_options"] = options
         if inferred_names and "medicines" not in payload:
             payload["medicines"] = [
-                {
-                    "drug_id": medicine.drug_id,
-                    "name": medicine.name,
-                    "drug_class": medicine.drug_class,
-                    "subgroup": medicine.subgroup,
-                    "route": medicine.route,
-                    "dose_low": medicine.dose_low,
-                    "dose_usual": medicine.dose_usual,
-                    "dose_max": medicine.dose_max,
-                    "source": medicine.source,
-                    "link": medicine.link,
-                    "available": medicine.available,
-                }
+                _medicine_json(medicine)
                 for medicine in catalog
                 if medicine.drug_id in inferred_names
             ]
+        selected_classes: set[str] = set()
+        for raw in payload.get("medicines", []):
+            if not isinstance(raw, dict):
+                continue
+            drug_class = raw.get("drug_class")
+            if isinstance(drug_class, str) and drug_class in {"A", "B", "C", "D"}:
+                selected_classes.add(drug_class)
+        for option in payload.get("medicine_options", []):
+            if not isinstance(option, dict):
+                continue
+            classes = option.get("classes")
+            if isinstance(classes, list):
+                selected_classes.update(
+                    code
+                    for code in classes
+                    if isinstance(code, str) and code in {"A", "B", "C", "D"}
+                )
+        if selected_classes:
+            payload["medicine_catalog_by_class"] = {
+                class_code: [
+                    _medicine_json(medicine)
+                    for medicine in catalog
+                    if medicine.drug_class == class_code
+                ]
+                for class_code in sorted(selected_classes)
+            }
         output.append(action.model_copy(update={"payload": payload}))
     return output
+
+
+def _medicine_json(medicine: Medicine) -> JsonObject:
+    return {
+        "drug_id": medicine.drug_id,
+        "name": medicine.name,
+        "drug_class": medicine.drug_class,
+        "subgroup": medicine.subgroup,
+        "route": medicine.route,
+        "dose_low": medicine.dose_low,
+        "dose_usual": medicine.dose_usual,
+        "dose_max": medicine.dose_max,
+        "source": medicine.source,
+        "link": medicine.link,
+        "available": medicine.available,
+    }
 
 
 def _negated_medication(name: str, text: str) -> bool:

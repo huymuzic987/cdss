@@ -3,3 +3,16 @@
   content: none;
 }
 
+.showcase-shell .modal-body { overflow-y: auto; }
+
+@media (max-width: 780px) {
+  .showcase-shell .modal-overlay { padding: 8px; }
+  .showcase-shell .modal-box { max-height: calc(100dvh - 16px); }
+}
+
+@media (max-width: 640px) {
+  .showcase-shell .modal-box {
+    width: 100%;
+    max-width: calc(100vw - 16px);
+  }
+}

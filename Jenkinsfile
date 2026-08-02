@@ -42,12 +42,28 @@ pipeline {
         // Two deployments must never build/migrate/promote on the same host
         // at once. A queued newer build waits instead of doubling host load.
         disableConcurrentBuilds()
+        // Retain enough history for trend analysis without unbounded controller
+        // disk growth. Test/deployment artifacts receive a smaller cap.
+        buildDiscarder(logRotator(
+            daysToKeepStr: '30',
+            numToKeepStr: '50',
+            artifactDaysToKeepStr: '14',
+            artifactNumToKeepStr: '20'
+        ))
+        // A hung Docker, SSH, or database operation must not occupy the only
+        // deployment executor indefinitely.
+        timeout(time: 90, unit: 'MINUTES')
+        // Restarting midway through a stateful deployment can bypass required
+        // backup, write-lock, or verification stages.
+        disableRestartFromStage()
+        skipStagesAfterUnstable()
         timestamps()
     }
 
     stages {
 
         stage('Checkout') {
+            options { timeout(time: 5, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 echo 'Checking out source code...'
@@ -56,12 +72,30 @@ pipeline {
         }
 
         stage('Verify Files') {
+            options { timeout(time: 3, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sh '''
                     echo "=== Jenkins Build Info ==="
                     pwd
                     ls -la
+
+                    if [ "$(uname -s)" != "Linux" ]; then
+                        echo "ERROR: CDSS requires a Linux Jenkins agent." >&2
+                        exit 1
+                    fi
+                    for required_command in \
+                        bash docker git ssh scp rsync curl awk sed grep tr tail seq cut \
+                        sha256sum find sort df nproc; do
+                        if ! command -v "$required_command" > /dev/null 2>&1; then
+                            echo "ERROR: Jenkins agent is missing required command: $required_command" >&2
+                            exit 1
+                        fi
+                    done
+                    if ! docker info > /dev/null 2>&1; then
+                        echo "ERROR: Jenkins agent cannot access the Docker daemon." >&2
+                        exit 1
+                    fi
 
                     for f in pyproject.toml uv.lock frontend/package.json frontend/pnpm-lock.yaml \
                              Dockerfile.backend frontend/Dockerfile docker-compose.prod.yml \
@@ -70,8 +104,13 @@ pipeline {
                              deploy/build_images.sh deploy/seed_database.sh \
                              deploy/lib.sh deploy/provision_stack.sh \
                              deploy/promote_stack.sh deploy/prune_old_stacks.sh \
+                             deploy/prune_release_dirs.sh \
                              deploy/cleanup_failed_stack.sh \
                              deploy/ensure_live_route.sh \
+                             deploy/render_router_config.sh \
+                             deploy/set_write_lock.sh \
+                             deploy/validate_env.sh \
+                             deploy/validate_candidate_db.sh \
                              deploy/run_quality_gates.sh \
                              deploy/run_frontend_quality_gates.sh \
                              scripts/generate_pregnancy_fhir_presets.py; do
@@ -93,6 +132,7 @@ pipeline {
         // the frontend's vitest/oxlint/build. A failure here stops the
         // pipeline, so promotion of a broken build is impossible.
         stage('Quality Gates') {
+            options { timeout(time: 35, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sh '''
@@ -100,15 +140,44 @@ pipeline {
                     ./deploy/run_quality_gates.sh
                 '''
             }
+            post {
+                always {
+                    junit(
+                        testResults: '.ci-reports/backend/junit.xml,frontend/.ci-reports/junit.xml',
+                        allowEmptyResults: true
+                    )
+                }
+            }
         }
 
         stage('Deploy Files') {
+            options { timeout(time: 10, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
-                            mkdir -p ${DEPLOY_PATH}
+                            set -e
+                            mkdir -p ${DEPLOY_PATH}/releases/${VERSION} \
+                                ${DEPLOY_PATH}/shared \
+                                ${DEPLOY_PATH}/persistent-backups
+                            chmod 0700 ${DEPLOY_PATH}/shared \
+                                ${DEPLOY_PATH}/persistent-backups
+
+                            # One-time migration from the former shared checkout.
+                            for state_file in .current_version .deployment_state \
+                                .build_state .router_drain_pending .write_lock; do
+                                if [ ! -e ${DEPLOY_PATH}/shared/\$state_file ] \
+                                    && [ -f ${DEPLOY_PATH}/deploy/\$state_file ]; then
+                                    cp -p ${DEPLOY_PATH}/deploy/\$state_file \
+                                        ${DEPLOY_PATH}/shared/\$state_file
+                                fi
+                            done
+                            if [ ! -e ${DEPLOY_PATH}/shared/.env ] \
+                                && [ -f ${DEPLOY_PATH}/.env ]; then
+                                cp -p ${DEPLOY_PATH}/.env ${DEPLOY_PATH}/shared/.env
+                                chmod 0600 ${DEPLOY_PATH}/shared/.env
+                            fi
                         "
 
                         # The target is on the same LAN. Compression consumes
@@ -127,25 +196,47 @@ pipeline {
                             --exclude '.ruff_cache' \
                             --exclude 'scratch' \
                             --exclude 'deploy/.current_version' \
+                            --exclude 'deploy/.deployment_state' \
                             --exclude 'deploy/.build_state' \
                             --exclude 'deploy/.router_drain_pending' \
+                            --exclude 'deploy/.write_lock' \
                             --exclude 'persistent-backups' \
-                            ./ ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/
+                            ./ ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/releases/${VERSION}/
+
+                        ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                            set -e
+                            ln -sfn ${DEPLOY_PATH}/shared/.env \
+                                ${DEPLOY_PATH}/releases/${VERSION}/.env
+                            ln -sfn ${DEPLOY_PATH}/persistent-backups \
+                                ${DEPLOY_PATH}/releases/${VERSION}/persistent-backups
+                            ln -sfn ${DEPLOY_PATH}/shared \
+                                ${DEPLOY_PATH}/releases/${VERSION}/deploy/state
+                        "
                     '''
                 }
             }
         }
 
         stage('Inject Environment') {
+            options { timeout(time: 5, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 withCredentials([file(credentialsId: 'cdss-prod-env', variable: 'ENV_FILE')]) {
                     sshagent(['ubuntu-vm-jenkins']) {
                         sh '''
-                            scp ${SSH_OPTS} $ENV_FILE ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/.env.new
                             ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
-                                sed -i 's/\\r\$//' ${DEPLOY_PATH}/.env.new
-                                mv -f ${DEPLOY_PATH}/.env.new ${DEPLOY_PATH}/.env
+                                umask 077
+                                cat > ${DEPLOY_PATH}/shared/.env.new
+                            " < "$ENV_FILE"
+                            ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                                set -e
+                                sed -i 's/\\r\$//' ${DEPLOY_PATH}/shared/.env.new
+                                chmod 0600 ${DEPLOY_PATH}/shared/.env.new
+                                cd ${DEPLOY_PATH}/releases/${VERSION}
+                                chmod +x deploy/validate_env.sh
+                                ./deploy/validate_env.sh ${DEPLOY_PATH}/shared/.env.new
+                                mv -f ${DEPLOY_PATH}/shared/.env.new \
+                                    ${DEPLOY_PATH}/shared/.env
                             "
                         '''
                     }
@@ -156,14 +247,16 @@ pipeline {
         // Repair and verify the currently promoted route before a potentially
         // lengthy build. This also recreates a missing stable router.
         stage('Ensure Live Route') {
+            options { timeout(time: 5, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
-                            cd ${DEPLOY_PATH}
-                            chmod +x deploy/ensure_live_route.sh deploy/promote_stack.sh
+                            cd ${DEPLOY_PATH}/releases/${VERSION}
+                            chmod +x deploy/ensure_live_route.sh deploy/promote_stack.sh \
+                                deploy/render_router_config.sh
                             PUBLIC_APP_PORT=${APP_PORT} ./deploy/ensure_live_route.sh
                         "
                     '''
@@ -175,13 +268,14 @@ pipeline {
         // source and production environment have reached the target host.
         // Provision and promotion reuse these exact images.
         stage('Build Images') {
+            options { timeout(time: 30, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
-                            cd ${DEPLOY_PATH}
+                            cd ${DEPLOY_PATH}/releases/${VERSION}
                             chmod +x deploy/build_images.sh
                             ./deploy/build_images.sh ${VERSION}
                         "
@@ -194,15 +288,36 @@ pipeline {
         // new stack is provisioned. The dump is written to the persistent
         // host backup directory, outside all per-version Docker volumes.
         stage('Backup Current Database') {
+            options { timeout(time: 20, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
-                            cd ${DEPLOY_PATH}
+                            cd ${DEPLOY_PATH}/releases/${VERSION}
                             chmod +x deploy/backup_current_db.sh deploy/backup_db.sh
                             ./deploy/backup_current_db.sh
+                        "
+                    '''
+                }
+            }
+        }
+
+        // Stop new mutating requests and wait for the old router workers to
+        // drain before pg_dump takes the candidate database snapshot.
+        stage('Enable Write Lock') {
+            options { timeout(time: 5, unit: 'MINUTES') }
+            steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
+                sshagent(['ubuntu-vm-jenkins']) {
+                    sh '''
+                        ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                            set -e
+                            cd ${DEPLOY_PATH}/releases/${VERSION}
+                            chmod +x deploy/set_write_lock.sh deploy/promote_stack.sh \
+                                deploy/render_router_config.sh
+                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/set_write_lock.sh enable
                         "
                     '''
                 }
@@ -213,13 +328,14 @@ pipeline {
         // it, then migrates and seeds it without changing tree_layouts.
         // Production remains online throughout this stage.
         stage('Provision New Stack') {
+            options { timeout(time: 35, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
-                            cd ${DEPLOY_PATH}
+                            cd ${DEPLOY_PATH}/releases/${VERSION}
                             chmod +x deploy/provision_stack.sh
                             ./deploy/provision_stack.sh ${VERSION}
                         "
@@ -233,31 +349,18 @@ pipeline {
         // checks fail, promote_stack.sh restores its previous configuration
         // without stopping the old release.
         stage('Promote New Stack') {
+            options { timeout(time: 10, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sshagent(['ubuntu-vm-jenkins']) {
                     sh '''
                         ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                             set -e
-                            cd ${DEPLOY_PATH}
-                            chmod +x deploy/promote_stack.sh
-                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/promote_stack.sh ${VERSION}
-                        "
-                    '''
-                }
-            }
-        }
-
-        stage('Prune Old Stacks') {
-            steps {
-                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
-                sshagent(['ubuntu-vm-jenkins']) {
-                    sh '''
-                        ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
-                            set -e
-                            cd ${DEPLOY_PATH}
-                            chmod +x deploy/prune_old_stacks.sh
-                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/prune_old_stacks.sh
+                            cd ${DEPLOY_PATH}/releases/${VERSION}
+                            chmod +x deploy/promote_stack.sh deploy/render_router_config.sh
+                            DEPLOY_GIT_COMMIT=${GIT_COMMIT} \
+                                PUBLIC_APP_PORT=${APP_PORT} \
+                                ./deploy/promote_stack.sh ${VERSION}
                         "
                     '''
                 }
@@ -265,6 +368,7 @@ pipeline {
         }
 
         stage('Verify Public Endpoint') {
+            options { timeout(time: 5, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sh '''
@@ -292,6 +396,68 @@ pipeline {
                 '''
             }
         }
+
+        // Writes resume only after the promoted release is externally
+        // reachable and identifies itself as this exact build.
+        stage('Disable Write Lock') {
+            options { timeout(time: 5, unit: 'MINUTES') }
+            steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
+                sshagent(['ubuntu-vm-jenkins']) {
+                    sh '''
+                        ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                            set -e
+                            cd ${DEPLOY_PATH}/releases/${VERSION}
+                            chmod +x deploy/set_write_lock.sh deploy/promote_stack.sh \
+                                deploy/render_router_config.sh
+                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/set_write_lock.sh disable
+                        "
+                    '''
+                }
+            }
+        }
+
+        // Retain the previous application stack until the new release has
+        // passed both host-local and public verification and writes resumed.
+        stage('Prune Old Stacks') {
+            options { timeout(time: 10, unit: 'MINUTES') }
+            steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
+                sshagent(['ubuntu-vm-jenkins']) {
+                    sh '''
+                        ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                            set -e
+                            cd ${DEPLOY_PATH}/releases/${VERSION}
+                            chmod +x deploy/prune_old_stacks.sh deploy/prune_release_dirs.sh
+                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/prune_old_stacks.sh
+                            CDSS_RELEASES_DIR=${DEPLOY_PATH}/releases \
+                                ./deploy/prune_release_dirs.sh
+                        "
+                    '''
+                }
+            }
+        }
+
+        stage('Record Deployment Evidence') {
+            options { timeout(time: 5, unit: 'MINUTES') }
+            steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
+                sshagent(['ubuntu-vm-jenkins']) {
+                    sh '''
+                        mkdir -p .ci-reports/deployment
+                        scp ${SSH_OPTS} \
+                            ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/shared/.deployment_state \
+                            .ci-reports/deployment/state.txt
+                        {
+                            printf 'jenkins_build=%s\n' '${BUILD_NUMBER}'
+                            printf 'git_commit=%s\n' '${GIT_COMMIT}'
+                            printf 'build_url=%s\n' '${BUILD_URL}'
+                            printf 'public_url=%s\n' '${PUBLIC_URL}'
+                        } > .ci-reports/deployment/build.txt
+                    '''
+                }
+            }
+        }
     }
 
     post {
@@ -307,9 +473,36 @@ pipeline {
             sshagent(['ubuntu-vm-jenkins']) {
                 sh '''
                     ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
-                        cd ${DEPLOY_PATH} 2>/dev/null || exit 0
-                        chmod +x deploy/cleanup_failed_stack.sh deploy/promote_stack.sh
-                        PUBLIC_APP_PORT=${APP_PORT} ./deploy/cleanup_failed_stack.sh ${VERSION}
+                        cd ${DEPLOY_PATH}/releases/${VERSION} 2>/dev/null || exit 0
+                        chmod +x deploy/cleanup_failed_stack.sh deploy/promote_stack.sh \
+                            deploy/render_router_config.sh deploy/set_write_lock.sh
+                        if PUBLIC_APP_PORT=${APP_PORT} \
+                            ./deploy/cleanup_failed_stack.sh ${VERSION}; then
+                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/set_write_lock.sh disable \
+                                || echo 'WARNING: write lock remains enabled because a healthy route could not be verified.'
+                        else
+                            echo 'WARNING: recovery failed; preserving the write lock and release stacks for diagnosis.'
+                        fi
+                    "
+                '''
+            }
+        }
+
+        aborted {
+            echo 'Deployment aborted - restoring a verified route and write-lock state.'
+            sshagent(['ubuntu-vm-jenkins']) {
+                sh '''
+                    ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                        cd ${DEPLOY_PATH}/releases/${VERSION} 2>/dev/null || exit 0
+                        chmod +x deploy/cleanup_failed_stack.sh deploy/promote_stack.sh \
+                            deploy/render_router_config.sh deploy/set_write_lock.sh
+                        if PUBLIC_APP_PORT=${APP_PORT} \
+                            ./deploy/cleanup_failed_stack.sh ${VERSION}; then
+                            PUBLIC_APP_PORT=${APP_PORT} ./deploy/set_write_lock.sh disable \
+                                || echo 'WARNING: write lock remains enabled because a healthy route could not be verified.'
+                        else
+                            echo 'WARNING: recovery failed; preserving the write lock and release stacks for diagnosis.'
+                        fi
                     "
                 '''
             }
@@ -317,6 +510,15 @@ pipeline {
 
         cleanup {
             script {
+                try {
+                    archiveArtifacts(
+                        artifacts: '.ci-reports/**/*,frontend/.ci-reports/**/*',
+                        allowEmptyArchive: true,
+                        fingerprint: false
+                    )
+                } catch (archiveError) {
+                    echo "WARNING: unable to archive CI/CD reports: ${archiveError}"
+                }
                 // Notification/reporting must never replace the real build
                 // result or prevent cleanWs() from running.
                 try {
@@ -329,10 +531,13 @@ pipeline {
                         'Ensure Live Route',
                         'Build Images',
                         'Backup Current Database',
+                        'Enable Write Lock',
                         'Provision New Stack',
                         'Promote New Stack',
+                        'Verify Public Endpoint',
+                        'Disable Write Lock',
                         'Prune Old Stacks',
-                        'Verify Public Endpoint'
+                        'Record Deployment Evidence'
                     ]
                     def buildResult = currentBuild.currentResult ?: 'UNKNOWN'
                     def activeStage = env.CDSS_CURRENT_STAGE ?: 'Pipeline initialization'

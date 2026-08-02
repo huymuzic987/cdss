@@ -6,6 +6,7 @@ import {
   getClinicalDecisionSupportMessages,
   type ClinicalDecisionSupportLocale,
 } from '../clinicalDecisionSupportMessages'
+import { DrugTooltip } from './DrugTooltip'
 
 export interface OrderProvenance {
   nodeLabel: string
@@ -14,23 +15,37 @@ export interface OrderProvenance {
   references: ExecutedReference[]
 }
 
+export function isSingleMedicationOrder(order: {
+  orderType?: string
+  drugClasses?: Array<{ code: string }>
+}): boolean {
+  const isAbcdCombination = (order.drugClasses?.length ?? 0) > 1
+    && order.drugClasses!.every((item) => /^[ABCD]$/.test(item.code))
+  return order.orderType === 'medication' && !isAbcdCombination
+}
+
 export function RecommendedOrderCard({ order, provenance, locale }: {
   order: RecommendedOrder
   provenance: OrderProvenance
   locale: ClinicalDecisionSupportLocale
 }) {
   const messages = getClinicalDecisionSupportMessages(locale)
-  const anchorRef = useRef<HTMLSpanElement>(null)
+  const anchorRef = useRef<HTMLElement | null>(null)
   const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [open, setOpen] = useState(false)
+  const [activeClassCode, setActiveClassCode] = useState<string | null>(null)
   const [position, setPosition] = useState<{
     top?: number; bottom?: number; left: number; width: number; maxHeight: number
   } | null>(null)
   const tooltipId = `cds-order-${order.id}`.replace(/[^a-zA-Z0-9_-]/g, '-')
   const isAbcdCombination = (order.drugClasses?.length ?? 0) > 1
     && order.drugClasses!.every((item) => /^[ABCD]$/.test(item.code))
+  const isSingleMedication = order.orderType === 'medication' && !isAbcdCombination
   const combinationDose = order.drugClasses?.[0]?.doseLabel || order.dose
+  const selectedDrugClass = isAbcdCombination
+    ? order.drugClasses?.find((item) => item.code === activeClassCode)
+    : order.drugClasses?.[0]
 
   function cancelTimers() {
     if (openTimer.current !== null) clearTimeout(openTimer.current)
@@ -38,10 +53,21 @@ export function RecommendedOrderCard({ order, provenance, locale }: {
     openTimer.current = null
     closeTimer.current = null
   }
-  function scheduleOpen() {
+
+  function scheduleOpen(code: string | null, anchor: HTMLElement) {
     cancelTimers()
+    anchorRef.current = anchor
+    setActiveClassCode(code)
     openTimer.current = setTimeout(() => setOpen(true), 90)
   }
+
+  function openImmediately(code: string | null, anchor: HTMLElement) {
+    cancelTimers()
+    anchorRef.current = anchor
+    setActiveClassCode(code)
+    setOpen(true)
+  }
+
   function scheduleClose() {
     cancelTimers()
     closeTimer.current = setTimeout(() => setOpen(false), 240)
@@ -70,98 +96,61 @@ export function RecommendedOrderCard({ order, provenance, locale }: {
       window.removeEventListener('resize', updatePosition)
       window.removeEventListener('scroll', updatePosition, true)
     }
-  }, [open])
+  }, [open, activeClassCode])
 
   useEffect(() => () => cancelTimers(), [])
 
-  const tooltip = isAbcdCombination && open && position && createPortal(
-    <div
+  const tooltip = (isAbcdCombination || isSingleMedication) && open && position && createPortal(
+    <DrugTooltip
       id={tooltipId}
-      className="cds-drug-tooltip"
-      role="tooltip"
+      order={order}
+      drugClass={selectedDrugClass}
+      provenance={provenance}
+      locale={locale}
       style={position}
       onMouseEnter={cancelTimers}
       onMouseLeave={scheduleClose}
-    >
-      <div className="cds-tooltip-header">
-        <strong>{messages.combinationTherapy}</strong>
-        {combinationDose && <span>{messages.startingDose}: {combinationDose}</span>}
-      </div>
-      <div className="cds-tooltip-grid">
-        {order.drugClasses?.map((drugClass) => (
-          <div className="cds-tooltip-drug-class" key={drugClass.code}>
-            <h4>{drugClass.label}{drugClass.doseLabel ? ` · ${drugClass.doseLabel}` : ''}</h4>
-            {drugClass.medicines.length === 0 ? <p className="cds-empty">{messages.noMedicines}</p> : (
-              <table><tbody>{drugClass.medicines.map((medicine) => (
-                <tr key={medicine.id}>
-                  <td><strong>{medicine.name}</strong>{medicine.subgroup && <small>{medicine.subgroup}</small>}</td>
-                  <td>{medicine.dose}</td>
-                </tr>
-              ))}</tbody></table>
-            )}
-          </div>
-        ))}
-      </div>
-      <div className="cds-tooltip-reference-row">
-          <div className="cds-tooltip-source">
-            <h4>{messages.recommendationSource}</h4>
-            <strong>{provenance.nodeLabel}</strong>
-            <span>{provenance.treeName} · {provenance.nodeKey}</span>
-          </div>
-          <div className="cds-tooltip-references">
-            <h4>{messages.guidelineReferences}</h4>
-            {provenance.references.length === 0 ? <p>{messages.noGuidelineReference}</p> : (
-              <ul>{provenance.references.map((reference) => (
-                <li key={`${reference.tree_key}:${reference.node_key}:${reference.reference_order}`}>
-                  <strong>{reference.source_title}</strong>
-                  {referenceLocator(reference) && <span>{referenceLocator(reference)}</span>}
-                  {reference.reference_note && <small>{reference.reference_note}</small>}
-                </li>
-              ))}</ul>
-            )}
-          </div>
-      </div>
-    </div>,
+    />,
     document.body,
   )
 
   return (
     <>
-      <div className={`cds-order-row ${isAbcdCombination ? 'cds-combination-row' : ''}`}>
+      <div
+        className={`cds-order-row ${isAbcdCombination ? 'cds-combination-row' : ''} ${isSingleMedication ? 'cds-single-drug-hover-target' : ''}`}
+        tabIndex={isSingleMedication ? 0 : undefined}
+        aria-describedby={isSingleMedication && open ? tooltipId : undefined}
+        onMouseEnter={isSingleMedication ? (event) => scheduleOpen(null, event.currentTarget) : undefined}
+        onMouseLeave={isSingleMedication ? scheduleClose : undefined}
+        onFocus={isSingleMedication ? (event) => openImmediately(null, event.currentTarget) : undefined}
+        onBlur={isSingleMedication ? scheduleClose : undefined}
+      >
         <span className="cds-order-name">{isAbcdCombination ? messages.combinationTherapy : order.name}</span>
         <span className="cds-order-detail">{isAbcdCombination ? combinationDose : order.dose || order.classLabel}</span>
         {order.drugClasses?.length ? (
-          <span
-            ref={isAbcdCombination ? anchorRef : undefined}
-            className={`cds-class-combination ${isAbcdCombination ? 'cds-class-hover-target' : ''}`}
-            tabIndex={isAbcdCombination ? 0 : undefined}
-            aria-describedby={isAbcdCombination && open ? tooltipId : undefined}
-            onMouseEnter={isAbcdCombination ? scheduleOpen : undefined}
-            onMouseLeave={isAbcdCombination ? scheduleClose : undefined}
-            onFocus={isAbcdCombination ? () => { cancelTimers(); setOpen(true) } : undefined}
-            onBlur={isAbcdCombination ? scheduleClose : undefined}
-          >
+          <span className="cds-class-combination">
             {order.drugClasses.map((drugClass) => (
-              <span className="cds-drug-class-label" key={drugClass.code}>
-                {drugClass.label}
+              <span
+                className={`cds-drug-class-label ${isAbcdCombination ? 'cds-class-hover-target' : ''}`}
+                key={drugClass.code}
+                tabIndex={isAbcdCombination ? 0 : undefined}
+                aria-describedby={isAbcdCombination && open && activeClassCode === drugClass.code ? tooltipId : undefined}
+                onMouseEnter={isAbcdCombination
+                  ? (event) => scheduleOpen(drugClass.code, event.currentTarget)
+                  : undefined}
+                onMouseLeave={isAbcdCombination ? scheduleClose : undefined}
+                onFocus={isAbcdCombination
+                  ? (event) => openImmediately(drugClass.code, event.currentTarget)
+                  : undefined}
+                onBlur={isAbcdCombination ? scheduleClose : undefined}
+              >
+                {/^[ABCD]$/.test(drugClass.code) ? drugClass.code : drugClass.label}
               </span>
             ))}
           </span>
         ) : order.classLabel && <span className="cds-order-class">{order.classLabel}</span>}
-        <span className="cds-order-source">{messages.sourceNode}: {provenance.nodeLabel}</span>
       </div>
       {tooltip}
     </>
   )
-}
-
-function referenceLocator(reference: ExecutedReference): string {
-  const sections = Array.isArray(reference.section_path)
-    ? reference.section_path.flatMap((item) => (
-        typeof item === 'object' && item !== null && !Array.isArray(item) && typeof item.title === 'string'
-          ? [item.number ? `${item.title} ${item.number}` : item.title]
-          : []
-      )).join(' › ')
-    : ''
-  return [reference.locator, reference.locator_detail, sections].filter(Boolean).join(' · ')
 }

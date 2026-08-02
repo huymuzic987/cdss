@@ -71,7 +71,6 @@ function formToFlatInput(form: PatientFormData): JsonObject {
   out['has_hfmref'] = form.has_hfmref
   out['has_hfpef'] = form.has_hfpef
   out['has_lvh'] = form.has_lvh
-  out['bp_target_reached'] = form.bp_target_reached
   out['has_kidney_transplant'] = form.has_kidney_transplant
   out['has_prior_creatinine_test'] = form.has_prior_creatinine_test
   out['still_using_ras_inhibitor'] = form.still_using_ras_inhibitor

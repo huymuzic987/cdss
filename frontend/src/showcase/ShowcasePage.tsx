@@ -7,6 +7,7 @@ import { PatientChart, type EvaluationStatus } from './PatientChart'
 import { ClinicMark, EmptyChart, PatientQueue } from './ShowcaseChrome'
 import type { ShowcasePatient } from './showcasePatients'
 import { useShowcaseTheme } from './useShowcaseTheme'
+import './showcase.css'
 
 export function ShowcasePage() {
   const [selectedPatient, setSelectedPatient] = useState<ShowcasePatient | null>(null)
@@ -62,4 +63,3 @@ export function ShowcasePage() {
     </div>
   )
 }
-

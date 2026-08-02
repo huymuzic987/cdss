@@ -1,5 +1,5 @@
 import type { JsonObject, TreeGraphNode, TreeGraphSourceReference } from '../api/types'
-import { getNodeTypeColors } from '../canvas/DecisionNodeShapeUtil'
+import { getNodeTypeColors } from '../canvas/nodeTypeColors'
 import { CopyButton } from './CopyButton'
 
 interface NodeDetailPanelProps {
@@ -107,4 +107,3 @@ export function NodeDetailPanel({ node, references, onJumpToLink, theme }: NodeD
     </div>
   )
 }
-

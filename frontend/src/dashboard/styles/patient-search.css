@@ -77,3 +77,17 @@
   color: var(--text-muted);
 }
 
+@media (max-width: 640px) {
+  .dash-search-box,
+  .dash-search-select {
+    min-width: 0;
+  }
+
+  .dash-search-box {
+    flex-basis: 100%;
+  }
+
+  .dash-search-select {
+    width: 100%;
+  }
+}

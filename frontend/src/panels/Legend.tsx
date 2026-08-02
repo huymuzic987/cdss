@@ -1,4 +1,4 @@
-import { getNodeTypeColors } from '../canvas/DecisionNodeShapeUtil'
+import { getNodeTypeColors } from '../canvas/nodeTypeColors'
 import type { NodeType } from '../api/types'
 
 const CANVAS_NODE_TYPES: NodeType[] = ['START', 'CONDITION', 'INFERENCE', 'ACTION', 'END', 'LINK', 'GLOBAL']

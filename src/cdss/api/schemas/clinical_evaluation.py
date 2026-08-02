@@ -54,7 +54,6 @@ KNOWN_BOOLEAN_FLAGS = frozenset(
         "has_hfmref",
         "has_hfpef",
         "has_lvh",
-        "bp_target_reached",
         "has_kidney_transplant",
         "has_prior_creatinine_test",
         "still_using_ras_inhibitor",

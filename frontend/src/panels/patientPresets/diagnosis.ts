@@ -137,7 +137,6 @@ export const diagnosisPresets: PatientPresetDefinition[] = [
       has_acute_cardiogenic_pulmonary_edema: true,
       current_clinic_sbp: '200', current_clinic_dbp: '124',
       has_hfref: true,
-      bp_target_reached: false,
       facility_capability: 'FULL_RESOURCES',
       age: '65', risk_factor_count: '3',
     },

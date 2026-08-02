@@ -330,9 +330,18 @@
             "traversal_order": 1,
             "to_node_key": "T13_C_BP_TARGET_REACHED",
             "candidate_condition": {
-              "op": "eq",
-              "path": "input.bp_target_reached",
-              "value": true
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+                }
+              ]
             }
           },
           {
@@ -340,9 +349,18 @@
             "traversal_order": 2,
             "to_node_key": "T13_C_BP_TARGET_NOT_REACHED",
             "candidate_condition": {
-              "op": "eq",
-              "path": "input.bp_target_reached",
-              "value": false
+              "any": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+                }
+              ]
             }
           }
         ]
@@ -546,9 +564,18 @@
             "traversal_order": 1,
             "to_node_key": "T13_C_BP_TARGET_REACHED",
             "candidate_condition": {
-              "op": "eq",
-              "path": "input.bp_target_reached",
-              "value": true
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+                }
+              ]
             }
           },
           {
@@ -556,9 +583,18 @@
             "traversal_order": 2,
             "to_node_key": "T13_C_BP_TARGET_NOT_REACHED",
             "candidate_condition": {
-              "op": "eq",
-              "path": "input.bp_target_reached",
-              "value": false
+              "any": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+                }
+              ]
             }
           }
         ]
@@ -654,9 +690,18 @@
             "traversal_order": 1,
             "to_node_key": "T13_C_BP_TARGET_REACHED",
             "candidate_condition": {
-              "op": "eq",
-              "path": "input.bp_target_reached",
-              "value": true
+              "all": [
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_sbp",
+                  "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+                },
+                {
+                  "op": "lt",
+                  "path": "input.current_clinic_dbp",
+                  "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+                }
+              ]
             }
           },
           {
@@ -664,9 +709,18 @@
             "traversal_order": 2,
             "to_node_key": "T13_C_BP_TARGET_NOT_REACHED",
             "candidate_condition": {
-              "op": "eq",
-              "path": "input.bp_target_reached",
-              "value": false
+              "any": [
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_sbp",
+                  "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+                },
+                {
+                  "op": "gte",
+                  "path": "input.current_clinic_dbp",
+                  "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+                }
+              ]
             }
           }
         ]
@@ -678,9 +732,18 @@
         "text_en": "BP reaches target",
         "text_vi": "HA đạt đích điều trị",
         "condition_definition": {
-          "op": "eq",
-          "path": "input.bp_target_reached",
-          "value": true
+          "all": [
+            {
+              "op": "lt",
+              "path": "input.current_clinic_sbp",
+              "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+            },
+            {
+              "op": "lt",
+              "path": "input.current_clinic_dbp",
+              "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+            }
+          ]
         },
         "context_patch": null,
         "action_payload": null,
@@ -765,9 +828,18 @@
         "text_en": "BP does not reach target",
         "text_vi": "HA không đạt đích điều trị",
         "condition_definition": {
-          "op": "eq",
-          "path": "input.bp_target_reached",
-          "value": false
+          "any": [
+            {
+              "op": "gte",
+              "path": "input.current_clinic_sbp",
+              "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"
+            },
+            {
+              "op": "gte",
+              "path": "input.current_clinic_dbp",
+              "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"
+            }
+          ]
         },
         "context_patch": null,
         "action_payload": null,

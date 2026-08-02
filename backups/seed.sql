@@ -182,7 +182,7 @@ DELETE FROM public.decision_nodes
 WHERE id = 'c82a074a-7873-40a8-9874-29f2f9a627a4';
 
 -- ==========================================================================
--- 2. DECISION NODES (378 nodes)
+-- 2. DECISION NODES (383 nodes after graph normalization)
 -- ==========================================================================
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
 VALUES ('e3b9491f-a5db-4d53-942e-0834fa0f25a0', (SELECT id FROM public.decision_trees WHERE tree_key = 'drug-combination'), 'T6_START_PATIENT_INFO_AND_PRESCRIPTIONS', 'START'::public.node_type, 'Patient information + prescribed medications', 'Thông tin bệnh nhân + Các đơn thuốc chỉ định', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2026-07-25 11:46:28.021853+00:00', '2026-07-25 11:46:28.021853+00:00')
@@ -802,11 +802,11 @@ VALUES ('5880accb-c184-5bfe-a6c0-78845c4ba7be', (SELECT id FROM public.decision_
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-VALUES ('93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-heart-failure'), 'T10_C_TARGET_NOT_REACHED', 'CONDITION'::public.node_type, 'BP target not reached', 'HA không đạt đích điều trị', '{"op": "eq", "path": "input.bp_target_reached", "value": false}'::jsonb, NULL, NULL, NULL, NULL, NULL, 15, '2026-07-05 00:00:00+00:00', '2026-07-05 00:00:00+00:00')
+VALUES ('93fcb99c-db2a-53b3-82f7-a1d4ecb58f0e', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-heart-failure'), 'T10_C_TARGET_NOT_REACHED', 'CONDITION'::public.node_type, 'BP target not reached', 'HA không đạt đích điều trị', '{"any": [{"op": "gte", "path": "input.current_clinic_sbp", "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"}, {"op": "gte", "path": "input.current_clinic_dbp", "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"}]}'::jsonb, NULL, NULL, NULL, NULL, NULL, 15, '2026-07-05 00:00:00+00:00', '2026-07-05 00:00:00+00:00')
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-VALUES ('d8271d2d-79ff-50e5-be69-ee29cc68f432', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-heart-failure'), 'T10_C_TARGET_REACHED', 'CONDITION'::public.node_type, 'BP target reached', 'HA đã đạt đích điều trị', '{"op": "eq", "path": "input.bp_target_reached", "value": true}'::jsonb, NULL, NULL, NULL, NULL, NULL, 16, '2026-07-05 00:00:00+00:00', '2026-07-05 00:00:00+00:00')
+VALUES ('d8271d2d-79ff-50e5-be69-ee29cc68f432', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertension-heart-failure'), 'T10_C_TARGET_REACHED', 'CONDITION'::public.node_type, 'BP target reached', 'HA đã đạt đích điều trị', '{"all": [{"op": "lt", "path": "input.current_clinic_sbp", "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"}, {"op": "lt", "path": "input.current_clinic_dbp", "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"}]}'::jsonb, NULL, NULL, NULL, NULL, NULL, 16, '2026-07-05 00:00:00+00:00', '2026-07-05 00:00:00+00:00')
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
@@ -1423,7 +1423,7 @@ VALUES ('29baba0e-818b-41db-a911-96f799a5b584', (SELECT id FROM public.decision_
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-VALUES ('8b2fa240-abcb-47e8-9e3c-9b0a15cb9958', (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension'), 'T13_C_BP_TARGET_REACHED', 'CONDITION'::public.node_type, 'BP reaches target', 'HA đạt đích điều trị', '{"op": "eq", "path": "input.bp_target_reached", "value": true}'::jsonb, NULL, NULL, NULL, NULL, NULL, 14, '2026-07-04 11:03:11.134834+00:00', '2026-07-04 11:03:11.134834+00:00')
+VALUES ('8b2fa240-abcb-47e8-9e3c-9b0a15cb9958', (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension'), 'T13_C_BP_TARGET_REACHED', 'CONDITION'::public.node_type, 'BP reaches target', 'HA đạt đích điều trị', '{"all": [{"op": "lt", "path": "input.current_clinic_sbp", "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"}, {"op": "lt", "path": "input.current_clinic_dbp", "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"}]}'::jsonb, NULL, NULL, NULL, NULL, NULL, 14, '2026-07-04 11:03:11.134834+00:00', '2026-07-04 11:03:11.134834+00:00')
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
@@ -1431,7 +1431,7 @@ VALUES ('3b5b88f1-65e0-4a2d-934b-fb5a965b6df6', (SELECT id FROM public.decision_
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-VALUES ('879486a4-d0bf-42f2-a772-dcb944ddbb93', (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension'), 'T13_C_BP_TARGET_NOT_REACHED', 'CONDITION'::public.node_type, 'BP does not reach target', 'HA không đạt đích điều trị', '{"op": "eq", "path": "input.bp_target_reached", "value": false}'::jsonb, NULL, NULL, NULL, NULL, NULL, 16, '2026-07-04 11:03:11.134834+00:00', '2026-07-04 11:03:11.134834+00:00')
+VALUES ('879486a4-d0bf-42f2-a772-dcb944ddbb93', (SELECT id FROM public.decision_trees WHERE tree_key = 'resistant-hypertension'), 'T13_C_BP_TARGET_NOT_REACHED', 'CONDITION'::public.node_type, 'BP does not reach target', 'HA không đạt đích điều trị', '{"any": [{"op": "gte", "path": "input.current_clinic_sbp", "value_from_path": "context.treatment.bp_target.sbp.upper_exclusive_mmhg"}, {"op": "gte", "path": "input.current_clinic_dbp", "value_from_path": "context.treatment.bp_target.dbp.upper_exclusive_mmhg"}]}'::jsonb, NULL, NULL, NULL, NULL, NULL, 16, '2026-07-04 11:03:11.134834+00:00', '2026-07-04 11:03:11.134834+00:00')
 ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
@@ -1784,7 +1784,7 @@ ON CONFLICT (tree_id, node_key) DO UPDATE SET text_en = EXCLUDED.text_en, text_v
 
 
 -- ========================================================================
--- 3. DECISION EDGES (428 edges)
+-- 3. DECISION EDGES (426 edges after graph normalization)
 -- ========================================================================
 -- Rebuild the edge graph deterministically on every seed run. The edge table
 -- has independent uniqueness constraints on (from,to) and (from,traversal),
@@ -4730,266 +4730,270 @@ ON CONFLICT (tree_id) DO UPDATE SET arrow_kind = EXCLUDED.arrow_kind, node_posit
 
 
 -- ==========================================================================
--- 6. MEDICINES REFERENCE CATALOG (65 drugs)
+-- 6. MEDICINES REFERENCE CATALOG (66 drugs)
 -- ==========================================================================
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0001', 'Diltiazem', 'C', 'CKCa Non-DHP', 'Thuốc Uống', '120 mg', '180 - 240 mg', '240 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0001', 'Diltiazem', 'C', 'CKCa Non-DHP', 'Thuốc Uống', '120 mg', '180 - 240 mg', '240 mg', 'Bảng 10', NULL, TRUE, 'C08DB01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0002', 'Verapamil', 'C', 'CKCa Non-DHP', 'Thuốc Uống', '120 mg', '240 - 360 mg', '360 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0002', 'Verapamil', 'C', 'CKCa Non-DHP', 'Thuốc Uống', '120 mg', '240 - 360 mg', '360 mg', 'Bảng 10', NULL, TRUE, 'C08DA01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0003', 'Amlodipine', 'C', 'CKCa DHP', 'Thuốc Uống', '2.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0003', 'Amlodipine', 'C', 'CKCa DHP', 'Thuốc Uống', '2.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, 'C08CA01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0004', 'Felodipine', 'C', 'CKCa DHP', 'Thuốc Uống', '2.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0004', 'Felodipine', 'C', 'CKCa DHP', 'Thuốc Uống', '2.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, 'C08CA02')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0005', 'Isradipine', 'C', 'CKCa DHP', 'Thuốc Uống', '2.5 mg BID', '5 - 10 mg BID', '20 mg/ngày', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0005', 'Isradipine', 'C', 'CKCa DHP', 'Thuốc Uống', '2.5 mg BID', '5 - 10 mg BID', '20 mg/ngày', 'Bảng 10', NULL, TRUE, 'C08CA03')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0006', 'Nifedipine', 'C', 'CKCa DHP', 'Thuốc Uống', '30 mg', '30 - 90 mg', '90 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0006', 'Nifedipine', 'C', 'CKCa DHP', 'Thuốc Uống', '30 mg', '30 - 90 mg', '90 mg', 'Bảng 10', NULL, TRUE, 'C08CA05')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0007', 'Nitrendipine', 'C', 'CKCa DHP', 'Thuốc Uống', '10 mg', '20 mg', '20 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0007', 'Nitrendipine', 'C', 'CKCa DHP', 'Thuốc Uống', '10 mg', '20 mg', '20 mg', 'Bảng 10', NULL, TRUE, 'C08CA08')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0008', 'Lercanidipine', 'C', 'CKCa DHP', 'Thuốc Uống', '10 mg', '20 mg', '20 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0008', 'Lercanidipine', 'C', 'CKCa DHP', 'Thuốc Uống', '10 mg', '20 mg', '20 mg', 'Bảng 10', NULL, TRUE, 'C08CA13')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0009', 'Benazepril', 'A', 'ƯCMC', 'Thuốc Uống', '5 mg', '10 - 40 mg', '40 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0009', 'Benazepril', 'A', 'ƯCMC', 'Thuốc Uống', '5 mg', '10 - 40 mg', '40 mg', 'Bảng 10', NULL, TRUE, 'C09AA07')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0010', 'Captopril', 'A', 'ƯCMC', 'Thuốc Uống', '12.5 mg BID', '50 - 100 mg BID', '200 mg/ngày', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0010', 'Captopril', 'A', 'ƯCMC', 'Thuốc Uống', '12.5 mg BID', '50 - 100 mg BID', '200 mg/ngày', 'Bảng 10', NULL, TRUE, 'C09AA01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0011', 'Enalapril', 'A', 'ƯCMC', 'Thuốc Uống', '5 mg', '10 - 40 mg', '40 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0011', 'Enalapril', 'A', 'ƯCMC', 'Thuốc Uống', '5 mg', '10 - 40 mg', '40 mg', 'Bảng 10', NULL, TRUE, 'C09AA02')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0012', 'Fosinopril', 'A', 'ƯCMC', 'Thuốc Uống', '10 mg', '10 - 40 mg', '40 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0012', 'Fosinopril', 'A', 'ƯCMC', 'Thuốc Uống', '10 mg', '10 - 40 mg', '40 mg', 'Bảng 10', NULL, TRUE, 'C09AA09')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0013', 'Lisinopril', 'A', 'ƯCMC', 'Thuốc Uống', '5 mg', '10 - 40 mg', '40 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0013', 'Lisinopril', 'A', 'ƯCMC', 'Thuốc Uống', '5 mg', '10 - 40 mg', '40 mg', 'Bảng 10', NULL, TRUE, 'C09AA03')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0014', 'Perindopril', 'A', 'ƯCMC', 'Thuốc Uống', '3.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0014', 'Perindopril', 'A', 'ƯCMC', 'Thuốc Uống', '3.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, 'C09AA04')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0015', 'Quinapril', 'A', 'ƯCMC', 'Thuốc Uống', '5 mg', '10 - 40 mg', '40 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0015', 'Quinapril', 'A', 'ƯCMC', 'Thuốc Uống', '5 mg', '10 - 40 mg', '40 mg', 'Bảng 10', NULL, TRUE, 'C09AA06')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0016', 'Ramipril', 'A', 'ƯCMC', 'Thuốc Uống', '2.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0016', 'Ramipril', 'A', 'ƯCMC', 'Thuốc Uống', '2.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, 'C09AA05')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0017', 'Trandolapril', 'A', 'ƯCMC', 'Thuốc Uống', '1 - 2 mg', '2 - 8 mg', '8 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0017', 'Trandolapril', 'A', 'ƯCMC', 'Thuốc Uống', '1 - 2 mg', '2 - 8 mg', '8 mg', 'Bảng 10', NULL, TRUE, 'C09AA10')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0018', 'Imidapril', 'A', 'ƯCMC', 'Thuốc Uống', '2.5 - 5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0018', 'Imidapril', 'A', 'ƯCMC', 'Thuốc Uống', '2.5 - 5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, 'C09AA16')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0019', 'Azilsartan', 'A', 'CTTA', 'Thuốc Uống', '40 mg', '80 mg', '80 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0019', 'Azilsartan', 'A', 'CTTA', 'Thuốc Uống', '40 mg', '80 mg', '80 mg', 'Bảng 10', NULL, TRUE, 'C09CA09')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0020', 'Candesartan', 'A', 'CTTA', 'Thuốc Uống', '4 mg', '8 - 32 mg', '32 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0020', 'Candesartan', 'A', 'CTTA', 'Thuốc Uống', '4 mg', '8 - 32 mg', '32 mg', 'Bảng 10', NULL, TRUE, 'C09CA06')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0021', 'Eprosartan', 'A', 'CTTA', 'Thuốc Uống', '400 mg', '600 - 800 mg', '800 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0021', 'Eprosartan', 'A', 'CTTA', 'Thuốc Uống', '400 mg', '600 - 800 mg', '800 mg', 'Bảng 10', NULL, TRUE, 'C09CA02')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0022', 'Irbesartan', 'A', 'CTTA', 'Thuốc Uống', '150 mg', '150 - 300 mg', '300 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0022', 'Irbesartan', 'A', 'CTTA', 'Thuốc Uống', '150 mg', '150 - 300 mg', '300 mg', 'Bảng 10', NULL, TRUE, 'C09CA04')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0023', 'Losartan', 'A', 'CTTA', 'Thuốc Uống', '50 mg', '50 - 100 mg', '100 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0023', 'Losartan', 'A', 'CTTA', 'Thuốc Uống', '50 mg', '50 - 100 mg', '100 mg', 'Bảng 10', NULL, TRUE, 'C09CA01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0024', 'Olmesartan', 'A', 'CTTA', 'Thuốc Uống', '10 mg', '20 - 40 mg', '40 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0024', 'Olmesartan', 'A', 'CTTA', 'Thuốc Uống', '10 mg', '20 - 40 mg', '40 mg', 'Bảng 10', NULL, TRUE, 'C09CA08')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0025', 'Telmisartan', 'A', 'CTTA', 'Thuốc Uống', '40 mg', '40 - 80 mg', '80 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0025', 'Telmisartan', 'A', 'CTTA', 'Thuốc Uống', '40 mg', '40 - 80 mg', '80 mg', 'Bảng 10', NULL, TRUE, 'C09CA07')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0026', 'Valsartan', 'A', 'CTTA', 'Thuốc Uống', '80 mg', '80 - 320 mg', '320 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0026', 'Valsartan', 'A', 'CTTA', 'Thuốc Uống', '80 mg', '80 - 320 mg', '320 mg', 'Bảng 10', NULL, TRUE, 'C09CA03')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0027', 'Bendroflumethiazide', 'D', 'LT Thiazide', 'Thuốc Uống', '5 mg', '10 mg', '10 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0027', 'Bendroflumethiazide', 'D', 'LT Thiazide', 'Thuốc Uống', '5 mg', '10 mg', '10 mg', 'Bảng 10', NULL, TRUE, 'C03AA01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0028', 'Chlorthalidone', 'D', 'LT Thiazide-like', 'Thuốc Uống', '12.5 mg', '12.5 - 25 mg', '25 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0028', 'Chlorthalidone', 'D', 'LT Thiazide-like', 'Thuốc Uống', '12.5 mg', '12.5 - 25 mg', '25 mg', 'Bảng 10', NULL, TRUE, 'C03BA04')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0029', 'Hydrochlorothiazide', 'D', 'LT Thiazide', 'Thuốc Uống', '12.5 mg', '12.5 - 50 mg', '50 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0029', 'Hydrochlorothiazide', 'D', 'LT Thiazide', 'Thuốc Uống', '12.5 mg', '12.5 - 50 mg', '50 mg', 'Bảng 10', NULL, TRUE, 'C03AA03')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0030', 'Indapamide', 'D', 'LT Thiazide-like', 'Thuốc Uống', '1.25 mg', '2.5 mg', '2.5 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0030', 'Indapamide', 'D', 'LT Thiazide-like', 'Thuốc Uống', '1.25 mg', '2.5 mg', '2.5 mg', 'Bảng 10', NULL, TRUE, 'C03BA11')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0031', 'Bumetanide', 'D', 'LT quai', 'Thuốc Uống', '0.5 mg', '1 mg', '1 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0031', 'Bumetanide', 'D', 'LT quai', 'Thuốc Uống', '0.5 mg', '1 mg', '1 mg', 'Bảng 10', NULL, TRUE, 'C03CA02')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0032', 'Furosemide', 'D', 'LT quai', 'Thuốc Uống/Thuốc Truyền Tĩnh Mạch', '20 mg BID', '40 mg BID', 'Variable', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0032', 'Furosemide', 'D', 'LT quai', 'Thuốc Uống/Thuốc Truyền Tĩnh Mạch', '20 mg BID', '40 mg BID', 'Variable', 'Bảng 10', NULL, TRUE, 'C03CA01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0033', 'Torsemide', 'D', 'LT quai', 'Thuốc Uống', '5 mg', '10 mg', '10 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0033', 'Torsemide', 'D', 'LT quai', 'Thuốc Uống', '5 mg', '10 mg', '10 mg', 'Bảng 10', NULL, TRUE, 'C03CA04')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0034', 'Amiloride', 'D', 'LT giữ Kali', 'Thuốc Uống', '5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0034', 'Amiloride', 'D', 'LT giữ Kali', 'Thuốc Uống', '5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, 'C03DB01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0035', 'Eplerenone', 'D', 'LT giữ Kali (MRA)', 'Thuốc Uống', '25 mg', '50 - 100 mg', '100 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0035', 'Eplerenone', 'D', 'LT giữ Kali', 'Thuốc Uống', '25 mg', '50 - 100 mg', '100 mg', 'Bảng 10', NULL, TRUE, 'C03DA04')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0036', 'Spironolactone', 'D', 'LT giữ Kali (MRA)', 'Thuốc Uống', '12.5 mg', '25 - 50 mg', '50 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0036', 'Spironolactone', 'D', 'LT giữ Kali', 'Thuốc Uống', '12.5 mg', '25 - 50 mg', '50 mg', 'Bảng 10', NULL, TRUE, 'C03DA01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0037', 'Triamterene', 'D', 'LT giữ Kali', 'Thuốc Uống', '100 mg', '100 mg', '100 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0037', 'Triamterene', 'D', 'LT giữ Kali', 'Thuốc Uống', '100 mg', '100 mg', '100 mg', 'Bảng 10', NULL, TRUE, 'C03DB02')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0038', 'Acebutolol', 'B', 'CB', 'Thuốc Uống', '200 mg', '200 - 400 mg', '400 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0038', 'Acebutolol', 'B', 'CB', 'Thuốc Uống', '200 mg', '200 - 400 mg', '400 mg', 'Bảng 10', NULL, TRUE, 'C07AB04')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0039', 'Atenolol', 'B', 'CB', 'Thuốc Uống', '25 mg', '100 mg', '100 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0039', 'Atenolol', 'B', 'CB', 'Thuốc Uống', '25 mg', '100 mg', '100 mg', 'Bảng 10', NULL, TRUE, 'C07AB03')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0040', 'Bisoprolol', 'B', 'CB', 'Thuốc Uống', '5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0040', 'Bisoprolol', 'B', 'CB', 'Thuốc Uống', '5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, 'C07AB07')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0041', 'Carvedilol', 'B', 'CB', 'Thuốc Uống', '3.125 mg BID', '6.25 - 25 mg BID', '50 mg/ngày', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0041', 'Carvedilol', 'B', 'CB', 'Thuốc Uống', '3.125 mg BID', '6.25 - 25 mg BID', '50 mg/ngày', 'Bảng 10', NULL, TRUE, 'C07AG02')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0042', 'Labetalol', 'B', 'CB', 'Thuốc Uống/Thuốc Truyền Tĩnh Mạch', '100 mg BID', '100 - 300 mg BID', '600 mg/ngày', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0042', 'Labetalol', 'B', 'CB', 'Thuốc Uống/Thuốc Truyền Tĩnh Mạch', '100 mg BID', '100 - 300 mg BID', '600 mg/ngày', 'Bảng 10', NULL, TRUE, 'C07AG01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0043', 'Metoprolol Succinate', 'B', 'CB', 'Thuốc Uống', '25 mg', '50 - 100 mg', '100 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0043', 'Metoprolol Succinate', 'B', 'CB', 'Thuốc Uống', '25 mg', '50 - 100 mg', '100 mg', 'Bảng 10', NULL, TRUE, 'C07AB02')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0044', 'Metoprolol Tartrate', 'B', 'CB', 'Thuốc Uống', '25 mg BID', '50 - 100 mg BID', '200 mg/ngày', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0044', 'Metoprolol Tartrate', 'B', 'CB', 'Thuốc Uống', '25 mg BID', '50 - 100 mg BID', '200 mg/ngày', 'Bảng 10', NULL, TRUE, 'C07AB02')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0045', 'Nadolol', 'B', 'CB', 'Thuốc Uống', '20 mg', '40 - 80 mg', '80 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0045', 'Nadolol', 'B', 'CB', 'Thuốc Uống', '20 mg', '40 - 80 mg', '80 mg', 'Bảng 10', NULL, TRUE, 'C07AA12')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0046', 'Nebivolol', 'B', 'CB', 'Thuốc Uống', '2.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0046', 'Nebivolol', 'B', 'CB', 'Thuốc Uống', '2.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, 'C07AB12')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0047', 'Propranolol', 'B', 'CB', 'Thuốc Uống', '40 mg BID', '40 - 160 mg BID', '320 mg/ngày', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0047', 'Propranolol', 'B', 'CB', 'Thuốc Uống', '40 mg BID', '40 - 160 mg BID', '320 mg/ngày', 'Bảng 10', NULL, TRUE, 'C07AA05')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0048', 'Aliskiren', NULL, 'Ức chế Renin trực tiếp', 'Thuốc Uống', '75 mg', '150 - 300 mg', '300 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0048', 'Aliskiren', NULL, 'Ức chế Renin trực tiếp', 'Thuốc Uống', '75 mg', '150 - 300 mg', '300 mg', 'Bảng 10', NULL, TRUE, 'C09XA02')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0049', 'Doxazosin', NULL, 'Ức chế thụ thể Alpha giao cảm', 'Thuốc Uống', '1 mg', '1 - 2 mg', '2 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0049', 'Doxazosin', NULL, 'Ức chế thụ thể Alpha giao cảm', 'Thuốc Uống', '1 mg', '1 - 2 mg', '2 mg', 'Bảng 10', NULL, TRUE, 'C02CA04')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0050', 'Prazosin', NULL, 'Ức chế thụ thể Alpha giao cảm', 'Thuốc Uống', '1 mg BID', '1 - 5 mg BID', '10 mg/ngày', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0050', 'Prazosin', NULL, 'Ức chế thụ thể Alpha giao cảm', 'Thuốc Uống', '1 mg BID', '1 - 5 mg BID', '10 mg/ngày', 'Bảng 10', NULL, TRUE, 'C02CA01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0051', 'Terazosin', NULL, 'Ức chế thụ thể Alpha giao cảm', 'Thuốc Uống', '1 mg', '1 - 2 mg', '2 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0051', 'Terazosin', NULL, 'Ức chế thụ thể Alpha giao cảm', 'Thuốc Uống', '1 mg', '1 - 2 mg', '2 mg', 'Bảng 10', NULL, TRUE, 'C02CA03')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0052', 'Hydralazine', NULL, 'Giãn mạch', 'Thuốc Uống/Thuốc Truyền Tĩnh Mạch', '10 mg BID', '25 - 100 mg BID', '200 mg/ngày', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0052', 'Hydralazine', NULL, 'Giãn mạch', 'Thuốc Uống/Thuốc Truyền Tĩnh Mạch', '10 mg BID', '25 - 100 mg BID', '200 mg/ngày', 'Bảng 10', NULL, TRUE, 'C02DB02')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0053', 'Minoxidil', NULL, 'Giãn mạch', 'Thuốc Uống', '2.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0053', 'Minoxidil', NULL, 'Giãn mạch', 'Thuốc Uống', '2.5 mg', '5 - 10 mg', '10 mg', 'Bảng 10', NULL, TRUE, 'C02DC01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0054', 'Clonidine', NULL, 'Chủ vận chọn lọc alpha-2 giao cảm', 'Thuốc Uống', '0.1 mg BID', '0.1 - 0.2 mg BID', '0.4 mg/ngày', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0054', 'Clonidine', NULL, 'Chủ vận chọn lọc alpha-2 giao cảm', 'Thuốc Uống', '0.1 mg BID', '0.1 - 0.2 mg BID', '0.4 mg/ngày', 'Bảng 10', NULL, TRUE, 'C02AC01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0055', 'Methyldopa', NULL, 'Chủ vận chọn lọc alpha-2 giao cảm', 'Thuốc Uống', '125 mg BID', '250 - 500 mg BID', '1000 mg/ngày', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0055', 'Methyldopa', NULL, 'Chủ vận chọn lọc alpha-2 giao cảm', 'Thuốc Uống', '125 mg BID', '250 - 500 mg BID', '1000 mg/ngày', 'Bảng 10', NULL, TRUE, 'C02AB01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0056', 'Reserpine', NULL, 'Giảm Adrenergic', 'Thuốc Uống', '0.1 mg', '0.1 - 0.25 mg', '0.25 mg', 'Bảng 10', NULL, TRUE, NULL)
+VALUES ('DRUG0056', 'Reserpine', NULL, 'Giảm Adrenergic', 'Thuốc Uống', '0.1 mg', '0.1 - 0.25 mg', '0.25 mg', 'Bảng 10', NULL, TRUE, 'C02AA02')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0057', 'Nicardipine', 'C', 'CKCa DHP', 'Thuốc Truyền Tĩnh Mạch', '3 mg/giờ', '5 mg/giờ', '15 mg/giờ', 'Mục 3.7.5', 'https://drugs.com/dosage/nicardipine.html', TRUE, NULL)
+VALUES ('DRUG0057', 'Nicardipine', 'C', 'CKCa DHP', 'Thuốc Truyền Tĩnh Mạch', '3 mg/giờ', '5 mg/giờ', '15 mg/giờ', 'Mục 3.7.5', 'https://drugs.com/dosage/nicardipine.html', TRUE, 'C08CA04')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0058', 'Clevidipine', 'C', 'CKCa DHP', 'Thuốc Truyền Tĩnh Mạch', '1 - 2 mg/giờ', '4 - 6 mg/giờ', '16-32 mg/giờ', 'Mục 3.7.5', 'https://drugs.com/dosage/clevidipine.html', TRUE, NULL)
+VALUES ('DRUG0058', 'Clevidipine', 'C', 'CKCa DHP', 'Thuốc Truyền Tĩnh Mạch', '1 - 2 mg/giờ', '4 - 6 mg/giờ', '16-32 mg/giờ', 'Mục 3.7.5', 'https://drugs.com/dosage/clevidipine.html', TRUE, 'C08CA16')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0059', 'Esmolol', 'B', 'CB', 'Thuốc Truyền Tĩnh Mạch', '50 mcg/kg/phút', '50-250 mcg/kg/phút', '300 mcg/kg/phút', 'Mục 3.7.5', 'https://drugs.com/dosage/esmolol.html', TRUE, NULL)
+VALUES ('DRUG0059', 'Esmolol', 'B', 'CB', 'Thuốc Truyền Tĩnh Mạch', '50 mcg/kg/min', '50-250 mcg/kg/phút', '300 mcg/kg/phút', 'Mục 3.7.5', 'https://drugs.com/dosage/esmolol.html', TRUE, 'C07AB09')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0060', 'Nitroprusside', NULL, 'Giãn mạch', 'Thuốc Truyền Tĩnh Mạch', '0.3 mcg/kg/phút', '0.3-10 mcg/kg/phút', '10 mcg/kg/phút', 'Mục 3.7.5', 'https://drugs.com/dosage/nitroprusside.html', TRUE, NULL)
+VALUES ('DRUG0060', 'Nitroprusside', NULL, 'Giãn mạch', 'Thuốc Truyền Tĩnh Mạch', '0.3 mcg/kg/phút', '0.3-10 mcg/kg/phút', '10 mcg/kg/phút', 'Mục 3.7.5', 'https://drugs.com/dosage/nitroprusside.html', TRUE, 'C02DD01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0061', 'Nitroglycerin', NULL, 'Giãn mạch', 'Thuốc Truyền Tĩnh Mạch', '5 mcg/phút', '10 mcg/phút', '20 mcg/phút', 'Mục 3.7.5', 'https://drugs.com/dosage/nitroglycerin.html', TRUE, NULL)
+VALUES ('DRUG0061', 'Nitroglycerin', NULL, 'Giãn mạch', 'Thuốc Truyền Tĩnh Mạch', '5 mcg/phút', '10 mcg/phút', '20 mcg/phút', 'Mục 3.7.5', 'https://drugs.com/dosage/nitroglycerin.html', TRUE, 'C01DA02')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0062', 'Dapagliflozin', 'SGLT2i', 'SGLT2i', 'Thuốc Uống', '5-10 mg', '10 mg', '10 mg', 'Mục 3.7.1', NULL, TRUE, NULL)
+VALUES ('DRUG0062', 'Dapagliflozin', 'SGLT2i', 'SGLT2i', 'Thuốc Uống', '5-10 mg', '10 mg', '10 mg', 'Mục 3.7.1', NULL, TRUE, 'A10BK01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0063', 'Empagliflozin', 'SGLT2i', 'SGLT2i', 'Thuốc Uống', '10 mg', '10 mg', '25 mg', 'Mục 3.7.1', NULL, TRUE, NULL)
+VALUES ('DRUG0063', 'Empagliflozin', 'SGLT2i', 'SGLT2i', 'Thuốc Uống', '10 mg', '10 mg', '25 mg', 'Mục 3.7.1', NULL, TRUE, 'A10BK03')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0064', 'Urapidil', NULL, 'Ức chế thụ thể Alpha giao cảm', 'Thuốc Uống/Thuốc Truyền Tĩnh Mạch', NULL, NULL, NULL, NULL, NULL, TRUE, NULL)
+VALUES ('DRUG0064', 'Urapidil', NULL, 'Ức chế thụ thể Alpha giao cảm', 'Thuốc Uống/Thuốc Truyền Tĩnh Mạch', NULL, NULL, NULL, 'Mục 3.6.5', NULL, TRUE, 'C02CA06')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0065', 'Aspirin', NULL, NULL, NULL, '75 - 81 mg/ngày', NULL, '150 - 162 mg/ngày', NULL, 'https://www.drugs.com/pregnancy/aspirin.html ; https://www.drugs.com/dosage/aspirin.html', TRUE, NULL)
+VALUES ('DRUG0065', 'Aspirin', NULL, NULL, 'Thuốc Uống', '75 - 81 mg/ngày', '75 - 162 mg/ngày', '150 - 162 mg/ngày', 'Bảng 16', 'https://www.drugs.com/pregnancy/aspirin.html ; https://www.drugs.com/dosage/aspirin.html', TRUE, 'B01AC06')
+ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
+
+INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
+VALUES ('DRUG0066', 'Magnesium Sulfate', NULL, NULL, 'Thuốc Truyền Tĩnh Mạch', '1 g/giờ', '1.2 - 1.6 g/giờ', '2 g/giờ', 'Mục 3.6.5', 'https://www.drugs.com/dosage/magnesium-sulfate.html', TRUE, 'A12CC02')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 

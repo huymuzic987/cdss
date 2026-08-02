@@ -121,16 +121,11 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 14px;
+  min-width: 0;
 }
 
 .dash-card-wide {
   grid-column: span 2;
-}
-
-@media (max-width: 760px) {
-  .dash-card-wide {
-    grid-column: span 1;
-  }
 }
 
 .dash-card-header {
@@ -182,3 +177,14 @@
   margin-bottom: 12px;
 }
 
+@media (max-width: 760px) {
+  .dash-grid,
+  .dash-kpi-row,
+  .dash-efficacy-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dash-card-wide {
+    grid-column: span 1;
+  }
+}

@@ -1,16 +1,17 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { TreeTabs } from './app/TreeTabs'
 import { TreeWorkspace } from './app/TreeWorkspace'
 import { useTheme } from './app/useTheme'
-import { DashboardPage } from './dashboard/DashboardPage'
 import { useSidebarResize } from './hooks/useSidebarResize'
 import { useTraversal } from './hooks/useTraversal'
 import { useTreeGraphs } from './hooks/useTreeGraphs'
 import { DrugToleranceCheckbox } from './panels/DrugToleranceCheckbox'
 import { EmergencyScenarioCheckbox } from './panels/EmergencyScenarioCheckbox'
-import { TraversalResultModal } from './panels/TraversalResultModal'
-import { ShowcasePage } from './showcase/ShowcasePage'
 import './App.css'
+
+const DashboardPage = lazy(() => import('./dashboard/DashboardPage').then(({ DashboardPage: page }) => ({ default: page })))
+const ShowcasePage = lazy(() => import('./showcase/ShowcasePage').then(({ ShowcasePage: page }) => ({ default: page })))
+const TraversalResultModal = lazy(() => import('./panels/TraversalResultModal').then(({ TraversalResultModal: modal }) => ({ default: modal })))
 
 // Stable identity so an idle render (no highlighted nodes) doesn't hand
 // TreeCanvas a brand-new Set every time, which would otherwise re-trigger its
@@ -58,7 +59,11 @@ function WorkbenchApp() {
 
       {graphs.error && !showDashboard && <div className="error-banner">{graphs.error}</div>}
       {showDashboard ? (
-        <div className="app-body"><DashboardPage /></div>
+        <main className="app-body">
+          <Suspense fallback={<LoadingState label="Loading dashboard…" />}>
+            <DashboardPage />
+          </Suspense>
+        </main>
       ) : (
         <TreeWorkspace
           graph={graphs.activeGraph}
@@ -85,12 +90,14 @@ function WorkbenchApp() {
       )}
 
       {traversal.showModal && (
-        <TraversalResultModal
-          result={traversal.modalResult}
-          partial={traversal.modalPartial}
-          graphs={graphs.graphCache}
-          onClose={() => traversal.setShowModal(false)}
-        />
+        <Suspense fallback={null}>
+          <TraversalResultModal
+            result={traversal.modalResult}
+            partial={traversal.modalPartial}
+            graphs={graphs.graphCache}
+            onClose={() => traversal.setShowModal(false)}
+          />
+        </Suspense>
       )}
       {traversal.showDrugTolerancePopup && (
         traversal.checkpointKind === 'emergency'
@@ -106,9 +113,15 @@ function WorkbenchApp() {
   )
 }
 
+function LoadingState({ label }: { label: string }) {
+  return <div className="app-loading" role="status" aria-live="polite">{label}</div>
+}
+
 function App() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
-  return path === '/showcase' ? <ShowcasePage /> : <WorkbenchApp />
+  return path === '/showcase'
+    ? <Suspense fallback={<LoadingState label="Loading showcase…" />}><ShowcasePage /></Suspense>
+    : <WorkbenchApp />
 }
 
 export default App
