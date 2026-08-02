@@ -1,0 +1,54 @@
+.sc-theme-toggle { margin-right:0 !important; }
+
+.showcase-shell[data-showcase-theme="dark"] {
+  --sc-canvas:#081317; --sc-paper:#102126; --sc-ink:#e6f0f1; --sc-teal:#63c4bc; --sc-teal-dark:#9edbd5; --sc-orange:#e69a56; --sc-red:#f17d73; --sc-line:#24383d; --sc-muted:#91a5a9; --sc-soft-teal:#173936;
+  --bg-app:#081317; --bg-surface:#0b1a1f; --bg-panel:#102126; --bg-panel-hover:#183037; --bg-inset:#0b191d; --border:#30464b; --border-soft:rgba(220,241,242,.1); --border-soft-strong:rgba(220,241,242,.17); --text-primary:#d9e7e9; --text-secondary:#a7b9bd; --text-muted:#83989d; --text-bright:#f1f7f7; --text-on-accent:#071315;
+  --accent-solid:#55b9b1; --accent-solid-hover:#72cbc4; --accent-border:#63c4bc; --accent-text:#7ad0c9; --accent-rgb:99,196,188; --accent-divider-soft:rgba(99,196,188,.12); --accent-divider:rgba(99,196,188,.2); --accent-input-border:rgba(99,196,188,.32); --accent-focus-ring:rgba(99,196,188,.18); --accent-btn-bg:rgba(99,196,188,.1); --accent-btn-bg-hover:rgba(99,196,188,.16); --accent-btn-border:rgba(99,196,188,.44); --accent-modal-border:rgba(99,196,188,.3); --accent-modal-glow:rgba(99,196,188,.12);
+  --input-bg:#0b191d; --danger-bg:#3b1e1e; --danger-text:#ffaaa2; --danger-border:#6e3431; --danger-soft-bg:#291719; --success-bg:#14372f; --success-text:#7dd8c4; --success-card-bg:#102e29; --success-card-bg-2:#112824; --success-card-border:#28584e; --warning-bg-1:#3d291a; --warning-bg-2:#352319; --neutral-badge-bg:#26383c;
+  color-scheme:dark;
+}
+.showcase-shell[data-showcase-theme="dark"] .sc-app-rail { background:#050d10; color:#d7e5e6; border-right:1px solid #1c2d31; }
+.showcase-shell[data-showcase-theme="dark"] .sc-topbar { border-color:var(--sc-line); background:rgba(12,27,32,.96); }
+.showcase-shell[data-showcase-theme="dark"] .sc-clinic-mark strong,.showcase-shell[data-showcase-theme="dark"] .sc-clinician strong,.showcase-shell[data-showcase-theme="dark"] .sc-topbar-context strong { color:#edf5f5; }
+.showcase-shell[data-showcase-theme="dark"] .sc-clinician>button { border-color:#2a4045; color:#9db1b5; background:#12252a; }
+.showcase-shell[data-showcase-theme="dark"] .sc-clinician>button:hover { color:#e8f1f2; border-color:#477078; background:#183037; }
+.showcase-shell[data-showcase-theme="dark"] .sc-clinician>button span { border-color:#12252a; }
+.showcase-shell[data-showcase-theme="dark"] .sc-clinician-avatar { color:#d9eeee; background:#27474e; }
+.showcase-shell[data-showcase-theme="dark"] .sc-patient-queue { border-color:var(--sc-line); background:#0b1a1f; }
+.showcase-shell[data-showcase-theme="dark"] .sc-search { border-color:#2a3e43; color:var(--sc-muted); background:#0f2227; }
+.showcase-shell[data-showcase-theme="dark"] .sc-search input { color:#dce9eb; }
+.showcase-shell[data-showcase-theme="dark"] .sc-search:focus-within { border-color:var(--sc-teal); box-shadow:0 0 0 3px rgba(99,196,188,.1); }
+.showcase-shell[data-showcase-theme="dark"] .sc-patient-card { color:#dce8ea; }
+.showcase-shell[data-showcase-theme="dark"] .sc-patient-card:hover { border-color:#263d42; background:#102328; }
+.showcase-shell[data-showcase-theme="dark"] .sc-patient-card.selected { border-color:#335b5a; background:#14282d; box-shadow:0 8px 24px rgba(0,0,0,.18); }
+.showcase-shell[data-showcase-theme="dark"] .sc-avatar { color:#9ed5d1; background:#1b3a3d; }
+.showcase-shell[data-showcase-theme="dark"] .sc-avatar.priority-review { color:#f2bd82; background:#3e2c1d; }
+.showcase-shell[data-showcase-theme="dark"] .sc-avatar.priority-priority { color:#f2a19a; background:#402424; }
+.showcase-shell[data-showcase-theme="dark"] .sc-card-measure em,.showcase-shell[data-showcase-theme="dark"] .sc-status { color:#86d4ce; background:#173936; }
+.showcase-shell[data-showcase-theme="dark"] .sc-card-measure em.priority-review,.showcase-shell[data-showcase-theme="dark"] .sc-status.priority-review { color:#efb778; background:#3c2b1b; }
+.showcase-shell[data-showcase-theme="dark"] .sc-card-measure em.priority-priority,.showcase-shell[data-showcase-theme="dark"] .sc-status.priority-priority { color:#f29b93; background:#3d2222; }
+.showcase-shell[data-showcase-theme="dark"] .sc-queue-foot { border-color:var(--sc-line); }
+.showcase-shell[data-showcase-theme="dark"] .sc-empty-chart { background-image:linear-gradient(rgba(99,196,188,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(99,196,188,.035) 1px,transparent 1px); }
+.showcase-shell[data-showcase-theme="dark"] .sc-empty-illustration { border-color:#294147; background:rgba(15,32,37,.9); box-shadow:12px 12px 0 #0c1c21; }
+.showcase-shell[data-showcase-theme="dark"] .sc-empty-illustration i { background:#2b4247; }
+.showcase-shell[data-showcase-theme="dark"] .sc-empty-note { border-color:#28504e; color:#a4dcd7; background:rgba(19,52,50,.74); }
+.showcase-shell[data-showcase-theme="dark"] .sc-chart { background:var(--sc-canvas); }
+.showcase-shell[data-showcase-theme="dark"] .sc-chart-header { border-color:var(--sc-line); background:#0d1d22; }
+.showcase-shell[data-showcase-theme="dark"] .sc-visit-state { border-color:#294147; color:#dbe8e9; background:#102227; }
+.showcase-shell[data-showcase-theme="dark"] .sc-primary-vital { color:#ecf5f5; background:#071216; }
+.showcase-shell[data-showcase-theme="dark"] .sc-vital-band,.showcase-shell[data-showcase-theme="dark"] .sc-chart-section { border-color:#293e43; background:var(--sc-paper); box-shadow:0 10px 28px rgba(0,0,0,.14); }
+.showcase-shell[data-showcase-theme="dark"] .sc-data-field,.showcase-shell[data-showcase-theme="dark"] .sc-chart-section>header { border-color:#263a3f; }
+.showcase-shell[data-showcase-theme="dark"] .sc-data-field>strong,.showcase-shell[data-showcase-theme="dark"] .sc-chart-section h2 { color:#e3edef; }
+.showcase-shell[data-showcase-theme="dark"] .sc-clinical-note { color:#b1c2c5; }
+.showcase-shell[data-showcase-theme="dark"] .sc-flag-list span { border-color:#2d454a; color:#bdd0d3; background:#13282d; }
+.showcase-shell[data-showcase-theme="dark"] .sc-review-rail { border-color:#2b464a; background:#0d1e23; box-shadow:0 14px 34px rgba(0,0,0,.2); }
+.showcase-shell[data-showcase-theme="dark"] .sc-review-heading,.showcase-shell[data-showcase-theme="dark"] .sc-review-disclaimer { border-color:#24383d; }
+.showcase-shell[data-showcase-theme="dark"] .sc-review-steps li>span { border-color:#53686d; background:#0d1e23; }
+.showcase-shell[data-showcase-theme="dark"] .sc-review-steps li::after { background:#30464b; }
+.showcase-shell[data-showcase-theme="dark"] .sc-review-steps li.complete>span { border-color:var(--sc-teal); background:var(--sc-teal); box-shadow:inset 0 0 0 2px #0d1e23; }
+.showcase-shell[data-showcase-theme="dark"] .sc-review-steps li.complete strong { color:#dce9ea; }
+.showcase-shell[data-showcase-theme="dark"] .sc-analysis-pulse { color:#f0bd86; background:#352617; }
+.showcase-shell[data-showcase-theme="dark"] .sc-review-ready { border-color:#295650; background:#112f2b; }
+.showcase-shell[data-showcase-theme="dark"] .sc-review-error { border-color:#653633; color:#f49b92; background:#2c191a; }
+.showcase-shell[data-showcase-theme="dark"] .modal-overlay { background:rgba(2,8,10,.82); }
+

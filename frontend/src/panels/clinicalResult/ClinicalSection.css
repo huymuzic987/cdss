@@ -1,0 +1,29 @@
+.cds-section-chevron {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg-inset);
+  color: var(--text-muted);
+  font-size: inherit;
+  line-height: 1;
+  transition: color .15s ease, border-color .15s ease, background .15s ease, transform .15s ease;
+}
+
+.cds-section-title:hover .cds-section-chevron {
+  border-color: var(--accent-btn-border);
+  background: var(--bg-panel-hover);
+  color: var(--accent-text);
+}
+
+.cds-section[open] > .cds-section-title .cds-section-chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cds-section-chevron { transition: none; }
+}
+
