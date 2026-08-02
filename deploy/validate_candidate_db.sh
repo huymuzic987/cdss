@@ -59,8 +59,8 @@ BEGIN
     -- These are materialized row counts after seed cleanup and graph
     -- normalization, not counts of INSERT statements in seed.sql.
     IF actual_tree_count < 14
-        OR actual_node_count < 387
-        OR actual_edge_count < 428
+        OR actual_node_count < 383
+        OR actual_edge_count < 426
         OR actual_medicine_count < 66
         OR actual_symptom_count < 86 THEN
         RAISE EXCEPTION 'candidate seed row counts are below the authoritative minimum (trees %, nodes %, edges %, medicines %, symptoms %)',

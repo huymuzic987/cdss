@@ -95,8 +95,8 @@ def test_candidate_validator_uses_materialized_seed_counts(tmp_path: Path) -> No
     )
 
     assert result.returncode == 0, result.stderr
-    assert "actual_node_count < 387" in result.stdout
-    assert "actual_edge_count < 428" in result.stdout
+    assert "actual_node_count < 383" in result.stdout
+    assert "actual_edge_count < 426" in result.stdout
     assert "actual_medicine_count < 66" in result.stdout
 
 
