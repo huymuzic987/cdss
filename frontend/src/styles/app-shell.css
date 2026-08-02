@@ -113,3 +113,27 @@
   position: relative;
   min-height: 0;
 }
+
+@media (max-width: 780px) {
+  .app-body {
+    overflow: hidden;
+  }
+
+  .top-tabs-bar {
+    gap: 6px;
+    padding: 6px 8px 0;
+  }
+
+  .top-tab {
+    min-height: 44px;
+    padding: 10px 14px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .tab-scroll-btn {
+    width: 40px;
+    min-height: 44px;
+    padding: 0 6px;
+  }
+}

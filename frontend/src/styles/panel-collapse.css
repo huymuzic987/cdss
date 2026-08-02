@@ -45,3 +45,53 @@
   background: var(--bg-panel-hover);
   color: var(--accent-text);
 }
+
+@media (max-width: 780px) {
+  .panel-toggle-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .panel-toggle-left {
+    left: 14px !important;
+  }
+
+  .mobile-drawer-open {
+    will-change: transform;
+  }
+
+  .panel-toggle-left.mobile-open,
+  .panel-toggle-left[aria-expanded='true'] {
+    left: min(88vw, 340px) !important;
+  }
+
+  .panel-toggle-right {
+    right: 14px !important;
+  }
+
+  .panel-toggle-right.mobile-open,
+  .panel-toggle-right[aria-expanded='true'] {
+    right: min(88vw, 340px) !important;
+  }
+
+  .sidebar-resizer {
+    display: none;
+  }
+
+  .mobile-drawer-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    border: 0;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.42);
+  }
+}
+
+@media (max-width: 780px) and (prefers-reduced-motion: reduce) {
+  .left-panel,
+  .side-panels,
+  .panel-toggle-btn {
+    transition: none !important;
+  }
+}
