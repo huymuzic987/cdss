@@ -144,6 +144,14 @@ The optional flags are `drug_replacement_required`, `adherence_adequate`, and
 `dose_adequate`. Existing callers that omit the scheduling fields retain the
 previous tree behavior.
 
+The input may also include `current_regimen_drug_classes` as a compact class
+combination such as `A+D`, `A+C`, or `A+C+D`. The follow-up result exposes the
+normalized `current_regimen_drug_classes` list and `current_regimen_label`.
+Replacing an unusable individual medicine retains this class combination and
+the current treatment stage; the existing tree decides which medicine within
+that class is substituted. When escalation is allowed, the existing tree
+continues and determines the next combination.
+
 For `MAINTAIN_CONTROLLED` and `ESCALATE_REGIMEN`, the hook records its result in
 `context.medication_follow_up` and lets the tree evaluate its existing
 reached/not-reached conditions. It does not introduce or select a new branch.

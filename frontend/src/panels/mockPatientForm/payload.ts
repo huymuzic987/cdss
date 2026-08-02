@@ -125,6 +125,7 @@ function formToFlatInput(form: PatientFormData): JsonObject {
   // of /evaluate's previous-visit inference (see CareSettingSection).
   if (form.medication_follow_up_stage) {
     out['medication_follow_up_stage'] = form.medication_follow_up_stage
+    set('current_regimen_drug_classes', form.current_regimen_drug_classes)
     set('active_bp_target_sbp_upper', num(form.target_sbp_upper))
     set('active_bp_target_dbp_upper', num(form.target_dbp_upper))
   }

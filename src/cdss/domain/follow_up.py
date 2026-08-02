@@ -57,6 +57,7 @@ class MedicationFollowUpAssessment:
     assessment_date: date
     regimen_effective_date: date
     minimum_regimen_days: int
+    current_regimen_drug_classes: tuple[str, ...] = ()
     drug_replacement_required: bool = False
     adherence_adequate: bool = True
     dose_adequate: bool = True
@@ -70,6 +71,7 @@ class MedicationFollowUpDecision:
     duration_sufficient: bool | None
     regimen_effective_date: date
     next_follow_up_date: date | None
+    current_regimen_drug_classes: tuple[str, ...]
 
 
 def is_bp_target_reached(
@@ -129,12 +131,13 @@ def evaluate_medication_follow_up(
         return MedicationFollowUpDecision(
             outcome=MedicationFollowUpOutcome.REPLACE_DRUG_SAME_STAGE,
             should_continue_traversal=False,
-            bp_target_reached=False,
-            duration_sufficient=None,
-            regimen_effective_date=new_effective_date,
+                bp_target_reached=False,
+                duration_sufficient=None,
+                regimen_effective_date=new_effective_date,
             next_follow_up_date=next_regimen_follow_up_date(
                 new_effective_date, assessment.minimum_regimen_days
             ),
+            current_regimen_drug_classes=assessment.current_regimen_drug_classes,
         )
 
     duration_sufficient = regimen_duration_is_sufficient(assessment)
@@ -206,6 +209,7 @@ def evaluate_medication_follow_up_at_bp_checkpoint(
             assessment_date=_required_date(input_data, "assessment_date"),
             regimen_effective_date=_required_date(input_data, "regimen_effective_date"),
             minimum_regimen_days=_required_integer(input_data, "minimum_regimen_days"),
+            current_regimen_drug_classes=_regimen_drug_classes(input_data),
             drug_replacement_required=input_data.get("drug_replacement_required") is True,
             adherence_adequate=input_data.get("adherence_adequate", True) is True,
             dose_adequate=input_data.get("dose_adequate", True) is True,
@@ -221,6 +225,8 @@ def evaluate_medication_follow_up_at_bp_checkpoint(
             decision.next_follow_up_date.isoformat() if decision.next_follow_up_date else None
         ),
         "checkpoint_node_key": current.node_key,
+        "current_regimen_drug_classes": list(decision.current_regimen_drug_classes),
+        "current_regimen_label": "+".join(decision.current_regimen_drug_classes),
     }
     run_state.context["medication_follow_up"] = summary
 
@@ -306,7 +312,26 @@ def _medication_decision(
         duration_sufficient=duration_sufficient,
         regimen_effective_date=assessment.regimen_effective_date,
         next_follow_up_date=next_follow_up_date,
+        current_regimen_drug_classes=assessment.current_regimen_drug_classes,
     )
+
+
+def _regimen_drug_classes(values: Mapping[str, Any]) -> tuple[str, ...]:
+    """Normalize a compact FHIR input value such as ``A+D`` into class codes."""
+    value = values.get("current_regimen_drug_classes")
+    if value is None or value == "":
+        return ()
+    if isinstance(value, str):
+        classes = tuple(part.strip().upper() for part in value.split("+") if part.strip())
+    elif isinstance(value, (list, tuple)):
+        classes = tuple(str(part).strip().upper() for part in value if str(part).strip())
+    else:
+        raise ValueError("current_regimen_drug_classes must be an A+D-style string or list")
+    if not classes or any(drug_class not in {"A", "B", "C", "D"} for drug_class in classes):
+        raise ValueError("current_regimen_drug_classes may contain only A, B, C, and D")
+    if len(classes) != len(set(classes)):
+        raise ValueError("current_regimen_drug_classes cannot contain duplicate classes")
+    return classes
 
 
 def _target_upper_limit(active_bp_target: Mapping[str, Any], axis: str) -> float:

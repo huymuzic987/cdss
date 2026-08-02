@@ -41,6 +41,7 @@ export function RecommendedOrderCard({ order, provenance, locale }: {
   const tooltipId = `cds-order-${order.id}`.replace(/[^a-zA-Z0-9_-]/g, '-')
   const isAbcdCombination = (order.drugClasses?.length ?? 0) > 1
     && order.drugClasses!.every((item) => /^[ABCD]$/.test(item.code))
+  const isCurrentRegimen = order.orderType === 'current-regimen'
   const isSingleMedication = order.orderType === 'medication' && !isAbcdCombination
   const combinationDose = order.drugClasses?.[0]?.doseLabel || order.dose
   const selectedDrugClass = isAbcdCombination
@@ -125,7 +126,7 @@ export function RecommendedOrderCard({ order, provenance, locale }: {
         onFocus={isSingleMedication ? (event) => openImmediately(null, event.currentTarget) : undefined}
         onBlur={isSingleMedication ? scheduleClose : undefined}
       >
-        <span className="cds-order-name">{isAbcdCombination ? messages.combinationTherapy : order.name}</span>
+        <span className="cds-order-name">{isAbcdCombination && !isCurrentRegimen ? messages.combinationTherapy : order.name}</span>
         <span className="cds-order-detail">{isAbcdCombination ? combinationDose : order.dose || order.classLabel}</span>
         {order.drugClasses?.length ? (
           <span className="cds-class-combination">

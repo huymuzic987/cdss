@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import type { ApiErrorResponse, EvaluationResponse, ExecutedAction, TreeGraphResponse } from '../api/types'
-import { buildClinicalPresentation } from './clinicalDecisionSupportAdapter'
+import type { ApiErrorResponse, EvaluationResponse, ExecutedAction, JsonObject, TreeGraphResponse } from '../api/types'
+import { buildClinicalPresentation, type RecommendedOrder } from './clinicalDecisionSupportAdapter'
 import {
   getClinicalDecisionSupportMessages,
   type ClinicalDecisionSupportLocale,
@@ -11,6 +11,7 @@ import { ClinicalSection } from './clinicalResult/ClinicalSection'
 import { confirmedText, formatVisitDate } from './clinicalResult/criticalFindingFormat'
 import { deriveCriticalSummary } from './clinicalResult/criticalSummary'
 import { ImportantDecisionPath } from './clinicalResult/ImportantDecisionPath'
+import { deriveMedicationFollowUpMessage } from './clinicalResult/medicationFollowUpMessage'
 import { buildOrderProvenance } from './clinicalResult/orderProvenance'
 import {
   isSingleMedicationOrder,
@@ -52,9 +53,15 @@ function ResultDialog({
   const detailedFindings = summary.findings.filter((finding) => finding.value !== confirmation)
   const recommendationAction = actionWithPresentation(actions) ?? actions.at(-1)
   const provenance = buildOrderProvenance(recommendationAction, references, graphs, locale)
+  const medicationFollowUpMessage = deriveMedicationFollowUpMessage(actions, context, locale)
+  const medicationReassessment = deriveMedicationReassessment(context, locale)
+  const displayedOrders = withCurrentFollowUpRegimen(presentation.orders, context, locale)
   const careActions = deriveCareActions(
     presentation.recommendation, presentation.additionalActions, summary, context,
   )
+  if (medicationFollowUpMessage && !careActions.includes(medicationFollowUpMessage)) {
+    careActions.unshift(medicationFollowUpMessage)
+  }
   const dialogRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -81,9 +88,6 @@ function ResultDialog({
                   </span>
                 )}
               </div>
-              {careActions[0] && summary.urgency !== 'routine' && (
-                <div className="cds-alert-action"><span>{messages.actionNow}</span><strong>{careActions[0]}</strong></div>
-              )}
               {!result && partial && <div className="cds-inner-row cds-error-copy">{partial.message}</div>}
               {result?.pregnancy_follow_up && (
                 <div className="cds-inner-row cds-episode-row">
@@ -112,8 +116,14 @@ function ResultDialog({
           <ClinicalSection title={messages.recommendedAction}>
             {careActions.length === 0 && !summary.followUp && <p className="cds-empty">{messages.noAdditionalActions}</p>}
             {careActions.map((action) => (
-              <div className="cds-inner-row cds-action-item" key={action}><span aria-hidden="true">→</span><span>{action}</span></div>
+              <div className="cds-inner-row cds-action-item" key={action}><span>{action}</span></div>
             ))}
+            {medicationReassessment && (
+              <div className="cds-inner-row cds-follow-up-row">
+                <span>{locale === 'vi' ? 'Ngày tái đánh giá' : 'Reassessment date'}</span>
+                <strong>{medicationReassessment.date}</strong>
+              </div>
+            )}
             {summary.followUp && (
               <div className="cds-inner-row cds-follow-up-row">
                 <span>{messages.followUpTiming}</span><strong>{summary.followUp.timing}</strong>
@@ -123,12 +133,12 @@ function ResultDialog({
           </ClinicalSection>
 
           <ClinicalSection title={messages.recommendedOrders}>
-            {presentation.orders.length === 0 ? <p className="cds-empty">{messages.noRecommendedOrders}</p> : (
+            {displayedOrders.length === 0 ? <p className="cds-empty">{messages.noRecommendedOrders}</p> : (
               <div className="cds-order-rows">
-                {presentation.orders.filter(isSingleMedicationOrder).length > 1 && (
+                {displayedOrders.filter(isSingleMedicationOrder).length > 1 && (
                   <div className="cds-order-choice-hint">{messages.chooseOneMedicine}</div>
                 )}
-                {presentation.orders.map((order) => (
+                {displayedOrders.map((order) => (
                   <RecommendedOrderCard
                     key={order.id} order={order} provenance={provenance} locale={locale}
                   />
@@ -149,6 +159,49 @@ function ResultDialog({
       </div>
     </div>
   )
+}
+
+function deriveMedicationReassessment(
+  context: EvaluationResponse['context'],
+  locale: ClinicalDecisionSupportLocale,
+): { date: string } | null {
+  const followUpValue = context.medication_follow_up
+  const followUp = typeof followUpValue === 'object' && followUpValue !== null && !Array.isArray(followUpValue)
+    ? followUpValue : null
+  const reassessment = typeof followUp?.next_follow_up_date === 'string'
+    ? followUp.next_follow_up_date : null
+  return reassessment ? { date: formatVisitDate(reassessment, locale) } : null
+}
+
+function withCurrentFollowUpRegimen(
+  orders: RecommendedOrder[],
+  context: JsonObject,
+  locale: ClinicalDecisionSupportLocale,
+): RecommendedOrder[] {
+  const hasNewCombination = orders.some((order) => order.orderType === 'medication'
+    && (order.drugClasses?.length ?? 0) > 1
+    && order.drugClasses!.every(({ code }) => /^[ABCD]$/.test(code)))
+  if (hasNewCombination) return orders
+  const value = context.medication_follow_up
+  const followUp = typeof value === 'object' && value !== null && !Array.isArray(value) ? value : null
+  const rawClasses = followUp?.current_regimen_drug_classes
+  const classes = Array.isArray(rawClasses)
+    ? rawClasses.filter((item): item is string => typeof item === 'string' && /^[ABCD]$/.test(item))
+    : []
+  if (classes.length === 0) return orders
+  const currentLabel = locale === 'vi' ? 'Phác đồ hiện tại' : 'Current regimen'
+  return [...orders, {
+    id: 'medication-follow-up-current-regimen',
+    name: currentLabel,
+    classLabel: classes.join(' + '),
+    orderType: 'current-regimen',
+    drugClasses: classes.map((code) => ({
+      code,
+      label: locale === 'vi' ? `Nhóm thuốc ${code}` : `Drug Class ${code}`,
+      doseLabel: '',
+      medicines: [],
+    })),
+  }]
 }
 
 function actionWithPresentation(actions: ExecutedAction[]): ExecutedAction | undefined {

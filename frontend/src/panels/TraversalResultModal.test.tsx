@@ -122,6 +122,70 @@ describe('TraversalResultModal', () => {
     expect(screen.queryByRole('button', { name: 'Close' })).toBeNull()
   })
 
+  it('shows the medication follow-up stop explanation in the clinical plan', () => {
+    const message = 'Replace the intolerable drug within the same regimen stage and reassess'
+    const followUpAction = {
+      ...result.actions[0]!,
+      node_key: 'T4_C_INITIAL_REGIMEN_MEDICATION_FOLLOW_UP_STOP',
+      text_en: message,
+      text_vi: 'Đổi thuốc không dung nạp trong cùng bậc điều trị và hẹn đánh giá lại',
+      payload: {
+        action_type: 'REPLACE_DRUG_SAME_STAGE',
+        outcome: 'REPLACE_DRUG_SAME_STAGE',
+        presentation: {
+          ...presentation,
+          recommendation: { text_en: message, text_vi: 'Đổi thuốc và đánh giá lại' },
+          recommended_orders: [],
+          additional_actions: [],
+        },
+      },
+    }
+    renderModal({
+      ...result,
+      context: {
+        medication_follow_up: {
+          outcome: 'REPLACE_DRUG_SAME_STAGE',
+          should_continue_traversal: false,
+          regimen_effective_date: '2026-01-29',
+          next_follow_up_date: '2026-02-26',
+          current_regimen_drug_classes: ['A', 'D'],
+        },
+      },
+      actions: [followUpAction],
+    })
+
+    const plan = screen.getByText('Clinical plan').closest('details') as HTMLElement
+    expect(within(plan).getByText(message)).toBeTruthy()
+    expect(within(plan).getByText('Reassessment date')).toBeTruthy()
+    expect(within(plan).getByText('26 Feb 2026')).toBeTruthy()
+    expect(within(plan).queryByText(/weeks after the regimen effective date/)).toBeNull()
+    const medication = screen.getByText('Medication and orders').closest('details') as HTMLElement
+    expect(within(medication).getByText('Current regimen')).toBeTruthy()
+    expect(within(medication).queryByText('Current treatment')).toBeNull()
+    expect(within(medication).getByText('A')).toBeTruthy()
+    expect(within(medication).getByText('D')).toBeTruthy()
+  })
+
+  it('shows controlled follow-up advice in the clinical plan but not the colored alert header', () => {
+    const message = 'Blood pressure target met. Continue monitoring and maintain the current regimen.'
+    renderModal({
+      ...result,
+      context: {
+        medication_follow_up: {
+          outcome: 'MAINTAIN_CONTROLLED',
+          should_continue_traversal: true,
+        },
+      },
+    })
+
+    const plan = screen.getByText('Clinical plan').closest('details') as HTMLElement
+    const alert = document.querySelector('.cds-alert-row') as HTMLElement
+    expect(within(plan).getByText(message)).toBeTruthy()
+    expect(within(plan).queryByText('Reassessment date')).toBeNull()
+    expect(within(alert).queryByText(message)).toBeNull()
+    expect(document.querySelector('.cds-alert-action')).toBeNull()
+  })
+
   it('uses urgency color and includes only route-changing patient data', () => {
     renderModal()
     const reasonSection = screen.getByText('Matched patient findings').closest('details') as HTMLElement
@@ -274,7 +338,7 @@ describe('TraversalResultModal', () => {
     renderModal()
 
     expect(screen.getByText('Start treatment and arrange follow-up.')).toBeTruthy()
-    expect(screen.getAllByText('Schedule follow-up')).toHaveLength(2)
+    expect(screen.getAllByText('Schedule follow-up')).toHaveLength(1)
     expect(screen.getByText('In 2 weeks')).toBeTruthy()
     expect(screen.queryByRole('radio')).toBeNull()
     expect(screen.queryByText('Acknowledge / Save decision')).toBeNull()

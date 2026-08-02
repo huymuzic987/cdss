@@ -55,6 +55,27 @@ describe('canonical FHIR patient presets', () => {
     }
   })
 
+  it('stores explicit drug-class combinations in medication episode Bundles', () => {
+    const expected = new Map([
+      ['med-review-episode-follow-up-1-replace', 'A+D'],
+      ['med-review-episode-follow-up-2-escalate', 'A+D'],
+      ['med-review-episode-follow-up-3-early', 'A+C+D'],
+      ['med-review-episode-follow-up-4-controlled', 'A+C+D'],
+    ])
+    for (const [id, combination] of expected) {
+      const preset = PATIENT_PRESETS.find((candidate) => candidate.id === id)
+      expect(preset, id).toBeDefined()
+      const flat = bundleToForm(preset!.bundle)
+      const patient = (preset!.bundle.entry as Array<{ resource: Record<string, unknown> }>)
+        .find(({ resource }) => resource.resourceType === 'Patient')!.resource
+      const extensions = patient.extension as Array<{ url: string, valueString?: string }>
+      expect(extensions.find(({ url }) => url.endsWith('/current_regimen_drug_classes'))?.valueString)
+        .toBe(combination)
+      expect(flat.current_regimen_drug_classes).toBe(combination)
+      expect(flat.medication_follow_up_stage).not.toBe('')
+    }
+  })
+
   it('keeps the eclampsia preset anchored to preeclampsia', () => {
     const preset = PATIENT_PRESETS.find(({ id }) => id === 'pregnancy-severe-eclampsia')
     expect(preset).toBeDefined()

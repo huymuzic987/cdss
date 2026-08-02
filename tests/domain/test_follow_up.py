@@ -133,6 +133,7 @@ def _medication_assessment(**overrides: Any) -> MedicationFollowUpAssessment:
         "assessment_date": date(2026, 6, 29),
         "regimen_effective_date": date(2026, 6, 1),
         "minimum_regimen_days": 28,
+        "current_regimen_drug_classes": ("A", "D"),
     }
     values.update(overrides)
     return MedicationFollowUpAssessment(**values)
@@ -165,6 +166,7 @@ def test_drug_replacement_stays_at_stage_and_resets_regimen_clock() -> None:
     )
 
     assert decision.outcome == MedicationFollowUpOutcome.REPLACE_DRUG_SAME_STAGE
+    assert decision.current_regimen_drug_classes == ("A", "D")
     assert decision.should_continue_traversal is False
     assert decision.regimen_effective_date == date(2026, 6, 15)
     assert decision.next_follow_up_date == date(2026, 7, 13)

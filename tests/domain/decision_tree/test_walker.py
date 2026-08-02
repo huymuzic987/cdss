@@ -262,6 +262,8 @@ def test_medication_follow_up_gate_stops_before_bp_branch_for_drug_replacement()
         "regimen_effective_date": "2026-01-29",
         "next_follow_up_date": "2026-02-26",
         "checkpoint_node_key": "regimen-checkpoint",
+        "current_regimen_drug_classes": ["A", "D"],
+        "current_regimen_label": "A+D",
     }
     assert result.actions[0].payload["action_type"] == "REPLACE_DRUG_SAME_STAGE"
 
@@ -371,6 +373,7 @@ def _medication_follow_up_input(
         "drug_replacement_required": drug_replacement_required,
         "adherence_adequate": True,
         "dose_adequate": True,
+        "current_regimen_drug_classes": "A+D",
     }
 
 

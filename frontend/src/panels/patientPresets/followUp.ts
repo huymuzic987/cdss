@@ -1,26 +1,7 @@
 import { FOLLOW_UP, MEDICATION_TARGET, type PatientPresetDefinition } from './shared'
-import { flatToBundle } from '../mockPatientForm/fhirBundle'
 import { formToPayload } from '../mockPatientForm/payload'
 import { DEFAULT_FORM } from '../mockPatientForm/types'
-
-const REVIEW_PATIENT_ID = 'medication-follow-up-review-001'
-
-function medicationFollowUpBundle(values: Record<string, string | number | boolean>) {
-  return flatToBundle({
-    is_medication_follow_up: true,
-    facility_capability: 'FULL_RESOURCES',
-    medication_follow_up_stage: 'INITIAL_REGIMEN',
-    active_bp_target_sbp_upper: 130,
-    active_bp_target_dbp_upper: 80,
-    minimum_regimen_days: 28,
-    current_regimen_drug_count: 2,
-    adherence_adequate: true,
-    dose_adequate: true,
-    age: 48,
-    risk_factor_count: 0,
-    ...values,
-  }, REVIEW_PATIENT_ID)
-}
+import { medicationFollowUpBundle, REVIEW_PATIENT_ID } from './followUpEpisode'
 
 export const followUpPresets: PatientPresetDefinition[] = [
   {
@@ -41,7 +22,7 @@ export const followUpPresets: PatientPresetDefinition[] = [
     id: 'med-review-episode-follow-up-1-replace',
     label: 'Medication Episode — Follow-Up 1: Replace Drug',
     category: FOLLOW_UP,
-    description: 'BP is uncontrolled, but one drug is unusable. Stops at the initial-regimen checkpoint and replaces only that drug while retaining the two-drug stage.',
+    description: 'BP is uncontrolled on A+D, but one drug is unusable. Stops at the initial-regimen checkpoint and replaces only that medicine within its class while retaining A+D and the two-drug stage.',
     bundle: medicationFollowUpBundle({
       current_clinic_sbp: 145,
       current_clinic_dbp: 90,
@@ -54,7 +35,7 @@ export const followUpPresets: PatientPresetDefinition[] = [
     id: 'med-review-episode-follow-up-2-escalate',
     label: 'Medication Episode — Follow-Up 2: Escalate to Three Drugs',
     category: FOLLOW_UP,
-    description: 'The replacement drug has had a complete 28-day trial; BP remains above target, so normal traversal escalates the two-drug regimen to three drugs.',
+    description: 'The replacement A+D regimen has had a complete 28-day trial; BP remains above target, so normal traversal escalates it to A+C+D.',
     bundle: medicationFollowUpBundle({
       current_clinic_sbp: 142,
       current_clinic_dbp: 88,
@@ -70,6 +51,7 @@ export const followUpPresets: PatientPresetDefinition[] = [
     bundle: medicationFollowUpBundle({
       medication_follow_up_stage: 'ESCALATED_REGIMEN',
       current_regimen_drug_count: 3,
+      current_regimen_drug_classes: 'A+C+D',
       current_clinic_sbp: 138,
       current_clinic_dbp: 84,
       assessment_date: '2026-03-10',
@@ -84,6 +66,7 @@ export const followUpPresets: PatientPresetDefinition[] = [
     bundle: medicationFollowUpBundle({
       medication_follow_up_stage: 'ESCALATED_REGIMEN',
       current_regimen_drug_count: 3,
+      current_regimen_drug_classes: 'A+C+D',
       current_clinic_sbp: 126,
       current_clinic_dbp: 76,
       assessment_date: '2026-03-26',
@@ -112,6 +95,7 @@ export const followUpPresets: PatientPresetDefinition[] = [
       is_medication_follow_up: true,
       facility_capability: 'FULL_RESOURCES',
       medication_follow_up_stage: 'INITIAL_REGIMEN',
+      current_regimen_drug_classes: 'A+D',
       ...MEDICATION_TARGET,
       current_clinic_sbp: '129', current_clinic_dbp: '79',
       age: '60', risk_factor_count: '2',
@@ -126,6 +110,7 @@ export const followUpPresets: PatientPresetDefinition[] = [
       is_medication_follow_up: true,
       facility_capability: 'LIMITED_RESOURCES',
       medication_follow_up_stage: 'INITIAL_REGIMEN',
+      current_regimen_drug_classes: 'A+C',
       ...MEDICATION_TARGET,
       current_clinic_sbp: '129', current_clinic_dbp: '79',
       age: '60', risk_factor_count: '2',
@@ -140,6 +125,7 @@ export const followUpPresets: PatientPresetDefinition[] = [
       is_medication_follow_up: true,
       facility_capability: 'FULL_RESOURCES',
       medication_follow_up_stage: 'INITIAL_REGIMEN',
+      current_regimen_drug_classes: 'A+D',
       ...MEDICATION_TARGET,
       current_clinic_sbp: '130', current_clinic_dbp: '80',
       age: '63', risk_factor_count: '3',
@@ -154,6 +140,7 @@ export const followUpPresets: PatientPresetDefinition[] = [
       is_medication_follow_up: true,
       facility_capability: 'FULL_RESOURCES',
       medication_follow_up_stage: 'ESCALATED_REGIMEN',
+      current_regimen_drug_classes: 'A+C+D',
       ...MEDICATION_TARGET,
       current_clinic_sbp: '130', current_clinic_dbp: '80',
       age: '65', risk_factor_count: '3',
@@ -168,6 +155,7 @@ export const followUpPresets: PatientPresetDefinition[] = [
       is_medication_follow_up: true,
       facility_capability: 'LIMITED_RESOURCES',
       medication_follow_up_stage: 'ESCALATED_REGIMEN',
+      current_regimen_drug_classes: 'A+C+D',
       ...MEDICATION_TARGET,
       current_clinic_sbp: '135', current_clinic_dbp: '85',
       tolerates_mra: true,
@@ -183,6 +171,7 @@ export const followUpPresets: PatientPresetDefinition[] = [
       is_medication_follow_up: true,
       facility_capability: 'LIMITED_RESOURCES',
       medication_follow_up_stage: 'ESCALATED_REGIMEN',
+      current_regimen_drug_classes: 'A+C+D',
       ...MEDICATION_TARGET,
       current_clinic_sbp: '135', current_clinic_dbp: '85',
       tolerates_mra: false,
@@ -199,6 +188,7 @@ export const followUpPresets: PatientPresetDefinition[] = [
       is_medication_follow_up: true,
       facility_capability: 'LIMITED_RESOURCES',
       medication_follow_up_stage: 'ESCALATED_REGIMEN',
+      current_regimen_drug_classes: 'A+C+D',
       ...MEDICATION_TARGET,
       current_clinic_sbp: '135', current_clinic_dbp: '85',
       tolerates_mra: false,
