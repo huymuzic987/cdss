@@ -15,7 +15,7 @@
     flex: 1 1 auto;
     overflow-x: hidden;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
     scrollbar-width: thin;
     scrollbar-color: color-mix(in srgb, var(--sc-teal) 42%, transparent) transparent;
   }
@@ -27,5 +27,13 @@
     border-radius: 999px;
     background: color-mix(in srgb, var(--sc-teal) 42%, transparent);
     background-clip: padding-box;
+  }
+}
+
+@media (max-width: 780px) {
+  .sc-queue-list {
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }

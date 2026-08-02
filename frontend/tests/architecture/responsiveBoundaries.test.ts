@@ -51,4 +51,17 @@ describe('frontend responsive boundaries', () => {
     expect(tables).toContain('min-width: max-content')
     expect(modal).toContain('max-width: calc(100vw - 16px)')
   })
+
+  it('defines showcase phone layout contracts', () => {
+    const layout = read('src/showcase/showcase-layout.css')
+    const scroll = read('src/showcase/showcase-scroll.css')
+    const modal = read('src/showcase/showcase-modal.css')
+
+    expect(layout).toContain('@media (max-width:780px)')
+    expect(layout).toContain('.sc-patient-card')
+    expect(layout).toContain('.sc-chart-layout')
+    expect(scroll).toContain('@media (min-width: 781px)')
+    expect(scroll).toContain('overscroll-behavior-x: contain')
+    expect(modal).toContain('max-width: calc(100vw - 16px)')
+  })
 })

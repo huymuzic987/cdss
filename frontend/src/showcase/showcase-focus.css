@@ -5,10 +5,12 @@
 
 .showcase-shell .sc-topbar {
   grid-column: 1 / -1;
+  gap: 12px;
   padding: 0 24px;
 }
 
-.sc-clinic-mark { min-width: 220px; }
+.sc-clinic-mark { flex: 1 1 auto; min-width: 220px; }
+.sc-clinic-mark > span:last-child { min-width: 0; }
 .sc-clinic-mark strong { font-size: 18px; }
 .sc-clinic-mark small { display: block; font-size: 11px; }
 .sc-mark-symbol { width: 36px; height: 36px; }
@@ -17,6 +19,7 @@
 .sc-topbar-title span { margin-top: 3px; color: var(--sc-muted); font-size: 12px; }
 .sc-theme-toggle {
   display: grid;
+  flex: 0 0 auto;
   width: 38px;
   height: 38px;
   margin-left: auto !important;
@@ -92,6 +95,7 @@
   .showcase-shell .sc-topbar { grid-column: 1; }
   .sc-topbar-title { display: none; }
   .sc-clinic-mark { min-width: 0; }
+  .sc-clinic-mark strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .showcase-shell .sc-patient-queue { grid-column: 1; grid-row: 2; }
   .showcase-shell .sc-empty-chart,.showcase-shell .sc-chart { grid-column: 1; grid-row: 3; }
 }
