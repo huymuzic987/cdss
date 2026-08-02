@@ -346,13 +346,17 @@ The zero-downtime cutover, with automatic rollback:
 
 1. Finds the healthy private frontend and its release network.
 2. Reuses the dedicated persistent `cdss-router`, or creates it when absent.
-   The router has no Compose release labels and the script refuses to adopt
-   another container that happens to own the public port.
+   During migration from the former port-published layout, it safely adopts
+   an existing `frontend` container from a `cdss-<version>` Compose project
+   without restarting it; unrelated containers that own the public port are
+   rejected.
 3. Connects the router to the candidate network and verifies the candidate
-   through its unique `cdss-frontend-${VERSION}` alias.
-4. Writes and validates a new nginx upstream configuration, then runs
-   `nginx -s reload`. Nginx starts new workers atomically and lets old workers
-   finish existing requests, while the router retains `APP_PORT` throughout.
+   through its unique `cdss-frontend-${VERSION}` alias. During legacy
+   bootstrap, it verifies the adopted frontend locally instead.
+4. Writes and validates either the legacy frontend configuration or a new
+   nginx upstream configuration, then runs `nginx -s reload`. Nginx starts
+   new workers atomically and lets old workers finish existing requests, while
+   the router retains `APP_PORT` throughout.
 5. Adds an `X-CDSS-Release` response header and checks `/` and `/health`
    through the public port. Promotion succeeds only when the header identifies
    the candidate release. On failure, the previous nginx configuration is

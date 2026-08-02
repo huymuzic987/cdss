@@ -5,6 +5,13 @@ PROMOTE_SCRIPT = (REPO_ROOT / "deploy" / "promote_stack.sh").read_text(encoding=
 CLEANUP_SCRIPT = (REPO_ROOT / "deploy" / "cleanup_failed_stack.sh").read_text(encoding="utf-8")
 
 
+def test_promotion_migrates_legacy_frontend_port_owner_to_stable_router() -> None:
+    assert 'docker rename "$ROUTER_ID" "$ROUTER_NAME"' in PROMOTE_SCRIPT
+    assert 'ROUTER_MODE="legacy"' in PROMOTE_SCRIPT
+    assert 'ROUTER_HEALTH_URL="http://127.0.0.1/"' in PROMOTE_SCRIPT
+    assert "Refusing to adopt a release container as the stable router." not in PROMOTE_SCRIPT
+
+
 def test_promotion_writes_state_before_atomic_version_commit() -> None:
     state_move = PROMOTE_SCRIPT.find('mv "$STATE_TMP" "$STATE_FILE"')
     version_move = PROMOTE_SCRIPT.find('mv "$VERSION_TMP" "$VERSION_FILE"')
