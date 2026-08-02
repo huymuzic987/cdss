@@ -55,23 +55,19 @@ def test_backend_and_frontend_branches_run_before_either_wait() -> None:
 
 
 def test_backend_pytest_and_pyright_are_concurrent_and_status_checked() -> None:
-    pyright_start = QUALITY_SCRIPT.find(
-        'timed backend-pyright uv run pyright &'
-    )
-    pytest_start = QUALITY_SCRIPT.find(
-        'if timed backend-pytest uv run pytest'
-    )
+    pyright_start = QUALITY_SCRIPT.find("timed backend-pyright uv run pyright &")
+    pytest_start = QUALITY_SCRIPT.find("if timed backend-pytest uv run pytest")
     pyright_wait = QUALITY_SCRIPT.find(r'wait "\$pyright_pid"')
     status_guard = QUALITY_SCRIPT.find(
         r'if [ "\$pytest_status" -ne 0 ] || [ "\$pyright_status" -ne 0 ]; then'
     )
 
     assert pyright_start >= 0
-    assert r'pyright_pid=\$!' in QUALITY_SCRIPT
+    assert r"pyright_pid=\$!" in QUALITY_SCRIPT
     assert pytest_start > pyright_start
     assert pyright_wait > pytest_start
-    assert r'pytest_status=\$?' in QUALITY_SCRIPT
-    assert r'pyright_status=\$?' in QUALITY_SCRIPT
+    assert r"pytest_status=\$?" in QUALITY_SCRIPT
+    assert r"pyright_status=\$?" in QUALITY_SCRIPT
     assert status_guard > pyright_wait
 
 
