@@ -29,6 +29,8 @@ POSTGRES_CONTAINER="cdss-ci-${CI_RUN_ID}-postgres"
 UV_CACHE_VOLUME="cdss-ci-uv-cache-py312"
 UV_ENV_VOLUME="cdss-ci-uv-env-py312"
 PNPM_STORE_VOLUME="cdss-ci-pnpm-store-v9"
+PNPM_MODULES_VOLUME="cdss-ci-node-modules-v9"
+PYRIGHT_CACHE_VOLUME="cdss-ci-pyright-node-py312"
 
 # Hardcoded to 54321: cdss.testing.database's fail-closed safety guard
 # rejects any test database target whose port isn't exactly this value (it
@@ -118,14 +120,17 @@ echo "Preparing persistent dependency caches..."
 docker volume create "$UV_CACHE_VOLUME" > /dev/null
 docker volume create "$UV_ENV_VOLUME" > /dev/null
 docker volume create "$PNPM_STORE_VOLUME" > /dev/null
+docker volume create "$PNPM_MODULES_VOLUME" > /dev/null
+docker volume create "$PYRIGHT_CACHE_VOLUME" > /dev/null
 docker run --rm \
     -v "$UV_CACHE_VOLUME":/uv-cache \
     -v "$UV_ENV_VOLUME":/venv \
+    -v "$PYRIGHT_CACHE_VOLUME":/pyright-cache \
     -e CACHE_UID="$HOST_UID" \
     -e CACHE_GID="$HOST_GID" \
     alpine:3 \
     sh -c '
-        for cache_dir in /uv-cache /venv; do
+        for cache_dir in /uv-cache /venv /pyright-cache; do
             if [ "$(stat -c %u "$cache_dir")" != "$CACHE_UID" ]; then
                 chown -R "$CACHE_UID:$CACHE_GID" "$cache_dir"
             fi
@@ -226,9 +231,11 @@ run_backend_quality_gates() {
     -v "$PWD":/workspace -w /workspace \
     -v "$UV_CACHE_VOLUME":/uv-cache \
     -v "$UV_ENV_VOLUME":/venv \
+    -v "$PYRIGHT_CACHE_VOLUME":/pyright-cache \
     -e DATABASE_URL="$TEST_DATABASE_URL" \
     -e CDSS_TIMING_FILE=/workspace/.ci-reports/timings.tsv \
     -e HOME=/tmp -e UV_CACHE_DIR=/uv-cache -e UV_PROJECT_ENVIRONMENT=/venv \
+    -e PYRIGHT_PYTHON_CACHE_DIR=/pyright-cache \
     --user "${HOST_UID}:${HOST_GID}" \
     "$UV_IMAGE" \
     sh -c "
@@ -265,6 +272,7 @@ run_frontend_quality_gates() {
     -v "$PWD/frontend":/workspace -w /workspace \
     -v "$PWD/deploy/run_frontend_quality_gates.sh":/quality-gate.sh:ro \
     -v "$PNPM_STORE_VOLUME":/pnpm/store \
+    -v "$PNPM_MODULES_VOLUME":/workspace/node_modules \
     -e HOME=/tmp \
     -e PNPM_VERSION="$PNPM_VERSION" \
     -e PNPM_STORE_DIR=/pnpm/store \
