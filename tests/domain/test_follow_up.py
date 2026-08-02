@@ -148,9 +148,7 @@ def test_target_requires_both_readings_below_exclusive_limits() -> None:
 
 
 def test_controlled_bp_continues_traversal_to_maintenance_action() -> None:
-    decision = evaluate_medication_follow_up(
-        _medication_assessment(clinic_sbp=125, clinic_dbp=75)
-    )
+    decision = evaluate_medication_follow_up(_medication_assessment(clinic_sbp=125, clinic_dbp=75))
 
     assert decision.outcome == MedicationFollowUpOutcome.MAINTAIN_CONTROLLED
     assert decision.should_continue_traversal is True
@@ -184,9 +182,7 @@ def test_early_unchanged_regimen_continues_until_original_reassessment() -> None
 
 
 def test_inadequate_adherence_or_dose_stops_escalation() -> None:
-    decision = evaluate_medication_follow_up(
-        _medication_assessment(adherence_adequate=False)
-    )
+    decision = evaluate_medication_follow_up(_medication_assessment(adherence_adequate=False))
 
     assert decision.outcome == MedicationFollowUpOutcome.ADDRESS_ADHERENCE_OR_DOSE
     assert decision.should_continue_traversal is False

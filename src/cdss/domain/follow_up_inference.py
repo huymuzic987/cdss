@@ -85,9 +85,7 @@ def build_current_visit_input(
     current["is_medication_follow_up"] = (
         inference.follow_up_type == FollowUpType.MEDICATION_FOLLOW_UP
     )
-    current["is_pregnancy_follow_up"] = (
-        inference.follow_up_type == FollowUpType.PREGNANCY_FOLLOW_UP
-    )
+    current["is_pregnancy_follow_up"] = inference.follow_up_type == FollowUpType.PREGNANCY_FOLLOW_UP
 
     if inference.follow_up_type == FollowUpType.LIFESTYLE_FOLLOW_UP:
         current["pre_lifestyle_clinic_sbp"] = current["previous_sbp"]
