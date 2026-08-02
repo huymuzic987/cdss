@@ -43,6 +43,26 @@
   margin-left: auto;
 }
 
+@media (max-width: 640px) {
+  .dash-filters-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dash-filters-actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .dash-filters-actions > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .dash-filters-export {
+    margin-left: 0;
+  }
+}
+
 /* ---- Clinical characteristics (plain inline stats, no card box) ---- */
 
 .dash-inline-stats {
@@ -89,4 +109,3 @@
   border-radius: 8px;
   max-width: 60ch;
 }
-

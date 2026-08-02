@@ -1,0 +1,16 @@
+.sc-empty-chart {
+  justify-content: flex-start;
+  padding-top: clamp(104px, 16vh, 160px);
+}
+
+.sc-empty-chart .sc-eyebrow { font-size: 13px; }
+.sc-empty-chart h2 { margin-top: 11px; font-size: clamp(32px, 3vw, 38px); line-height: 1.15; }
+.sc-empty-chart > p { max-width: 600px; font-size: 18px; line-height: 1.6; }
+.sc-empty-note { margin-top: 26px; padding: 11px 15px; font-size: 14px; line-height: 1.45; }
+
+@media (max-width: 780px) {
+  .sc-empty-chart { padding-top: 76px; }
+  .sc-empty-chart h2 { font-size: 30px; }
+  .sc-empty-chart > p { font-size: 16px; }
+  .sc-empty-note { font-size: 13px; }
+}

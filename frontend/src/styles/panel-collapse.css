@@ -33,7 +33,7 @@
   color: var(--text-secondary);
   box-shadow: 0 2px 8px var(--shadow-color);
   cursor: pointer;
-  transition: left 0.2s ease, right 0.2s ease, background 0.15s ease, color 0.15s ease;
+  transition: left 0.2s ease, right 0.2s ease, background 0.15s ease;
   z-index: 60;
 }
 
@@ -46,3 +46,57 @@
   color: var(--accent-text);
 }
 
+@media (max-width: 780px) {
+  .left-panel,
+  .side-panels {
+    transition: transform 0.2s ease;
+  }
+
+  .panel-toggle-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .panel-toggle-left {
+    left: calc(14px + 22px) !important;
+  }
+
+  .mobile-drawer-open {
+    will-change: transform;
+  }
+
+  .panel-toggle-left.mobile-open,
+  .panel-toggle-left[aria-expanded='true'] {
+    left: min(88vw, 340px) !important;
+  }
+
+  .panel-toggle-right {
+    right: calc(14px + 22px) !important;
+  }
+
+  .panel-toggle-right.mobile-open,
+  .panel-toggle-right[aria-expanded='true'] {
+    right: min(88vw, 340px) !important;
+  }
+
+  .sidebar-resizer {
+    display: none;
+  }
+
+  .mobile-drawer-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    border: 0;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.42);
+  }
+}
+
+@media (max-width: 780px) and (prefers-reduced-motion: reduce) {
+  .left-panel,
+  .side-panels,
+  .panel-toggle-btn {
+    transition: none !important;
+  }
+}

@@ -1,0 +1,39 @@
+.sc-clinic-mark small,.sc-topbar-title span { font-size: 14px; }
+.sc-topbar-title strong { font-size: 17px; }
+.sc-queue-heading div > span { font-size: 15px; }
+.sc-eyebrow { font-size: 14px; }
+.sc-search input { font-size: 16px; }
+
+.sc-patient-card { min-height: 112px; padding-top: 18px; padding-bottom: 18px; }
+.sc-patient-time { top: 19px; font-size: 14px; }
+.sc-patient-card-body > strong { font-size: 18px; }
+.sc-patient-card-body > small { margin-top: 5px; font-size: 15px; line-height: 1.4; }
+.sc-card-measure { margin-top: 11px; font-size: 16px; }
+.sc-card-measure small { font-size: 14px; }
+.sc-card-measure em,.sc-status { padding: 5px 8px; font-size: 13px; }
+
+.sc-chart-identity p { font-size: 16px; }
+.sc-visit-state { font-size: 15px; }
+.sc-visit-state small { font-size: 13px; }
+.sc-primary-vital > span { font-size: 14px; }
+.sc-primary-vital > small { font-size: 14px; }
+.sc-data-field > span { font-size: 14px; }
+.sc-data-field > strong { font-size: 17px; }
+.sc-chart-section header p { font-size: 14px; }
+.sc-clinical-note { font-size: 16px; }
+.sc-flag-list span { font-size: 15px; }
+.sc-clear-state strong { font-size: 15px; }
+.sc-clear-state small { font-size: 14px; }
+
+.sc-review-heading small { font-size: 14px; }
+.sc-review-steps strong { font-size: 15px; }
+.sc-review-steps small { font-size: 14px; }
+.sc-analysis-pulse { font-size: 14px; }
+.sc-review-ready p strong,.sc-review-error strong { font-size: 15px; }
+.sc-review-ready p span,.sc-review-error p { font-size: 14px; }
+.sc-review-ready button,.sc-review-error button { font-size: 14px; }
+.sc-review-disclaimer { font-size: 13px; }
+
+.sc-empty-chart > p { font-size: 20px; }
+.sc-empty-note { font-size: 16px; }
+

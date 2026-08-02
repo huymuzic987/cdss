@@ -108,6 +108,90 @@ def test_low_dose_combination_presents_class_medicines_with_only_low_doses() -> 
     assert order["drug_classes"][1]["medicines"][0]["dose"] == "2.5 mg"
 
 
+def test_single_medicine_presents_its_complete_catalog_class() -> None:
+    bundle = json.loads(next(iter(sorted(FIXTURE_DIR.glob("*.json")))).read_text(encoding="utf-8"))
+    parsed = parse_clinical_bundle(bundle)
+    class_a = [
+        {
+            "drug_id": "enalapril",
+            "name": "Enalapril",
+            "drug_class": "A",
+            "subgroup": "ƯCMC",
+            "route": "Thuốc Uống",
+            "dose_low": "5 mg",
+            "dose_usual": "10–20 mg",
+            "available": True,
+        },
+        {
+            "drug_id": "losartan",
+            "name": "Losartan",
+            "drug_class": "A",
+            "subgroup": "CTTA",
+            "route": "Thuốc Uống",
+            "dose_low": "25 mg",
+            "dose_usual": "50–100 mg",
+            "available": True,
+        },
+    ]
+    action = ExecutedAction(
+        tree_key="example",
+        node_key="single-enalapril",
+        node_type=NodeType.END,
+        text_en="Start Enalapril",
+        text_vi="Start Enalapril",
+        payload={
+            "medicines": [class_a[0]],
+            "medicine_catalog_by_class": {"A": class_a},
+        },
+    )
+
+    order = build_presentation(action, parsed, [])["recommended_orders"][0]
+
+    assert order["name_en"] == "Enalapril"
+    assert order["class_label_en"] == "A"
+    assert [medicine["name"] for medicine in order["drug_classes"][0]["medicines"]] == [
+        "Enalapril",
+        "Losartan",
+    ]
+
+
+def test_combination_hover_uses_complete_database_catalog() -> None:
+    bundle = json.loads(next(iter(sorted(FIXTURE_DIR.glob("*.json")))).read_text(encoding="utf-8"))
+    parsed = parse_clinical_bundle(bundle)
+    oral = {
+        "drug_id": "amlodipine",
+        "name": "Amlodipine",
+        "drug_class": "C",
+        "route": "Thuốc Uống",
+        "available": True,
+    }
+    intravenous = {
+        "drug_id": "nicardipine",
+        "name": "Nicardipine",
+        "drug_class": "C",
+        "route": "Thuốc Truyền Tĩnh Mạch",
+        "available": True,
+    }
+    action = ExecutedAction(
+        tree_key="example",
+        node_key="class-c",
+        node_type=NodeType.END,
+        text_en="Start a calcium-channel blocker",
+        text_vi="Start a calcium-channel blocker",
+        payload={
+            "medicine_options": [{"classes": ["C"], "medicines": {"C": [oral]}}],
+            "medicine_catalog_by_class": {"C": [oral, intravenous]},
+        },
+    )
+
+    order = build_presentation(action, parsed, [])["recommended_orders"][0]
+
+    assert [item["name"] for item in order["drug_classes"][0]["medicines"]] == [
+        "Amlodipine",
+        "Nicardipine",
+    ]
+
+
 def test_legacy_parameters_resource_is_rejected() -> None:
     bundle = {
         "resourceType": "Bundle",

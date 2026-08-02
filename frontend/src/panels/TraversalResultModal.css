@@ -55,7 +55,7 @@
 .cds-alert-moderate .cds-section-content { border-color: #a16207; background: #facc15; color: #1c1917; }
 .cds-alert-routine .cds-section-content { border-color: #166534; background: #15803d; color: #fff; }
 .cds-alert-row { padding: 14px; }
-.cds-row-heading { display: flex; align-items: center; gap: 12px; color: inherit; font-size: 17px; line-height: 1.45; }
+.cds-row-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; color: inherit; font-size: 17px; line-height: 1.45; }
 .cds-urgency-badge {
   flex: 0 0 auto;
   padding: 5px 9px;
@@ -69,6 +69,17 @@
 }
 .cds-section[class*="cds-alert-"] .cds-urgency-badge { color: inherit; background: rgba(255,255,255,.18); }
 .cds-alert-high .cds-urgency-badge,.cds-alert-moderate .cds-urgency-badge { background: rgba(255,255,255,.45); }
+.cds-confirmed-tags { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.cds-confirmed-tag {
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 3px;
+  background: rgba(0,0,0,.22);
+  color: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+}
 .cds-alert-action { display: flex; align-items: baseline; gap: 10px; margin-top: 10px; padding: 9px 11px; border-radius: 7px; background: rgba(0,0,0,.18); }
 .cds-alert-action span { font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
 .cds-alert-action strong { font-size: 14px; }
@@ -90,7 +101,7 @@
 .cds-follow-up-row > small { color: var(--text-muted); font-size: 11px; text-align: right; }
 .cds-order-row {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) minmax(130px, .7fr) auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
   gap: 8px 15px;
   cursor: default;
@@ -98,13 +109,15 @@
   transition: background .12s ease;
 }
 .cds-order-row:hover { background: var(--bg-panel-hover); }
-.cds-order-name { color: var(--text-bright); font-size: 14px; font-weight: 760; }
-.cds-order-detail,.cds-order-class { color: var(--text-secondary); font-size: 12px; }
+.cds-order-choice-hint { padding: 8px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); font-size: 12px; font-weight: 650; }
+.cds-order-name { min-width: 0; overflow-wrap: anywhere; color: var(--text-bright); font-size: 14px; font-weight: 760; }
+.cds-order-detail,.cds-order-class { min-width: 0; overflow-wrap: anywhere; color: var(--text-secondary); font-size: 12px; }
 .cds-class-combination { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
 .cds-class-hover-target { cursor: pointer; border-radius: 999px; outline: none; transition: filter .15s ease, transform .15s ease; }
 .cds-class-hover-target:hover,.cds-class-hover-target:focus-visible { filter: brightness(1.18); transform: translateY(-1px); }
+.cds-single-drug-hover-target { cursor: pointer; }
+.cds-single-drug-hover-target:focus-visible,.cds-single-drug-hover-target:hover { background: var(--bg-panel-hover); }
 .cds-drug-class-label { padding: 4px 7px; border: 1px solid var(--accent-border); border-radius: 999px; color: var(--accent-text); font-size: 11px; white-space: nowrap; }
-.cds-order-source { grid-column: 1 / -1; color: var(--text-muted); font-size: 11px; }
 .cds-empty { margin: 0; padding: 11px 13px; color: var(--text-secondary); font-size: 13px; line-height: 1.45; }
 .cds-path-list { margin: 0; padding: 0; list-style: none; }
 .cds-path-row { display: grid; grid-template-columns: 24px minmax(0, 1fr) minmax(130px, auto); align-items: center; gap: 9px; padding: 9px 13px; border-top: 1px solid var(--border); }
@@ -123,6 +136,12 @@
 .cds-tooltip-header span { color: var(--text-secondary); font-size: 11px; }
 .cds-tooltip-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .cds-tooltip-grid > div:nth-child(even) { padding-left: 14px; border-left: 1px solid var(--border); }
+.cds-tooltip-medicine-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; padding-top: 10px; }
+.cds-tooltip-medicine { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-inset); }
+.cds-tooltip-medicine > span:first-child { display: flex; min-width: 0; flex-direction: column; }
+.cds-tooltip-medicine strong { color: var(--text-bright); font-size: 12px; }
+.cds-tooltip-medicine small { color: var(--text-muted); font-size: 10px; }
+.cds-tooltip-medicine > span:last-child { color: var(--text-secondary); font-size: 11px; white-space: nowrap; }
 .cds-tooltip-reference-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
 .cds-drug-tooltip h4 { margin: 9px 0 5px; color: var(--accent-text); font-size: 11px; text-transform: uppercase; }
 .cds-tooltip-drug-class table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -145,6 +164,7 @@
   .cds-data-row > strong,.cds-path-row > small,.cds-class-combination { text-align: left; justify-content: flex-start; }
   .cds-follow-up-row { grid-template-columns: auto 1fr; }
   .cds-follow-up-row > small { grid-column: 1 / -1; text-align: left; }
+  .cds-tooltip-medicine-grid,.cds-tooltip-reference-row { grid-template-columns: 1fr; }
   .cds-path-row { grid-template-columns: 24px 1fr; }
   .cds-path-row > small { grid-column: 2; }
   .cds-tooltip-grid,.cds-tooltip-reference-row { grid-template-columns: 1fr; }

@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import type { JsonObject } from '../../api/types'
 import type { DrugToleranceResult } from '../../panels/DrugToleranceCheckbox'
 import { updateBundleClinicalFlag } from './bundleFlags'
-import { enteredEntries, hasDrugToleranceSelection, hasEmergencyScenarioSelection, highlightedByTree, isDrugToleranceEntry, isEmergencyCheckpoint, lastEntered, replaceRemainingEntries } from './trace'
+import { enteredEntries, highlightedByTree, isDrugToleranceEntry, isEmergencyCheckpoint, lastEntered, replaceRemainingEntries } from './trace'
 import type { EmergencyScenarioFlags } from '../../panels/EmergencyScenarioCheckbox'
 import type { EvaluationRunner, TraversalDependencies } from './useEvaluationRunner'
 import type { TraversalStore } from './useTraversalStore'
@@ -74,13 +74,13 @@ export function useManualTraversal(
 
     const nextIndex = store.manualStepIndex + 1
     store.setManualStepIndex(nextIndex)
-    if (isDrugToleranceEntry(entry) && !hasDrugToleranceSelection(store.manualInputRef.current)) {
+    if (isDrugToleranceEntry(entry)) {
       store.setCheckpointKind('resistant')
       store.setCheckpointPending(true)
       store.setShowDrugTolerancePopup(true)
       return
     }
-    if (isEmergencyCheckpoint(entry) && !hasEmergencyScenarioSelection(store.manualInputRef.current)) {
+    if (isEmergencyCheckpoint(entry)) {
       store.setCheckpointKind('emergency')
       store.setCheckpointPending(true)
       store.setShowDrugTolerancePopup(true)

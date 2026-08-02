@@ -58,7 +58,6 @@ export function CareSettingSection({ form, setStr, setBool, disabled }: FormSect
           <div className="ps-toggles">
             <Toggle label="Tolerates MRA" fieldKey="tolerates_mra" form={form} onChange={setBool} disabled={disabled} />
             <Toggle label="Tolerates Spironolactone" fieldKey="tolerates_spironolactone" form={form} onChange={setBool} disabled={disabled} />
-            <Toggle label="BP Target Reached" fieldKey="bp_target_reached" form={form} onChange={setBool} disabled={disabled} />
           </div>
         </>
       )}
