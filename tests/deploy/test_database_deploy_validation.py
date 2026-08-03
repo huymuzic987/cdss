@@ -83,6 +83,23 @@ def test_candidate_validator_emits_bounded_fail_closed_sql(tmp_path: Path) -> No
     assert "tree layouts changed" in result.stdout
 
 
+def test_candidate_validator_uses_materialized_seed_counts(tmp_path: Path) -> None:
+    script = normalized_script(tmp_path, "validate_candidate_db.sh")
+
+    result = subprocess.run(
+        ["bash", script.name, "9f7c2d4a1b6e", "all"],
+        cwd=tmp_path,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "actual_node_count < 383" in result.stdout
+    assert "actual_edge_count < 426" in result.stdout
+    assert "actual_medicine_count < 66" in result.stdout
+
+
 def test_database_validation_precedes_candidate_service_start() -> None:
     provision = (REPO_ROOT / "deploy" / "provision_stack.sh").read_text(encoding="utf-8")
 
@@ -92,3 +109,20 @@ def test_database_validation_precedes_candidate_service_start() -> None:
     services = provision.index('run_timed "candidate-services-start"')
 
     assert migration < seed < validation < services
+
+
+def test_candidate_database_readiness_is_frequent_but_bounded() -> None:
+    provision = (REPO_ROOT / "deploy" / "provision_stack.sh").read_text(encoding="utf-8")
+    readiness_start = provision.index('echo "Waiting for database to be ready..."')
+    readiness_end = provision.index('if [ "$db_ready" != "true" ]', readiness_start)
+    readiness_block = provision[readiness_start:readiness_end]
+
+    assert "for i in $(seq 1 120); do" in readiness_block
+    assert "sleep 1" in readiness_block
+    assert "sleep 5" not in readiness_block
+    assert "db_ready_deadline=$((db_ready_started_at + 120))" in readiness_block
+    assert 'if [ "$(date +%s)" -ge "$db_ready_deadline" ]; then' in readiness_block
+
+    probe_start = readiness_block.index("pg_isready")
+    probe_end = readiness_block.index("\n", probe_start)
+    assert "--timeout=1" in readiness_block[probe_start:probe_end]

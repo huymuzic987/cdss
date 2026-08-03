@@ -29,6 +29,8 @@ POSTGRES_CONTAINER="cdss-ci-${CI_RUN_ID}-postgres"
 UV_CACHE_VOLUME="cdss-ci-uv-cache-py312"
 UV_ENV_VOLUME="cdss-ci-uv-env-py312"
 PNPM_STORE_VOLUME="cdss-ci-pnpm-store-v9"
+PNPM_MODULES_VOLUME="cdss-ci-node-modules-v9"
+PYRIGHT_CACHE_VOLUME="cdss-ci-pyright-node-py312"
 
 # Hardcoded to 54321: cdss.testing.database's fail-closed safety guard
 # rejects any test database target whose port isn't exactly this value (it
@@ -118,14 +120,17 @@ echo "Preparing persistent dependency caches..."
 docker volume create "$UV_CACHE_VOLUME" > /dev/null
 docker volume create "$UV_ENV_VOLUME" > /dev/null
 docker volume create "$PNPM_STORE_VOLUME" > /dev/null
+docker volume create "$PNPM_MODULES_VOLUME" > /dev/null
+docker volume create "$PYRIGHT_CACHE_VOLUME" > /dev/null
 docker run --rm \
     -v "$UV_CACHE_VOLUME":/uv-cache \
     -v "$UV_ENV_VOLUME":/venv \
+    -v "$PYRIGHT_CACHE_VOLUME":/pyright-cache \
     -e CACHE_UID="$HOST_UID" \
     -e CACHE_GID="$HOST_GID" \
     alpine:3 \
     sh -c '
-        for cache_dir in /uv-cache /venv; do
+        for cache_dir in /uv-cache /venv /pyright-cache; do
             if [ "$(stat -c %u "$cache_dir")" != "$CACHE_UID" ]; then
                 chown -R "$CACHE_UID:$CACHE_GID" "$cache_dir"
             fi
@@ -226,9 +231,11 @@ run_backend_quality_gates() {
     -v "$PWD":/workspace -w /workspace \
     -v "$UV_CACHE_VOLUME":/uv-cache \
     -v "$UV_ENV_VOLUME":/venv \
+    -v "$PYRIGHT_CACHE_VOLUME":/pyright-cache \
     -e DATABASE_URL="$TEST_DATABASE_URL" \
     -e CDSS_TIMING_FILE=/workspace/.ci-reports/timings.tsv \
     -e HOME=/tmp -e UV_CACHE_DIR=/uv-cache -e UV_PROJECT_ENVIRONMENT=/venv \
+    -e PYRIGHT_PYTHON_CACHE_DIR=/pyright-cache \
     --user "${HOST_UID}:${HOST_GID}" \
     "$UV_IMAGE" \
     sh -c "
@@ -248,14 +255,28 @@ run_backend_quality_gates() {
         # Fail quickly with a clear runtime error before spending time on the
         # test suite if Pyright's bundled Node.js cannot start.
         timed pyright-runtime-check uv run pyright --version
-        timed backend-pytest uv run pytest \
+        pyright_status=0
+        timed backend-pyright uv run pyright &
+        pyright_pid=\$!
+        if timed backend-pytest uv run pytest \
             --junitxml=.ci-reports/backend/junit.xml \
             --cov=cdss \
             --cov-report=term-missing \
-            --cov-report=xml:.ci-reports/backend/coverage.xml
+            --cov-report=xml:.ci-reports/backend/coverage.xml; then
+            pytest_status=0
+        else
+            pytest_status=\$?
+        fi
+        if wait "\$pyright_pid"; then
+            pyright_status=0
+        else
+            pyright_status=\$?
+        fi
         timed backend-ruff-check uv run ruff check
         timed backend-ruff-format uv run ruff format --check
-        timed backend-pyright uv run pyright
+        if [ "\$pytest_status" -ne 0 ] || [ "\$pyright_status" -ne 0 ]; then
+            exit 1
+        fi
     "
 }
 
@@ -265,6 +286,7 @@ run_frontend_quality_gates() {
     -v "$PWD/frontend":/workspace -w /workspace \
     -v "$PWD/deploy/run_frontend_quality_gates.sh":/quality-gate.sh:ro \
     -v "$PNPM_STORE_VOLUME":/pnpm/store \
+    -v "$PNPM_MODULES_VOLUME":/workspace/node_modules \
     -e HOME=/tmp \
     -e PNPM_VERSION="$PNPM_VERSION" \
     -e PNPM_STORE_DIR=/pnpm/store \

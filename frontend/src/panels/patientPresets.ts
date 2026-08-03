@@ -4,6 +4,7 @@ import { cardioModifierPresets } from './patientPresets/modifiersCardio'
 import { demographicPresets } from './patientPresets/demographic'
 import { diagnosisPresets } from './patientPresets/diagnosis'
 import { followUpPresets } from './patientPresets/followUp'
+import { comorbidityFollowUpEpisodePresets } from './patientPresets/followUpComorbidityEpisodes'
 import {
   pregnancyFollowUpPresets,
   pregnancyPresets,
@@ -17,6 +18,7 @@ const definitions: PatientPresetDefinition[] = [
   ...diagnosisPresets,
   ...demographicPresets,
   ...followUpPresets,
+  ...comorbidityFollowUpEpisodePresets,
   ...cardioModifierPresets,
   ...renalModifierPresets,
   ...pregnancyPresets,

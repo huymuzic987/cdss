@@ -41,17 +41,31 @@ DECLARE
     unresolved_links integer;
     invalid_start_counts integer;
     actual_layout_fingerprint text;
+    actual_tree_count integer;
+    actual_node_count integer;
+    actual_edge_count integer;
+    actual_medicine_count integer;
+    actual_symptom_count integer;
 BEGIN
     IF (SELECT count(*) FROM alembic_version) <> 1
         OR (SELECT version_num FROM alembic_version LIMIT 1) <> '$EXPECTED_HEAD' THEN
         RAISE EXCEPTION 'candidate Alembic revision does not match $EXPECTED_HEAD';
     END IF;
-    IF (SELECT count(*) FROM decision_trees) < 14
-        OR (SELECT count(*) FROM decision_nodes) < 381
-        OR (SELECT count(*) FROM decision_edges) < 440
-        OR (SELECT count(*) FROM medicines) < 65
-        OR (SELECT count(*) FROM symptoms) < 86 THEN
-        RAISE EXCEPTION 'candidate seed row counts are below the authoritative minimum';
+    SELECT count(*) INTO actual_tree_count FROM decision_trees;
+    SELECT count(*) INTO actual_node_count FROM decision_nodes;
+    SELECT count(*) INTO actual_edge_count FROM decision_edges;
+    SELECT count(*) INTO actual_medicine_count FROM medicines;
+    SELECT count(*) INTO actual_symptom_count FROM symptoms;
+    -- These are materialized row counts after seed cleanup and graph
+    -- normalization, not counts of INSERT statements in seed.sql.
+    IF actual_tree_count < 14
+        OR actual_node_count < 383
+        OR actual_edge_count < 426
+        OR actual_medicine_count < 66
+        OR actual_symptom_count < 86 THEN
+        RAISE EXCEPTION 'candidate seed row counts are below the authoritative minimum (trees %, nodes %, edges %, medicines %, symptoms %)',
+            actual_tree_count, actual_node_count, actual_edge_count,
+            actual_medicine_count, actual_symptom_count;
     END IF;
 
     SELECT count(*) INTO invalid_start_counts

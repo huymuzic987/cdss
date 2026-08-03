@@ -95,8 +95,19 @@ KNOWN_BOOLEAN_FLAGS = frozenset(
         "is_breastfeeding",
         "is_lifestyle_follow_up",
         "is_medication_follow_up",
+        # Stateless medication follow-up gates. These are encoded as local
+        # clinical-flag Conditions by the simulator, so they must be included
+        # in this closed-world set to survive canonical Bundle parsing.
+        "drug_replacement_required",
+        "adherence_adequate",
+        "dose_adequate",
     }
 )
+
+# Unlike ordinary diagnosis flags, omission of these workflow-quality flags
+# means "not reported" and the follow-up policy deliberately defaults them to
+# adequate. Do not collapse omission into False during canonical parsing.
+OPTIONAL_DEFAULT_TRUE_FLAGS = frozenset({"adherence_adequate", "dose_adequate"})
 
 
 @dataclass(frozen=True)
@@ -147,7 +158,9 @@ def parse_clinical_bundle(bundle: Any) -> ParsedClinicalBundle:
         _invalid("Patient.id is required")
     patient_ref = f"Patient/{patient_id}"
 
-    runtime: JsonObject = {key: False for key in KNOWN_BOOLEAN_FLAGS}
+    runtime: JsonObject = {
+        key: False for key in KNOWN_BOOLEAN_FLAGS if key not in OPTIONAL_DEFAULT_TRUE_FLAGS
+    }
     runtime["facility_capability"] = "FULL_RESOURCES"
     runtime["risk_factor_count"] = 0
     _apply_birth_date(patient, runtime)

@@ -120,17 +120,23 @@ def enrich_inferred_medications(
                 for medicine in catalog
                 if medicine.drug_id in inferred_names
             ]
-        selected_classes = {
-            raw.get("drug_class")
-            for raw in payload.get("medicines", [])
-            if isinstance(raw, dict) and raw.get("drug_class") in {"A", "B", "C", "D"}
-        }
+        selected_classes: set[str] = set()
+        for raw in payload.get("medicines", []):
+            if not isinstance(raw, dict):
+                continue
+            drug_class = raw.get("drug_class")
+            if isinstance(drug_class, str) and drug_class in {"A", "B", "C", "D"}:
+                selected_classes.add(drug_class)
         for option in payload.get("medicine_options", []):
             if not isinstance(option, dict):
                 continue
-            selected_classes.update(
-                code for code in option.get("classes", []) if code in {"A", "B", "C", "D"}
-            )
+            classes = option.get("classes")
+            if isinstance(classes, list):
+                selected_classes.update(
+                    code
+                    for code in classes
+                    if isinstance(code, str) and code in {"A", "B", "C", "D"}
+                )
         if selected_classes:
             payload["medicine_catalog_by_class"] = {
                 class_code: [
