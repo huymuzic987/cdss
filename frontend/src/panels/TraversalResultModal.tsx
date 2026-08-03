@@ -18,7 +18,7 @@ import {
   isSingleMedicationOrder,
   RecommendedOrderCard,
 } from './clinicalResult/RecommendedOrderCard'
-import { RegimenDisplay } from './clinicalResult/RegimenDisplay'
+import { RegimenDisplay, RegimenPathDisplay } from './clinicalResult/RegimenDisplay'
 
 export type { RecommendedOrder } from './clinicalDecisionSupportAdapter'
 
@@ -135,7 +135,7 @@ function ResultDialog({
           </ClinicalSection>
 
           <ClinicalSection title={messages.recommendedOrders}>
-            <RegimenDisplay presentation={presentation} locale={locale} />
+            <RegimenDisplay presentation={presentation} references={references} locale={locale} />
             {presentation.orders.length === 0 && presentation.regimenOptions.length === 0
               ? <p className="cds-empty">{messages.noRecommendedOrders}</p> : (
               <div className="cds-order-rows">
@@ -158,6 +158,7 @@ function ResultDialog({
             defaultOpen={false}
           >
             <ImportantDecisionPath steps={summary.path} emptyText={messages.noImportantPath} />
+            <RegimenPathDisplay presentation={presentation} locale={locale} />
           </ClinicalSection>
         </div>
       </div>

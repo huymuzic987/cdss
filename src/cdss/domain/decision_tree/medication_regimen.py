@@ -101,11 +101,44 @@ def build_traversed_medication_regimen(
         for component in step_components(step)
         if component.selector_kind == "class" and component.code
     }
+    selected_medicines = [
+        component
+        for step in steps
+        for component in step_components(step)
+        if component.selector_kind == "medicine"
+    ]
+    for component in selected_medicines:
+        matched = next(
+            (
+                item
+                for item in catalog
+                if (component.medicine_id and item.drug_id == component.medicine_id)
+                or (
+                    component.name
+                    and item.name.casefold() in component.name.casefold()
+                )
+            ),
+            None,
+        )
+        if matched and matched.drug_class:
+            selected_classes.add(matched.drug_class)
+        if matched and matched.subgroup and "MRA" in matched.subgroup.upper():
+            selected_classes.add("MRA")
     return MedicationRegimenPlan(
         steps=steps,
         effective_regimen=derive_effective_regimen(sorted(steps, key=lambda step: step.trace_step)),
+        catalog=[medicine_json(item) for item in catalog],
         catalog_by_class={
-            code: [medicine_json(item) for item in catalog if item.drug_class == code]
+            code: [
+                medicine_json(item)
+                for item in catalog
+                if item.drug_class == code
+                or (
+                    code == "MRA"
+                    and item.subgroup is not None
+                    and "MRA" in item.subgroup.upper()
+                )
+            ]
             for code in sorted(selected_classes)
         },
     )

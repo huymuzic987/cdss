@@ -1,17 +1,46 @@
-.cds-regimen-path,.cds-final-regimens { padding: 11px 13px 13px; border-bottom: 1px solid var(--border); }
-.cds-regimen-path > strong,.cds-final-regimens > strong { display: block; margin-bottom: 8px; color: var(--text-bright); font-size: 12px; }
+.cds-regimen-panel { border-bottom: 1px solid var(--border); }
+.cds-regimen-panel > summary { cursor: pointer; padding: 9px 13px; color: var(--text-bright); font-size: 12px; font-weight: 800; list-style-position: inside; user-select: none; }
+.cds-regimen-panel > summary:hover { color: var(--accent-text); }
+.cds-regimen-panel-content { padding: 0 13px 11px; }
 .cds-regimen-path-step { display: grid; grid-template-columns: 72px minmax(0,1fr) auto; gap: 10px; padding: 7px 0; border-top: 1px solid var(--border); align-items: center; }
 .cds-regimen-path-step > span:first-child { color: var(--accent-text); font-size: 10px; font-weight: 800; }
 .cds-regimen-path-step span small { display: block; margin-top: 2px; color: var(--text-muted); }
 .cds-regimen-path-step > small { color: var(--text-secondary); text-align: right; }
-.cds-regimen-guidance { margin-bottom: 9px; color: var(--text-secondary); font-size: 12px; font-weight: 700; }
-.cds-final-regimen { padding: 11px 12px; border: 1px solid var(--accent-border); border-radius: 8px; background: color-mix(in srgb, var(--accent) 6%, transparent); }
-.cds-regimen-option-title { display: block; margin-bottom: 9px; color: var(--accent-text); font-size: 12px; }
-.cds-regimen-components { display: flex; flex-wrap: wrap; align-items: stretch; gap: 7px; }
-.cds-regimen-component-group { display: flex; align-items: center; gap: 7px; }
-.cds-regimen-component { display: flex; min-width: 78px; flex-direction: column; gap: 2px; padding: 7px 9px; border-radius: 6px; background: var(--bg-panel); }
+.cds-regimen-path-in-decision { margin-top: 10px; border: 1px solid var(--border); border-radius: 7px; }
+.cds-regimen-guidance { margin-bottom: 7px; color: var(--text-secondary); font-size: 11px; font-weight: 700; }
+.cds-final-regimen { position: relative; display: flex; align-items: center; gap: 10px; margin-top: 5px; padding: 5px 8px; border: 1px solid var(--accent-border); border-radius: 6px; background: color-mix(in srgb, var(--accent) 6%, transparent); outline: none; }
+.cds-regimen-option-title { display: grid; width: 23px; height: 23px; flex: 0 0 auto; place-items: center; border: 1px solid hsl(var(--option-hue) 85% 68%); border-radius: 50%; background: hsl(var(--option-hue) 72% 42%); color: #fff; cursor: pointer; font-size: 11px; font-weight: 900; box-shadow: 0 2px 8px hsl(var(--option-hue) 75% 30% / .28); }
+.cds-regimen-option-title:hover,.cds-regimen-option-title:focus-visible { transform: translateY(-1px) scale(1.05); box-shadow: 0 3px 11px hsl(var(--option-hue) 75% 35% / .42); outline: none; }
+:root[data-theme="light"] .cds-regimen-option-title { border-color: hsl(var(--option-hue) 72% 40%); background: hsl(var(--option-hue) 82% 76%); color: #111827; box-shadow: 0 2px 7px hsl(var(--option-hue) 55% 45% / .22); }
+.cds-regimen-components { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 5px; }
+.cds-regimen-component-group { display: flex; align-items: center; gap: 5px; }
+.cds-regimen-component { display: flex; min-width: 0; flex-direction: row; align-items: baseline; gap: 5px; padding: 3px 6px; border: 1px solid color-mix(in srgb, var(--accent-border) 65%, transparent); border-radius: 4px; background: var(--bg-panel); cursor: pointer; font: inherit; }
+.cds-regimen-component:hover,.cds-regimen-component:focus-visible { border-color: var(--accent-text); background: color-mix(in srgb, var(--accent) 12%, var(--bg-panel)); transform: translateY(-1px); }
 .cds-regimen-component strong { color: var(--text-bright); font-size: 14px; }
-.cds-regimen-component small,.cds-regimen-together { color: var(--text-secondary); font-size: 11px; }
-.cds-regimen-and { color: var(--success-text); font-size: 18px; font-weight: 850; }
-.cds-regimen-together { display: block; margin-top: 8px; font-weight: 650; }
-.cds-regimen-or { padding: 5px; color: var(--accent-text); font-size: 11px; font-weight: 850; letter-spacing: .08em; text-align: center; }
+.cds-regimen-component small { color: var(--text-secondary); font-size: 10px; }
+.cds-regimen-and { color: var(--success-text); font-size: 15px; font-weight: 850; }
+.cds-regimen-row-tooltip { position: fixed; z-index: 10000; display: grid; gap: 8px; width: min(520px, calc(100vw - 32px)); max-height: min(360px, calc(100vh - 32px)); overflow: auto; padding: 10px 11px; border: 1px solid var(--accent-border); border-radius: 7px; background: var(--bg-panel); box-shadow: 0 12px 30px rgba(0,0,0,.42); color: var(--text-secondary); font-size: 10px; line-height: 1.4; pointer-events: none; }
+.cds-regimen-tooltip-above { transform: translateY(-100%); }
+.cds-regimen-row-tooltip > strong,.cds-regimen-reference-details > strong { color: var(--text-bright); }
+.cds-regimen-group-details,.cds-regimen-reference-details { display: grid; gap: 3px; }
+.cds-regimen-group-details b { color: var(--accent-text); }
+.cds-regimen-reference-details { padding-top: 7px; border-top: 1px solid var(--border); }
+.cds-regimen-catalog-details { position: fixed; z-index: 10001; display: grid; gap: 7px; width: min(620px,calc(100vw - 32px)); max-height: min(520px,calc(100vh - 32px)); overflow: auto; padding: 12px; border: 1px solid var(--accent-border); border-radius: 8px; background: var(--bg-panel); box-shadow: 0 16px 42px rgba(0,0,0,.5); color: var(--text-secondary); font-size: 11px; }
+.cds-regimen-catalog-above { transform: translateY(-100%); }
+.cds-regimen-catalog-heading { display: flex; align-items: flex-start; justify-content: space-between; color: var(--text-bright); }
+.cds-regimen-catalog-heading > span { display: grid; gap: 2px; }
+.cds-regimen-catalog-heading small { color: var(--text-secondary); font-weight: 500; }
+.cds-regimen-catalog-heading button { border: 0; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 18px; }
+.cds-regimen-medicine-detail { display: grid; gap: 6px; padding-top: 8px; border-top: 1px solid var(--border); }
+.cds-regimen-medicine-detail strong { color: var(--text-bright); }
+.cds-regimen-medicine-detail .cds-active-dose { color: var(--text-bright); font-weight: 850; }
+.cds-regimen-medicine-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.cds-regimen-medicine-heading > span { color: var(--text-muted); font-size: 10px; text-align: right; }
+.cds-regimen-dose-comparison { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; padding: 6px 8px; border-radius: 5px; background: var(--bg-inset); }
+.cds-regimen-specific-meta { color: var(--text-secondary); }
+.cds-regimen-catalog-heading + span { margin-top: -5px; }
+@media (max-width: 680px) {
+  .cds-regimen-medicine-heading { display: grid; gap: 2px; }
+  .cds-regimen-medicine-heading > span { text-align: left; }
+  .cds-regimen-dose-comparison { grid-template-columns: 1fr; }
+}

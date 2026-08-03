@@ -1,6 +1,6 @@
 import type { JsonValue } from '../../api/types'
 import type { ClinicalDecisionSupportLocale } from '../clinicalDecisionSupportMessages'
-import type { FinalRegimenComponent, FinalRegimenOption, RegimenStep } from './types'
+import type { FinalRegimenComponent, FinalRegimenOption, RegimenMedicine, RegimenStep } from './types'
 import { localized, objectValue, stringValue } from './values'
 
 const DOSE_LABELS: Record<string, { en: string, vi: string }> = {
@@ -129,6 +129,8 @@ export function parseRegimenPlan(
     }
     return [{
       id: stringValue(step.id, `regimen-step-${index}`),
+      treeKey: stringValue(step.tree_key),
+      nodeKey: stringValue(step.node_key),
       operation,
       instruction: localized(step, 'text', locale) || stepComponentLabel,
       componentLabel: stepComponentLabel,
@@ -175,4 +177,38 @@ export function parseFinalRegimenOptions(
     components: deduplicate([...base, ...fallbackAdditions])
       .filter((item) => !stopped.has(item.label.toLocaleUpperCase())),
   })).filter((option) => option.components.length > 0)
+}
+
+export function parseRegimenCatalog(
+  value: JsonValue | undefined,
+): Record<string, RegimenMedicine[]> {
+  const plan = objectValue(value)
+  const rawCatalog = plan?.catalog_by_class
+  const classEntries = rawCatalog && typeof rawCatalog === 'object' && !Array.isArray(rawCatalog)
+    ? Object.entries(rawCatalog)
+    : []
+  const parsed = Object.fromEntries(classEntries.map(([group, rawItems]) => {
+    if (!Array.isArray(rawItems)) return [group, []]
+    return [group, parseCatalogMedicines(rawItems, group)]
+  }))
+  if (Array.isArray(plan?.catalog)) parsed.__all__ = parseCatalogMedicines(plan.catalog, 'Others')
+  return parsed
+}
+
+function parseCatalogMedicines(rawItems: JsonValue[], fallbackGroup: string): RegimenMedicine[] {
+  return rawItems.flatMap((raw) => {
+    const item = objectValue(raw)
+    if (!item) return []
+    return [{
+      id: stringValue(item.drug_id),
+      name: stringValue(item.name),
+      group: stringValue(item.drug_class, fallbackGroup),
+      subgroup: stringValue(item.subgroup),
+      route: stringValue(item.route),
+      doseLow: stringValue(item.dose_low),
+      doseUsual: stringValue(item.dose_usual),
+      doseMax: stringValue(item.dose_max),
+      snomedCode: stringValue(item.snomed_code),
+    }]
+  })
 }

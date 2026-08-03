@@ -35,6 +35,8 @@ describe('parseRegimenPlan', () => {
     expect(steps).toEqual([
       {
         id: 'start',
+        treeKey: '',
+        nodeKey: '',
         operation: 'START',
         instruction: 'Start A and C',
         componentLabel: 'A + C',
@@ -42,6 +44,8 @@ describe('parseRegimenPlan', () => {
       },
       {
         id: 'add',
+        treeKey: '',
+        nodeKey: '',
         operation: 'ADD',
         instruction: 'Add B',
         componentLabel: 'B',

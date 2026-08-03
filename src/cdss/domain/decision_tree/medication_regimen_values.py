@@ -134,6 +134,7 @@ def medicine_json(medicine: Medicine) -> dict[str, Any]:
         "source": medicine.source,
         "link": medicine.link,
         "available": medicine.available,
+        "snomed_code": medicine.snomed_code,
     }
 
 

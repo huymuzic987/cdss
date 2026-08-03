@@ -2,7 +2,7 @@
 import type { ClinicalDecisionSupportLocale } from './clinicalDecisionSupportMessages'
 import { buildClinicalSummaryEvidence, mergeEvidence, parseEvidence } from './clinicalPresentation/evidence'
 import { parseOptions, parseStructuredOrders } from './clinicalPresentation/orders'
-import { parseFinalRegimenOptions, parseRegimenPlan } from './clinicalPresentation/regimen'
+import { parseFinalRegimenOptions, parseRegimenCatalog, parseRegimenPlan } from './clinicalPresentation/regimen'
 import type { ClinicalPresentation } from './clinicalPresentation/types'
 import { localized, objectValue, stringValue } from './clinicalPresentation/values'
 
@@ -44,12 +44,14 @@ export function buildClinicalPresentation(
       evidence: [], recommendation: '', orders: [], additionalActions: [],
       regimenSteps: [],
       regimenOptions: [],
+      regimenCatalog: {},
       contractError: 'missing_or_unsupported_presentation',
     }
   }
   const structuredOrders = parseStructuredOrders(presentation.recommended_orders, locale)
   const regimenSteps = parseRegimenPlan(presentation.regimen_plan, locale)
   const regimenOptions = parseFinalRegimenOptions(presentation.regimen_plan, locale)
+  const regimenCatalog = parseRegimenCatalog(presentation.regimen_plan)
   const displayedOrders = regimenSteps.length > 0 || regimenOptions.length > 0 ? [] : structuredOrders
   const evidence = mergeEvidence(
     buildClinicalSummaryEvidence(
@@ -71,6 +73,7 @@ export function buildClinicalPresentation(
     orders: Array.from(new Map(displayedOrders.map((order) => [order.id, order])).values()),
     regimenSteps,
     regimenOptions,
+    regimenCatalog,
     additionalActions: parseOptions(presentation.additional_actions, locale),
   }
 }

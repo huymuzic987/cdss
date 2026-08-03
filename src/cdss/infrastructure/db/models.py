@@ -266,6 +266,7 @@ class Medicine(Base):
     # the catalog is backfilled. Plain string column, not a FK: there is no ATC
     # reference table in this schema, just the code itself for future lookups.
     atc_code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    snomed_code: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     __table_args__ = (Index("ix_medicines_drug_class", "drug_class"),)
 

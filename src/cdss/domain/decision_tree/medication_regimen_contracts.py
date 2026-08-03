@@ -81,3 +81,4 @@ class MedicationRegimenPlan(RuntimeModel):
         default_factory=EffectiveMedicationRegimen
     )
     catalog_by_class: dict[str, list[dict[str, Any]]] = Field(default_factory=dict)
+    catalog: list[dict[str, Any]] = Field(default_factory=list)

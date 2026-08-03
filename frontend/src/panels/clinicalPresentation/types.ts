@@ -47,12 +47,15 @@ export interface ClinicalPresentation {
   orders: RecommendedOrder[]
   regimenSteps: RegimenStep[]
   regimenOptions: FinalRegimenOption[]
+  regimenCatalog: Record<string, RegimenMedicine[]>
   additionalActions: ActionOption[]
   contractError?: string
 }
 
 export interface RegimenStep {
   id: string
+  treeKey: string
+  nodeKey: string
   operation: string
   instruction: string
   componentLabel: string
@@ -69,4 +72,16 @@ export interface FinalRegimenComponent {
 export interface FinalRegimenOption {
   id: string
   components: FinalRegimenComponent[]
+}
+
+export interface RegimenMedicine {
+  id: string
+  name: string
+  group: string
+  subgroup: string
+  route: string
+  doseLow: string
+  doseUsual: string
+  doseMax: string
+  snomedCode: string
 }
