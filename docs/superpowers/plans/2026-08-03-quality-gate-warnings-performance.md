@@ -24,11 +24,12 @@
 
 - Create `frontend/src/panels/clinicalResult/orderClassification.ts` for the pure medication-order predicate.
 - Create `frontend/src/panels/clinicalResult/orderClassification.test.ts` for predicate regression coverage.
-- Create `frontend/src/utils/cleanText.test.ts` for cleaning behavior and source-level lint intent.
+- Create `frontend/tests/architecture/cleanText.test.ts` for cleaning behavior and source-level lint intent.
 - Modify `frontend/src/panels/clinicalResult/RecommendedOrderCard.tsx` and `frontend/src/panels/TraversalResultModal.tsx` to consume the predicate module.
 - Modify `frontend/src/utils/cleanText.ts` to use the Unicode-escaped range.
 - Modify `pyproject.toml` and `uv.lock` to use `httpx2` for the Starlette test client.
 - Modify `frontend/vite.config.ts` with bounded Rolldown dependency groups.
+- Modify `frontend/src/layout/elkLayout.ts` to load ELK's API and worker asset separately.
 - Modify `frontend/tests/architecture/performanceBoundaries.test.ts` with code-splitting and memoization invariants.
 - Modify `frontend/src/showcase/ShowcaseChrome.tsx` and `frontend/src/showcase/ShowcasePage.tsx` to reduce unnecessary card rerenders.
 
@@ -37,7 +38,7 @@
 **Files:**
 - Create: `frontend/src/panels/clinicalResult/orderClassification.ts`
 - Create: `frontend/src/panels/clinicalResult/orderClassification.test.ts`
-- Create: `frontend/src/utils/cleanText.test.ts`
+- Create: `frontend/tests/architecture/cleanText.test.ts`
 - Modify: `frontend/src/panels/clinicalResult/RecommendedOrderCard.tsx`
 - Modify: `frontend/src/panels/TraversalResultModal.tsx`
 - Modify: `frontend/src/utils/cleanText.ts`
@@ -79,7 +80,7 @@ Expected: FAIL because `orderClassification.ts` does not exist yet.
 
 - [ ] **Step 3: Write the cleaning regression tests and lint-source assertion.**
 
-Create `frontend/src/utils/cleanText.test.ts`:
+Create `frontend/tests/architecture/cleanText.test.ts`:
 
 ```ts
 import { readFileSync } from 'node:fs'
@@ -211,10 +212,12 @@ git commit -m "fix(test): use httpx2 with Starlette TestClient"
 
 **Files:**
 - Modify: `frontend/vite.config.ts`
+- Modify: `frontend/src/layout/elkLayout.ts`
 - Modify: `frontend/tests/architecture/performanceBoundaries.test.ts`
 
 **Interfaces:**
 - Produces named Rolldown output groups for `tldraw` and `elkjs`, each with `maxSize: 450 * 1024`.
+- Loads `elkjs/lib/elk-api.js` with `elkjs/lib/elk-worker.min.js?url` instead of bundling `elk.bundled.js`.
 - Preserves `TreeWorkspace`'s `lazy(() => import('../canvas/TreeCanvas'))` boundary.
 
 - [ ] **Step 1: Add failing source-boundary assertions.**

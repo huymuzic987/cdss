@@ -1,5 +1,5 @@
 import { ClipboardList, HeartPulse, Search, ShieldCheck } from 'lucide-react'
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import { SHOWCASE_PATIENTS, formatBloodPressure, type ShowcasePatient } from './showcasePatients'
 
 export function ClinicMark() {
@@ -10,6 +10,28 @@ export function ClinicMark() {
     </div>
   )
 }
+
+const PatientCard = memo(function PatientCard({ patient, selected, onSelect }: {
+  patient: ShowcasePatient
+  selected: boolean
+  onSelect: (patient: ShowcasePatient) => void
+}) {
+  return (
+    <button type="button" className={`sc-patient-card${selected ? ' selected' : ''}`}
+      onClick={() => onSelect(patient)} data-patient-id={patient.id}
+      aria-pressed={selected}>
+      <span className={`sc-avatar priority-${patient.priority}`}>{patient.initials}</span>
+      <span className="sc-patient-card-body">
+        <strong>{patient.name}</strong>
+        <small>{patient.form.age ? `${patient.form.age} years · ` : ''}{patient.visitType}</small>
+        <span className="sc-card-measure">
+          <span>{formatBloodPressure(patient.form.current_clinic_sbp, patient.form.current_clinic_dbp)} <small>mmHg</small></span>
+          <em className={`priority-${patient.priority}`}>{patient.status}</em>
+        </span>
+      </span>
+    </button>
+  )
+})
 
 export function PatientQueue({ selectedId, query, onQueryChange, onSelect }: {
   selectedId: string | null
@@ -38,20 +60,7 @@ export function PatientQueue({ selectedId, query, onQueryChange, onSelect }: {
       </label>
       <div className="sc-queue-list">
         {patients.map((patient) => (
-          <button type="button" key={patient.id}
-            className={`sc-patient-card${selectedId === patient.id ? ' selected' : ''}`}
-            onClick={() => onSelect(patient)} data-patient-id={patient.id}
-            aria-pressed={selectedId === patient.id}>
-            <span className={`sc-avatar priority-${patient.priority}`}>{patient.initials}</span>
-            <span className="sc-patient-card-body">
-              <strong>{patient.name}</strong>
-              <small>{patient.form.age ? `${patient.form.age} years · ` : ''}{patient.visitType}</small>
-              <span className="sc-card-measure">
-                <span>{formatBloodPressure(patient.form.current_clinic_sbp, patient.form.current_clinic_dbp)} <small>mmHg</small></span>
-                <em className={`priority-${patient.priority}`}>{patient.status}</em>
-              </span>
-            </span>
-          </button>
+          <PatientCard key={patient.id} patient={patient} selected={selectedId === patient.id} onSelect={onSelect} />
         ))}
         {patients.length === 0 && <p className="sc-no-results">No presets match this search.</p>}
       </div>
@@ -72,4 +81,3 @@ export function EmptyChart() {
     </main>
   )
 }
-

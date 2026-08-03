@@ -41,4 +41,24 @@ describe('frontend performance boundaries', () => {
     expect(nginx).toContain('Cache-Control "public, max-age=31536000, immutable"')
     expect(nginx).toContain('gzip_types')
   })
+
+  it('bounds the heavy canvas dependency chunks', () => {
+    const vite = read('vite.config.ts')
+    expect(vite).toContain("name: 'tldraw'")
+    expect(vite).toContain("name: 'elkjs'")
+    expect(vite).toContain('CANVAS_CHUNK_MAX_SIZE = 450 * 1024')
+    expect(vite).toContain('maxSize: CANVAS_CHUNK_MAX_SIZE')
+  })
+
+  it('loads the ELK API with a worker instead of bundling the engine', () => {
+    const layout = read('src/layout/elkLayout.ts')
+    expect(layout).toContain("elk-api.js")
+    expect(layout).toContain("elk-worker.min.js?url")
+    expect(layout).not.toContain('elk.bundled.js')
+  })
+
+  it('memoizes showcase patient cards and selection callbacks', () => {
+    expect(read('src/showcase/ShowcaseChrome.tsx')).toMatch(/memo\(function PatientCard/)
+    expect(read('src/showcase/ShowcasePage.tsx')).toContain('const selectPatient = useCallback(')
+  })
 })

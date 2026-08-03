@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { cleanText } from './cleanText'
+import { cleanText } from '../../src/utils/cleanText'
 
 describe('cleanText', () => {
   it('preserves ASCII text and trims it', () => {
@@ -16,7 +17,7 @@ describe('cleanText', () => {
   })
 
   it('uses a Unicode property escape for the ASCII range', () => {
-    const source = readFileSync('src/utils/cleanText.ts', 'utf8')
+    const source = readFileSync(join(process.cwd(), 'src/utils/cleanText.ts'), 'utf8')
     expect(source).toContain('[^\\p{ASCII}]')
     expect(source).not.toContain('[^\\x00-\\x7F]')
   })
