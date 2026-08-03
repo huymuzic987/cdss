@@ -177,13 +177,13 @@ T5_INITIAL_TARGET_NOT_REACHED = [
     _candidate(
         T5,
         "T5_C_INITIAL_REGIMEN_BP_TARGET_NOT_REACHED",
-        "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION",
+        "T5_INFERENCE_COMBINE_FIXED_DOSE_A_C_D_ONE_PILL",
         True,
     ),
-    _entered(T5, "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION"),
+    _entered(T5, "T5_INFERENCE_COMBINE_FIXED_DOSE_A_C_D_ONE_PILL"),
     _candidate(
         T5,
-        "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION",
+        "T5_INFERENCE_COMBINE_FIXED_DOSE_A_C_D_ONE_PILL",
         "T5_LINK_THREE_DRUG_TO_TREE_6",
         True,
     ),
@@ -223,15 +223,16 @@ T5_ESCALATED_TARGET_NOT_REACHED = [
     _candidate(
         T5,
         "T5_C_ESCALATED_REGIMEN_BP_TARGET_NOT_REACHED",
-        "T5_INFERENCE_ADD_MRA_DIURETIC_ALPHA_BLOCKER_OR_BETA_BLOCKER_FOR_RESISTANT_HYPERTENSION",
+        "T5_INFERENCE_SELECT_MRA_OR_ANOTHER_DIURETIC_OR_ALPHA_BLOCKER_OR_BETA_BLOCKER_FOR_RESISTANT_HYPERTENSION",
         True,
     ),
     _entered(
-        T5, "T5_INFERENCE_ADD_MRA_DIURETIC_ALPHA_BLOCKER_OR_BETA_BLOCKER_FOR_RESISTANT_HYPERTENSION"
+        T5,
+        "T5_INFERENCE_SELECT_MRA_OR_ANOTHER_DIURETIC_OR_ALPHA_BLOCKER_OR_BETA_BLOCKER_FOR_RESISTANT_HYPERTENSION",
     ),
     _candidate(
         T5,
-        "T5_INFERENCE_ADD_MRA_DIURETIC_ALPHA_BLOCKER_OR_BETA_BLOCKER_FOR_RESISTANT_HYPERTENSION",
+        "T5_INFERENCE_SELECT_MRA_OR_ANOTHER_DIURETIC_OR_ALPHA_BLOCKER_OR_BETA_BLOCKER_FOR_RESISTANT_HYPERTENSION",
         "T5_LINK_RESISTANT_HYPERTENSION",
         True,
     ),
@@ -689,20 +690,9 @@ def test_tree_5_initial_regimen_not_reached_resolves_link_then_needs_more_input(
             ],
         },
     }
-    # T6's own compare/adjust/duplicate-check steps are INFERENCE nodes now (they
-    # only ever fed context forward), so drug-combination contributes no action of
-    # its own here -- T5's fixed-dose recommendation is the only one collected.
-    assert [
-        (action.tree_key, action.node_key, action.text_vi, action.payload["action_type"])
-        for action in state.actions
-    ] == [
-        (
-            T5,
-            "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION",
-            "VIÊN PHỐI HỢP 3 THUỐC (1 viên): A+C+D",
-            "FIXED_DOSE_THREE_DRUG_COMBINATION",
-        ),
-    ]
+    # The canonical seed normalizes prescribing steps into INFERENCE nodes.
+    # They update regimen context but are not collected as terminal actions.
+    assert state.actions == []
     _assert_trace(
         state,
         [
@@ -714,7 +704,7 @@ def test_tree_5_initial_regimen_not_reached_resolves_link_then_needs_more_input(
     _assert_references(
         state,
         [
-            (T5, "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION", 1),
+            (T5, "T5_INFERENCE_COMBINE_FIXED_DOSE_A_C_D_ONE_PILL", 1),
             ("drug-combination", "T6_START_PATIENT_INFO_AND_PRESCRIPTIONS", 1),
             ("drug-combination", "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS", 1),
             ("drug-combination", "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS", 2),
@@ -789,7 +779,7 @@ def test_tree_5_escalated_regimen_resolves_link_and_reaches_resistant_hypertensi
         [
             (
                 T5,
-                "T5_INFERENCE_ADD_MRA_DIURETIC_ALPHA_BLOCKER_OR_BETA_BLOCKER_FOR_RESISTANT_HYPERTENSION",
+                "T5_INFERENCE_SELECT_MRA_OR_ANOTHER_DIURETIC_OR_ALPHA_BLOCKER_OR_BETA_BLOCKER_FOR_RESISTANT_HYPERTENSION",
                 1,
             ),
             ("resistant-hypertension", "T13_START", 1),

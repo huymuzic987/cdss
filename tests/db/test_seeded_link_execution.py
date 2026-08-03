@@ -205,7 +205,10 @@ def test_drug_combination_link_resolves_and_retains_prior_execution_state(
 
     partial = exc_info.value.partial_run_state
     assert partial is not None
-    assert partial.actions
+    if predecessor.node_type is NodeType.INFERENCE:
+        assert partial.actions == []
+    else:
+        assert partial.actions
     assert partial.trace
     assert any(
         entry.tree_key == graph.tree.tree_key and entry.node_key == link.node_key

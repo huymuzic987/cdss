@@ -61,4 +61,8 @@ describe('frontend performance boundaries', () => {
     expect(read('src/showcase/ShowcaseChrome.tsx')).toMatch(/memo\(function PatientCard/)
     expect(read('src/showcase/ShowcasePage.tsx')).toContain('const selectPatient = useCallback(')
   })
+
+  it('allows component tests enough time on a resource-constrained CI agent', () => {
+    expect(read('vitest.config.ts')).toContain('testTimeout: 15_000')
+  })
 })
