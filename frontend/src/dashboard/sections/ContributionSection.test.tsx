@@ -46,7 +46,7 @@ const MOCK_RESPONSE: ContributionResponse = {
   ],
   overlapping_matrix: [
     {
-      feature_area: 'Decision Trees 1–14 Authoring & Maintenance',
+      feature_area: 'Decision Trees 1-14 Authoring & Maintenance',
       collaborators: ['Khoa Dang', 'Quang Minh', 'Huy'],
       shared_deliverables: 'Khoa authored Trees 7,9,10,13; Quang Minh authored Trees 6,8,11,12,14.',
     },

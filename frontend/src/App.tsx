@@ -89,7 +89,7 @@ function WorkbenchApp() {
 
       {graphs.error && viewMode === 'tree' && <div className="error-banner">{graphs.error}</div>}
       {viewMode === 'contribution' ? (
-        <main className="app-body overflow-y-auto">
+        <main className="app-body overflow-y-auto block w-full">
           <Suspense fallback={<LoadingState label="Loading contributions…" />}>
             <ContributionPage />
           </Suspense>
