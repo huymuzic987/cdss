@@ -458,7 +458,22 @@ pipeline {
                 }
             }
         }
+
+        stage('Update Contribution Stats') {
+            options { timeout(time: 5, unit: 'MINUTES') }
+            steps {
+                script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
+                sh '''
+                    if command -v python3 >/dev/null 2>&1; then
+                        python3 scripts/update_contributions_db.py || true
+                    elif command -v python >/dev/null 2>&1; then
+                        python scripts/update_contributions_db.py || true
+                    fi
+                '''
+            }
+        }
     }
+
 
     post {
 
