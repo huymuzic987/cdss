@@ -624,14 +624,14 @@
           {
             "edge_id": "a0a5ede0-da36-9730-daae-b42f08b946d7",
             "traversal_order": 1,
-            "to_node_key": "T4_INF_DIFFICULT_TO_CONTROL_HYPERTENSION",
+            "to_node_key": "T4_INFERENCE_CLASSIFY_DIFFICULT_TO_CONTROL_HYPERTENSION",
             "candidate_condition": null
           }
         ]
       },
-      "T4_INF_DIFFICULT_TO_CONTROL_HYPERTENSION": {
+      "T4_INFERENCE_CLASSIFY_DIFFICULT_TO_CONTROL_HYPERTENSION": {
         "id": "de0def41-cd3e-8156-7917-89ee6d7aac51",
-        "node_key": "T4_INF_DIFFICULT_TO_CONTROL_HYPERTENSION",
+        "node_key": "T4_INFERENCE_CLASSIFY_DIFFICULT_TO_CONTROL_HYPERTENSION",
         "node_type": "INFERENCE",
         "text_en": "Difficult-to-control hypertension",
         "text_vi": "THA KHÓ KIỂM SOÁT (KKS)",

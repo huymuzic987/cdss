@@ -76,9 +76,7 @@ pipeline {
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 sh '''
-                    echo "=== Jenkins Build Info ==="
-                    pwd
-                    ls -la
+                    echo "Verifying Linux agent, Docker access, and required files..."
 
                     if [ "$(uname -s)" != "Linux" ]; then
                         echo "ERROR: CDSS requires a Linux Jenkins agent." >&2
@@ -120,8 +118,7 @@ pipeline {
                         fi
                     done
 
-                    echo "Git commit:"
-                    git log -1 --oneline
+                    echo "Verified required commands and files. Git commit: $(git log -1 --oneline)"
                 '''
             }
         }

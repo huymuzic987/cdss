@@ -121,7 +121,7 @@ def test_structured_select_keeps_each_medicine_as_an_or_alternative() -> None:
                 "alternatives": [
                     {"components": [{"selector_kind": "medicine", "name": name}]}
                     for name in ("Methyldopa", "Labetalol (oral)", "Nifedipine", "Nicardipine")
-                ]
+                ],
             }
         },
     )
@@ -393,11 +393,7 @@ def test_independent_select_survives_later_base_selection_and_repeated_start() -
     glucose_lowering = _node(
         "T8_INFERENCE_SELECT_SGLT2I_OR_GLP1RA",
         "Select SGLT2i or GLP1RA",
-        context_patch={
-            "treatment_preferences": {
-                "combination_options": [["SGLT2i"], ["GLP1RA"]]
-            }
-        },
+        context_patch={"treatment_preferences": {"combination_options": [["SGLT2i"], ["GLP1RA"]]}},
     )
     base_selection = _node(
         "T4_INFERENCE_SELECT_FIXED_DOSE_A_C_OR_A_D_ONE_PILL",
@@ -405,7 +401,7 @@ def test_independent_select_survives_later_base_selection_and_repeated_start() -
         context_patch={
             "treatment_preferences": {
                 "dose_strategy": "USUAL_DOSE",
-                "combination_options": [["A", "C"], ["A", "D"]]
+                "combination_options": [["A", "C"], ["A", "D"]],
             }
         },
     )
@@ -415,7 +411,7 @@ def test_independent_select_survives_later_base_selection_and_repeated_start() -
         context_patch={
             "treatment_preferences": {
                 "dose_strategy": "LOW_DOSE",
-                "combination_options": [["A", "C"], ["A", "D"]]
+                "combination_options": [["A", "C"], ["A", "D"]],
             }
         },
     )

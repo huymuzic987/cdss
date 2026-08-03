@@ -28,7 +28,7 @@
       },
       {
         "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
-        "code": "T12_INF_HELLP_SYNDROME_CLASSIFICATION"
+        "code": "T12_INFERENCE_CLASSIFY_HELLP_SYNDROME"
       },
       {
         "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",

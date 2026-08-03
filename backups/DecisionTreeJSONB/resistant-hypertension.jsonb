@@ -282,14 +282,14 @@
           {
             "edge_id": "1d339393-b1aa-407c-84f6-80d5dcae8b97",
             "traversal_order": 1,
-            "to_node_key": "T13_A_ADD_MRA",
+            "to_node_key": "T13_ACTION_COMBINE_A_C_D_AND_MRA",
             "candidate_condition": null
           }
         ]
       },
-      "T13_A_ADD_MRA": {
+      "T13_ACTION_COMBINE_A_C_D_AND_MRA": {
         "id": "ac540e55-906b-437f-a6af-2eccb619bbb5",
-        "node_key": "T13_A_ADD_MRA",
+        "node_key": "T13_ACTION_COMBINE_A_C_D_AND_MRA",
         "node_type": "ACTION",
         "text_en": "Combine A + C + D and MRA",
         "text_vi": "Phối hợp 3 nhóm thuốc A + C + D và MRA",
@@ -516,14 +516,14 @@
           {
             "edge_id": "17e6f351-1c1a-4d71-8e7b-021e432a9656",
             "traversal_order": 1,
-            "to_node_key": "T13_A_ADD_SPIRONOLACTONE",
+            "to_node_key": "T13_ACTION_ADD_LOW_DOSE_SPIRONOLACTONE",
             "candidate_condition": null
           }
         ]
       },
-      "T13_A_ADD_SPIRONOLACTONE": {
+      "T13_ACTION_ADD_LOW_DOSE_SPIRONOLACTONE": {
         "id": "8e783a9b-44d4-4246-9ab1-4bf9a9190d3b",
-        "node_key": "T13_A_ADD_SPIRONOLACTONE",
+        "node_key": "T13_ACTION_ADD_LOW_DOSE_SPIRONOLACTONE",
         "node_type": "ACTION",
         "text_en": "Add low-dose Spironolactone to current regimen",
         "text_vi": "Thêm Spironolactone liều thấp kết hợp với liều thuốc điều trị hiện có",
@@ -642,14 +642,14 @@
           {
             "edge_id": "c2923555-8fb0-47cb-9da3-25df8dfd371b",
             "traversal_order": 1,
-            "to_node_key": "T13_A_ALTERNATIVES",
+            "to_node_key": "T13_ACTION_ADD_POTASSIUM_SPARING_DIURETIC_HIGHER_DIURETIC_DOSE_BISOPROLOL_OR_DOXAZOSIN",
             "candidate_condition": null
           }
         ]
       },
-      "T13_A_ALTERNATIVES": {
+      "T13_ACTION_ADD_POTASSIUM_SPARING_DIURETIC_HIGHER_DIURETIC_DOSE_BISOPROLOL_OR_DOXAZOSIN": {
         "id": "29baba0e-818b-41db-a911-96f799a5b584",
-        "node_key": "T13_A_ALTERNATIVES",
+        "node_key": "T13_ACTION_ADD_POTASSIUM_SPARING_DIURETIC_HIGHER_DIURETIC_DOSE_BISOPROLOL_OR_DOXAZOSIN",
         "node_type": "ACTION",
         "text_en": "Alternatives: Add K-sparing D, Increase D dose, or Add Bisoprolol/Doxazosin",
         "text_vi": "Thêm nhóm D giữ kali, Tăng liều nhóm D, hoặc Thêm Bisoprolol/Doxazosin",

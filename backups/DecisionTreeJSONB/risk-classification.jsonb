@@ -1361,14 +1361,14 @@
           {
             "edge_id": "9513c8ad-8705-3e2c-1da7-ed614f3bb286",
             "traversal_order": 1,
-            "to_node_key": "T2_INF_HIGH_RISK_COMORBIDITY_PRESENT",
+            "to_node_key": "T2_INFERENCE_CLASSIFY_HIGH_RISK_COMORBIDITY_PRESENT",
             "candidate_condition": null
           }
         ]
       },
-      "T2_INF_HIGH_RISK_COMORBIDITY_PRESENT": {
+      "T2_INFERENCE_CLASSIFY_HIGH_RISK_COMORBIDITY_PRESENT": {
         "id": "9dc9020e-d70e-1ebe-f2ea-b390b5346c33",
-        "node_key": "T2_INF_HIGH_RISK_COMORBIDITY_PRESENT",
+        "node_key": "T2_INFERENCE_CLASSIFY_HIGH_RISK_COMORBIDITY_PRESENT",
         "node_type": "INFERENCE",
         "text_en": "High risk",
         "text_vi": "NGUY CƠ CAO",
@@ -1487,14 +1487,14 @@
           {
             "edge_id": "0ec9f145-3bf2-02b9-3525-ffc0938f6c0c",
             "traversal_order": 1,
-            "to_node_key": "T2_INF_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3",
+            "to_node_key": "T2_INFERENCE_CLASSIFY_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3",
             "candidate_condition": null
           }
         ]
       },
-      "T2_INF_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3": {
+      "T2_INFERENCE_CLASSIFY_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3": {
         "id": "23276de5-636d-3312-1636-1dc4f4b6b969",
-        "node_key": "T2_INF_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3",
+        "node_key": "T2_INFERENCE_CLASSIFY_HIGH_RISK_FACTOR_COUNT_AT_LEAST_3",
         "node_type": "INFERENCE",
         "text_en": "High risk",
         "text_vi": "NGUY CƠ CAO",
@@ -2297,14 +2297,14 @@
           {
             "edge_id": "8c0d33d1-69f8-3ffd-4a91-2b2dfb1ebeab",
             "traversal_order": 1,
-            "to_node_key": "T2_INF_HIGH_NORMAL_LOW_RISK",
+            "to_node_key": "T2_INFERENCE_CLASSIFY_HIGH_NORMAL_LOW_RISK",
             "candidate_condition": null
           }
         ]
       },
-      "T2_INF_HIGH_NORMAL_LOW_RISK": {
+      "T2_INFERENCE_CLASSIFY_HIGH_NORMAL_LOW_RISK": {
         "id": "b492a11d-3566-318f-3269-e04bc11d09fa",
-        "node_key": "T2_INF_HIGH_NORMAL_LOW_RISK",
+        "node_key": "T2_INFERENCE_CLASSIFY_HIGH_NORMAL_LOW_RISK",
         "node_type": "INFERENCE",
         "text_en": "Low risk",
         "text_vi": "NGUY CƠ THẤP",
@@ -2423,14 +2423,14 @@
           {
             "edge_id": "4b7b2d3a-1dce-eb66-3187-ee4d5129e705",
             "traversal_order": 1,
-            "to_node_key": "T2_INF_HIGH_NORMAL_MEDIUM_RISK",
+            "to_node_key": "T2_INFERENCE_CLASSIFY_HIGH_NORMAL_MEDIUM_RISK",
             "candidate_condition": null
           }
         ]
       },
-      "T2_INF_HIGH_NORMAL_MEDIUM_RISK": {
+      "T2_INFERENCE_CLASSIFY_HIGH_NORMAL_MEDIUM_RISK": {
         "id": "03f895d0-ee99-19d6-58c3-35b49042dda3",
-        "node_key": "T2_INF_HIGH_NORMAL_MEDIUM_RISK",
+        "node_key": "T2_INFERENCE_CLASSIFY_HIGH_NORMAL_MEDIUM_RISK",
         "node_type": "INFERENCE",
         "text_en": "Medium risk",
         "text_vi": "NGUY CƠ TRUNG BÌNH",
@@ -2549,14 +2549,14 @@
           {
             "edge_id": "44a2cb10-680e-db04-c115-9a0ec0bd8f96",
             "traversal_order": 1,
-            "to_node_key": "T2_INF_GRADE_1_OR_MASKED_LOW_RISK",
+            "to_node_key": "T2_INFERENCE_CLASSIFY_GRADE_1_OR_MASKED_LOW_RISK",
             "candidate_condition": null
           }
         ]
       },
-      "T2_INF_GRADE_1_OR_MASKED_LOW_RISK": {
+      "T2_INFERENCE_CLASSIFY_GRADE_1_OR_MASKED_LOW_RISK": {
         "id": "27c4d74f-163b-4131-11d4-9597e6404738",
-        "node_key": "T2_INF_GRADE_1_OR_MASKED_LOW_RISK",
+        "node_key": "T2_INFERENCE_CLASSIFY_GRADE_1_OR_MASKED_LOW_RISK",
         "node_type": "INFERENCE",
         "text_en": "Low risk",
         "text_vi": "NGUY CƠ THẤP",
@@ -2678,14 +2678,14 @@
           {
             "edge_id": "9b96b74c-f961-de5c-5005-bc92f335ed33",
             "traversal_order": 1,
-            "to_node_key": "T2_INF_GRADE_1_OR_MASKED_MEDIUM_RISK",
+            "to_node_key": "T2_INFERENCE_CLASSIFY_GRADE_1_OR_MASKED_MEDIUM_RISK",
             "candidate_condition": null
           }
         ]
       },
-      "T2_INF_GRADE_1_OR_MASKED_MEDIUM_RISK": {
+      "T2_INFERENCE_CLASSIFY_GRADE_1_OR_MASKED_MEDIUM_RISK": {
         "id": "d186b9cc-2b53-3662-e66d-655fff3ba7c6",
-        "node_key": "T2_INF_GRADE_1_OR_MASKED_MEDIUM_RISK",
+        "node_key": "T2_INFERENCE_CLASSIFY_GRADE_1_OR_MASKED_MEDIUM_RISK",
         "node_type": "INFERENCE",
         "text_en": "Medium risk",
         "text_vi": "NGUY CƠ TRUNG BÌNH",
@@ -2804,14 +2804,14 @@
           {
             "edge_id": "0281eecb-d94e-0002-88b2-baf80e4ba6ec",
             "traversal_order": 1,
-            "to_node_key": "T2_INF_GRADE_2_HIGH_RISK",
+            "to_node_key": "T2_INFERENCE_CLASSIFY_GRADE_2_HIGH_RISK",
             "candidate_condition": null
           }
         ]
       },
-      "T2_INF_GRADE_2_HIGH_RISK": {
+      "T2_INFERENCE_CLASSIFY_GRADE_2_HIGH_RISK": {
         "id": "fc7fc2c0-c399-0786-26b1-836ef99c51c4",
-        "node_key": "T2_INF_GRADE_2_HIGH_RISK",
+        "node_key": "T2_INFERENCE_CLASSIFY_GRADE_2_HIGH_RISK",
         "node_type": "INFERENCE",
         "text_en": "High risk",
         "text_vi": "NGUY CƠ CAO",
@@ -2930,14 +2930,14 @@
           {
             "edge_id": "7a595f93-e07c-4990-e493-35e652671be4",
             "traversal_order": 1,
-            "to_node_key": "T2_INF_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK",
+            "to_node_key": "T2_INFERENCE_CLASSIFY_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK",
             "candidate_condition": null
           }
         ]
       },
-      "T2_INF_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK": {
+      "T2_INFERENCE_CLASSIFY_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK": {
         "id": "ebd2cf1d-a6d6-e606-f1b7-d83ae2028e4e",
-        "node_key": "T2_INF_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK",
+        "node_key": "T2_INFERENCE_CLASSIFY_GRADE_2_ZERO_RISK_FACTOR_HIGH_RISK",
         "node_type": "INFERENCE",
         "text_en": "High risk",
         "text_vi": "NGUY CƠ CAO",

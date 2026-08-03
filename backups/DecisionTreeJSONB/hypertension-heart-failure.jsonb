@@ -222,14 +222,14 @@
           {
             "edge_id": "1ec8426a-e5ac-5944-bc14-f2db7559fd2f",
             "traversal_order": 1,
-            "to_node_key": "T10_A_EVAL_EF",
+            "to_node_key": "T10_INFERENCE_EVALUATE_EJECTION_FRACTION_AND_HEART_STRUCTURE",
             "candidate_condition": null
           }
         ]
       },
-      "T10_A_EVAL_EF": {
+      "T10_INFERENCE_EVALUATE_EJECTION_FRACTION_AND_HEART_STRUCTURE": {
         "id": "31a12b62-51e6-595b-bb87-5e214f2f8f97",
-        "node_key": "T10_A_EVAL_EF",
+        "node_key": "T10_INFERENCE_EVALUATE_EJECTION_FRACTION_AND_HEART_STRUCTURE",
         "node_type": "INFERENCE",
         "text_en": "Evaluate ejection fraction (EF) and heart structure",
         "text_vi": "Đánh giá phân suất tống máu(EF) và cấu trúc tim",
@@ -354,7 +354,7 @@
           {
             "edge_id": "0c873821-a364-52f2-be42-f66535f910ed",
             "traversal_order": 1,
-            "to_node_key": "T10_I_HFREF",
+            "to_node_key": "T10_INFERENCE_COMBINE_LOW_DOSE_A_PLUS_B_PLUS_D_PLUS_MRA_PLUS_SGLT2I_FOR_HFREF",
             "candidate_condition": null
           }
         ]
@@ -404,7 +404,7 @@
           {
             "edge_id": "adf69fd5-7e4b-5b38-aa2d-57308eaa3de9",
             "traversal_order": 1,
-            "to_node_key": "T10_I_HFMREF_1",
+            "to_node_key": "T10_INFERENCE_COMBINE_LOW_DOSE_D_PLUS_SGLT2I_PLUS_MRA_FOR_HFMREF",
             "candidate_condition": null
           }
         ]
@@ -454,7 +454,7 @@
           {
             "edge_id": "a7637926-2376-53d3-9cad-9de5387ee27e",
             "traversal_order": 1,
-            "to_node_key": "T10_I_HFPEF_1",
+            "to_node_key": "T10_INFERENCE_COMBINE_D_SGLT2I_AND_ALDOSTERONE_ANTAGONIST_FOR_HFPEF",
             "candidate_condition": null
           }
         ]
@@ -504,21 +504,53 @@
           {
             "edge_id": "dfee59ac-2d23-559e-80ba-b60dd8ba33a7",
             "traversal_order": 1,
-            "to_node_key": "T10_I_LVH",
+            "to_node_key": "T10_INFERENCE_SELECT_LOW_DOSE_A_PLUS_C_OR_A_PLUS_D_FOR_LVH",
             "candidate_condition": null
           }
         ]
       },
-      "T10_I_HFREF": {
+      "T10_INFERENCE_COMBINE_LOW_DOSE_A_PLUS_B_PLUS_D_PLUS_MRA_PLUS_SGLT2I_FOR_HFREF": {
         "id": "877ac137-c482-5091-9494-bd882b0cf7cd",
-        "node_key": "T10_I_HFREF",
+        "node_key": "T10_INFERENCE_COMBINE_LOW_DOSE_A_PLUS_B_PLUS_D_PLUS_MRA_PLUS_SGLT2I_FOR_HFREF",
         "node_type": "INFERENCE",
-        "text_en": "Combine A + B + D and/or Aldosterone antagonist + SGLT2i. B: (bisoprolol, carvedilol, metoprolol, nebivolol)",
-        "text_vi": "Phối hợp A + B + D và/hoặc kháng aldosterone + SGLT2i. B: (bisoprolol, carvedilol, metoprolol, nebivolol)",
+        "text_en": "Combine low-dose A + B + D + MRA + SGLT2 inhibitor for HFrEF",
+        "text_vi": "Phối hợp liều thấp A + B + D + MRA + thuốc ức chế SGLT2 cho HFrEF",
         "condition_definition": null,
         "context_patch": null,
         "action_payload": {
-          "action_type": "COMBINE_ABD_ALDO_SGLT2I"
+          "action_type": "COMBINE_ABD_ALDO_SGLT2I",
+          "regimen_update": {
+            "operation": "COMBINE",
+            "components": [
+              {
+                "selector_kind": "class",
+                "code": "A",
+                "dose_strategy": "LOW_DOSE"
+              },
+              {
+                "selector_kind": "class",
+                "code": "B",
+                "name": "Beta-blocker",
+                "dose_strategy": "LOW_DOSE"
+              },
+              {
+                "selector_kind": "class",
+                "code": "D",
+                "dose_strategy": "LOW_DOSE"
+              },
+              {
+                "selector_kind": "class",
+                "code": "MRA",
+                "name": "Mineralocorticoid receptor antagonist",
+                "dose_strategy": "LOW_DOSE"
+              },
+              {
+                "selector_kind": "class",
+                "code": "SGLT2i",
+                "dose_strategy": "LOW_DOSE"
+              }
+            ]
+          }
         },
         "global_config": null,
         "link_target_tree_key": null,
@@ -589,16 +621,37 @@
           }
         ]
       },
-      "T10_I_HFMREF_1": {
+      "T10_INFERENCE_COMBINE_LOW_DOSE_D_PLUS_SGLT2I_PLUS_MRA_FOR_HFMREF": {
         "id": "465565d5-433a-563c-8b06-78b98785b814",
-        "node_key": "T10_I_HFMREF_1",
+        "node_key": "T10_INFERENCE_COMBINE_LOW_DOSE_D_PLUS_SGLT2I_PLUS_MRA_FOR_HFMREF",
         "node_type": "INFERENCE",
-        "text_en": "Combine D and SGLT2i and Aldosterone antagonist",
-        "text_vi": "Phối hợp D và SGLT2i và kháng Aldosterone",
+        "text_en": "Combine low-dose D, SGLT2 inhibitor, and mineralocorticoid receptor antagonist",
+        "text_vi": "Phối hợp D liều thấp, thuốc ức chế SGLT2 và thuốc đối kháng thụ thể mineralocorticoid",
         "condition_definition": null,
         "context_patch": null,
         "action_payload": {
-          "action_type": "COMBINE_D_SGLT2I_ALDO"
+          "action_type": "COMBINE_D_SGLT2I_ALDO",
+          "regimen_update": {
+            "operation": "COMBINE",
+            "components": [
+              {
+                "selector_kind": "class",
+                "code": "D",
+                "dose_strategy": "LOW_DOSE"
+              },
+              {
+                "selector_kind": "class",
+                "code": "SGLT2i",
+                "dose_strategy": "LOW_DOSE"
+              },
+              {
+                "selector_kind": "class",
+                "code": "MRA",
+                "name": "Mineralocorticoid receptor antagonist",
+                "dose_strategy": "LOW_DOSE"
+              }
+            ]
+          }
         },
         "global_config": null,
         "link_target_tree_key": null,
@@ -632,14 +685,14 @@
           {
             "edge_id": "4fbfb060-bf0b-58c9-8d2c-17982208f3ba",
             "traversal_order": 1,
-            "to_node_key": "T10_I_HFMREF_2",
+            "to_node_key": "T10_INFERENCE_ADD_A_ARNI_ARB_OR_ACE_INHIBITOR_FOR_HFMREF",
             "candidate_condition": null
           }
         ]
       },
-      "T10_I_HFMREF_2": {
+      "T10_INFERENCE_ADD_A_ARNI_ARB_OR_ACE_INHIBITOR_FOR_HFMREF": {
         "id": "339634e2-d9f3-5366-b8b0-60cba53abba6",
-        "node_key": "T10_I_HFMREF_2",
+        "node_key": "T10_INFERENCE_ADD_A_ARNI_ARB_OR_ACE_INHIBITOR_FOR_HFMREF",
         "node_type": "INFERENCE",
         "text_en": "Add A (ARNI or CTTA or UCMC)",
         "text_vi": "Phối hợp thêm A (ARNI hoặc CTTA hoặc UCMC)",
@@ -717,9 +770,9 @@
           }
         ]
       },
-      "T10_I_HFPEF_1": {
+      "T10_INFERENCE_COMBINE_D_SGLT2I_AND_ALDOSTERONE_ANTAGONIST_FOR_HFPEF": {
         "id": "30cee5c4-7eba-556e-8b51-dea56475179e",
-        "node_key": "T10_I_HFPEF_1",
+        "node_key": "T10_INFERENCE_COMBINE_D_SGLT2I_AND_ALDOSTERONE_ANTAGONIST_FOR_HFPEF",
         "node_type": "INFERENCE",
         "text_en": "Combine D and SGLT2i and Aldosterone antagonist",
         "text_vi": "Phối hợp D và SGLT2i và kháng Aldosterone",
@@ -760,14 +813,14 @@
           {
             "edge_id": "6181d575-f571-53a0-a64a-a57cbde419dc",
             "traversal_order": 1,
-            "to_node_key": "T10_I_HFPEF_2",
+            "to_node_key": "T10_INFERENCE_ADD_A_ARNI_OR_ARB_FOR_HFPEF",
             "candidate_condition": null
           }
         ]
       },
-      "T10_I_HFPEF_2": {
+      "T10_INFERENCE_ADD_A_ARNI_OR_ARB_FOR_HFPEF": {
         "id": "debdecef-88df-5601-8cfc-b5eb91b8b08f",
-        "node_key": "T10_I_HFPEF_2",
+        "node_key": "T10_INFERENCE_ADD_A_ARNI_OR_ARB_FOR_HFPEF",
         "node_type": "INFERENCE",
         "text_en": "Add A (ARNI and CTTA)",
         "text_vi": "Phối hợp thêm A (ARNI và CTTA)",
@@ -845,16 +898,49 @@
           }
         ]
       },
-      "T10_I_LVH": {
+      "T10_INFERENCE_SELECT_LOW_DOSE_A_PLUS_C_OR_A_PLUS_D_FOR_LVH": {
         "id": "5880accb-c184-5bfe-a6c0-78845c4ba7be",
-        "node_key": "T10_I_LVH",
+        "node_key": "T10_INFERENCE_SELECT_LOW_DOSE_A_PLUS_C_OR_A_PLUS_D_FOR_LVH",
         "node_type": "INFERENCE",
-        "text_en": "Combine A + C or A + D",
-        "text_vi": "Phối hợp A + C hoặc A + D",
+        "text_en": "Select one low-dose combination for LVH: A + C or A + D",
+        "text_vi": "Chọn một phối hợp liều thấp cho phì đại thất trái: A + C hoặc A + D",
         "condition_definition": null,
         "context_patch": null,
         "action_payload": {
-          "action_type": "COMBINE_AC_OR_AD"
+          "action_type": "SELECT_AC_OR_AD",
+          "regimen_update": {
+            "operation": "SELECT",
+            "alternatives": [
+              {
+                "components": [
+                  {
+                    "selector_kind": "class",
+                    "code": "A",
+                    "dose_strategy": "LOW_DOSE"
+                  },
+                  {
+                    "selector_kind": "class",
+                    "code": "C",
+                    "dose_strategy": "LOW_DOSE"
+                  }
+                ]
+              },
+              {
+                "components": [
+                  {
+                    "selector_kind": "class",
+                    "code": "A",
+                    "dose_strategy": "LOW_DOSE"
+                  },
+                  {
+                    "selector_kind": "class",
+                    "code": "D",
+                    "dose_strategy": "LOW_DOSE"
+                  }
+                ]
+              }
+            ]
+          }
         },
         "global_config": null,
         "link_target_tree_key": null,
@@ -979,13 +1065,13 @@
           {
             "edge_id": "b1f6e489-a934-5a25-a8de-4b4d8ce64eea",
             "traversal_order": 1,
-            "to_node_key": "T10_I_ADD_CCB",
+            "to_node_key": "T10_INFERENCE_ADD_DIHYDROPYRIDINE_CCB",
             "candidate_condition": null
           },
           {
             "edge_id": "fe0dae5c-3849-5dc1-ae5b-0c6c8e84ac63",
             "traversal_order": 2,
-            "to_node_key": "T10_I_ADJUST",
+            "to_node_key": "T10_INFERENCE_ADJUST_DRUG_DOSAGE_AND_MONITOR",
             "candidate_condition": null
           }
         ]
@@ -1044,14 +1130,14 @@
           {
             "edge_id": "cf52cec7-bdb7-5907-b4bd-3cde3b124370",
             "traversal_order": 1,
-            "to_node_key": "T10_I_MAINTAIN",
+            "to_node_key": "T10_INFERENCE_MAINTAIN_REGIMEN",
             "candidate_condition": null
           }
         ]
       },
-      "T10_I_ADD_CCB": {
+      "T10_INFERENCE_ADD_DIHYDROPYRIDINE_CCB": {
         "id": "3f8ae7a2-1a20-5a7a-8f80-0abb5eed489e",
-        "node_key": "T10_I_ADD_CCB",
+        "node_key": "T10_INFERENCE_ADD_DIHYDROPYRIDINE_CCB",
         "node_type": "INFERENCE",
         "text_en": "Add Dihydropyridine CCB",
         "text_vi": "Thêm CKCa nhóm Dihydropyridine",
@@ -1103,9 +1189,9 @@
           }
         ]
       },
-      "T10_I_ADJUST": {
+      "T10_INFERENCE_ADJUST_DRUG_DOSAGE_AND_MONITOR": {
         "id": "ca0c7576-4117-510d-b28b-6eff717791f7",
-        "node_key": "T10_I_ADJUST",
+        "node_key": "T10_INFERENCE_ADJUST_DRUG_DOSAGE_AND_MONITOR",
         "node_type": "INFERENCE",
         "text_en": "Adjust drug dosage and monitor",
         "text_vi": "Điều chỉnh liều lượng thuốc và theo dõi",
@@ -1157,9 +1243,9 @@
           }
         ]
       },
-      "T10_I_MAINTAIN": {
+      "T10_INFERENCE_MAINTAIN_REGIMEN": {
         "id": "1208d7cb-f28c-5131-afad-9249828c164c",
-        "node_key": "T10_I_MAINTAIN",
+        "node_key": "T10_INFERENCE_MAINTAIN_REGIMEN",
         "node_type": "INFERENCE",
         "text_en": "Maintain regimen",
         "text_vi": "Duy trì phác đồ",

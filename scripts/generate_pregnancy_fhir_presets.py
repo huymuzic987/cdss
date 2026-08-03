@@ -111,7 +111,7 @@ def _static_cases() -> list[PresetCase]:
             expected_terminal="T12_END_REFER_OBGYN",
             expected_nodes=(
                 "T12_C_CLINIC_BP_HIGH",
-                "T12_INF_GESTATIONAL_HTN_CLASSIFICATION",
+                "T12_INFERENCE_CLASSIFY_GESTATIONAL_HTN",
                 "T12_C_BP_MILD_MODERATE",
                 "T12_C_BP_TARGET_NOT_ACHIEVED",
             ),
@@ -147,7 +147,7 @@ def _static_cases() -> list[PresetCase]:
             expected_nodes=(
                 "T12_C_BP_SEVERE",
                 "T12_C_HYPERTENSIVE_CRISIS",
-                "T12_INF_IV_NITROGLYCERIN",
+                "T12_INFERENCE_START_IV_NITROGLYCERIN_INFUSION",
             ),
         ),
         PresetCase(
@@ -164,7 +164,7 @@ def _static_cases() -> list[PresetCase]:
             expected_nodes=(
                 "T12_C_BP_SEVERE",
                 "T12_C_PULMONARY_EDEMA",
-                "T12_INF_MAGNESIUM_SUPPLEMENT",
+                "T12_INFERENCE_ADD_MAGNESIUM",
             ),
         ),
         PresetCase(
@@ -180,7 +180,7 @@ def _static_cases() -> list[PresetCase]:
             expected_terminal="T12_END_MAINTAIN_REGIMEN_PREGNANT",
             expected_nodes=(
                 "T12_C_PREECLAMPSIA_PROTEINURIA",
-                "T12_INF_PREECLAMPSIA_CLASSIFICATION",
+                "T12_INFERENCE_CLASSIFY_PREECLAMPSIA",
                 "T12_C_TARGET_MET",
             ),
         ),
@@ -206,7 +206,7 @@ def _static_cases() -> list[PresetCase]:
             expected_terminal="T12_END_MAINTAIN_REGIMEN_PREGNANT",
             expected_nodes=(
                 "T12_C_PREECLAMPSIA_RISK_FACTOR",
-                "T12_INF_PREECLAMPSIA_CLASSIFICATION",
+                "T12_INFERENCE_CLASSIFY_PREECLAMPSIA",
                 "T12_C_TARGET_MET",
             ),
         ),
@@ -225,7 +225,7 @@ def _static_cases() -> list[PresetCase]:
             expected_terminal="T12_END_MAINTAIN_REGIMEN_PREGNANT",
             expected_nodes=(
                 "T12_C_SEVERE_SIGNS",
-                "T12_INF_ECLAMPSIA_CLASSIFICATION",
+                "T12_INFERENCE_CLASSIFY_ECLAMPSIA",
                 "T12_C_TARGET_MET",
             ),
         ),
@@ -244,7 +244,7 @@ def _static_cases() -> list[PresetCase]:
             expected_terminal="T12_END_EMERGENCY_DELIVERY",
             expected_nodes=(
                 "T12_C_SEVERE_SIGNS",
-                "T12_INF_ECLAMPSIA_CLASSIFICATION",
+                "T12_INFERENCE_CLASSIFY_ECLAMPSIA",
                 "T12_C_TARGET_NOT_MET",
             ),
         ),
@@ -263,7 +263,7 @@ def _static_cases() -> list[PresetCase]:
             expected_terminal="T12_END_MAINTAIN_REGIMEN_PREGNANT",
             expected_nodes=(
                 "T12_C_HELLP_SIGNS",
-                "T12_INF_HELLP_SYNDROME_CLASSIFICATION",
+                "T12_INFERENCE_CLASSIFY_HELLP_SYNDROME",
                 "T12_C_TARGET_MET",
             ),
         ),
@@ -282,7 +282,7 @@ def _static_cases() -> list[PresetCase]:
             expected_terminal="T12_END_EMERGENCY_DELIVERY",
             expected_nodes=(
                 "T12_C_HELLP_SIGNS",
-                "T12_INF_HELLP_SYNDROME_CLASSIFICATION",
+                "T12_INFERENCE_CLASSIFY_HELLP_SYNDROME",
                 "T12_C_TARGET_NOT_MET",
             ),
         ),
@@ -401,7 +401,7 @@ def _follow_up_cases() -> list[PresetCase]:
                 expected_nodes=(
                     ("T12_C_POSTPARTUM", "T12_C_BREASTFEEDING")
                     if postpartum
-                    else ("T12_INF_GESTATIONAL_HTN_CLASSIFICATION",)
+                    else ("T12_INFERENCE_CLASSIFY_GESTATIONAL_HTN",)
                 ),
                 category=FOLLOW_UP_CATEGORY,
                 visits=visits[: follow_up_number + 1],

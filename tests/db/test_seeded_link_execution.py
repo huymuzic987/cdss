@@ -186,18 +186,14 @@ def test_drug_combination_link_resolves_and_retains_prior_execution_state(
             if edge.to_node_id == link.id
         ]
         predecessor = next(
-            (
-                node
-                for node in predecessors
-                if node.node_type is NodeType.ACTION and node.action_payload is not None
-            ),
+            (node for node in predecessors if node.action_payload is not None),
             None,
         )
         if predecessor is not None:
             selected = (graph, predecessor, link)
             break
     if selected is None:
-        pytest.fail("seeded ACTION leading to drug-combination LINK was not found")
+        pytest.fail("seeded actionable node leading to drug-combination LINK was not found")
     graph, predecessor, link = selected
 
     with pytest.raises(MissingRuntimePath) as exc_info:

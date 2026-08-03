@@ -1344,7 +1344,7 @@
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
-          "code": "T12_INF_GESTATIONAL_HTN_CLASSIFICATION"
+          "code": "T12_INFERENCE_CLASSIFY_GESTATIONAL_HTN"
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
@@ -2140,7 +2140,7 @@
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
-          "code": "T12_INF_IV_NITROGLYCERIN"
+          "code": "T12_INFERENCE_START_IV_NITROGLYCERIN_INFUSION"
         }
       ]
     },
@@ -2569,7 +2569,7 @@
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
-          "code": "T12_INF_MAGNESIUM_SUPPLEMENT"
+          "code": "T12_INFERENCE_ADD_MAGNESIUM"
         }
       ]
     },
@@ -2994,7 +2994,7 @@
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
-          "code": "T12_INF_PREECLAMPSIA_CLASSIFICATION"
+          "code": "T12_INFERENCE_CLASSIFY_PREECLAMPSIA"
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
@@ -3848,7 +3848,7 @@
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
-          "code": "T12_INF_PREECLAMPSIA_CLASSIFICATION"
+          "code": "T12_INFERENCE_CLASSIFY_PREECLAMPSIA"
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
@@ -4277,7 +4277,7 @@
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
-          "code": "T12_INF_ECLAMPSIA_CLASSIFICATION"
+          "code": "T12_INFERENCE_CLASSIFY_ECLAMPSIA"
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
@@ -4741,7 +4741,7 @@
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
-          "code": "T12_INF_ECLAMPSIA_CLASSIFICATION"
+          "code": "T12_INFERENCE_CLASSIFY_ECLAMPSIA"
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
@@ -5205,7 +5205,7 @@
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
-          "code": "T12_INF_HELLP_SYNDROME_CLASSIFICATION"
+          "code": "T12_INFERENCE_CLASSIFY_HELLP_SYNDROME"
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
@@ -5704,7 +5704,7 @@
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
-          "code": "T12_INF_HELLP_SYNDROME_CLASSIFICATION"
+          "code": "T12_INFERENCE_CLASSIFY_HELLP_SYNDROME"
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
@@ -7770,7 +7770,7 @@
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
-          "code": "T12_INF_GESTATIONAL_HTN_CLASSIFICATION"
+          "code": "T12_INFERENCE_CLASSIFY_GESTATIONAL_HTN"
         }
       ]
     },
@@ -8178,7 +8178,7 @@
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
-          "code": "T12_INF_GESTATIONAL_HTN_CLASSIFICATION"
+          "code": "T12_INFERENCE_CLASSIFY_GESTATIONAL_HTN"
         }
       ]
     },
@@ -8686,7 +8686,7 @@
         },
         {
           "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
-          "code": "T12_INF_GESTATIONAL_HTN_CLASSIFICATION"
+          "code": "T12_INFERENCE_CLASSIFY_GESTATIONAL_HTN"
         }
       ]
     },

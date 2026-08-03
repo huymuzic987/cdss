@@ -17,6 +17,8 @@ _ACTION_TYPE_CLASSES: dict[str, tuple[str, ...]] = {
     "ADD_A_ARNI_CTTA": ("A",),
     "COMBINE_ACD_MRA": ("A", "C", "D", "MRA"),
 }
+
+
 def components_from_action_payload(
     payload: Mapping[str, Any] | None,
 ) -> tuple[list[RegimenComponent], list[RegimenAlternative]]:
@@ -34,9 +36,7 @@ def components_from_action_payload(
         for raw in options:
             code = _string(raw.get("class")) if isinstance(raw, Mapping) else None
             if code:
-                alternatives.append(
-                    RegimenAlternative(components=[class_component(code, dose)])
-                )
+                alternatives.append(RegimenAlternative(components=[class_component(code, dose)]))
     classes = payload.get("classes")
     components = (
         [class_component(code, dose) for code in classes if isinstance(code, str) and code]

@@ -55,8 +55,8 @@ def test_backend_and_frontend_branches_run_before_either_wait() -> None:
 
 
 def test_backend_pytest_and_pyright_are_concurrent_and_status_checked() -> None:
-    pyright_start = QUALITY_SCRIPT.find("timed backend-pyright uv run pyright &")
-    pytest_start = QUALITY_SCRIPT.find("if timed backend-pytest uv run pytest")
+    pyright_start = QUALITY_SCRIPT.find("timed backend-pyright run_logged")
+    pytest_start = QUALITY_SCRIPT.find("if timed backend-pytest run_logged")
     pyright_wait = QUALITY_SCRIPT.find(r'wait "\$pyright_pid"')
     status_guard = QUALITY_SCRIPT.find(
         r'if [ "\$pytest_status" -ne 0 ] || [ "\$pyright_status" -ne 0 ]; then'
@@ -78,3 +78,13 @@ def test_quality_gates_generate_junit_and_coverage_reports() -> None:
     assert "--outputFile.junit=./.ci-reports/junit.xml" in FRONTEND_SCRIPT
     assert ".ci-reports/timings.tsv" in QUALITY_SCRIPT
     assert ".ci-reports/timings.tsv" in FRONTEND_SCRIPT
+
+
+def test_quality_gate_logs_are_archivable_and_console_output_is_bounded() -> None:
+    assert 'CI_LOG_TAIL_LINES="${CI_LOG_TAIL_LINES:-80}"' in QUALITY_SCRIPT
+    assert "run_logged .ci-reports/backend/pytest.log uv run pytest" in QUALITY_SCRIPT
+    assert "tail -n" in QUALITY_SCRIPT
+    assert "log_file" in QUALITY_SCRIPT
+    assert 'CI_LOG_TAIL_LINES="${CI_LOG_TAIL_LINES:-80}"' in FRONTEND_SCRIPT
+    assert "--reporter=dot" in FRONTEND_SCRIPT
+    assert ".ci-reports/vitest.log" in FRONTEND_SCRIPT

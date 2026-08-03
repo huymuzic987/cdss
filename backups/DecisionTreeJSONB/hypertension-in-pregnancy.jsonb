@@ -1113,14 +1113,14 @@
           {
             "edge_id": "05b09f96-5f56-493e-9843-befdba7765e6",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_GESTATIONAL_HTN_CLASSIFICATION",
+            "to_node_key": "T12_INFERENCE_CLASSIFY_GESTATIONAL_HTN",
             "candidate_condition": null
           }
         ]
       },
-      "T12_INF_GESTATIONAL_HTN_CLASSIFICATION": {
+      "T12_INFERENCE_CLASSIFY_GESTATIONAL_HTN": {
         "id": "5c2989f1-d68f-48af-9c9b-7a3a72f1ba35",
-        "node_key": "T12_INF_GESTATIONAL_HTN_CLASSIFICATION",
+        "node_key": "T12_INFERENCE_CLASSIFY_GESTATIONAL_HTN",
         "node_type": "INFERENCE",
         "text_en": "Gestational hypertension",
         "text_vi": "THA thai kỳ",
@@ -1287,7 +1287,7 @@
           {
             "edge_id": "0d5f3611-2098-4733-9713-e0a3ad5b1ca1",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_PREECLAMPSIA_CLASSIFICATION",
+            "to_node_key": "T12_INFERENCE_CLASSIFY_PREECLAMPSIA",
             "candidate_condition": null
           }
         ]
@@ -1380,14 +1380,14 @@
           {
             "edge_id": "8ff2da8b-670a-4cf9-99f2-5856aeb0215e",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_PREECLAMPSIA_CLASSIFICATION",
+            "to_node_key": "T12_INFERENCE_CLASSIFY_PREECLAMPSIA",
             "candidate_condition": null
           }
         ]
       },
-      "T12_INF_PREECLAMPSIA_CLASSIFICATION": {
+      "T12_INFERENCE_CLASSIFY_PREECLAMPSIA": {
         "id": "3bf12557-a06e-44ac-adfb-da0004db5e47",
-        "node_key": "T12_INF_PREECLAMPSIA_CLASSIFICATION",
+        "node_key": "T12_INFERENCE_CLASSIFY_PREECLAMPSIA",
         "node_type": "INFERENCE",
         "text_en": "Preeclampsia",
         "text_vi": "Tiền sản giật",
@@ -1430,7 +1430,7 @@
           {
             "edge_id": "2f7141df-55a8-4ec9-87ea-d01c4071bb17",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_LABETALOL_MGSO4",
+            "to_node_key": "T12_INFERENCE_SELECT_LOW_DOSE_LABETALOL_PLUS_MAGNESIUM_SULFATE_OR_NICARDIPINE_PLUS_MAGNESIUM_SULFATE",
             "candidate_condition": null
           }
         ]
@@ -1588,7 +1588,7 @@
           {
             "edge_id": "ec6930d0-52cc-4e73-b65d-1dcd9b2741b9",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_ECLAMPSIA_CLASSIFICATION",
+            "to_node_key": "T12_INFERENCE_CLASSIFY_ECLAMPSIA",
             "candidate_condition": null
           }
         ]
@@ -1652,14 +1652,14 @@
           {
             "edge_id": "22f6edfc-c75d-4f58-b9d7-adf070aad30d",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_HELLP_SYNDROME_CLASSIFICATION",
+            "to_node_key": "T12_INFERENCE_CLASSIFY_HELLP_SYNDROME",
             "candidate_condition": null
           }
         ]
       },
-      "T12_INF_ECLAMPSIA_CLASSIFICATION": {
+      "T12_INFERENCE_CLASSIFY_ECLAMPSIA": {
         "id": "1f19d5a8-96a5-4292-8a65-e2e14ca3aefc",
-        "node_key": "T12_INF_ECLAMPSIA_CLASSIFICATION",
+        "node_key": "T12_INFERENCE_CLASSIFY_ECLAMPSIA",
         "node_type": "INFERENCE",
         "text_en": "Eclampsia",
         "text_vi": "Sản giật",
@@ -1702,14 +1702,14 @@
           {
             "edge_id": "9e72baec-cf51-4bf7-b36d-c4502cd61f08",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_LABETALOL_MGSO4",
+            "to_node_key": "T12_INFERENCE_SELECT_LOW_DOSE_LABETALOL_PLUS_MAGNESIUM_SULFATE_OR_NICARDIPINE_PLUS_MAGNESIUM_SULFATE",
             "candidate_condition": null
           }
         ]
       },
-      "T12_INF_HELLP_SYNDROME_CLASSIFICATION": {
+      "T12_INFERENCE_CLASSIFY_HELLP_SYNDROME": {
         "id": "30b3b86e-8ce8-4ae1-8e0f-bf899c225544",
-        "node_key": "T12_INF_HELLP_SYNDROME_CLASSIFICATION",
+        "node_key": "T12_INFERENCE_CLASSIFY_HELLP_SYNDROME",
         "node_type": "INFERENCE",
         "text_en": "HELLP syndrome",
         "text_vi": "Hội chứng HELLP",
@@ -1752,7 +1752,7 @@
           {
             "edge_id": "d7bf1139-997e-4e2d-9d2f-502cf921be8b",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_LABETALOL_MGSO4",
+            "to_node_key": "T12_INFERENCE_SELECT_LOW_DOSE_LABETALOL_PLUS_MAGNESIUM_SULFATE_OR_NICARDIPINE_PLUS_MAGNESIUM_SULFATE",
             "candidate_condition": null
           }
         ]
@@ -1829,7 +1829,7 @@
           {
             "edge_id": "7bbedfd8-dafa-4251-9876-c1b48abdc128",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_MILD_MODERATE_SEVERITY",
+            "to_node_key": "T12_INFERENCE_CLASSIFY_MILD_MODERATE",
             "candidate_condition": null
           }
         ]
@@ -1888,14 +1888,14 @@
           {
             "edge_id": "75417199-4a3d-4e83-9fa0-372a24cff2f7",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_SEVERE_SEVERITY",
+            "to_node_key": "T12_INFERENCE_CLASSIFY_SEVERE",
             "candidate_condition": null
           }
         ]
       },
-      "T12_INF_MILD_MODERATE_SEVERITY": {
+      "T12_INFERENCE_CLASSIFY_MILD_MODERATE": {
         "id": "af8bcf05-a21b-4088-8a63-46fa63185b7a",
-        "node_key": "T12_INF_MILD_MODERATE_SEVERITY",
+        "node_key": "T12_INFERENCE_CLASSIFY_MILD_MODERATE",
         "node_type": "INFERENCE",
         "text_en": "Mild-moderate",
         "text_vi": "Tính nhẹ - trung bình",
@@ -1938,14 +1938,14 @@
           {
             "edge_id": "c1b371c7-9d07-4d44-9996-6145feacabb3",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_METHYLDOPA",
+            "to_node_key": "T12_INFERENCE_SELECT_METHYLDOPA_OR_ORAL_LABETALOL_OR_NON_CAPSULE_NIFEDIPINE_OR_NICARDIPINE",
             "candidate_condition": null
           }
         ]
       },
-      "T12_INF_SEVERE_SEVERITY": {
+      "T12_INFERENCE_CLASSIFY_SEVERE": {
         "id": "04b4e1d5-11ab-4d25-9f07-13d058f2fe9d",
-        "node_key": "T12_INF_SEVERE_SEVERITY",
+        "node_key": "T12_INFERENCE_CLASSIFY_SEVERE",
         "node_type": "INFERENCE",
         "text_en": "Severe hypertension",
         "text_vi": "THA nặng",
@@ -1988,17 +1988,17 @@
           {
             "edge_id": "dccdc020-ac9d-4ddc-8222-952a54c4ee41",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_SEVERE_DRUG_OPTIONS",
+            "to_node_key": "T12_INFERENCE_SELECT_METHYLDOPA_NIFEDIPINE_NICARDIPINE_IV_LABETALOL_IV_NICARDIPINE_ESMOLOL_HYDRALAZINE_OR_URAPIDIL",
             "candidate_condition": null
           }
         ]
       },
-      "T12_INF_METHYLDOPA": {
+      "T12_INFERENCE_SELECT_METHYLDOPA_OR_ORAL_LABETALOL_OR_NON_CAPSULE_NIFEDIPINE_OR_NICARDIPINE": {
         "id": "36028c0b-d677-4efd-9d89-6868f677300f",
-        "node_key": "T12_INF_METHYLDOPA",
+        "node_key": "T12_INFERENCE_SELECT_METHYLDOPA_OR_ORAL_LABETALOL_OR_NON_CAPSULE_NIFEDIPINE_OR_NICARDIPINE",
         "node_type": "INFERENCE",
-        "text_en": "Combination (Methyldopa) OR (oral Labetalol) OR (Nifedipine [avoid capsule form] OR Nicardipine [dihydropyridine CCB])",
-        "text_vi": "Phối hợp (Methyldopa) HOẶC (Labetalol uống [Chẹn Beta]) HOẶC (Nifedipine [trừ viên dạng nang] HOẶC Nicardipine [CKCa-Dihydropyridine])",
+        "text_en": "Select (Methyldopa) OR (oral Labetalol) OR (Nifedipine [avoid capsule form]) OR (Nicardipine [dihydropyridine CCB])",
+        "text_vi": "Chọn (Methyldopa) HOẶC (Labetalol uống [Chẹn Beta]) HOẶC (Nifedipine [trừ viên dạng nang]) HOẶC (Nicardipine [CKCa-Dihydropyridine])",
         "condition_definition": null,
         "context_patch": {
           "treatment_options": {
@@ -2007,7 +2007,47 @@
             "nifedipine_or_nicardipine": true
           }
         },
-        "action_payload": null,
+        "action_payload": {
+          "regimen_update": {
+            "operation": "SELECT",
+            "alternatives": [
+              {
+                "components": [
+                  {
+                    "name": "Methyldopa",
+                    "selector_kind": "medicine"
+                  }
+                ]
+              },
+              {
+                "components": [
+                  {
+                    "name": "Labetalol (oral)",
+                    "route": "oral",
+                    "selector_kind": "medicine"
+                  }
+                ]
+              },
+              {
+                "components": [
+                  {
+                    "name": "Nifedipine (avoid capsule form)",
+                    "route": "oral",
+                    "selector_kind": "medicine"
+                  }
+                ]
+              },
+              {
+                "components": [
+                  {
+                    "name": "Nicardipine",
+                    "selector_kind": "medicine"
+                  }
+                ]
+              }
+            ]
+          }
+        },
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
@@ -2040,14 +2080,14 @@
           {
             "edge_id": "f336e7a9-91ad-4b3e-ae62-865a622662c4",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_LABETALOL_ORAL",
+            "to_node_key": "T12_INFERENCE_SELECT_ORAL_LABETALOL",
             "candidate_condition": null
           }
         ]
       },
-      "T12_INF_LABETALOL_ORAL": {
+      "T12_INFERENCE_SELECT_ORAL_LABETALOL": {
         "id": "df96c137-3378-4753-b2a8-dccd72a244f8",
-        "node_key": "T12_INF_LABETALOL_ORAL",
+        "node_key": "T12_INFERENCE_SELECT_ORAL_LABETALOL",
         "node_type": "INFERENCE",
         "text_en": "OR: oral Labetalol (beta blocker)",
         "text_vi": "HOẶC: Labetalol uống (Chẹn Beta)",
@@ -2090,14 +2130,14 @@
           {
             "edge_id": "67fb48e9-fd62-4710-9794-cb4bf004af09",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_NIFEDIPINE_OR_NICARDIPINE",
+            "to_node_key": "T12_INFERENCE_SELECT_NON_CAPSULE_NIFEDIPINE_OR_NICARDIPINE",
             "candidate_condition": null
           }
         ]
       },
-      "T12_INF_NIFEDIPINE_OR_NICARDIPINE": {
+      "T12_INFERENCE_SELECT_NON_CAPSULE_NIFEDIPINE_OR_NICARDIPINE": {
         "id": "82d04526-8de0-42f0-85ac-3d4e1b603ab6",
-        "node_key": "T12_INF_NIFEDIPINE_OR_NICARDIPINE",
+        "node_key": "T12_INFERENCE_SELECT_NON_CAPSULE_NIFEDIPINE_OR_NICARDIPINE",
         "node_type": "INFERENCE",
         "text_en": "OR: Nifedipine (avoid capsule form) or Nicardipine (dihydropyridine CCB)",
         "text_vi": "HOẶC: Nifedipine [trừ viên dạng nang] hoặc Nicardipine (CKCa-Dihydropyridine)",
@@ -2140,14 +2180,14 @@
           {
             "edge_id": "39341121-b3da-4984-b285-ba44e1eff9c7",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_ABSOLUTE_CONTRAINDICATIONS",
+            "to_node_key": "T12_INFERENCE_AVOID_ACE_INHIBITOR_ARB_AND_ARNI",
             "candidate_condition": null
           }
         ]
       },
-      "T12_INF_ABSOLUTE_CONTRAINDICATIONS": {
+      "T12_INFERENCE_AVOID_ACE_INHIBITOR_ARB_AND_ARNI": {
         "id": "e8197786-f1f5-4718-b574-ddca2e736978",
-        "node_key": "T12_INF_ABSOLUTE_CONTRAINDICATIONS",
+        "node_key": "T12_INFERENCE_AVOID_ACE_INHIBITOR_ARB_AND_ARNI",
         "node_type": "INFERENCE",
         "text_en": "Absolute contraindication: A (ACEI, ARB), ARNI",
         "text_vi": "Chống chỉ định tuyệt đối:\nA (ƯCMC, CTTA)\nARNI",
@@ -2199,9 +2239,9 @@
           }
         ]
       },
-      "T12_INF_SEVERE_DRUG_OPTIONS": {
+      "T12_INFERENCE_SELECT_METHYLDOPA_NIFEDIPINE_NICARDIPINE_IV_LABETALOL_IV_NICARDIPINE_ESMOLOL_HYDRALAZINE_OR_URAPIDIL": {
         "id": "35f6bea4-1c2c-46b8-a0a3-d0f08fecebcd",
-        "node_key": "T12_INF_SEVERE_DRUG_OPTIONS",
+        "node_key": "T12_INFERENCE_SELECT_METHYLDOPA_NIFEDIPINE_NICARDIPINE_IV_LABETALOL_IV_NICARDIPINE_ESMOLOL_HYDRALAZINE_OR_URAPIDIL",
         "node_type": "INFERENCE",
         "text_en": "Methyldopa oral OR Nifedipine (avoid capsule form) OR Nicardipine OR IV Labetalol OR IV Nicardipine OR Esmolol (beta blocker) OR Hydralazine (vasodilator) OR Urapidil",
         "text_vi": "Methyldopa uống\nhoặc (CKCa-Dihydropyridine) Nifedipine [trừ viên dạng nang] hoặc Nicardipine\nhoặc Labetalol tĩnh mạch\nhoặc Nicardipine tĩnh mạch\nhoặc Esmolol (Chẹn Beta)\nhoặc Hydralazine (Giãn mạch)\nhoặc Urapidil",
@@ -2260,7 +2300,7 @@
           {
             "edge_id": "f838dd71-74d6-4940-a847-4648dd00c5eb",
             "traversal_order": 3,
-            "to_node_key": "T12_INF_ABSOLUTE_CONTRAINDICATIONS",
+            "to_node_key": "T12_INFERENCE_AVOID_ACE_INHIBITOR_ARB_AND_ARNI",
             "candidate_condition": null
           }
         ]
@@ -2310,7 +2350,7 @@
           {
             "edge_id": "6e0e3f71-7e4b-4c73-9ef7-c677e151b885",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_MAGNESIUM_SUPPLEMENT",
+            "to_node_key": "T12_INFERENCE_ADD_MAGNESIUM",
             "candidate_condition": null
           }
         ]
@@ -2360,14 +2400,14 @@
           {
             "edge_id": "f9e32734-2daa-420e-912b-1205b85f47b1",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_IV_NITROGLYCERIN",
+            "to_node_key": "T12_INFERENCE_START_IV_NITROGLYCERIN_INFUSION",
             "candidate_condition": null
           }
         ]
       },
-      "T12_INF_IV_NITROGLYCERIN": {
+      "T12_INFERENCE_START_IV_NITROGLYCERIN_INFUSION": {
         "id": "54dafeb4-5f46-4ed4-b7fb-fec57a3c0029",
-        "node_key": "T12_INF_IV_NITROGLYCERIN",
+        "node_key": "T12_INFERENCE_START_IV_NITROGLYCERIN_INFUSION",
         "node_type": "INFERENCE",
         "text_en": "IV nitroglycerin infusion",
         "text_vi": "Truyền Nitroglycerin tĩnh mạch",
@@ -2415,9 +2455,9 @@
           }
         ]
       },
-      "T12_INF_MAGNESIUM_SUPPLEMENT": {
+      "T12_INFERENCE_ADD_MAGNESIUM": {
         "id": "a604674f-7384-4fb2-a663-bc3944337246",
-        "node_key": "T12_INF_MAGNESIUM_SUPPLEMENT",
+        "node_key": "T12_INFERENCE_ADD_MAGNESIUM",
         "node_type": "INFERENCE",
         "text_en": "Add magnesium",
         "text_vi": "Bổ sung magie",
@@ -2461,12 +2501,12 @@
           }
         ]
       },
-      "T12_INF_LABETALOL_MGSO4": {
+      "T12_INFERENCE_SELECT_LOW_DOSE_LABETALOL_PLUS_MAGNESIUM_SULFATE_OR_NICARDIPINE_PLUS_MAGNESIUM_SULFATE": {
         "id": "d5af70df-5c22-4524-96e9-a6fd37acfaff",
-        "node_key": "T12_INF_LABETALOL_MGSO4",
+        "node_key": "T12_INFERENCE_SELECT_LOW_DOSE_LABETALOL_PLUS_MAGNESIUM_SULFATE_OR_NICARDIPINE_PLUS_MAGNESIUM_SULFATE",
         "node_type": "INFERENCE",
-        "text_en": "Combination (Labetalol + Magnesium Sulfate) OR (Nicardipine + Magnesium Sulfate)",
-        "text_vi": "Phối hợp (Labetalol [Chẹn Beta] + Magnesium Sulfate) HOẶC (Nicardipine [CKCa] + Magnesium Sulfate)",
+        "text_en": "Select one combination: Labetalol + Magnesium Sulfate or Nicardipine + Magnesium Sulfate",
+        "text_vi": "Chọn một phối hợp: Labetalol + Magnesium Sulfate hoặc Nicardipine + Magnesium Sulfate",
         "condition_definition": null,
         "context_patch": {
           "treatment_options": {
@@ -2474,7 +2514,41 @@
             "nicardipine_plus_magnesium_sulfate": true
           }
         },
-        "action_payload": null,
+        "action_payload": {
+          "regimen_update": {
+            "operation": "SELECT",
+            "alternatives": [
+              {
+                "components": [
+                  {
+                    "selector_kind": "medicine",
+                    "name": "Labetalol",
+                    "dose_strategy": "LOW_DOSE"
+                  },
+                  {
+                    "selector_kind": "medicine",
+                    "name": "Magnesium Sulfate",
+                    "dose_strategy": "LOW_DOSE"
+                  }
+                ]
+              },
+              {
+                "components": [
+                  {
+                    "selector_kind": "medicine",
+                    "name": "Nicardipine",
+                    "dose_strategy": "LOW_DOSE"
+                  },
+                  {
+                    "selector_kind": "medicine",
+                    "name": "Magnesium Sulfate",
+                    "dose_strategy": "LOW_DOSE"
+                  }
+                ]
+              }
+            ]
+          }
+        },
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
@@ -2507,14 +2581,14 @@
           {
             "edge_id": "ab119443-91f4-48eb-9acf-53de2ac629ac",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_NICARDIPINE_MGSO4",
+            "to_node_key": "T12_INFERENCE_COMBINE_NICARDIPINE_WITH_MAGNESIUM_SULFATE",
             "candidate_condition": null
           }
         ]
       },
-      "T12_INF_NICARDIPINE_MGSO4": {
+      "T12_INFERENCE_COMBINE_NICARDIPINE_WITH_MAGNESIUM_SULFATE": {
         "id": "1290beb3-4be1-42be-8e86-80361913f907",
-        "node_key": "T12_INF_NICARDIPINE_MGSO4",
+        "node_key": "T12_INFERENCE_COMBINE_NICARDIPINE_WITH_MAGNESIUM_SULFATE",
         "node_type": "INFERENCE",
         "text_en": "OR Option 2: Nicardipine + Magnesium Sulfate",
         "text_vi": "HOẶC Lựa chọn 2: Nicardipine (CKCa) +\nMagnesium Sulfate",
@@ -3491,7 +3565,7 @@
           {
             "edge_id": "b389d8cd-6c6e-421d-8391-b5397af71e15",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_BREASTFEEDING_DRUG_GUIDANCE",
+            "to_node_key": "T12_INFERENCE_SELECT_BREASTFEEDING_DRUGS_AND_AVOID_CONTRAINDICATED_DRUGS",
             "candidate_condition": null
           }
         ]
@@ -3550,7 +3624,7 @@
           {
             "edge_id": "b6f52e45-28b0-4e7f-97c6-dc23e8a17cdd",
             "traversal_order": 1,
-            "to_node_key": "T12_INF_CHANGE_REGIMEN_NO_METHYLDOPA",
+            "to_node_key": "T12_INFERENCE_CHANGE_REGIMEN_AND_STOP_METHYLDOPA",
             "candidate_condition": null
           }
         ]
@@ -3614,9 +3688,9 @@
           }
         ]
       },
-      "T12_INF_BREASTFEEDING_DRUG_GUIDANCE": {
+      "T12_INFERENCE_SELECT_BREASTFEEDING_DRUGS_AND_AVOID_CONTRAINDICATED_DRUGS": {
         "id": "ba46f4c2-f4e3-49fe-87ec-dc2091a2580d",
-        "node_key": "T12_INF_BREASTFEEDING_DRUG_GUIDANCE",
+        "node_key": "T12_INFERENCE_SELECT_BREASTFEEDING_DRUGS_AND_AVOID_CONTRAINDICATED_DRUGS",
         "node_type": "INFERENCE",
         "text_en": "Drug contraindications and preferences while breastfeeding",
         "text_vi": "Chống chỉ định bắt buộc: Nicardipine\nTránh Atenolol, Propranolol, Nifedipine\nƯu tiên dùng Methyldopa / CKCa kéo dài",
@@ -3675,9 +3749,9 @@
           }
         ]
       },
-      "T12_INF_CHANGE_REGIMEN_NO_METHYLDOPA": {
+      "T12_INFERENCE_CHANGE_REGIMEN_AND_STOP_METHYLDOPA": {
         "id": "a5aec129-112f-4c62-97d2-4011a3676ab7",
-        "node_key": "T12_INF_CHANGE_REGIMEN_NO_METHYLDOPA",
+        "node_key": "T12_INFERENCE_CHANGE_REGIMEN_AND_STOP_METHYLDOPA",
         "node_type": "INFERENCE",
         "text_en": "Change the current regimen; maintain treatment without Methyldopa",
         "text_vi": "Thay đổi phác đồ hiện tại\nDuy trì phác đồ nhưng không dùng Methyldopa",

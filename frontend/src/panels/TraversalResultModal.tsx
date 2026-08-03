@@ -134,7 +134,7 @@ function ResultDialog({
 
           <ClinicalSection title={messages.recommendedOrders}>
             <RegimenDisplay presentation={presentation} references={references} locale={locale} />
-            {presentation.orders.length === 0 && presentation.regimenOptions.length === 0
+            {displayedOrders.length === 0 && presentation.regimenOptions.length === 0
               ? <p className="cds-empty">{messages.noRecommendedOrders}</p> : (
               <div className="cds-order-rows">
                 {displayedOrders.filter(isSingleMedicationOrder).length > 1 && (

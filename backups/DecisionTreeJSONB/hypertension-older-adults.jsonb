@@ -67,14 +67,14 @@
           {
             "edge_id": "8130c9b9-08ae-4c62-9930-166b0cf69c0b",
             "traversal_order": 1,
-            "to_node_key": "T7_A_CLASSIFY",
+            "to_node_key": "T7_INFERENCE_CLASSIFY_HYPERTENSION_IN_OLDER_ADULTS",
             "candidate_condition": null
           }
         ]
       },
-      "T7_A_CLASSIFY": {
+      "T7_INFERENCE_CLASSIFY_HYPERTENSION_IN_OLDER_ADULTS": {
         "id": "e281b92f-39f7-404a-b2b3-8134c7df2865",
-        "node_key": "T7_A_CLASSIFY",
+        "node_key": "T7_INFERENCE_CLASSIFY_HYPERTENSION_IN_OLDER_ADULTS",
         "node_type": "INFERENCE",
         "text_en": "Classify hypertension in elderly and very elderly patients",
         "text_vi": "Phân loại THA bệnh nhân cao tuổi và bệnh nhân rất già",
@@ -193,7 +193,7 @@
           {
             "edge_id": "8c6aff7b-b625-4fff-97a9-2e305d65005b",
             "traversal_order": 1,
-            "to_node_key": "T7_I_DC_70_79",
+            "to_node_key": "T7_INFERENCE_COMBINE_THIAZIDE_LIKE_D_AND_C_FOR_AGE_70_TO_79",
             "candidate_condition": null
           }
         ]
@@ -252,9 +252,9 @@
           }
         ]
       },
-      "T7_I_DC_70_79": {
+      "T7_INFERENCE_COMBINE_THIAZIDE_LIKE_D_AND_C_FOR_AGE_70_TO_79": {
         "id": "8dee04a9-d059-4004-bc44-2bdf62d04469",
-        "node_key": "T7_I_DC_70_79",
+        "node_key": "T7_INFERENCE_COMBINE_THIAZIDE_LIKE_D_AND_C_FOR_AGE_70_TO_79",
         "node_type": "INFERENCE",
         "text_en": "Prescribe D + C combination, prioritize thiazide-like D",
         "text_vi": "Chỉ định điều trị thuốc D + C, Ưu tiên D thiazide-like",

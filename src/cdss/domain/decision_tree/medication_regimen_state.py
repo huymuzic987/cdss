@@ -13,12 +13,8 @@ def derive_effective_regimen(steps: list[RegimenUpdateStep]) -> EffectiveMedicat
     effective = EffectiveMedicationRegimen()
     for step in steps:
         if step.keyword is RegimenKeyword.START:
-            incoming = step.alternatives or [
-                RegimenAlternative(components=step.components)
-            ]
-            effective.base_options = _merge_alternative_choices(
-                effective.base_options, incoming
-            )
+            incoming = step.alternatives or [RegimenAlternative(components=step.components)]
+            effective.base_options = _merge_alternative_choices(effective.base_options, incoming)
         elif step.keyword is RegimenKeyword.SELECT:
             if step.alternatives:
                 effective.base_options = _merge_alternative_choices(
@@ -98,9 +94,7 @@ def _merge_alternative_choices(
         return existing
 
     merged = [
-        RegimenAlternative(
-            components=_unique_components([*base.components, *choice.components])
-        )
+        RegimenAlternative(components=_unique_components([*base.components, *choice.components]))
         for base in existing
         for choice in incoming
     ]

@@ -236,14 +236,14 @@
           {
             "edge_id": "5026ca45-6bc9-4df8-a734-bf71dfbf41c3",
             "traversal_order": 1,
-            "to_node_key": "T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS",
+            "to_node_key": "T14_INFERENCE_DETERMINE_CLINICAL_SCENARIO_FLAGS",
             "candidate_condition": null
           }
         ]
       },
-      "T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS": {
+      "T14_INFERENCE_DETERMINE_CLINICAL_SCENARIO_FLAGS": {
         "id": "5f9327f7-08f3-433b-b6cf-4f8d989ed0d1",
-        "node_key": "T14_INF_DETERMINE_CLINICAL_SCENARIO_FLAGS",
+        "node_key": "T14_INFERENCE_DETERMINE_CLINICAL_SCENARIO_FLAGS",
         "node_type": "INFERENCE",
         "text_en": "Determine which of the 9 specific hypertensive-emergency clinical scenarios applies (Bảng 14)",
         "text_vi": "Xác định bệnh cảnh lâm sàng cấp cứu cụ thể (Bảng 14)",
@@ -452,7 +452,7 @@
           {
             "edge_id": "b63e808c-6341-4516-9bd0-8f540f94a5f6",
             "traversal_order": 9,
-            "to_node_key": "T14_ACTION_MALIGNANT_HTN_TMA_AKI",
+            "to_node_key": "T14_ACTION_SELECT_LABETALOL_NICARDIPINE_NITROPRUSSIDE_OR_URAPIDIL_FOR_MALIGNANT_HTN_TMA_AKI",
             "candidate_condition": null
           }
         ]
@@ -481,14 +481,14 @@
           {
             "edge_id": "ea212dbb-a16b-4ef9-9fd8-8b2819d1fdc7",
             "traversal_order": 1,
-            "to_node_key": "T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY",
+            "to_node_key": "T14_ACTION_SELECT_LABETALOL_NICARDIPINE_OR_NITROPRUSSIDE_FOR_HYPERTENSIVE_ENCEPHALOPATHY",
             "candidate_condition": null
           }
         ]
       },
-      "T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY": {
+      "T14_ACTION_SELECT_LABETALOL_NICARDIPINE_OR_NITROPRUSSIDE_FOR_HYPERTENSIVE_ENCEPHALOPATHY": {
         "id": "b15c9c78-c837-4451-af49-19c97d368b36",
-        "node_key": "T14_ACTION_HYPERTENSIVE_ENCEPHALOPATHY",
+        "node_key": "T14_ACTION_SELECT_LABETALOL_NICARDIPINE_OR_NITROPRUSSIDE_FOR_HYPERTENSIVE_ENCEPHALOPATHY",
         "node_type": "ACTION",
         "text_en": "Hypertensive encephalopathy: primary Labetalol/Nicardipine; alternative Nitroprusside; target MAP -20% to -25%, immediate",
         "text_vi": "Bệnh não do THA: ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside; mục tiêu MAP giảm 20-25%, ngay lập tức",
@@ -586,14 +586,14 @@
           {
             "edge_id": "d71a1ccf-95e8-41b4-b9a5-27b092276c5f",
             "traversal_order": 1,
-            "to_node_key": "T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE",
+            "to_node_key": "T14_ACTION_SELECT_LABETALOL_NICARDIPINE_OR_URAPIDIL_FOR_AIS_THROMBOLYSIS",
             "candidate_condition": null
           }
         ]
       },
-      "T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE": {
+      "T14_ACTION_SELECT_LABETALOL_NICARDIPINE_OR_URAPIDIL_FOR_AIS_THROMBOLYSIS": {
         "id": "61f81d80-845e-452c-b80f-02a0bae3e88d",
-        "node_key": "T14_ACTION_AIS_THROMBOLYSIS_CANDIDATE",
+        "node_key": "T14_ACTION_SELECT_LABETALOL_NICARDIPINE_OR_URAPIDIL_FOR_AIS_THROMBOLYSIS",
         "node_type": "ACTION",
         "text_en": "AIS, thrombolysis candidate: primary Labetalol/Nicardipine; alternative Urapidil; target MAP -15%, within 1 hour",
         "text_vi": "Nhồi máu não cấp có chỉ định tiêu sợi huyết: ưu tiên Labetalol/Nicardipine; thay thế Urapidil; mục tiêu MAP giảm 15%, trong 1 giờ",
@@ -687,14 +687,14 @@
           {
             "edge_id": "54979b4c-880b-48b1-9906-cea354d29dcd",
             "traversal_order": 1,
-            "to_node_key": "T14_ACTION_AIS_SEVERE",
+            "to_node_key": "T14_ACTION_SELECT_LABETALOL_NICARDIPINE_OR_NITROPRUSSIDE_FOR_SEVERE_AIS",
             "candidate_condition": null
           }
         ]
       },
-      "T14_ACTION_AIS_SEVERE": {
+      "T14_ACTION_SELECT_LABETALOL_NICARDIPINE_OR_NITROPRUSSIDE_FOR_SEVERE_AIS": {
         "id": "5f03a0ba-fc0d-4ac1-9e06-f40641921048",
-        "node_key": "T14_ACTION_AIS_SEVERE",
+        "node_key": "T14_ACTION_SELECT_LABETALOL_NICARDIPINE_OR_NITROPRUSSIDE_FOR_SEVERE_AIS",
         "node_type": "ACTION",
         "text_en": "AIS: primary Labetalol/Nicardipine; alternative Nitroprusside; target MAP -15%, within 1 hour",
         "text_vi": "Nhồi máu não cấp: ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside; mục tiêu MAP giảm 15%, trong 1 giờ",
@@ -779,14 +779,14 @@
           {
             "edge_id": "a4ecca27-fab0-475d-afb7-1e2d092cb8da",
             "traversal_order": 1,
-            "to_node_key": "T14_ACTION_ACUTE_ICH",
+            "to_node_key": "T14_ACTION_SELECT_NITROGLYCERINE_LABETALOL_OR_URAPIDIL_FOR_ACUTE_ICH",
             "candidate_condition": null
           }
         ]
       },
-      "T14_ACTION_ACUTE_ICH": {
+      "T14_ACTION_SELECT_NITROGLYCERINE_LABETALOL_OR_URAPIDIL_FOR_ACUTE_ICH": {
         "id": "2ae327a8-8199-4851-b979-000fadf9edb1",
-        "node_key": "T14_ACTION_ACUTE_ICH",
+        "node_key": "T14_ACTION_SELECT_NITROGLYCERINE_LABETALOL_OR_URAPIDIL_FOR_ACUTE_ICH",
         "node_type": "ACTION",
         "text_en": "Acute ICH: primary Nitroglycerine/Labetalol; alternative Urapidil; target 130<SBP<180 mmHg",
         "text_vi": "Xuất huyết não cấp: ưu tiên Nitroglycerine/Labetalol; thay thế Urapidil; mục tiêu 130<HATT<180 mmHg",
@@ -883,14 +883,14 @@
           {
             "edge_id": "1e7a271d-f69d-4197-9108-91958b67cb40",
             "traversal_order": 1,
-            "to_node_key": "T14_ACTION_ACS",
+            "to_node_key": "T14_ACTION_SELECT_NITROPRUSSIDE_OR_NITROGLYCERINE_WITH_LOOP_DIURETIC_OR_URAPIDIL_FOR_ACS",
             "candidate_condition": null
           }
         ]
       },
-      "T14_ACTION_ACS": {
+      "T14_ACTION_SELECT_NITROPRUSSIDE_OR_NITROGLYCERINE_WITH_LOOP_DIURETIC_OR_URAPIDIL_FOR_ACS": {
         "id": "f57f80db-de51-40ad-a751-626056ee90ec",
-        "node_key": "T14_ACTION_ACS",
+        "node_key": "T14_ACTION_SELECT_NITROPRUSSIDE_OR_NITROGLYCERINE_WITH_LOOP_DIURETIC_OR_URAPIDIL_FOR_ACS",
         "node_type": "ACTION",
         "text_en": "ACS: primary Nitroprusside or Nitroglycerine (with a loop diuretic); alternative Urapidil (with a loop diuretic); target SBP <140 mmHg, immediate",
         "text_vi": "Hội chứng vành cấp: ưu tiên Nitroprusside hoặc Nitroglycerine (kèm lợi tiểu quai); thay thế Urapidil (kèm lợi tiểu quai); mục tiêu HATT <140 mmHg, ngay lập tức",
@@ -975,14 +975,14 @@
           {
             "edge_id": "d0f1f6ad-b6d5-4f35-a871-c9f92eebe479",
             "traversal_order": 1,
-            "to_node_key": "T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
+            "to_node_key": "T14_ACTION_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
             "candidate_condition": null
           }
         ]
       },
-      "T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA": {
+      "T14_ACTION_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA": {
         "id": "4ce0d75e-7416-4381-b4eb-18e83f1df2c1",
-        "node_key": "T14_ACTION_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
+        "node_key": "T14_ACTION_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
         "node_type": "ACTION",
         "text_en": "Acute cardiogenic pulmonary edema: Labetalol or Metoprolol; target SBP <140 mmHg, immediate",
         "text_vi": "Phù phổi cấp do tim: Labetalol hoặc Metoprolol; mục tiêu HATT <140 mmHg, ngay lập tức",
@@ -1150,17 +1150,17 @@
           {
             "edge_id": "15a6e5d3-cee6-4f7e-9f2b-d2fbc88b1472",
             "traversal_order": 1,
-            "to_node_key": "T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP",
+            "to_node_key": "T14_ACTION_SELECT_LABETALOL_PLUS_MAGNESIUM_SULFATE_OR_NICARDIPINE_PLUS_MAGNESIUM_SULFATE_FOR_ECLAMPSIA_PREECLAMPSIA_OR_HELLP",
             "candidate_condition": null
           }
         ]
       },
-      "T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP": {
+      "T14_ACTION_SELECT_LABETALOL_PLUS_MAGNESIUM_SULFATE_OR_NICARDIPINE_PLUS_MAGNESIUM_SULFATE_FOR_ECLAMPSIA_PREECLAMPSIA_OR_HELLP": {
         "id": "c684b8bb-1b9e-4742-8c55-d17ebd14ce36",
-        "node_key": "T14_ACTION_ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP",
+        "node_key": "T14_ACTION_SELECT_LABETALOL_PLUS_MAGNESIUM_SULFATE_OR_NICARDIPINE_PLUS_MAGNESIUM_SULFATE_FOR_ECLAMPSIA_PREECLAMPSIA_OR_HELLP",
         "node_type": "ACTION",
-        "text_en": "Eclampsia/severe preeclampsia/HELLP: Labetalol or Nicardipine plus magnesium sulfate; target SBP <160 mmHg and DBP <105 mmHg, immediate",
-        "text_vi": "Sản giật/tiền sản giật nặng/HELLP: Labetalol hoặc Nicardipine phối hợp Magnesium sulfate; mục tiêu HATT <160 mmHg và HATTr <105 mmHg, ngay lập tức",
+        "text_en": "Select Labetalol + Magnesium Sulfate or Nicardipine + Magnesium Sulfate; target SBP <160 mmHg and DBP <105 mmHg immediately",
+        "text_vi": "Chọn Labetalol + Magnesium Sulfate hoặc Nicardipine + Magnesium Sulfate; mục tiêu HATT <160 mmHg và HATTr <105 mmHg ngay lập tức",
         "condition_definition": null,
         "context_patch": null,
         "action_payload": {
@@ -1169,7 +1169,40 @@
           "follow_up_mode": "NEW_ENCOUNTER",
           "follow_up_required": false,
           "target_dbp_upper_mmhg": 105,
-          "target_sbp_upper_mmhg": 160
+          "target_sbp_upper_mmhg": 160,
+          "regimen_update": {
+            "operation": "SELECT",
+            "alternatives": [
+              {
+                "components": [
+                  {
+                    "selector_kind": "medicine",
+                    "name": "Labetalol",
+                    "dose_strategy": "LOW_DOSE"
+                  },
+                  {
+                    "selector_kind": "medicine",
+                    "name": "Magnesium Sulfate",
+                    "dose_strategy": "LOW_DOSE"
+                  }
+                ]
+              },
+              {
+                "components": [
+                  {
+                    "selector_kind": "medicine",
+                    "name": "Nicardipine",
+                    "dose_strategy": "LOW_DOSE"
+                  },
+                  {
+                    "selector_kind": "medicine",
+                    "name": "Magnesium Sulfate",
+                    "dose_strategy": "LOW_DOSE"
+                  }
+                ]
+              }
+            ]
+          }
         },
         "global_config": null,
         "link_target_tree_key": null,
@@ -1226,9 +1259,9 @@
         "references": [],
         "transitions": []
       },
-      "T14_ACTION_MALIGNANT_HTN_TMA_AKI": {
+      "T14_ACTION_SELECT_LABETALOL_NICARDIPINE_NITROPRUSSIDE_OR_URAPIDIL_FOR_MALIGNANT_HTN_TMA_AKI": {
         "id": "961295af-8239-437a-8106-a6fb9da5d24c",
-        "node_key": "T14_ACTION_MALIGNANT_HTN_TMA_AKI",
+        "node_key": "T14_ACTION_SELECT_LABETALOL_NICARDIPINE_NITROPRUSSIDE_OR_URAPIDIL_FOR_MALIGNANT_HTN_TMA_AKI",
         "node_type": "ACTION",
         "text_en": "Hypertensive emergency with or without TMA/acute kidney injury: primary Labetalol/Nicardipine; alternative Nitroprusside/Urapidil; target MAP -20% to -25%, within hours",
         "text_vi": "THA cấp cứu có hoặc không có TMA/Suy thận cấp: ưu tiên Labetalol/Nicardipine; thay thế Nitroprusside/Urapidil; mục tiêu MAP giảm 20-25%, trong vài giờ",

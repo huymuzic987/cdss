@@ -622,14 +622,14 @@
           {
             "edge_id": "672ddd64-cc32-a3df-cf65-214e972b3d3b",
             "traversal_order": 1,
-            "to_node_key": "T5_INF_RESISTANT_HYPERTENSION_TREATMENT_STEP",
+            "to_node_key": "T5_INFERENCE_ADD_MRA_DIURETIC_ALPHA_BLOCKER_OR_BETA_BLOCKER_FOR_RESISTANT_HYPERTENSION",
             "candidate_condition": null
           }
         ]
       },
-      "T5_INF_RESISTANT_HYPERTENSION_TREATMENT_STEP": {
+      "T5_INFERENCE_ADD_MRA_DIURETIC_ALPHA_BLOCKER_OR_BETA_BLOCKER_FOR_RESISTANT_HYPERTENSION": {
         "id": "2d8f35fd-3fe7-7869-49f5-bc9cbb752ea1",
-        "node_key": "T5_INF_RESISTANT_HYPERTENSION_TREATMENT_STEP",
+        "node_key": "T5_INFERENCE_ADD_MRA_DIURETIC_ALPHA_BLOCKER_OR_BETA_BLOCKER_FOR_RESISTANT_HYPERTENSION",
         "node_type": "INFERENCE",
         "text_en": "Resistant hypertension: add MRA, another diuretic, alpha-blocker, or beta-blocker; increase to two pills",
         "text_vi": "THA KHÁNG TRỊ: Thêm MRA, Lợi tiểu khác, chẹn alpha hoặc beta (Lên 2 viên)",

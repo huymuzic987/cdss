@@ -10,6 +10,7 @@ aliases) so responses validate against the official R4 JSON Schema.
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
@@ -110,7 +111,11 @@ def _literal_to_fhirpath(value: JsonValue) -> str:
 
 
 def _node_key_to_id(node_key: str) -> str:
-    return node_key.lower().replace("_", "-")
+    slug = node_key.lower().replace("_", "-")
+    if len(slug) <= 64:
+        return slug
+    digest = hashlib.sha256(node_key.encode("utf-8")).hexdigest()[:8]
+    return f"{slug[: 64 - len(digest) - 1]}-{digest}"
 
 
 def _json_extension_value(value: Any) -> str:
