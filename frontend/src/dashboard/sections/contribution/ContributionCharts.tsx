@@ -25,7 +25,7 @@ export function ContributionCharts({ contributors, recentCommits = [] }: Contrib
         <DonutShareChart contributors={contributors} />
 
         {/* Top Row Chart 2: Interactive Commit Velocity Area Chart */}
-        <CommitVelocityChart recentCommits={recentCommits} />
+        <CommitVelocityChart contributors={contributors} recentCommits={recentCommits} />
 
         {/* Bottom Row Chart 3: Commit Type Breakdown Stacked Bar Chart */}
         <CommitTypeBreakdownChart contributors={contributors} recentCommits={recentCommits} />
