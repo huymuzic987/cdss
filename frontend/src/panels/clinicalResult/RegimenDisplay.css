@@ -1,0 +1,17 @@
+.cds-regimen-path,.cds-final-regimens { padding: 11px 13px 13px; border-bottom: 1px solid var(--border); }
+.cds-regimen-path > strong,.cds-final-regimens > strong { display: block; margin-bottom: 8px; color: var(--text-bright); font-size: 12px; }
+.cds-regimen-path-step { display: grid; grid-template-columns: 72px minmax(0,1fr) auto; gap: 10px; padding: 7px 0; border-top: 1px solid var(--border); align-items: center; }
+.cds-regimen-path-step > span:first-child { color: var(--accent-text); font-size: 10px; font-weight: 800; }
+.cds-regimen-path-step span small { display: block; margin-top: 2px; color: var(--text-muted); }
+.cds-regimen-path-step > small { color: var(--text-secondary); text-align: right; }
+.cds-regimen-guidance { margin-bottom: 9px; color: var(--text-secondary); font-size: 12px; font-weight: 700; }
+.cds-final-regimen { padding: 11px 12px; border: 1px solid var(--accent-border); border-radius: 8px; background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.cds-regimen-option-title { display: block; margin-bottom: 9px; color: var(--accent-text); font-size: 12px; }
+.cds-regimen-components { display: flex; flex-wrap: wrap; align-items: stretch; gap: 7px; }
+.cds-regimen-component-group { display: flex; align-items: center; gap: 7px; }
+.cds-regimen-component { display: flex; min-width: 78px; flex-direction: column; gap: 2px; padding: 7px 9px; border-radius: 6px; background: var(--bg-panel); }
+.cds-regimen-component strong { color: var(--text-bright); font-size: 14px; }
+.cds-regimen-component small,.cds-regimen-together { color: var(--text-secondary); font-size: 11px; }
+.cds-regimen-and { color: var(--success-text); font-size: 18px; font-weight: 850; }
+.cds-regimen-together { display: block; margin-top: 8px; font-weight: 650; }
+.cds-regimen-or { padding: 5px; color: var(--accent-text); font-size: 11px; font-weight: 850; letter-spacing: .08em; text-align: center; }

@@ -16,6 +16,7 @@ import {
   isSingleMedicationOrder,
   RecommendedOrderCard,
 } from './clinicalResult/RecommendedOrderCard'
+import { RegimenDisplay } from './clinicalResult/RegimenDisplay'
 
 export type { RecommendedOrder } from './clinicalDecisionSupportAdapter'
 
@@ -123,7 +124,9 @@ function ResultDialog({
           </ClinicalSection>
 
           <ClinicalSection title={messages.recommendedOrders}>
-            {presentation.orders.length === 0 ? <p className="cds-empty">{messages.noRecommendedOrders}</p> : (
+            <RegimenDisplay presentation={presentation} locale={locale} />
+            {presentation.orders.length === 0 && presentation.regimenOptions.length === 0
+              ? <p className="cds-empty">{messages.noRecommendedOrders}</p> : (
               <div className="cds-order-rows">
                 {presentation.orders.filter(isSingleMedicationOrder).length > 1 && (
                   <div className="cds-order-choice-hint">{messages.chooseOneMedicine}</div>

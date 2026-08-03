@@ -428,3 +428,80 @@ def test_available_link_target_has_no_warning() -> None:
     )
 
     assert result.warnings == []
+
+
+@pytest.mark.parametrize(
+    ("node_key", "regimen_update", "expected_reason"),
+    [
+        (
+            "T6_INFERENCE_ADD_LOW_DOSE_B_BETA_BLOCKER",
+            {
+                "operation": "COMBINE",
+                "components": [{"selector_kind": "class", "code": "B"}],
+            },
+            "regimen_operation_does_not_match_node_key",
+        ),
+        (
+            "T6_INFERENCE_MAINTAIN_CURRENT_REGIMEN_NO_CHANGE",
+            {
+                "operation": "MAINTAIN",
+                "components": [{"selector_kind": "class", "code": "C"}],
+            },
+            "maintain_regimen_must_not_contain_components",
+        ),
+    ],
+)
+def test_regimen_update_must_match_key_and_maintain_is_empty(
+    node_key: str,
+    regimen_update: dict[str, Any],
+    expected_reason: str,
+) -> None:
+    start = _node(1, "start", NodeType.START)
+    inference = _node(
+        2,
+        node_key,
+        NodeType.INFERENCE,
+        action_payload={"regimen_update": regimen_update},
+    )
+    end = _node(3, "end", NodeType.END)
+
+    with pytest.raises(InvalidTreeStructure) as exc_info:
+        validate_tree_graph(
+            _graph(
+                [start, inference, end],
+                [_edge(10, start, inference), _edge(11, inference, end)],
+            )
+        )
+
+    assert exc_info.value.details["reason"] == expected_reason
+
+
+def test_explicit_add_regimen_update_is_valid() -> None:
+    start = _node(1, "start", NodeType.START)
+    inference = _node(
+        2,
+        "T6_INFERENCE_ADD_LOW_DOSE_B_BETA_BLOCKER",
+        NodeType.INFERENCE,
+        action_payload={
+            "regimen_update": {
+                "operation": "ADD",
+                "components": [
+                    {
+                        "selector_kind": "class",
+                        "code": "B",
+                        "dose_strategy": "LOW_DOSE",
+                    }
+                ],
+            }
+        },
+    )
+    end = _node(3, "end", NodeType.END)
+
+    result = validate_tree_graph(
+        _graph(
+            [start, inference, end],
+            [_edge(10, start, inference), _edge(11, inference, end)],
+        )
+    )
+
+    assert result.warnings == []

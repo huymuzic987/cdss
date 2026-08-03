@@ -105,6 +105,80 @@ function renderModal(
 afterEach(cleanup)
 
 describe('TraversalResultModal', () => {
+  it('shows the collection path and final B regimen without legacy orders', () => {
+    const regimenPresentation = {
+      ...presentation,
+      regimen_plan: {
+        schema_version: '1.0',
+        steps: [{
+          id: 'add-b',
+          keyword: 'ADD',
+          text_en: 'Add beta-blocker',
+          text_vi: 'ThÃªm thuá»‘c cháº¹n Beta',
+          components: [{ selector_kind: 'class', code: 'B', dose_strategy: 'LOW_DOSE' }],
+          alternatives: [],
+        }],
+        effective_regimen: {
+          base_options: [],
+          additions: [{ selector_kind: 'class', code: 'B', dose_strategy: 'LOW_DOSE' }],
+          stopped_components: [],
+          constraints: [],
+        },
+      },
+    }
+    const action = {
+      ...result.actions[0]!,
+      payload: { ...result.actions[0]!.payload, presentation: regimenPresentation },
+    }
+
+    renderModal({ ...result, actions: [action] })
+
+    expect(screen.getByText('Drug collection path')).toBeTruthy()
+    expect(screen.getByText('ADD')).toBeTruthy()
+    expect(screen.getByText('Final drug regimen')).toBeTruthy()
+    expect(screen.getByText('Option 1')).toBeTruthy()
+    expect(screen.getAllByText('B')).toHaveLength(2)
+    expect(screen.getAllByText('Low dose')).toHaveLength(2)
+    expect(screen.getAllByText('Use all components together').length).toBeGreaterThan(0)
+    expect(document.querySelector('.cds-order-row')).toBeNull()
+    expect(screen.queryByText('Amlodipine')).toBeNull()
+  })
+
+  it('renders alternative bases as complete OR regimens with additions in both', () => {
+    const regimenPresentation = {
+      ...presentation,
+      regimen_plan: {
+        schema_version: '1.0',
+        steps: [],
+        effective_regimen: {
+          base_options: [
+            { components: [{ code: 'A' }, { code: 'C' }] },
+            { components: [{ code: 'A' }, { code: 'D' }] },
+          ],
+          additions: [{ code: 'B' }],
+          stopped_components: [],
+          constraints: [],
+        },
+      },
+    }
+    const action = {
+      ...result.actions[0]!,
+      payload: { ...result.actions[0]!.payload, presentation: regimenPresentation },
+    }
+
+    renderModal({ ...result, actions: [action] })
+
+    const options = document.querySelectorAll('.cds-final-regimen')
+    const optionLabels = [...options].map((option) => (
+      [...option.querySelectorAll('.cds-regimen-component > strong')].map((item) => item.textContent)
+    ))
+    expect(options).toHaveLength(2)
+    expect(optionLabels[0]).toEqual(['A', 'C', 'B'])
+    expect(optionLabels[1]).toEqual(['A', 'D', 'B'])
+    expect(screen.getByText('OR')).toBeTruthy()
+    expect(screen.getByText('Choose one complete regimen')).toBeTruthy()
+  })
+
   it('renders alert, reason, action, drugs, and path as five ordered rows', () => {
     renderModal()
     const body = screen.getByRole('dialog').querySelector('.cds-modal-body')

@@ -455,7 +455,7 @@
           {
             "edge_id": "d9b67463-7ae1-41cc-b508-f3928c710f31",
             "traversal_order": 1,
-            "to_node_key": "T8_INF_ADD_SGLT2I_GLP1RA",
+            "to_node_key": "T8_INFERENCE_SELECT_SGLT2I_OR_GLP1RA",
             "candidate_condition": null
           }
         ]
@@ -531,18 +531,22 @@
           }
         ]
       },
-      "T8_INF_ADD_SGLT2I_GLP1RA": {
+      "T8_INFERENCE_SELECT_SGLT2I_OR_GLP1RA": {
         "id": "5020708d-fda3-4d55-aa4f-b30692011a7f",
-        "node_key": "T8_INF_ADD_SGLT2I_GLP1RA",
+        "node_key": "T8_INFERENCE_SELECT_SGLT2I_OR_GLP1RA",
         "node_type": "INFERENCE",
-        "text_en": "Add SGLT2i or GLP-1RA",
-        "text_vi": "Bổ sung SGLT2i hoặc GLP-1RA",
+        "text_en": "Select SGLT2i or GLP1RA",
+        "text_vi": "Chọn SGLT2i hoặc GLP1RA",
         "condition_definition": null,
         "context_patch": {
           "treatment_preferences": {
-            "additional_drug_classes": [
-              "SGLT2_INHIBITOR",
-              "GLP1_RECEPTOR_AGONIST"
+            "combination_options": [
+              [
+                "SGLT2i"
+              ],
+              [
+                "GLP1RA"
+              ]
             ]
           }
         },

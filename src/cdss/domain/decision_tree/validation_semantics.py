@@ -8,6 +8,7 @@ from cdss.domain.decision_tree.conditions import validate_condition_definition
 from cdss.domain.decision_tree.contracts import NodeType, copy_json_value
 from cdss.domain.decision_tree.graph import NodeDefinition, TreeGraph
 from cdss.domain.decision_tree.validation_errors import context_patch_error, structure_error
+from cdss.domain.decision_tree.validation_regimen import validate_regimen_update
 
 
 def validate_node_semantics(
@@ -56,6 +57,7 @@ def validate_node_semantics(
             )
 
         validate_context_patch(graph, node)
+        validate_regimen_update(graph, node)
 
 
 def validate_context_patch(graph: TreeGraph, node: NodeDefinition) -> None:
