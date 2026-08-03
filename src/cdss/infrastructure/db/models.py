@@ -498,3 +498,23 @@ class FhirImportBatch(Base):
     imported_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=_utcnow
     )
+
+
+class GitContribution(Base):
+    """Pre-calculated contribution statistics per team member."""
+
+    __tablename__ = "git_contributions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    member_key: Mapped[str] = mapped_column(Text, nullable=False, unique=True, index=True)
+    display_name: Mapped[str] = mapped_column(Text, nullable=False)
+    canonical_email: Mapped[str] = mapped_column(Text, nullable=False)
+    commit_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    lines_added: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    lines_deleted: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    total_loc_changes: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    last_commit_hash: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow
+    )
+

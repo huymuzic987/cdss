@@ -1,5 +1,6 @@
 import type {
   ApiErrorResponse,
+  ContributionResponse,
   DashboardFilters,
   DashboardSummaryResponse,
   EvaluationResponse,
@@ -59,14 +60,17 @@ async function deleteRequest(path: string): Promise<void> {
 }
 
 function buildQuery(params: object): string {
-  const entries = (Object.entries(params) as [string, string | number | undefined][]).filter(
-    ([, v]) => v !== undefined && v !== '',
-  )
-  if (entries.length === 0) return ''
-  return (
-    '?' + entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join('&')
-  )
+  const searchParams = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== '') {
+      searchParams.append(key, String(value))
+    }
+  }
+  const queryString = searchParams.toString()
+  return queryString ? `?${queryString}` : ''
 }
+
+
 
 export function fetchTrees(): Promise<TreeSummary[]> {
   return getJson<TreeSummary[]>('/trees')
@@ -88,34 +92,38 @@ export function resetTreeLayout(treeKey: string): Promise<void> {
   return deleteRequest(`/trees/${encodeURIComponent(treeKey)}/layout`)
 }
 
-export async function evaluateTree(bundle: JsonObject): Promise<{
+export interface EvaluationOutcome {
   result: EvaluationResponse | null
   partial: ApiErrorResponse | null
   error: ApiErrorResponse | null
-}> {
-  return postEvaluation('/evaluate', bundle)
 }
 
-/** Known-stage medication follow-up: skips previous-visit inference. */
-export async function evaluateFollowUp(bundle: JsonObject): Promise<{
-  result: EvaluationResponse | null
-  partial: ApiErrorResponse | null
-  error: ApiErrorResponse | null
-}> {
-  return postEvaluation('/evaluate/follow-up', bundle)
-}
-
-async function postEvaluation(path: string, bundle: JsonObject): Promise<{
-  result: EvaluationResponse | null
-  partial: ApiErrorResponse | null
-  error: ApiErrorResponse | null
-}> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+export async function evaluateTree(bundle: JsonObject): Promise<EvaluationOutcome> {
+  const response = await fetch(`${API_BASE_URL}/evaluate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(bundle),
   })
-  const body = (await response.json()) as EvaluationResponse | ApiErrorResponse
+  const body = (await response.json()) as unknown
+  if (response.ok) {
+    return { result: body as EvaluationResponse, partial: null, error: null }
+  }
+  const err = body as ApiErrorResponse
+  // 424 = LinkTargetNotFound — partial run state is available
+  if (response.status === 424 && err.partial_run_state) {
+    return { result: null, partial: err, error: null }
+  }
+  return { result: null, partial: null, error: err }
+}
+
+/** Known-stage medication follow-up: skips previous-visit inference. */
+export async function evaluateFollowUp(bundle: JsonObject): Promise<EvaluationOutcome> {
+  const response = await fetch(`${API_BASE_URL}/evaluate/follow-up`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(bundle),
+  })
+  const body = (await response.json()) as unknown
   if (response.ok) {
     return { result: body as EvaluationResponse, partial: null, error: null }
   }
@@ -143,6 +151,10 @@ export function fetchPatientDetail(fhirId: string): Promise<PatientDetailRespons
 
 export function seedDashboardData(source: 'preset' | 'synthetic' | 'real_test_case'): Promise<ImportResult> {
   return postJson<ImportResult>(`/dashboard/seed?source=${source}`)
+}
+
+export function fetchContributionStats(scope: 'main' | 'all' = 'main'): Promise<ContributionResponse> {
+  return getJson<ContributionResponse>(`/dashboard/contributions?scope=${scope}`)
 }
 
 export function fhirPatientExportUrl(filters: DashboardFilters): string {
