@@ -213,3 +213,7 @@ export interface PatientSearchParams {
   limit?: number
   offset?: number
 }
+
+export * from './contribution'
+
+

@@ -251,3 +251,54 @@ def test_legacy_parameters_resource_is_rejected() -> None:
         parse_clinical_bundle(bundle)
 
     assert "canonical clinical profile" in exc_info.value.details["reason"]
+
+
+@pytest.mark.parametrize(
+    ("flag", "active"),
+    [
+        ("drug_replacement_required", True),
+        ("adherence_adequate", False),
+        ("dose_adequate", True),
+    ],
+)
+def test_medication_follow_up_flags_survive_canonical_parsing(flag: str, active: bool) -> None:
+    bundle = json.loads(next(iter(sorted(FIXTURE_DIR.glob("*.json")))).read_text(encoding="utf-8"))
+    patient_id = bundle["entry"][0]["resource"]["id"]
+    bundle["entry"].append(
+        {
+            "resource": {
+                "resourceType": "Condition",
+                "id": f"{patient_id}-{flag}",
+                "subject": {"reference": f"Patient/{patient_id}"},
+                "code": {
+                    "coding": [
+                        {
+                            "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+                            "code": flag,
+                        }
+                    ]
+                },
+                "verificationStatus": {
+                    "coding": [
+                        {
+                            "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+                            "code": "confirmed" if active else "refuted",
+                        }
+                    ]
+                },
+            }
+        }
+    )
+
+    parsed = parse_clinical_bundle(bundle)
+
+    assert parsed.runtime_input[flag] is active
+
+
+def test_omitted_adherence_and_dose_flags_remain_unspecified() -> None:
+    parsed = parse_clinical_bundle(
+        json.loads(next(iter(sorted(FIXTURE_DIR.glob("*.json")))).read_text(encoding="utf-8"))
+    )
+
+    assert "adherence_adequate" not in parsed.runtime_input
+    assert "dose_adequate" not in parsed.runtime_input

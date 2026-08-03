@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { ApiErrorResponse, EvaluationResponse, ExecutedAction, TreeGraphResponse } from '../api/types'
+import type { ApiErrorResponse, EvaluationResponse, TreeGraphResponse } from '../api/types'
 import { buildClinicalPresentation } from './clinicalDecisionSupportAdapter'
 import {
   getClinicalDecisionSupportMessages,
@@ -11,6 +11,8 @@ import { ClinicalSection } from './clinicalResult/ClinicalSection'
 import { confirmedText, formatVisitDate } from './clinicalResult/criticalFindingFormat'
 import { deriveCriticalSummary } from './clinicalResult/criticalSummary'
 import { ImportantDecisionPath } from './clinicalResult/ImportantDecisionPath'
+import { deriveMedicationFollowUpMessage } from './clinicalResult/medicationFollowUpMessage'
+import { actionWithPresentation, deriveMedicationReassessment, withCurrentFollowUpRegimen } from './clinicalResult/modalHelpers'
 import { buildOrderProvenance } from './clinicalResult/orderProvenance'
 import {
   isSingleMedicationOrder,
@@ -53,9 +55,15 @@ function ResultDialog({
   const detailedFindings = summary.findings.filter((finding) => finding.value !== confirmation)
   const recommendationAction = actionWithPresentation(actions) ?? actions.at(-1)
   const provenance = buildOrderProvenance(recommendationAction, references, graphs, locale)
+  const medicationFollowUpMessage = deriveMedicationFollowUpMessage(actions, context, locale)
+  const medicationReassessment = deriveMedicationReassessment(context, locale)
+  const displayedOrders = withCurrentFollowUpRegimen(presentation.orders, context, locale)
   const careActions = deriveCareActions(
     presentation.recommendation, presentation.additionalActions, summary, context,
   )
+  if (medicationFollowUpMessage && !careActions.includes(medicationFollowUpMessage)) {
+    careActions.unshift(medicationFollowUpMessage)
+  }
   const dialogRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -82,9 +90,6 @@ function ResultDialog({
                   </span>
                 )}
               </div>
-              {careActions[0] && summary.urgency !== 'routine' && (
-                <div className="cds-alert-action"><span>{messages.actionNow}</span><strong>{careActions[0]}</strong></div>
-              )}
               {!result && partial && <div className="cds-inner-row cds-error-copy">{partial.message}</div>}
               {result?.pregnancy_follow_up && (
                 <div className="cds-inner-row cds-episode-row">
@@ -113,8 +118,14 @@ function ResultDialog({
           <ClinicalSection title={messages.recommendedAction}>
             {careActions.length === 0 && !summary.followUp && <p className="cds-empty">{messages.noAdditionalActions}</p>}
             {careActions.map((action) => (
-              <div className="cds-inner-row cds-action-item" key={action}><span aria-hidden="true">→</span><span>{action}</span></div>
+              <div className="cds-inner-row cds-action-item" key={action}><span>{action}</span></div>
             ))}
+            {medicationReassessment && (
+              <div className="cds-inner-row cds-follow-up-row">
+                <span>{locale === 'vi' ? 'Ngày tái đánh giá' : 'Reassessment date'}</span>
+                <strong>{medicationReassessment.date}</strong>
+              </div>
+            )}
             {summary.followUp && (
               <div className="cds-inner-row cds-follow-up-row">
                 <span>{messages.followUpTiming}</span><strong>{summary.followUp.timing}</strong>
@@ -128,10 +139,10 @@ function ResultDialog({
             {presentation.orders.length === 0 && presentation.regimenOptions.length === 0
               ? <p className="cds-empty">{messages.noRecommendedOrders}</p> : (
               <div className="cds-order-rows">
-                {presentation.orders.filter(isSingleMedicationOrder).length > 1 && (
+                {displayedOrders.filter(isSingleMedicationOrder).length > 1 && (
                   <div className="cds-order-choice-hint">{messages.chooseOneMedicine}</div>
                 )}
-                {presentation.orders.map((order) => (
+                {displayedOrders.map((order) => (
                   <RecommendedOrderCard
                     key={order.id} order={order} provenance={provenance} locale={locale}
                   />
@@ -152,13 +163,6 @@ function ResultDialog({
       </div>
     </div>
   )
-}
-
-function actionWithPresentation(actions: ExecutedAction[]): ExecutedAction | undefined {
-  return [...actions].reverse().find((action) => {
-    const value = action.payload.presentation
-    return typeof value === 'object' && value !== null && !Array.isArray(value)
-  })
 }
 
 export function TraversalResultModal({ locale, ...props }: TraversalResultModalProps) {

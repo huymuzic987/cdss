@@ -15,6 +15,12 @@ _CONTINUATION_NODES = frozenset(
         ("hypertension-in-pregnancy", "T12_C_IMMEDIATE_TARGET"),
         ("resistant-hypertension", "T13_A_CHECK_MRA"),
         ("resistant-hypertension", "T13_A_CHECK_SPIRONOLACTONE"),
+        # These treatment actions lead directly to the resistant-HTN BP
+        # reached/not-reached conditions. Continue so the shared stateless
+        # medication follow-up gate can run before those conditions.
+        ("resistant-hypertension", "T13_A_ADD_MRA"),
+        ("resistant-hypertension", "T13_A_ADD_SPIRONOLACTONE"),
+        ("resistant-hypertension", "T13_A_ALTERNATIVES"),
         ("hypertensive-emergency", "T14_ACTION_ADMIT_AND_DETERMINE_TARGET_ORGAN"),
     }
 )
