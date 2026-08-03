@@ -105,6 +105,143 @@ function renderModal(
 afterEach(cleanup)
 
 describe('TraversalResultModal', () => {
+  it('shows a compact final regimen with click-only details', async () => {
+    const regimenPresentation = {
+      ...presentation,
+      regimen_plan: {
+        schema_version: '1.0',
+        steps: [{
+          id: 'add-b',
+          tree_key: 'treatment-tree',
+          node_key: 'T4_ACTION_ADD_DRUG',
+          keyword: 'ADD',
+          text_en: 'Add beta-blocker',
+          text_vi: 'ThÃªm thuá»‘c cháº¹n Beta',
+          components: [{ selector_kind: 'class', code: 'B', dose_strategy: 'LOW_DOSE' }],
+          alternatives: [],
+        }],
+        effective_regimen: {
+          base_options: [],
+          additions: [{ selector_kind: 'class', code: 'B', dose_strategy: 'LOW_DOSE' }],
+          stopped_components: [],
+          constraints: [],
+        },
+        catalog_by_class: {
+          B: [{
+            drug_id: 'DRUG-BISOPROLOL', name: 'Bisoprolol', drug_class: 'B',
+            route: 'Thuốc Uống', dose_low: '1.25 mg', dose_usual: '5 mg',
+            dose_max: '10 mg', snomed_code: '386872004',
+          }],
+        },
+      },
+    }
+    const action = {
+      ...result.actions[0]!,
+      payload: { ...result.actions[0]!.payload, presentation: regimenPresentation },
+    }
+
+    renderModal({ ...result, actions: [action] })
+
+    expect(screen.getByText('Drug collection path')).toBeTruthy()
+    expect(screen.getByText('ADD')).toBeTruthy()
+    expect(screen.getByText('Final drug regimen')).toBeTruthy()
+    expect(screen.queryByText('Option 1')).toBeNull()
+    expect(screen.getAllByText('B')).toHaveLength(2)
+    expect(screen.getAllByText('Low dose')).toHaveLength(2)
+    expect(screen.queryByText('1.25 mg')).toBeNull()
+    expect(screen.getAllByText('Use all components together').length).toBeGreaterThan(0)
+    expect(document.querySelector('.cds-order-row')).toBeNull()
+    expect(screen.queryByText('Amlodipine')).toBeNull()
+    expect(screen.queryByRole('tooltip')).toBeNull()
+
+    await userEvent.setup().hover(document.querySelector('.cds-final-regimen') as HTMLElement)
+    expect(screen.queryByRole('tooltip')).toBeNull()
+    expect(screen.getByText('Drug collection path').closest('.cds-path-details')).toBeTruthy()
+
+    await userEvent.setup().click(document.querySelector('.cds-regimen-component') as HTMLElement)
+    const drugDialog = screen.getByRole('dialog', { name: 'B drug details' })
+    expect(within(drugDialog).getByText('Bisoprolol')).toBeTruthy()
+    expect(within(drugDialog).getByText('Low: 1.25 mg').classList.contains('cds-active-dose')).toBe(true)
+    expect(within(drugDialog).getByText('Usual: 5 mg')).toBeTruthy()
+    expect(within(drugDialog).getByText('Maximum: 10 mg')).toBeTruthy()
+    expect(drugDialog.textContent).toContain('SNOMED CT: 386872004')
+
+    await userEvent.setup().click(document.querySelector('.cds-regimen-component') as HTMLElement)
+    expect(screen.queryByRole('dialog', { name: 'B drug details' })).toBeNull()
+  })
+
+  it('toggles the drug collection path independently from the final regimen', async () => {
+    const regimenPresentation = {
+      ...presentation,
+      regimen_plan: {
+        schema_version: '1.0',
+        steps: [{
+          id: 'add-b', tree_key: 'treatment-tree', node_key: 'T4_ACTION_ADD_DRUG',
+          keyword: 'ADD', text_en: 'Add beta-blocker', text_vi: 'Thêm thuốc chẹn Beta',
+          components: [{ selector_kind: 'class', code: 'B' }], alternatives: [],
+        }],
+        effective_regimen: {
+          base_options: [], additions: [{ selector_kind: 'class', code: 'B' }],
+          stopped_components: [], constraints: [],
+        },
+      },
+    }
+    const action = {
+      ...result.actions[0]!,
+      payload: { ...result.actions[0]!.payload, presentation: regimenPresentation },
+    }
+    renderModal({ ...result, actions: [action] })
+
+    const path = screen.getByText('Drug collection path').closest('details')!
+    const final = screen.getByText('Final drug regimen').closest('details')!
+    expect(path.hasAttribute('open')).toBe(true)
+    expect(final.hasAttribute('open')).toBe(true)
+
+    await userEvent.setup().click(path.querySelector('summary')!)
+    expect(path.hasAttribute('open')).toBe(false)
+    expect(final.hasAttribute('open')).toBe(true)
+  })
+
+  it('renders alternative bases as complete OR regimens with additions in both', async () => {
+    const regimenPresentation = {
+      ...presentation,
+      regimen_plan: {
+        schema_version: '1.0',
+        steps: [],
+        effective_regimen: {
+          base_options: [
+            { components: [{ code: 'A' }, { code: 'C' }] },
+            { components: [{ code: 'A' }, { code: 'D' }] },
+          ],
+          additions: [{ code: 'B' }],
+          stopped_components: [],
+          constraints: [],
+        },
+      },
+    }
+    const action = {
+      ...result.actions[0]!,
+      payload: { ...result.actions[0]!.payload, presentation: regimenPresentation },
+    }
+
+    renderModal({ ...result, actions: [action] })
+
+    const options = document.querySelectorAll('.cds-final-regimen')
+    const optionLabels = [...options].map((option) => (
+      [...option.querySelectorAll('.cds-regimen-component > strong')].map((item) => item.textContent)
+    ))
+    expect(options).toHaveLength(2)
+    expect(optionLabels[0]).toEqual(['A', 'C', 'B'])
+    expect(optionLabels[1]).toEqual(['A', 'D', 'B'])
+    expect(screen.queryByText('OR')).toBeNull()
+    expect(screen.getByText('Choose one complete regimen below')).toBeTruthy()
+    const regimenNumber = screen.getByRole('button', { name: 'Show details for regimen 1' })
+    await userEvent.setup().click(regimenNumber)
+    expect(await screen.findByRole('tooltip')).toBeTruthy()
+    await userEvent.setup().click(regimenNumber)
+    expect(screen.queryByRole('tooltip')).toBeNull()
+  })
+
   it('renders alert, reason, action, drugs, and path as five ordered rows', () => {
     renderModal()
     const body = screen.getByRole('dialog').querySelector('.cds-modal-body')

@@ -46,6 +46,8 @@ def build_presentation(
         presentation["evidence_strength"] = _coded_label(payload["recommendation_strength"])
     if isinstance(payload.get("evidence_level"), str):
         presentation["evidence_level"] = _coded_label(payload["evidence_level"])
+    if isinstance(payload.get("regimen_plan"), dict):
+        presentation["regimen_plan"] = deepcopy(payload["regimen_plan"])
     return presentation
 
 
@@ -54,9 +56,9 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
     excluded = _excluded_medicines(payload)
     blocked_text = f"{_presentation_text(payload)} {action.text_en} {action.text_vi}".casefold()
     existing = payload.get("recommended_orders")
-    if isinstance(existing, list):
-        return [deepcopy(item) for item in existing if isinstance(item, dict)]
     orders: list[JsonObject] = []
+    if isinstance(existing, list):
+        orders.extend(deepcopy(item) for item in existing if isinstance(item, dict))
     medicines = payload.get("medicines")
     class_catalog = payload.get("medicine_catalog_by_class")
     if not isinstance(class_catalog, dict):
@@ -131,7 +133,53 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
                     "source_data": deepcopy(raw),
                 }
             )
-    return orders
+    return _unique_orders(orders)
+
+
+def _unique_orders(orders: list[JsonObject]) -> list[JsonObject]:
+    output: list[JsonObject] = []
+    seen: set[str] = set()
+    for order in orders:
+        identity = _order_identity(order)
+        if identity in seen:
+            continue
+        seen.add(identity)
+        output.append(order)
+    return output
+
+
+def _order_identity(order: JsonObject) -> str:
+    medicine_ids = order.get("medicine_ids")
+    if isinstance(medicine_ids, list):
+        normalized_ids = sorted(
+            value.casefold().strip()
+            for value in medicine_ids
+            if isinstance(value, str) and value.strip()
+        )
+        if normalized_ids:
+            return f"medicines:{'|'.join(normalized_ids)}"
+
+    source_data = order.get("source_data")
+    if isinstance(source_data, dict):
+        identity = source_data.get("drug_id") or source_data.get("id")
+        if isinstance(identity, str) and identity.strip():
+            return f"medicines:{identity.casefold().strip()}"
+
+    drug_classes = order.get("drug_classes")
+    if isinstance(drug_classes, list):
+        class_codes = sorted(
+            raw.get("code", "").casefold().strip()
+            for raw in drug_classes
+            if isinstance(raw, dict) and isinstance(raw.get("code"), str)
+        )
+        if class_codes:
+            strategy = _string(order.get("dose_strategy")).casefold()
+            return f"classes:{'|'.join(class_codes)}:{strategy}"
+
+    identity = order.get("id")
+    if isinstance(identity, str) and identity.strip():
+        return f"id:{identity.casefold().strip()}"
+    return f"value:{order!r}"
 
 
 def _drug_class_details(

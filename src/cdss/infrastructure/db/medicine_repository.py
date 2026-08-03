@@ -24,6 +24,7 @@ def _to_domain(row: MedicineModel) -> Medicine:
         source=row.source,
         link=row.link,
         available=row.available,
+        snomed_code=getattr(row, "snomed_code", None),
     )
 
 
