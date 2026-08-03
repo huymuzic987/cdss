@@ -251,4 +251,3 @@ class ContributionsResponse(ApiModel):
     recent_commits: list[RecentCommitItem]
     scope: str
     updated_at: datetime
-

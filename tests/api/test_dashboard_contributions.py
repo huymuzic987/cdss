@@ -53,4 +53,3 @@ def test_get_contributions_all_scope():
     assert response.status_code == 200
     data = response.json()
     assert data["scope"] == "all"
-

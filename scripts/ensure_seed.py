@@ -9,12 +9,13 @@ import hashlib
 import subprocess
 import sys
 from pathlib import Path
+
 import psycopg2
 
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 
-from backups.dump import _database_url
+from backups.dump import _database_url  # noqa: E402
 
 
 def get_seed_hash(seed_path: Path) -> str:
@@ -33,7 +34,7 @@ def is_seeded_and_current(conn, seed_hash: str) -> bool:
         # 1. Check if tracking table exists
         cur.execute("""
             SELECT EXISTS (
-                SELECT 1 FROM information_schema.tables 
+                SELECT 1 FROM information_schema.tables
                 WHERE table_schema = 'public' AND table_name = '_dev_seed_meta'
             );
         """)
@@ -43,7 +44,7 @@ def is_seeded_and_current(conn, seed_hash: str) -> bool:
         # 2. Check if decision_trees table exists and is populated
         cur.execute("""
             SELECT EXISTS (
-                SELECT 1 FROM information_schema.tables 
+                SELECT 1 FROM information_schema.tables
                 WHERE table_schema = 'public' AND table_name = 'decision_trees'
             );
         """)
@@ -83,8 +84,11 @@ def main():
             print("-> Database is up-to-date with backups/seed.sql (Skipping seed).")
             return
 
-        print("-> Seed is missing or backups/seed.sql was modified. Applying Alembic migrations and seed...")
-        
+        print(
+            "-> Seed is missing or backups/seed.sql was modified. "
+            "Applying Alembic migrations and seed..."
+        )
+
         # Run Alembic migrations
         result = subprocess.run(["uv", "run", "alembic", "upgrade", "head"], cwd=root)
         if result.returncode != 0:
@@ -97,14 +101,17 @@ def main():
         cur.execute(sql_content)
 
         # Save metadata record
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS _dev_seed_meta (
                 hash TEXT PRIMARY KEY,
                 applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
             INSERT INTO _dev_seed_meta (hash) VALUES (%s)
             ON CONFLICT (hash) DO UPDATE SET applied_at = CURRENT_TIMESTAMP;
-        """, (seed_hash,))
+        """,
+            (seed_hash,),
+        )
         conn.commit()
         cur.close()
         print("-> Database successfully seeded and tracking hash updated!")

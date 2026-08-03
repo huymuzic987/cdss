@@ -1,6 +1,7 @@
 """Public dashboard router composed from focused endpoint modules."""
 
 from fastapi import APIRouter
+from fastapi.responses import RedirectResponse
 
 from cdss.api.routes import (
     dashboard_contributions,
@@ -8,8 +9,6 @@ from cdss.api.routes import (
     dashboard_seed,
     dashboard_summary,
 )
-
-from fastapi.responses import RedirectResponse
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 router.include_router(dashboard_seed.router)
@@ -23,5 +22,3 @@ router.include_router(dashboard_contributions.router)
 def dashboard_root_redirect():
     """Redirect GET /dashboard to GET /dashboard/summary."""
     return RedirectResponse(url="/dashboard/summary")
-
-

@@ -110,7 +110,6 @@ export function ContributionSection() {
       {(activeTab === 'all' || activeTab === 'charts') && (
         <ContributionCharts
           contributors={data.contributors}
-          overlappingMatrix={data.overlapping_matrix}
           recentCommits={data.recent_commits}
         />
       )}

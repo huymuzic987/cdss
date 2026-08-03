@@ -512,9 +512,10 @@ class GitContribution(Base):
     commit_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
     lines_added: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
     lines_deleted: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
-    total_loc_changes: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    total_loc_changes: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("0")
+    )
     last_commit_hash: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow
     )
-
