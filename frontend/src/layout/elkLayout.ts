@@ -1,4 +1,5 @@
-import ELK from 'elkjs/lib/elk.bundled.js'
+import ELK from 'elkjs/lib/elk-api.js'
+import elkWorkerUrl from 'elkjs/lib/elk-worker.min.js?url'
 import type { TreeGraphEdge, TreeGraphNode } from '../api/types'
 
 export const NODE_WIDTH = 220
@@ -9,7 +10,7 @@ export interface NodePosition {
   y: number
 }
 
-const elk = new ELK()
+const elk = new ELK({ workerUrl: elkWorkerUrl })
 
 export async function layoutTree(
   nodes: TreeGraphNode[],

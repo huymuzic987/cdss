@@ -14,10 +14,8 @@ import { ImportantDecisionPath } from './clinicalResult/ImportantDecisionPath'
 import { deriveMedicationFollowUpMessage } from './clinicalResult/medicationFollowUpMessage'
 import { actionWithPresentation, deriveMedicationReassessment, withCurrentFollowUpRegimen } from './clinicalResult/modalHelpers'
 import { buildOrderProvenance } from './clinicalResult/orderProvenance'
-import {
-  isSingleMedicationOrder,
-  RecommendedOrderCard,
-} from './clinicalResult/RecommendedOrderCard'
+import { isSingleMedicationOrder } from './clinicalResult/orderClassification'
+import { RecommendedOrderCard } from './clinicalResult/RecommendedOrderCard'
 import { RegimenDisplay, RegimenPathDisplay } from './clinicalResult/RegimenDisplay'
 
 export type { RecommendedOrder } from './clinicalDecisionSupportAdapter'
