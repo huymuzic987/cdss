@@ -7,21 +7,13 @@ import {
   type ClinicalDecisionSupportLocale,
 } from '../clinicalDecisionSupportMessages'
 import { DrugTooltip } from './DrugTooltip'
+import { isSingleMedicationOrder } from './orderClassification'
 
 export interface OrderProvenance {
   nodeLabel: string
   nodeKey: string
   treeName: string
   references: ExecutedReference[]
-}
-
-export function isSingleMedicationOrder(order: {
-  orderType?: string
-  drugClasses?: Array<{ code: string }>
-}): boolean {
-  const isAbcdCombination = (order.drugClasses?.length ?? 0) > 1
-    && order.drugClasses!.every((item) => /^[ABCD]$/.test(item.code))
-  return order.orderType === 'medication' && !isAbcdCombination
 }
 
 export function RecommendedOrderCard({ order, provenance, locale }: {
@@ -42,7 +34,7 @@ export function RecommendedOrderCard({ order, provenance, locale }: {
   const isAbcdCombination = (order.drugClasses?.length ?? 0) > 1
     && order.drugClasses!.every((item) => /^[ABCD]$/.test(item.code))
   const isCurrentRegimen = order.orderType === 'current-regimen'
-  const isSingleMedication = order.orderType === 'medication' && !isAbcdCombination
+  const isSingleMedication = isSingleMedicationOrder(order)
   const combinationDose = order.drugClasses?.[0]?.doseLabel || order.dose
   const selectedDrugClass = isAbcdCombination
     ? order.drugClasses?.find((item) => item.code === activeClassCode)
