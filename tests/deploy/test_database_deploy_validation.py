@@ -21,7 +21,14 @@ def sample_seed(layout_markers: bool = True) -> str:
                 "-- 6. MEDICINES REFERENCE CATALOG (1 drug)",
             ]
         )
-    lines.extend(["SELECT 'medicine-payload';", "COMMIT;", ""])
+    lines.extend(
+        [
+            "SELECT 'medicine-payload';",
+            "UPDATE public.tree_layouts SET node_positions = '{}'::jsonb;",
+            "COMMIT;",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -54,6 +61,23 @@ def test_preserve_layout_seed_filter_is_fail_closed(tmp_path: Path) -> None:
     assert valid.returncode == 0, valid.stderr
     assert "layout-payload" not in valid.stdout
     assert "medicine-payload" in valid.stdout
+    assert "UPDATE public.tree_layouts SET node_positions" in valid.stdout
+    assert (
+        "CREATE TEMP TABLE cdss_preserved_tree_layouts ON COMMIT DROP AS TABLE public.tree_layouts;"
+    ) in valid.stdout
+    assert "DELETE FROM public.tree_layouts;" in valid.stdout
+    assert (
+        "INSERT INTO public.tree_layouts SELECT * FROM cdss_preserved_tree_layouts;"
+    ) in valid.stdout
+    assert valid.stdout.index("BEGIN;") < valid.stdout.index(
+        "CREATE TEMP TABLE cdss_preserved_tree_layouts"
+    )
+    assert valid.stdout.index("INSERT INTO public.tree_layouts SELECT *") < (
+        valid.stdout.index("COMMIT;")
+    )
+    assert valid.stdout.index("UPDATE public.tree_layouts SET node_positions") < (
+        valid.stdout.index("INSERT INTO public.tree_layouts SELECT *")
+    )
     assert invalid.returncode != 0
     assert "markers" in invalid.stderr
 
