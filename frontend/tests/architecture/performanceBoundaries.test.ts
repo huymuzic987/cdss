@@ -42,12 +42,11 @@ describe('frontend performance boundaries', () => {
     expect(nginx).toContain('gzip_types')
   })
 
-  it('bounds the heavy canvas dependency chunks', () => {
+  it('leaves cyclic canvas dependencies to Vite automatic chunking', () => {
     const vite = read('vite.config.ts')
-    expect(vite).toContain("name: 'tldraw'")
-    expect(vite).toContain("name: 'elkjs'")
-    expect(vite).toContain('CANVAS_CHUNK_MAX_SIZE = 450 * 1024')
-    expect(vite).toContain('maxSize: CANVAS_CHUNK_MAX_SIZE')
+
+    expect(vite).not.toContain('codeSplitting')
+    expect(vite).not.toContain('maxSize')
   })
 
   it('loads the ELK API with a worker instead of bundling the engine', () => {
