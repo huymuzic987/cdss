@@ -16,7 +16,11 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.add_column("medicines", sa.Column("snomed_code", sa.Text(), nullable=True))
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    columns = [col["name"] for col in inspector.get_columns("medicines")]
+    if "snomed_code" not in columns:
+        op.add_column("medicines", sa.Column("snomed_code", sa.Text(), nullable=True))
 
 
 def downgrade() -> None:
