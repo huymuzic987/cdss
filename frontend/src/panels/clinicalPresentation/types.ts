@@ -45,6 +45,43 @@ export interface ClinicalPresentation {
   recommendationStrength?: string
   evidenceLevel?: string
   orders: RecommendedOrder[]
+  regimenSteps: RegimenStep[]
+  regimenOptions: FinalRegimenOption[]
+  regimenCatalog: Record<string, RegimenMedicine[]>
   additionalActions: ActionOption[]
   contractError?: string
+}
+
+export interface RegimenStep {
+  id: string
+  treeKey: string
+  nodeKey: string
+  operation: string
+  instruction: string
+  componentLabel: string
+  doseLabel: string
+}
+
+export interface FinalRegimenComponent {
+  label: string
+  detail: string
+  group: 'A' | 'B' | 'C' | 'D' | 'MRA' | 'SGLT2i' | 'GLP1RA' | 'Others'
+  dose: string
+}
+
+export interface FinalRegimenOption {
+  id: string
+  components: FinalRegimenComponent[]
+}
+
+export interface RegimenMedicine {
+  id: string
+  name: string
+  group: string
+  subgroup: string
+  route: string
+  doseLow: string
+  doseUsual: string
+  doseMax: string
+  snomedCode: string
 }

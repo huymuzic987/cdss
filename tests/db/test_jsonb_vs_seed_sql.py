@@ -454,3 +454,62 @@ def test_jsonb_trees_match_seed_sql(sql_tree_graphs):
             + "\n".join(discrepancies)
         )
         pytest.fail(msg)
+
+
+def test_inference_key_prefix_matches_persisted_node_type(sql_tree_graphs) -> None:
+    mismatches = [
+        f"{tree_key}:{node.node_key}:{node.node_type.value}"
+        for tree_key, graph in sql_tree_graphs.items()
+        for node in graph.nodes_by_id.values()
+        if ("_INFERENCE_" in node.node_key) != (node.node_type is NodeType.INFERENCE)
+    ]
+
+    assert mismatches == []
+
+
+def test_combine_inference_never_encodes_or_alternatives(sql_tree_graphs) -> None:
+    invalid = [
+        f"{tree_key}:{node.node_key}"
+        for tree_key, graph in sql_tree_graphs.items()
+        for node in graph.nodes_by_id.values()
+        if node.node_type is NodeType.INFERENCE
+        and re.match(r"^T\d+_INFERENCE_COMBINE_", node.node_key)
+        and ("_OR_" in node.node_key or " or " in node.text_en.casefold())
+    ]
+
+    assert invalid == []
+
+
+def test_every_inference_uses_the_canonical_key_grammar(sql_tree_graphs) -> None:
+    keywords = {
+        "DETERMINE",
+        "CLASSIFY",
+        "SET",
+        "RESTORE",
+        "EVALUATE",
+        "COMPARE",
+        "TEST",
+        "START",
+        "ADD",
+        "COMBINE",
+        "SELECT",
+        "ADJUST",
+        "CHANGE",
+        "ESCALATE",
+        "REDUCE",
+        "STOP",
+        "KEEP",
+        "MAINTAIN",
+        "MONITOR",
+        "AVOID",
+    }
+    invalid = []
+    for tree_key, graph in sql_tree_graphs.items():
+        for node in graph.nodes_by_id.values():
+            if node.node_type is not NodeType.INFERENCE:
+                continue
+            match = re.match(r"^T\d+_INFERENCE_([A-Z]+)_[A-Z0-9_]+$", node.node_key)
+            if match is None or match.group(1) not in keywords:
+                invalid.append(f"{tree_key}:{node.node_key}")
+
+    assert invalid == []

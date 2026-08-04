@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Streams seed.sql into psql. For a cloned production database, the complete
-# TREE LAYOUTS section is omitted so operator-edited node/edge positions and
-# layout metadata remain byte-for-byte unchanged.
+# TREE LAYOUTS section is omitted and the existing rows are restored at the
+# end of the seed transaction. The restore also protects operator-edited
+# layouts from graph-normalization statements later in seed.sql.
 set -euo pipefail
 
 MODE="${1:?usage: seed_database.sh <all|preserve-layouts>}"
@@ -35,8 +36,19 @@ case "$MODE" in
             exit 1
         fi
         awk '
+            /^BEGIN;$/ {
+                print
+                print "CREATE TEMP TABLE cdss_preserved_tree_layouts ON COMMIT DROP AS TABLE public.tree_layouts;"
+                next
+            }
             /^-- 5\. TREE LAYOUTS / { skipping = 1; next }
             /^-- 6\. MEDICINES REFERENCE CATALOG / { skipping = 0 }
+            /^COMMIT;$/ {
+                print "DELETE FROM public.tree_layouts;"
+                print "INSERT INTO public.tree_layouts SELECT * FROM cdss_preserved_tree_layouts;"
+                print
+                next
+            }
             !skipping { print }
         ' "$SEED_FILE"
         ;;

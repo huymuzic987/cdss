@@ -146,14 +146,14 @@
           {
             "edge_id": "1bff8c2b-2e3e-c7cd-a976-7df20869808e",
             "traversal_order": 1,
-            "to_node_key": "T1_INF_HYPERTENSIVE_EMERGENCY",
+            "to_node_key": "T1_INFERENCE_CLASSIFY_HYPERTENSIVE_EMERGENCY",
             "candidate_condition": null
           }
         ]
       },
-      "T1_INF_HYPERTENSIVE_EMERGENCY": {
+      "T1_INFERENCE_CLASSIFY_HYPERTENSIVE_EMERGENCY": {
         "id": "bfbb746b-d5ff-6d27-a5e6-5376a31d2841",
-        "node_key": "T1_INF_HYPERTENSIVE_EMERGENCY",
+        "node_key": "T1_INFERENCE_CLASSIFY_HYPERTENSIVE_EMERGENCY",
         "node_type": "INFERENCE",
         "text_en": "Hypertensive emergency",
         "text_vi": "THA CẤP CỨU",
@@ -461,14 +461,14 @@
           {
             "edge_id": "a2ece51c-4e7d-b61e-47ed-3237c63eca64",
             "traversal_order": 1,
-            "to_node_key": "T1_INF_ESSENTIAL_HYPERTENSION",
+            "to_node_key": "T1_INFERENCE_CLASSIFY_ESSENTIAL_HYPERTENSION",
             "candidate_condition": null
           }
         ]
       },
-      "T1_INF_ESSENTIAL_HYPERTENSION": {
+      "T1_INFERENCE_CLASSIFY_ESSENTIAL_HYPERTENSION": {
         "id": "e9270ac1-7ccd-40d7-92d4-a8e4d065f611",
-        "node_key": "T1_INF_ESSENTIAL_HYPERTENSION",
+        "node_key": "T1_INFERENCE_CLASSIFY_ESSENTIAL_HYPERTENSION",
         "node_type": "INFERENCE",
         "text_en": "Hypertension",
         "text_vi": "THA",
@@ -676,14 +676,14 @@
           {
             "edge_id": "75922197-ea80-da5c-c403-2554bfd7e888",
             "traversal_order": 1,
-            "to_node_key": "T1_INF_ESSENTIAL_GRADE_2",
+            "to_node_key": "T1_INFERENCE_CLASSIFY_ESSENTIAL_GRADE_2",
             "candidate_condition": null
           }
         ]
       },
-      "T1_INF_ESSENTIAL_GRADE_2": {
+      "T1_INFERENCE_CLASSIFY_ESSENTIAL_GRADE_2": {
         "id": "42a86643-3a3d-4e13-e45f-c160a278e0b9",
-        "node_key": "T1_INF_ESSENTIAL_GRADE_2",
+        "node_key": "T1_INFERENCE_CLASSIFY_ESSENTIAL_GRADE_2",
         "node_type": "INFERENCE",
         "text_en": "Grade 2 hypertension",
         "text_vi": "THA độ 2",
@@ -877,14 +877,14 @@
           {
             "edge_id": "56c35a70-3380-20a3-9bee-50d97423d558",
             "traversal_order": 1,
-            "to_node_key": "T1_INF_ESSENTIAL_GRADE_1",
+            "to_node_key": "T1_INFERENCE_CLASSIFY_ESSENTIAL_GRADE_1",
             "candidate_condition": null
           }
         ]
       },
-      "T1_INF_ESSENTIAL_GRADE_1": {
+      "T1_INFERENCE_CLASSIFY_ESSENTIAL_GRADE_1": {
         "id": "1bfbc013-8b60-85f8-0e6f-16bb8b2e08f3",
-        "node_key": "T1_INF_ESSENTIAL_GRADE_1",
+        "node_key": "T1_INFERENCE_CLASSIFY_ESSENTIAL_GRADE_1",
         "node_type": "INFERENCE",
         "text_en": "Grade 1 hypertension",
         "text_vi": "THA độ 1",
@@ -1078,14 +1078,14 @@
           {
             "edge_id": "6d85e9fe-f59e-5a5b-1bf4-f17b96bc666b",
             "traversal_order": 1,
-            "to_node_key": "T1_INF_ESSENTIAL_HIGH_NORMAL_BP",
+            "to_node_key": "T1_INFERENCE_CLASSIFY_ESSENTIAL_HIGH_NORMAL_BP",
             "candidate_condition": null
           }
         ]
       },
-      "T1_INF_ESSENTIAL_HIGH_NORMAL_BP": {
+      "T1_INFERENCE_CLASSIFY_ESSENTIAL_HIGH_NORMAL_BP": {
         "id": "28c71bb1-a8df-b8d0-bc32-06c0e5006228",
-        "node_key": "T1_INF_ESSENTIAL_HIGH_NORMAL_BP",
+        "node_key": "T1_INFERENCE_CLASSIFY_ESSENTIAL_HIGH_NORMAL_BP",
         "node_type": "INFERENCE",
         "text_en": "High-normal BP",
         "text_vi": "HA bình thường-cao",

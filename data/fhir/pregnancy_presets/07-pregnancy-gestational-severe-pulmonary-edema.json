@@ -32,7 +32,7 @@
       },
       {
         "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
-        "code": "T12_INF_MAGNESIUM_SUPPLEMENT"
+        "code": "T12_INFERENCE_ADD_MAGNESIUM"
       }
     ]
   },

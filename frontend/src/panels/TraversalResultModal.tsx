@@ -14,10 +14,9 @@ import { ImportantDecisionPath } from './clinicalResult/ImportantDecisionPath'
 import { deriveMedicationFollowUpMessage } from './clinicalResult/medicationFollowUpMessage'
 import { actionWithPresentation, deriveMedicationReassessment, withCurrentFollowUpRegimen } from './clinicalResult/modalHelpers'
 import { buildOrderProvenance } from './clinicalResult/orderProvenance'
-import {
-  isSingleMedicationOrder,
-  RecommendedOrderCard,
-} from './clinicalResult/RecommendedOrderCard'
+import { isSingleMedicationOrder } from './clinicalResult/orderClassification'
+import { RecommendedOrderCard } from './clinicalResult/RecommendedOrderCard'
+import { RegimenDisplay, RegimenPathDisplay } from './clinicalResult/RegimenDisplay'
 
 export type { RecommendedOrder } from './clinicalDecisionSupportAdapter'
 
@@ -134,7 +133,9 @@ function ResultDialog({
           </ClinicalSection>
 
           <ClinicalSection title={messages.recommendedOrders}>
-            {displayedOrders.length === 0 ? <p className="cds-empty">{messages.noRecommendedOrders}</p> : (
+            <RegimenDisplay presentation={presentation} references={references} locale={locale} />
+            {displayedOrders.length === 0 && presentation.regimenOptions.length === 0
+              ? <p className="cds-empty">{messages.noRecommendedOrders}</p> : (
               <div className="cds-order-rows">
                 {displayedOrders.filter(isSingleMedicationOrder).length > 1 && (
                   <div className="cds-order-choice-hint">{messages.chooseOneMedicine}</div>
@@ -155,6 +156,7 @@ function ResultDialog({
             defaultOpen={false}
           >
             <ImportantDecisionPath steps={summary.path} emptyText={messages.noImportantPath} />
+            <RegimenPathDisplay presentation={presentation} locale={locale} />
           </ClinicalSection>
         </div>
       </div>

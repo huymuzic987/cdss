@@ -1,0 +1,214 @@
+import type { JsonValue } from '../../api/types'
+import type { ClinicalDecisionSupportLocale } from '../clinicalDecisionSupportMessages'
+import type { FinalRegimenComponent, FinalRegimenOption, RegimenMedicine, RegimenStep } from './types'
+import { localized, objectValue, stringValue } from './values'
+
+const DOSE_LABELS: Record<string, { en: string, vi: string }> = {
+  LOW_DOSE: { en: 'Low dose', vi: 'Liều thấp' },
+  LOW_TO_USUAL_DOSE: { en: 'Low to usual dose', vi: 'Liều thấp đến liều thông thường' },
+  USUAL_DOSE: { en: 'Usual dose', vi: 'Liều thông thường' },
+  MAX_DOSE: { en: 'Maximum dose', vi: 'Liều tối đa' },
+}
+
+const GROUP_DETAILS = {
+  A: 'RAS (ACE inhibitor / ARB / ARNI)',
+  B: 'Beta-blocker',
+  C: 'Calcium-channel blocker',
+  D: 'Diuretic',
+  MRA: 'Mineralocorticoid receptor antagonist',
+  SGLT2i: 'SGLT2 inhibitor',
+  GLP1RA: 'GLP-1 receptor agonist',
+} as const
+
+type CanonicalGroup = FinalRegimenComponent['group']
+type ParsedComponent = FinalRegimenComponent & { generic: boolean, identity: string }
+
+function canonicalGroup(code: string, name: string): CanonicalGroup {
+  const value = `${code} ${name}`.toLocaleLowerCase()
+  if (/(\bsglt2i?\b|sglt2[_ -]?inhibitor|dapagliflozin|empagliflozin)/i.test(value)) return 'SGLT2i'
+  if (/(\bglp-?1\s*ra\b|glp1ra|glp1[_ -]?receptor[_ -]?agonist)/i.test(value)) return 'GLP1RA'
+  if (/(\bmra\b|mineralocorticoid|aldosterone antagonist|spironolactone|eplerenone)/i.test(value)) return 'MRA'
+  if (/(\bbeta.?block|labetalol|metoprolol|bisoprolol|esmolol|propranolol|atenolol)/i.test(value) || code.toUpperCase() === 'B') return 'B'
+  if (/(\bcalcium.?channel|\bccb\b|dihydropyridine|amlodipine|nifedipine|nicardipine)/i.test(value) || code.toUpperCase() === 'C') return 'C'
+  if (/(\bdiuretic|thiazide|furosemide|indapamide|chlorthalidone)/i.test(value) || code.toUpperCase() === 'D') return 'D'
+  if (/(\bras\b|ace inhibitor|\bacei\b|\barb\b|\barni\b|ưcmc|ctta|enalapril|lisinopril|losartan|valsartan|sacubitril)/i.test(value) || code.toUpperCase() === 'A') return 'A'
+  return 'Others'
+}
+
+function genericGroupName(value: string, group: CanonicalGroup): boolean {
+  const normalized = value.trim().toLocaleLowerCase()
+  if (normalized === group.toLocaleLowerCase()) return true
+  return [
+    'ras', 'ace inhibitor', 'arb', 'arni', 'beta blocker', 'beta-blocker',
+    'calcium channel blocker', 'calcium-channel blocker', 'ccb', 'diuretic',
+    'mra', 'mineralocorticoid receptor antagonist', 'aldosterone antagonist',
+    'sglt2i', 'sglt2 inhibitor', 'sglt2_inhibitor',
+    'glp1ra', 'glp-1ra', 'glp-1 receptor agonist', 'glp1_receptor_agonist',
+  ].includes(normalized)
+}
+
+function parseComponent(
+  value: JsonValue,
+  locale: ClinicalDecisionSupportLocale,
+): ParsedComponent | null {
+  const component = objectValue(value)
+  if (!component) return null
+  const code = stringValue(component.code)
+  const name = stringValue(component.name, code)
+  if (!name) return null
+  const group = canonicalGroup(code, name)
+  const generic = genericGroupName(name, group) || genericGroupName(code, group)
+  const detail = generic && group !== 'Others'
+    ? GROUP_DETAILS[group as keyof typeof GROUP_DETAILS]
+    : group
+  const label = generic ? group : name
+  const identity = group === 'Others' ? `Others:${name.toLocaleLowerCase()}` : group
+  const strategy = stringValue(component.dose_strategy, 'LOW_DOSE')
+  const dose = stringValue(component.dose)
+    || DOSE_LABELS[strategy]?.[locale]
+    || (locale === 'vi' ? 'Liều thấp' : 'Low dose')
+  return { label, detail, group, dose, generic, identity }
+}
+
+function components(
+  value: JsonValue | undefined,
+  locale: ClinicalDecisionSupportLocale,
+): ParsedComponent[] {
+  if (!Array.isArray(value)) return []
+  return value.map((item) => parseComponent(item, locale))
+    .filter((item): item is ParsedComponent => item !== null)
+}
+
+function alternativeComponents(
+  value: JsonValue,
+  locale: ClinicalDecisionSupportLocale,
+): ParsedComponent[] {
+  return components(objectValue(value)?.components, locale)
+}
+
+function alternativeLabel(value: JsonValue, locale: ClinicalDecisionSupportLocale): string {
+  return alternativeComponents(value, locale).map(componentLabel).join(' + ')
+}
+
+function componentLabel(item: ParsedComponent): string {
+  return item.generic || item.detail === item.label ? item.label : `${item.label} (${item.detail})`
+}
+
+function deduplicate(items: ParsedComponent[]): FinalRegimenComponent[] {
+  const selected = new Map<string, ParsedComponent>()
+  for (const item of items) {
+    const previous = selected.get(item.identity)
+    if (!previous || (previous.generic && !item.generic)) selected.set(item.identity, item)
+  }
+  return [...selected.values()].map(({ generic: _generic, identity: _identity, ...item }) => item)
+}
+
+export function parseRegimenPlan(
+  value: JsonValue | undefined,
+  locale: ClinicalDecisionSupportLocale,
+): RegimenStep[] {
+  const plan = objectValue(value)
+  if (!plan || plan.schema_version !== '1.0' || !Array.isArray(plan.steps)) return []
+  return plan.steps.flatMap((raw, index) => {
+    const step = objectValue(raw)
+    if (!step) return []
+    const operation = stringValue(step.keyword)
+    const direct = components(step.components, locale)
+    const alternatives = Array.isArray(step.alternatives)
+      ? step.alternatives.map((item) => alternativeLabel(item, locale)).filter(Boolean)
+      : []
+    const stepComponentLabel = direct.map(componentLabel).join(' + ')
+      || alternatives.join(locale === 'vi' ? ' hoặc ' : ' or ')
+    const doses = Array.from(new Set(direct.map((item) => item.dose)))
+    if (doses.length === 0 && Array.isArray(step.alternatives)) {
+      for (const rawAlternative of step.alternatives) {
+        for (const item of alternativeComponents(rawAlternative, locale)) {
+          if (!doses.includes(item.dose)) doses.push(item.dose)
+        }
+      }
+    }
+    return [{
+      id: stringValue(step.id, `regimen-step-${index}`),
+      treeKey: stringValue(step.tree_key),
+      nodeKey: stringValue(step.node_key),
+      operation,
+      instruction: localized(step, 'text', locale) || stepComponentLabel,
+      componentLabel: stepComponentLabel,
+      doseLabel: doses.join(' / '),
+    }]
+  })
+}
+
+export function parseFinalRegimenOptions(
+  value: JsonValue | undefined,
+  locale: ClinicalDecisionSupportLocale,
+): FinalRegimenOption[] {
+  const effective = objectValue(objectValue(value)?.effective_regimen)
+  if (!effective) return []
+
+  const bases = Array.isArray(effective.base_options)
+    ? effective.base_options.map((item) => alternativeComponents(item, locale)).filter((item) => item.length > 0)
+    : []
+  const additions = components(effective.additions, locale)
+  const stopped = new Set(
+    components(effective.stopped_components, locale).map((item) => item.label.toLocaleUpperCase()),
+  )
+  let candidates = bases.length > 0 ? bases : additions.length > 0 ? [[]] : []
+  let fallbackAdditions = additions
+  if (candidates.length === 0) {
+    const rawSteps = objectValue(value)?.steps
+    const steps = Array.isArray(rawSteps) ? rawSteps : []
+    const lastMaterialStep = [...steps].reverse().map((item) => objectValue(item))
+      .find((step) => step && (
+        components(step.components, locale).length > 0
+        || (Array.isArray(step.alternatives) && step.alternatives.length > 0)
+      ))
+    const alternatives = Array.isArray(lastMaterialStep?.alternatives)
+      ? lastMaterialStep.alternatives.map((item) => alternativeComponents(item, locale))
+        .filter((item) => item.length > 0)
+      : []
+    const direct = components(lastMaterialStep?.components, locale)
+    candidates = alternatives.length > 0 ? alternatives : direct.length > 0 ? [[]] : []
+    fallbackAdditions = alternatives.length > 0 ? [] : direct
+  }
+
+  return candidates.map((base, index) => ({
+    id: `regimen-option-${index + 1}`,
+    components: deduplicate([...base, ...fallbackAdditions])
+      .filter((item) => !stopped.has(item.label.toLocaleUpperCase())),
+  })).filter((option) => option.components.length > 0)
+}
+
+export function parseRegimenCatalog(
+  value: JsonValue | undefined,
+): Record<string, RegimenMedicine[]> {
+  const plan = objectValue(value)
+  const rawCatalog = plan?.catalog_by_class
+  const classEntries = rawCatalog && typeof rawCatalog === 'object' && !Array.isArray(rawCatalog)
+    ? Object.entries(rawCatalog)
+    : []
+  const parsed = Object.fromEntries(classEntries.map(([group, rawItems]) => {
+    if (!Array.isArray(rawItems)) return [group, []]
+    return [group, parseCatalogMedicines(rawItems, group)]
+  }))
+  if (Array.isArray(plan?.catalog)) parsed.__all__ = parseCatalogMedicines(plan.catalog, 'Others')
+  return parsed
+}
+
+function parseCatalogMedicines(rawItems: JsonValue[], fallbackGroup: string): RegimenMedicine[] {
+  return rawItems.flatMap((raw) => {
+    const item = objectValue(raw)
+    if (!item) return []
+    return [{
+      id: stringValue(item.drug_id),
+      name: stringValue(item.name),
+      group: stringValue(item.drug_class, fallbackGroup),
+      subgroup: stringValue(item.subgroup),
+      route: stringValue(item.route),
+      doseLow: stringValue(item.dose_low),
+      doseUsual: stringValue(item.dose_usual),
+      doseMax: stringValue(item.dose_max),
+      snomedCode: stringValue(item.snomed_code),
+    }]
+  })
+}

@@ -577,7 +577,7 @@
           {
             "edge_id": "fbce838f-3d48-4b53-88ae-52cdd8551d84",
             "traversal_order": 1,
-            "to_node_key": "T9_A_B_3Y",
+            "to_node_key": "T9_INFERENCE_ADD_BETA_BLOCKER_FOR_THREE_YEARS",
             "candidate_condition": null
           }
         ]
@@ -625,7 +625,7 @@
           {
             "edge_id": "aec623d2-1beb-4130-b16c-890b4a88e992",
             "traversal_order": 1,
-            "to_node_key": "T9_A_B_OR_C",
+            "to_node_key": "T9_INFERENCE_SELECT_BETA_BLOCKER_OR_CCB",
             "candidate_condition": null
           }
         ]
@@ -673,7 +673,7 @@
           {
             "edge_id": "48ca8568-2e68-4c81-8447-9b121b45d174",
             "traversal_order": 1,
-            "to_node_key": "T9_A_NO_B",
+            "to_node_key": "T9_INFERENCE_AVOID_ROUTINE_BETA_BLOCKER",
             "candidate_condition": null
           }
         ]
@@ -721,14 +721,14 @@
           {
             "edge_id": "624d0ead-c247-4f5c-8e28-7d4b418db2be",
             "traversal_order": 1,
-            "to_node_key": "T9_A_B_EARLY",
+            "to_node_key": "T9_INFERENCE_START_BETA_BLOCKER_EARLY",
             "candidate_condition": null
           }
         ]
       },
-      "T9_A_B_3Y": {
+      "T9_INFERENCE_ADD_BETA_BLOCKER_FOR_THREE_YEARS": {
         "id": "6299ea87-2ba4-52b4-9752-bbd2a796e0ff",
-        "node_key": "T9_A_B_3Y",
+        "node_key": "T9_INFERENCE_ADD_BETA_BLOCKER_FOR_THREE_YEARS",
         "node_type": "INFERENCE",
         "text_en": "Combine Beta-blocker for 3 years",
         "text_vi": "Phối hợp thuốc B trong 3 năm",
@@ -780,9 +780,9 @@
           }
         ]
       },
-      "T9_A_B_OR_C": {
+      "T9_INFERENCE_SELECT_BETA_BLOCKER_OR_CCB": {
         "id": "b2f92cb6-82fc-52ba-a4ca-54257fc2f0b7",
-        "node_key": "T9_A_B_OR_C",
+        "node_key": "T9_INFERENCE_SELECT_BETA_BLOCKER_OR_CCB",
         "node_type": "INFERENCE",
         "text_en": "Combine Beta-blocker or CCB",
         "text_vi": "Phối hợp thuốc B hoặc C",
@@ -834,9 +834,9 @@
           }
         ]
       },
-      "T9_A_NO_B": {
+      "T9_INFERENCE_AVOID_ROUTINE_BETA_BLOCKER": {
         "id": "ef39acd8-3c32-5eda-bca8-a6c79adfcaf2",
-        "node_key": "T9_A_NO_B",
+        "node_key": "T9_INFERENCE_AVOID_ROUTINE_BETA_BLOCKER",
         "node_type": "INFERENCE",
         "text_en": "No routine indication for Beta-blocker",
         "text_vi": "Không có chỉ định thuốc B thường quy",
@@ -888,9 +888,9 @@
           }
         ]
       },
-      "T9_A_B_EARLY": {
+      "T9_INFERENCE_START_BETA_BLOCKER_EARLY": {
         "id": "bc668dbe-04db-5f5d-a80d-fd1a51f5037b",
-        "node_key": "T9_A_B_EARLY",
+        "node_key": "T9_INFERENCE_START_BETA_BLOCKER_EARLY",
         "node_type": "INFERENCE",
         "text_en": "Start Beta-blocker as early as possible",
         "text_vi": "Bắt đầu thuốc B sớm nhất có thể",

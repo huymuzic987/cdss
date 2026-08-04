@@ -28,7 +28,7 @@
       },
       {
         "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
-        "code": "T12_INF_GESTATIONAL_HTN_CLASSIFICATION"
+        "code": "T12_INFERENCE_CLASSIFY_GESTATIONAL_HTN"
       },
       {
         "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",

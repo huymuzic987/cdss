@@ -273,14 +273,14 @@
           {
             "edge_id": "5ef7806e-ad6c-43a2-9b3d-7b6fd484c715",
             "traversal_order": 1,
-            "to_node_key": "T8_INF_REGIMEN_OPTIONS",
+            "to_node_key": "T8_INFERENCE_SELECT_A_WITH_C_OR_D",
             "candidate_condition": null
           }
         ]
       },
-      "T8_INF_REGIMEN_OPTIONS": {
+      "T8_INFERENCE_SELECT_A_WITH_C_OR_D": {
         "id": "00182e46-02d8-44f3-90aa-aeed4b86eb4e",
-        "node_key": "T8_INF_REGIMEN_OPTIONS",
+        "node_key": "T8_INFERENCE_SELECT_A_WITH_C_OR_D",
         "node_type": "INFERENCE",
         "text_en": "A + C, or A + D (ACE inhibitor/ARB + calcium-channel blocker, or ACE inhibitor/ARB + thiazide-like diuretic)",
         "text_vi": "A + C, hoặc A + D (ƯCMC/CTTA + CKCa, hoặc ƯCMC/CTTA + LT Thiazide-like)",
@@ -455,7 +455,7 @@
           {
             "edge_id": "d9b67463-7ae1-41cc-b508-f3928c710f31",
             "traversal_order": 1,
-            "to_node_key": "T8_INF_ADD_SGLT2I_GLP1RA",
+            "to_node_key": "T8_INFERENCE_SELECT_SGLT2I_OR_GLP1RA",
             "candidate_condition": null
           }
         ]
@@ -526,23 +526,27 @@
           {
             "edge_id": "668194a9-4326-42af-afba-ee9a11bf73b2",
             "traversal_order": 1,
-            "to_node_key": "T8_INF_MAINTAIN_REGIMEN",
+            "to_node_key": "T8_INFERENCE_MAINTAIN_REGIMEN",
             "candidate_condition": null
           }
         ]
       },
-      "T8_INF_ADD_SGLT2I_GLP1RA": {
+      "T8_INFERENCE_SELECT_SGLT2I_OR_GLP1RA": {
         "id": "5020708d-fda3-4d55-aa4f-b30692011a7f",
-        "node_key": "T8_INF_ADD_SGLT2I_GLP1RA",
+        "node_key": "T8_INFERENCE_SELECT_SGLT2I_OR_GLP1RA",
         "node_type": "INFERENCE",
-        "text_en": "Add SGLT2i or GLP-1RA",
-        "text_vi": "Bổ sung SGLT2i hoặc GLP-1RA",
+        "text_en": "Select SGLT2i or GLP1RA",
+        "text_vi": "Chọn SGLT2i hoặc GLP1RA",
         "condition_definition": null,
         "context_patch": {
           "treatment_preferences": {
-            "additional_drug_classes": [
-              "SGLT2_INHIBITOR",
-              "GLP1_RECEPTOR_AGONIST"
+            "combination_options": [
+              [
+                "SGLT2i"
+              ],
+              [
+                "GLP1RA"
+              ]
             ]
           }
         },
@@ -564,14 +568,14 @@
               }
             ],
             "locator": "Bảng 18. Chiến lược điều trị tăng huyết áp kèm theo đái tháo đường (2)",
-            "locator_detail": "Glucose-lowering therapy with SGLT2i or GLP-1RA is prioritized for its demonstrated cardiovascular benefit.",
+            "locator_detail": "Glucose-lowering therapy with SGLT2i or GLP1RA is prioritized for its demonstrated cardiovascular benefit.",
             "printed_page_numbers": [
               32
             ],
             "pdf_page_numbers": [
               34
             ],
-            "reference_note": "Điều trị hạ glucose máu với SGLT2-i hoặc GLP-1 RA được ưu tiên với những lợi ích bệnh tim mạch đã được chứng minh.",
+            "reference_note": "Điều trị hạ glucose máu với SGLT2i hoặc GLP1RA được ưu tiên với những lợi ích bệnh tim mạch đã được chứng minh.",
             "reference_order": 1
           }
         ],
@@ -598,9 +602,9 @@
           }
         ]
       },
-      "T8_INF_MAINTAIN_REGIMEN": {
+      "T8_INFERENCE_MAINTAIN_REGIMEN": {
         "id": "e726ffd6-3e0f-483b-aa91-846208d522c1",
-        "node_key": "T8_INF_MAINTAIN_REGIMEN",
+        "node_key": "T8_INFERENCE_MAINTAIN_REGIMEN",
         "node_type": "INFERENCE",
         "text_en": "Maintain current regimen",
         "text_vi": "Duy trì phác đồ",

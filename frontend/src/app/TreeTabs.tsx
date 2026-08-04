@@ -4,8 +4,6 @@ import type { TreeSummary } from '../api/types'
 interface TreeTabsProps {
   trees: TreeSummary[]
   activeTreeKey: string | null
-  showDashboard: boolean
-  onShowDashboard: () => void
   onSelectTree: (treeKey: string) => void
 }
 
@@ -25,7 +23,7 @@ function ScrollArrow({ direction, onClick }: { direction: -1 | 1; onClick: () =>
   )
 }
 
-export function TreeTabs({ trees, activeTreeKey, showDashboard, onShowDashboard, onSelectTree }: TreeTabsProps) {
+export function TreeTabs({ trees, activeTreeKey, onSelectTree }: TreeTabsProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
@@ -61,14 +59,11 @@ export function TreeTabs({ trees, activeTreeKey, showDashboard, onShowDashboard,
           if (element && Math.abs(event.deltaY) > Math.abs(event.deltaX)) element.scrollLeft += event.deltaY
         }}
       >
-        <button type="button" className={`top-tab dashboard-tab${showDashboard ? ' active' : ''}`} onClick={onShowDashboard}>
-          Dashboard
-        </button>
         {trees.map((tree) => (
           <button
             key={tree.tree_key}
             type="button"
-            className={`top-tab${!showDashboard && activeTreeKey === tree.tree_key ? ' active' : ''}`}
+            className={`top-tab${activeTreeKey === tree.tree_key ? ' active' : ''}`}
             onClick={() => onSelectTree(tree.tree_key)}
             title={tree.name_en}
           >
@@ -80,3 +75,5 @@ export function TreeTabs({ trees, activeTreeKey, showDashboard, onShowDashboard,
     </div>
   )
 }
+
+

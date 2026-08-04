@@ -113,7 +113,9 @@ export function DashboardPage() {
       {hasData && overview && visits && efficacy && (
         <FollowUpKpis overview={overview} visits={visits} efficacy={efficacy} onJumpToPatients={jumpToPatients} />
       )}
+
       {selectedPatient && <PatientDetailModal fhirId={selectedPatient} onClose={() => setSelectedPatient(null)} />}
     </div>
   )
 }
+

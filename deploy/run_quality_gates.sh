@@ -55,6 +55,7 @@ UV_IMAGE="ghcr.io/astral-sh/uv:python3.12-bookworm"
 NODE_IMAGE="node:24.18.1-alpine"
 PNPM_VERSION="9.15.9"
 CDSS_TIMING_FILE="${CDSS_TIMING_FILE:-$PWD/.ci-reports/timings.tsv}"
+CI_LOG_TAIL_LINES="${CI_LOG_TAIL_LINES:-80}"
 
 # Emit tab-separated timing records that can be copied from the Jenkins log
 # into the deployment baseline. Keep this deliberately log-only for now so
@@ -115,6 +116,8 @@ fi
 cleanup
 
 mkdir -p .ci-reports/backend frontend/.ci-reports
+
+echo "CI reports: .ci-reports (full logs archived; failures show last ${CI_LOG_TAIL_LINES} lines)"
 
 echo "Preparing persistent dependency caches..."
 docker volume create "$UV_CACHE_VOLUME" > /dev/null
@@ -195,6 +198,7 @@ timed "pregnancy-fhir-catalog-and-migration" docker run --rm --network "$NETWORK
     -v "$UV_ENV_VOLUME":/venv \
     -e DATABASE_URL="$TEST_DATABASE_URL" \
     -e CDSS_TIMING_FILE=/workspace/.ci-reports/timings.tsv \
+    -e CI_LOG_TAIL_LINES="$CI_LOG_TAIL_LINES" \
     -e HOME=/tmp -e UV_CACHE_DIR=/uv-cache -e UV_PROJECT_ENVIRONMENT=/venv \
     --user "${HOST_UID}:${HOST_GID}" \
     "$UV_IMAGE" \
@@ -211,9 +215,23 @@ timed "pregnancy-fhir-catalog-and-migration" docker run --rm --network "$NETWORK
                 >> \"\$CDSS_TIMING_FILE\" || true
             return \"\$status\"
         }
-        timed catalog-dependency-sync uv sync --frozen
-        timed pregnancy-fhir-generation uv run python scripts/generate_pregnancy_fhir_presets.py
-        timed test-schema-migration uv run alembic upgrade head
+        run_logged() {
+            log_file=\"\$1\"
+            shift
+            if \"\$@\" >\"\$log_file\" 2>&1; then
+                status=0
+            else
+                status=\$?
+            fi
+            if [ \"\$status\" -ne 0 ]; then
+                echo \"--- \$log_file (last \$CI_LOG_TAIL_LINES lines) ---\" >&2
+                tail -n \"\$CI_LOG_TAIL_LINES\" \"\$log_file\" >&2 || true
+            fi
+            return \"\$status\"
+        }
+        timed catalog-dependency-sync run_logged .ci-reports/catalog-dependency-sync.log uv sync --frozen
+        timed pregnancy-fhir-generation run_logged .ci-reports/pregnancy-fhir-generation.log uv run python scripts/generate_pregnancy_fhir_presets.py
+        timed test-schema-migration run_logged .ci-reports/test-schema-migration.log uv run alembic upgrade head
     "
 echo "Pregnancy FHIR catalogs generated; disposable database migrated to head."
 
@@ -234,6 +252,7 @@ run_backend_quality_gates() {
     -v "$PYRIGHT_CACHE_VOLUME":/pyright-cache \
     -e DATABASE_URL="$TEST_DATABASE_URL" \
     -e CDSS_TIMING_FILE=/workspace/.ci-reports/timings.tsv \
+    -e CI_LOG_TAIL_LINES="$CI_LOG_TAIL_LINES" \
     -e HOME=/tmp -e UV_CACHE_DIR=/uv-cache -e UV_PROJECT_ENVIRONMENT=/venv \
     -e PYRIGHT_PYTHON_CACHE_DIR=/pyright-cache \
     --user "${HOST_UID}:${HOST_GID}" \
@@ -251,14 +270,28 @@ run_backend_quality_gates() {
                 >> \"\$CDSS_TIMING_FILE\" || true
             return \"\$status\"
         }
-        timed backend-dependency-sync uv sync --frozen
+        run_logged() {
+            log_file=\"\$1\"
+            shift
+            if \"\$@\" >\"\$log_file\" 2>&1; then
+                status=0
+            else
+                status=\$?
+            fi
+            if [ \"\$status\" -ne 0 ]; then
+                echo \"--- \$log_file (last \$CI_LOG_TAIL_LINES lines) ---\" >&2
+                tail -n \"\$CI_LOG_TAIL_LINES\" \"\$log_file\" >&2 || true
+            fi
+            return \"\$status\"
+        }
+        timed backend-dependency-sync run_logged .ci-reports/backend/dependency-sync.log uv sync --frozen
         # Fail quickly with a clear runtime error before spending time on the
         # test suite if Pyright's bundled Node.js cannot start.
-        timed pyright-runtime-check uv run pyright --version
+        timed pyright-runtime-check run_logged .ci-reports/backend/pyright-runtime-check.log uv run pyright --version
         pyright_status=0
-        timed backend-pyright uv run pyright &
+        timed backend-pyright run_logged .ci-reports/backend/pyright.log uv run pyright &
         pyright_pid=\$!
-        if timed backend-pytest uv run pytest \
+        if timed backend-pytest run_logged .ci-reports/backend/pytest.log uv run pytest \
             --junitxml=.ci-reports/backend/junit.xml \
             --cov=cdss \
             --cov-report=term-missing \
@@ -272,8 +305,8 @@ run_backend_quality_gates() {
         else
             pyright_status=\$?
         fi
-        timed backend-ruff-check uv run ruff check
-        timed backend-ruff-format uv run ruff format --check
+        timed backend-ruff-check run_logged .ci-reports/backend/ruff-check.log uv run ruff check
+        timed backend-ruff-format run_logged .ci-reports/backend/ruff-format.log uv run ruff format --check
         if [ "\$pytest_status" -ne 0 ] || [ "\$pyright_status" -ne 0 ]; then
             exit 1
         fi

@@ -46,6 +46,16 @@ from cdss.domain.decision_tree.graph import (
     TreeGraph,
     TreeGraphRepository,
 )
+from cdss.domain.decision_tree.medication_regimen import (
+    DEFAULT_REGIMEN_DOSE_STRATEGY,
+    EffectiveMedicationRegimen,
+    MedicationRegimenPlan,
+    RegimenAlternative,
+    RegimenComponent,
+    RegimenKeyword,
+    RegimenUpdateStep,
+    build_traversed_medication_regimen,
+)
 from cdss.domain.decision_tree.medicine_catalog import Medicine, MedicineRepository
 from cdss.domain.decision_tree.patches import ContextPatchResult, apply_context_patch
 from cdss.domain.decision_tree.paths import resolve_runtime_path
@@ -81,10 +91,15 @@ __all__ = [
     "LinkTargetNotFound",
     "Medicine",
     "MedicineRepository",
+    "MedicationRegimenPlan",
     "MissingRuntimePath",
     "NoMatchingTransition",
     "NodeDefinition",
     "NodeType",
+    "RegimenAlternative",
+    "RegimenComponent",
+    "RegimenKeyword",
+    "RegimenUpdateStep",
     "RunState",
     "resolve_runtime_path",
     "select_output_actions",
@@ -102,7 +117,10 @@ __all__ = [
     "TreeValidationResult",
     "TreeValidationWarning",
     "UnsupportedOperator",
+    "DEFAULT_REGIMEN_DOSE_STRATEGY",
+    "EffectiveMedicationRegimen",
     "apply_context_patch",
+    "build_traversed_medication_regimen",
     "validate_condition_definition",
     "validate_tree_graph",
     "walk_tree",

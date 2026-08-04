@@ -7,7 +7,7 @@ echo "  CDSS Efficient Dev Server Launcher    "
 echo "========================================"
 
 echo ""
-echo "[1/4] Starting PostgreSQL container..."
+echo "[1/3] Starting PostgreSQL container..."
 
 start_postgres() {
     if command -v docker >/dev/null 2>&1; then
@@ -28,23 +28,15 @@ start_postgres() {
 
 start_postgres || echo "Warning: Docker compose command failed, checking if DB is already running..."
 
-echo "[2/4] Waiting for database connection on port 54321..."
+echo "[2/3] Waiting for database connection on port 54321..."
 until uv run python -c "import psycopg2; from backups.dump import _database_url; conn=psycopg2.connect(_database_url())" 2>/dev/null; do
     sleep 1
 done
 echo "-> Database connection established!"
 
 echo ""
-echo "[3/4] Applying latest Alembic schema migrations..."
-uv run alembic upgrade head || {
-    echo "Alembic upgrade failed (likely orphaned revision). Stamping head..."
-    uv run alembic stamp --purge head
-    uv run alembic upgrade head
-}
-
-echo ""
-echo "[4/4] Overwriting database data with backups/seed.sql..."
-uv run python -c "import psycopg2; from backups.dump import _database_url; conn=psycopg2.connect(_database_url()); cur=conn.cursor(); sql=open('backups/seed.sql', encoding='utf-8').read(); cur.execute(sql); conn.commit(); print('Database seeded successfully!')"
+echo "[3/3] Checking database seed status..."
+uv run python scripts/ensure_seed.py "$@"
 
 echo ""
 echo "========================================"
@@ -55,6 +47,6 @@ echo "========================================"
 
 trap 'kill $(jobs -p) 2>/dev/null || true' EXIT
 
-uv run uvicorn cdss.main:app --reload &
+uv run uvicorn cdss.main:app --reload --reload-dir src &
 pnpm --prefix frontend dev &
 wait

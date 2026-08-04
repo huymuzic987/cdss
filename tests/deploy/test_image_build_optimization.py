@@ -11,6 +11,11 @@ def test_image_build_fails_fast_when_host_capacity_is_too_low() -> None:
     assert "docker system df" in BUILD_SCRIPT
 
 
+def test_low_storage_reclaims_only_unused_buildkit_cache_before_failing() -> None:
+    assert "docker builder prune --all --force" in BUILD_SCRIPT
+    assert "recheck_available_kb" in BUILD_SCRIPT
+
+
 def test_build_parallelism_is_bounded_by_current_host_capacity() -> None:
     assert "BUILD_PARALLEL_LIMIT=1" in BUILD_SCRIPT
     assert "BUILD_PARALLEL_LIMIT=2" in BUILD_SCRIPT

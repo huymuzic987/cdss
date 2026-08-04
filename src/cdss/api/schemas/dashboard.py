@@ -205,3 +205,49 @@ class PatientListItem(ApiModel):
 class PatientListResponse(ApiModel):
     items: list[PatientListItem]
     total: int
+
+
+class ContributorMetricResponse(ApiModel):
+    member_key: str
+    display_name: str
+    canonical_email: str
+    github_username: str | None
+    commits: int
+    commits_percentage: float
+    lines_added: int
+    lines_added_percentage: float
+    lines_deleted: int
+    total_loc_changes: int
+    total_loc_percentage: float
+    primary_role: str
+    deliverables: list[str]
+
+
+class ContributionSummaryResponse(ApiModel):
+    total_commits: int
+    total_lines_added: int
+    total_lines_deleted: int
+    total_loc_changes: int
+    active_contributors: int
+
+
+class OverlappingTaskResponse(ApiModel):
+    feature_area: str
+    collaborators: list[str]
+    shared_deliverables: str
+
+
+class RecentCommitItem(ApiModel):
+    hash: str
+    author: str
+    message: str
+    timestamp: int
+
+
+class ContributionsResponse(ApiModel):
+    summary: ContributionSummaryResponse
+    contributors: list[ContributorMetricResponse]
+    overlapping_matrix: list[OverlappingTaskResponse]
+    recent_commits: list[RecentCommitItem]
+    scope: str
+    updated_at: datetime

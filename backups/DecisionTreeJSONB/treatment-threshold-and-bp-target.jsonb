@@ -272,7 +272,7 @@
           {
             "edge_id": "8ede9d5d-cff4-6d2e-597b-a2fe3ba6d77c",
             "traversal_order": 1,
-            "to_node_key": "T3_INF_RESTORE_ACTIVE_BP_TARGET",
+            "to_node_key": "T3_INFERENCE_RESTORE_ACTIVE_BP_TARGET",
             "candidate_condition": null
           }
         ]
@@ -1125,7 +1125,7 @@
           {
             "edge_id": "aa3e7f7c-07f8-6a7a-c87f-26870234ada6",
             "traversal_order": 1,
-            "to_node_key": "T3_INF_18_69_NO_COMORBIDITY_BP_TARGET",
+            "to_node_key": "T3_INFERENCE_SET_18_69_NO_COMORBIDITY_BP_TARGET",
             "candidate_condition": null
           }
         ]
@@ -1170,9 +1170,9 @@
         ],
         "transitions": []
       },
-      "T3_INF_RESTORE_ACTIVE_BP_TARGET": {
+      "T3_INFERENCE_RESTORE_ACTIVE_BP_TARGET": {
         "id": "fe2929b6-a17a-269e-7ffd-23d3ce77c5b5",
-        "node_key": "T3_INF_RESTORE_ACTIVE_BP_TARGET",
+        "node_key": "T3_INFERENCE_RESTORE_ACTIVE_BP_TARGET",
         "node_type": "INFERENCE",
         "text_en": "Restore active BP target from medication follow-up input",
         "text_vi": "Khôi phục đích huyết áp đang áp dụng từ thông tin tái khám điều trị thuốc",
@@ -1218,9 +1218,9 @@
           }
         ]
       },
-      "T3_INF_18_69_NO_COMORBIDITY_BP_TARGET": {
+      "T3_INFERENCE_SET_18_69_NO_COMORBIDITY_BP_TARGET": {
         "id": "732bb6a9-f802-9e67-8377-bec03ab0ccab",
-        "node_key": "T3_INF_18_69_NO_COMORBIDITY_BP_TARGET",
+        "node_key": "T3_INFERENCE_SET_18_69_NO_COMORBIDITY_BP_TARGET",
         "node_type": "INFERENCE",
         "text_en": "Target SBP 120–<140 mmHg or lower\nTarget DBP <80 mmHg",
         "text_vi": "Đích điều trị HATT 120 - < 140 mmHg hoặc thấp hơn\nĐích điều trị HATTr <80",
@@ -1506,7 +1506,7 @@
           {
             "edge_id": "e6398cd1-5a0d-0151-00c6-9ff1f01c6eb0",
             "traversal_order": 1,
-            "to_node_key": "T3_INF_18_69_COMORBIDITY_BP_TARGET",
+            "to_node_key": "T3_INFERENCE_SET_18_69_COMORBIDITY_BP_TARGET",
             "candidate_condition": null
           }
         ]
@@ -1551,9 +1551,9 @@
         ],
         "transitions": []
       },
-      "T3_INF_18_69_COMORBIDITY_BP_TARGET": {
+      "T3_INFERENCE_SET_18_69_COMORBIDITY_BP_TARGET": {
         "id": "95569744-0278-46a5-b937-6c519a461eec",
-        "node_key": "T3_INF_18_69_COMORBIDITY_BP_TARGET",
+        "node_key": "T3_INFERENCE_SET_18_69_COMORBIDITY_BP_TARGET",
         "node_type": "INFERENCE",
         "text_en": "Target SBP 120–<130 mmHg or lower\nTarget DBP <80 mmHg",
         "text_vi": "Đích điều trị HATT 120 - <130 hoặc thấp hơn\nĐích điều trị HATTr <80",
@@ -2041,7 +2041,7 @@
           {
             "edge_id": "b429d36a-803f-d921-020d-003aa8f98790",
             "traversal_order": 1,
-            "to_node_key": "T3_INF_AGE_70_OR_HIGHER_BP_TARGET",
+            "to_node_key": "T3_INFERENCE_SET_AGE_70_OR_HIGHER_BP_TARGET",
             "candidate_condition": null
           }
         ]
@@ -2207,7 +2207,7 @@
           {
             "edge_id": "385f3a9d-3b2f-bd53-dba6-e8dd396a8896",
             "traversal_order": 1,
-            "to_node_key": "T3_INF_AGE_70_OR_HIGHER_BP_TARGET",
+            "to_node_key": "T3_INFERENCE_SET_AGE_70_OR_HIGHER_BP_TARGET",
             "candidate_condition": null
           }
         ]
@@ -2252,9 +2252,9 @@
         ],
         "transitions": []
       },
-      "T3_INF_AGE_70_OR_HIGHER_BP_TARGET": {
+      "T3_INFERENCE_SET_AGE_70_OR_HIGHER_BP_TARGET": {
         "id": "c9e3529b-2291-4756-1e9c-13b00c5fdd0f",
-        "node_key": "T3_INF_AGE_70_OR_HIGHER_BP_TARGET",
+        "node_key": "T3_INFERENCE_SET_AGE_70_OR_HIGHER_BP_TARGET",
         "node_type": "INFERENCE",
         "text_en": "Target SBP <140 mmHg, or <130 mmHg if tolerated\nTarget DBP <80 mmHg",
         "text_vi": "Đích điều trị HATT <140 hoặc <130 nếu dung nạp được\nĐích điều trị HATTr <80",
@@ -2556,7 +2556,7 @@
           {
             "edge_id": "cac9a75d-8d43-ef4e-9b68-9858a7b2285c",
             "traversal_order": 1,
-            "to_node_key": "T3_INF_18_69_NO_COMORBIDITY_HIGH_RISK_HABTC_BP_TARGET",
+            "to_node_key": "T3_INFERENCE_SET_18_69_NO_COMORBIDITY_HIGH_RISK_HABTC_BP_TARGET",
             "candidate_condition": null
           }
         ]
@@ -2645,9 +2645,9 @@
           }
         ]
       },
-      "T3_INF_18_69_NO_COMORBIDITY_HIGH_RISK_HABTC_BP_TARGET": {
+      "T3_INFERENCE_SET_18_69_NO_COMORBIDITY_HIGH_RISK_HABTC_BP_TARGET": {
         "id": "cfb91d03-1e28-26a1-acc8-44e033cac052",
-        "node_key": "T3_INF_18_69_NO_COMORBIDITY_HIGH_RISK_HABTC_BP_TARGET",
+        "node_key": "T3_INFERENCE_SET_18_69_NO_COMORBIDITY_HIGH_RISK_HABTC_BP_TARGET",
         "node_type": "INFERENCE",
         "text_en": "Target SBP 120–<130 mmHg or lower\nTarget DBP <80 mmHg",
         "text_vi": "Đích điều trị HATT 120 - <130 hoặc thấp hơn\nĐích điều trị HATTr <80",
@@ -2810,7 +2810,7 @@
           {
             "edge_id": "5b6ba9f8-a257-d4ba-7941-ac12a453390d",
             "traversal_order": 1,
-            "to_node_key": "T3_INF_18_69_COMORBIDITY_BP_TARGET",
+            "to_node_key": "T3_INFERENCE_SET_18_69_COMORBIDITY_BP_TARGET",
             "candidate_condition": null
           }
         ]

@@ -37,7 +37,10 @@ export function ShowcasePage() {
   }, [])
 
   useEffect(() => () => { runIdRef.current += 1 }, [])
-  const selectPatient = (patient: ShowcasePatient) => { setSelectedPatient(patient); void runEvaluation(patient) }
+  const selectPatient = useCallback((patient: ShowcasePatient) => {
+    setSelectedPatient(patient)
+    void runEvaluation(patient)
+  }, [runEvaluation])
   const closeModal = () => {
     setShowModal(false)
     window.setTimeout(() => selectedPatient

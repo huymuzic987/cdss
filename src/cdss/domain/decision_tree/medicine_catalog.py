@@ -20,6 +20,7 @@ class Medicine:
     source: str | None
     link: str | None
     available: bool
+    snomed_code: str | None = None
 
 
 class MedicineRepository(Protocol):

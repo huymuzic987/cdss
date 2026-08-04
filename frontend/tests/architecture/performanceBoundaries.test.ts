@@ -41,4 +41,27 @@ describe('frontend performance boundaries', () => {
     expect(nginx).toContain('Cache-Control "public, max-age=31536000, immutable"')
     expect(nginx).toContain('gzip_types')
   })
+
+  it('leaves cyclic canvas dependencies to Vite automatic chunking', () => {
+    const vite = read('vite.config.ts')
+
+    expect(vite).not.toContain('codeSplitting')
+    expect(vite).not.toContain('maxSize')
+  })
+
+  it('loads the ELK API with a worker instead of bundling the engine', () => {
+    const layout = read('src/layout/elkLayout.ts')
+    expect(layout).toContain("elk-api.js")
+    expect(layout).toContain("elk-worker.min.js?url")
+    expect(layout).not.toContain('elk.bundled.js')
+  })
+
+  it('memoizes showcase patient cards and selection callbacks', () => {
+    expect(read('src/showcase/ShowcaseChrome.tsx')).toMatch(/memo\(function PatientCard/)
+    expect(read('src/showcase/ShowcasePage.tsx')).toContain('const selectPatient = useCallback(')
+  })
+
+  it('allows component tests enough time on a resource-constrained CI agent', () => {
+    expect(read('vitest.config.ts')).toContain('testTimeout: 15_000')
+  })
 })

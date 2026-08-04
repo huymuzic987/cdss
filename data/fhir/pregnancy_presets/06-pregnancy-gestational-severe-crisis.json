@@ -32,7 +32,7 @@
       },
       {
         "system": "http://cdss.local/fhir/CodeSystem/preset/expected-node",
-        "code": "T12_INF_IV_NITROGLYCERIN"
+        "code": "T12_INFERENCE_START_IV_NITROGLYCERIN_INFUSION"
       }
     ]
   },

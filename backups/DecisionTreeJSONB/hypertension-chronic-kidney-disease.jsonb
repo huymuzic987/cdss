@@ -69,14 +69,14 @@
           {
             "edge_id": "1de61262-4c5c-49cc-a11c-4d4478ff38ff",
             "traversal_order": 1,
-            "to_node_key": "T11_INF_DETERMINE_TRANSPLANT_STATUS",
+            "to_node_key": "T11_INFERENCE_DETERMINE_TRANSPLANT_STATUS",
             "candidate_condition": null
           }
         ]
       },
-      "T11_INF_DETERMINE_TRANSPLANT_STATUS": {
+      "T11_INFERENCE_DETERMINE_TRANSPLANT_STATUS": {
         "id": "2284cf0e-04f3-4f9e-9d37-22559644355b",
-        "node_key": "T11_INF_DETERMINE_TRANSPLANT_STATUS",
+        "node_key": "T11_INFERENCE_DETERMINE_TRANSPLANT_STATUS",
         "node_type": "INFERENCE",
         "text_en": "Determine kidney transplant status",
         "text_vi": "Xác định tình trạng ghép thận",
@@ -149,7 +149,7 @@
           {
             "edge_id": "64bd5138-5a0b-4d57-b1ed-3cfc4e5e4cbc",
             "traversal_order": 1,
-            "to_node_key": "T11_INF_REGIMEN_OPTIONS",
+            "to_node_key": "T11_INFERENCE_SELECT_A_WITH_C_OR_D",
             "candidate_condition": null
           }
         ]
@@ -178,14 +178,14 @@
           {
             "edge_id": "511bd4db-9191-4462-850f-fec12b68eb16",
             "traversal_order": 1,
-            "to_node_key": "T11_INF_POST_TRANSPLANT_REGIMEN_OPTIONS",
+            "to_node_key": "T11_INFERENCE_SELECT_DIHYDROPYRIDINE_CCB_OR_ARB_AND_SET_BP_TARGET_AFTER_TRANSPLANT",
             "candidate_condition": null
           }
         ]
       },
-      "T11_INF_REGIMEN_OPTIONS": {
+      "T11_INFERENCE_SELECT_A_WITH_C_OR_D": {
         "id": "8a867ec1-5ea6-4ce3-8e0c-840f333a5aa4",
-        "node_key": "T11_INF_REGIMEN_OPTIONS",
+        "node_key": "T11_INFERENCE_SELECT_A_WITH_C_OR_D",
         "node_type": "INFERENCE",
         "text_en": "A + C, or A + D (ACE inhibitor/ARB + calcium-channel blocker, or ACE inhibitor/ARB + thiazide-like diuretic)",
         "text_vi": "A + C, hoặc A + D (ƯCMC/CTTA + CKCa, hoặc ƯCMC/CTTA + LT Thiazide-like)",
@@ -237,14 +237,14 @@
           {
             "edge_id": "e5545262-c543-4ba6-8dfe-829de11de0a8",
             "traversal_order": 1,
-            "to_node_key": "T11_INF_DETERMINE_CREATININE_TEST_STATUS",
+            "to_node_key": "T11_INFERENCE_DETERMINE_CREATININE_TEST_STATUS",
             "candidate_condition": null
           }
         ]
       },
-      "T11_INF_DETERMINE_CREATININE_TEST_STATUS": {
+      "T11_INFERENCE_DETERMINE_CREATININE_TEST_STATUS": {
         "id": "6dc877e2-2d2a-46c7-a8d1-cc3a4388401d",
-        "node_key": "T11_INF_DETERMINE_CREATININE_TEST_STATUS",
+        "node_key": "T11_INFERENCE_DETERMINE_CREATININE_TEST_STATUS",
         "node_type": "INFERENCE",
         "text_en": "Determine whether baseline creatinine was tested before",
         "text_vi": "Xác định đã xét nghiệm chỉ số creatinine nền trước đó hay chưa",
@@ -317,7 +317,7 @@
           {
             "edge_id": "8e732f42-09e4-4441-9945-c149cfbc6d9b",
             "traversal_order": 1,
-            "to_node_key": "T11_ACTION_TEST_CREATININE_AND_MONITOR",
+            "to_node_key": "T11_INFERENCE_TEST_CREATININE_AND_MONITOR",
             "candidate_condition": null
           }
         ]
@@ -346,14 +346,14 @@
           {
             "edge_id": "18d3547f-f6f7-4182-8130-e3d544c81780",
             "traversal_order": 1,
-            "to_node_key": "T11_INF_DETERMINE_RAS_INHIBITOR_USE_STATUS",
+            "to_node_key": "T11_INFERENCE_DETERMINE_RAS_INHIBITOR_USE_STATUS",
             "candidate_condition": null
           }
         ]
       },
-      "T11_ACTION_TEST_CREATININE_AND_MONITOR": {
+      "T11_INFERENCE_TEST_CREATININE_AND_MONITOR": {
         "id": "c3e81015-fa4a-462e-ba74-369fb405da78",
-        "node_key": "T11_ACTION_TEST_CREATININE_AND_MONITOR",
+        "node_key": "T11_INFERENCE_TEST_CREATININE_AND_MONITOR",
         "node_type": "INFERENCE",
         "text_en": "Test creatinine and monitor after 2-4 weeks",
         "text_vi": "Xét nghiệm chỉ số creatinine và theo dõi sau 2-4 tuần",
@@ -411,9 +411,9 @@
           }
         ]
       },
-      "T11_INF_DETERMINE_RAS_INHIBITOR_USE_STATUS": {
+      "T11_INFERENCE_DETERMINE_RAS_INHIBITOR_USE_STATUS": {
         "id": "13a3e412-984a-467f-84ac-27c0c70cb892",
-        "node_key": "T11_INF_DETERMINE_RAS_INHIBITOR_USE_STATUS",
+        "node_key": "T11_INFERENCE_DETERMINE_RAS_INHIBITOR_USE_STATUS",
         "node_type": "INFERENCE",
         "text_en": "Determine whether the patient is still using the RAS-inhibitor (class A)",
         "text_vi": "Xác định còn dùng thuốc nhóm A (ức chế RAS) hay không",
@@ -486,7 +486,7 @@
           {
             "edge_id": "5601d1ee-a006-482d-b4a6-394bb8b5fba9",
             "traversal_order": 1,
-            "to_node_key": "T11_INF_DETERMINE_CREATININE_INCREASE_STATUS",
+            "to_node_key": "T11_INFERENCE_DETERMINE_CREATININE_INCREASE_STATUS",
             "candidate_condition": null
           }
         ]
@@ -515,14 +515,14 @@
           {
             "edge_id": "e1a435c7-174d-4639-ace0-011c073dadbe",
             "traversal_order": 1,
-            "to_node_key": "T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR",
+            "to_node_key": "T11_INFERENCE_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR",
             "candidate_condition": null
           }
         ]
       },
-      "T11_INF_DETERMINE_CREATININE_INCREASE_STATUS": {
+      "T11_INFERENCE_DETERMINE_CREATININE_INCREASE_STATUS": {
         "id": "6e9613bd-09ce-484f-858c-0dfc5d120cce",
-        "node_key": "T11_INF_DETERMINE_CREATININE_INCREASE_STATUS",
+        "node_key": "T11_INFERENCE_DETERMINE_CREATININE_INCREASE_STATUS",
         "node_type": "INFERENCE",
         "text_en": "Test creatinine, compare with the prior measurement, and determine whether creatinine increased by more than 30%",
         "text_vi": "Xét nghiệm creatinine, đối chiếu với lần đo trước và xác định creatinine có tăng >30% hay không",
@@ -616,7 +616,7 @@
           {
             "edge_id": "fbc42b77-88b0-4ff1-9f38-02971463d0e8",
             "traversal_order": 1,
-            "to_node_key": "T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE",
+            "to_node_key": "T11_INFERENCE_MAINTAIN_REGIMEN_CREATININE_STABLE",
             "candidate_condition": null
           }
         ]
@@ -666,14 +666,14 @@
           {
             "edge_id": "7ec23be2-ad42-4e72-aa99-fbb1a76b2b6d",
             "traversal_order": 1,
-            "to_node_key": "T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR",
+            "to_node_key": "T11_INFERENCE_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR",
             "candidate_condition": null
           }
         ]
       },
-      "T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE": {
+      "T11_INFERENCE_MAINTAIN_REGIMEN_CREATININE_STABLE": {
         "id": "392b6a0b-7c8e-419b-8fb5-f14a90c3b2f8",
-        "node_key": "T11_ACTION_MAINTAIN_REGIMEN_CREATININE_STABLE",
+        "node_key": "T11_INFERENCE_MAINTAIN_REGIMEN_CREATININE_STABLE",
         "node_type": "INFERENCE",
         "text_en": "Maintain regimen",
         "text_vi": "Duy trì phác đồ",
@@ -710,9 +710,9 @@
           }
         ]
       },
-      "T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR": {
+      "T11_INFERENCE_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR": {
         "id": "8943a52d-445d-4c5f-a33d-e7f71edcda20",
-        "node_key": "T11_ACTION_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR",
+        "node_key": "T11_INFERENCE_REDUCE_DOSE_OR_STOP_RAS_INHIBITOR",
         "node_type": "INFERENCE",
         "text_en": "Reduce dose or stop the RAS-inhibitor (class A) combination",
         "text_vi": "Giảm liều hoặc ngừng phối hợp A",
@@ -770,9 +770,9 @@
           }
         ]
       },
-      "T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR": {
+      "T11_INFERENCE_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR": {
         "id": "ecc9c7d9-6ed8-4add-b908-f4a36b29bdfa",
-        "node_key": "T11_ACTION_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR",
+        "node_key": "T11_INFERENCE_MAINTAIN_REGIMEN_STOPPED_RAS_INHIBITOR",
         "node_type": "INFERENCE",
         "text_en": "Maintain regimen",
         "text_vi": "Duy trì phác đồ",
@@ -809,9 +809,9 @@
           }
         ]
       },
-      "T11_INF_POST_TRANSPLANT_REGIMEN_OPTIONS": {
+      "T11_INFERENCE_SELECT_DIHYDROPYRIDINE_CCB_OR_ARB_AND_SET_BP_TARGET_AFTER_TRANSPLANT": {
         "id": "ab407d81-938c-4f6a-9937-0259bdf2a4b8",
-        "node_key": "T11_INF_POST_TRANSPLANT_REGIMEN_OPTIONS",
+        "node_key": "T11_INFERENCE_SELECT_DIHYDROPYRIDINE_CCB_OR_ARB_AND_SET_BP_TARGET_AFTER_TRANSPLANT",
         "node_type": "INFERENCE",
         "text_en": "First-line choice after kidney transplant: C (dihydropyridine CCB) or A (ARB); BP target <130/80 mmHg",
         "text_vi": "Lựa chọn đầu tay sau ghép thận: C (CKCa nhóm Dihydropyridine) hoặc A (CTTA); Mục tiêu HA <130/80 mmHg",
@@ -872,14 +872,14 @@
           {
             "edge_id": "51717c50-7d45-44f8-94b3-ea71d76d9784",
             "traversal_order": 1,
-            "to_node_key": "T11_ACTION_MAINTAIN_REGIMEN_POST_TRANSPLANT",
+            "to_node_key": "T11_INFERENCE_MAINTAIN_REGIMEN_POST_TRANSPLANT",
             "candidate_condition": null
           }
         ]
       },
-      "T11_ACTION_MAINTAIN_REGIMEN_POST_TRANSPLANT": {
+      "T11_INFERENCE_MAINTAIN_REGIMEN_POST_TRANSPLANT": {
         "id": "3eaff7e6-b016-4775-907e-d57b14316bf2",
-        "node_key": "T11_ACTION_MAINTAIN_REGIMEN_POST_TRANSPLANT",
+        "node_key": "T11_INFERENCE_MAINTAIN_REGIMEN_POST_TRANSPLANT",
         "node_type": "INFERENCE",
         "text_en": "Maintain regimen",
         "text_vi": "Duy trì phác đồ",

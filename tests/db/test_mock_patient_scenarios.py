@@ -64,17 +64,17 @@ T3_MEDICATION_FULL_RESOURCES = [
     _entered(T3, "T3_START_BP_AND_AGE_INFORMATION"),
     _candidate(T3, "T3_START_BP_AND_AGE_INFORMATION", "T3_C_IS_MEDICATION_FOLLOW_UP", True),
     _entered(T3, "T3_C_IS_MEDICATION_FOLLOW_UP"),
-    _candidate(T3, "T3_C_IS_MEDICATION_FOLLOW_UP", "T3_INF_RESTORE_ACTIVE_BP_TARGET", True),
-    _entered(T3, "T3_INF_RESTORE_ACTIVE_BP_TARGET"),
+    _candidate(T3, "T3_C_IS_MEDICATION_FOLLOW_UP", "T3_INFERENCE_RESTORE_ACTIVE_BP_TARGET", True),
+    _entered(T3, "T3_INFERENCE_RESTORE_ACTIVE_BP_TARGET"),
     _candidate(
         T3,
-        "T3_INF_RESTORE_ACTIVE_BP_TARGET",
+        "T3_INFERENCE_RESTORE_ACTIVE_BP_TARGET",
         "T3_LINK_ESSENTIAL_TREATMENT_STRATEGY",
         False,
     ),
     _candidate(
         T3,
-        "T3_INF_RESTORE_ACTIVE_BP_TARGET",
+        "T3_INFERENCE_RESTORE_ACTIVE_BP_TARGET",
         "T3_LINK_OPTIMAL_TREATMENT_STRATEGY",
         True,
     ),
@@ -85,11 +85,11 @@ T3_MEDICATION_LIMITED_RESOURCES = [
     _entered(T3, "T3_START_BP_AND_AGE_INFORMATION"),
     _candidate(T3, "T3_START_BP_AND_AGE_INFORMATION", "T3_C_IS_MEDICATION_FOLLOW_UP", True),
     _entered(T3, "T3_C_IS_MEDICATION_FOLLOW_UP"),
-    _candidate(T3, "T3_C_IS_MEDICATION_FOLLOW_UP", "T3_INF_RESTORE_ACTIVE_BP_TARGET", True),
-    _entered(T3, "T3_INF_RESTORE_ACTIVE_BP_TARGET"),
+    _candidate(T3, "T3_C_IS_MEDICATION_FOLLOW_UP", "T3_INFERENCE_RESTORE_ACTIVE_BP_TARGET", True),
+    _entered(T3, "T3_INFERENCE_RESTORE_ACTIVE_BP_TARGET"),
     _candidate(
         T3,
-        "T3_INF_RESTORE_ACTIVE_BP_TARGET",
+        "T3_INFERENCE_RESTORE_ACTIVE_BP_TARGET",
         "T3_LINK_ESSENTIAL_TREATMENT_STRATEGY",
         True,
     ),
@@ -177,13 +177,13 @@ T5_INITIAL_TARGET_NOT_REACHED = [
     _candidate(
         T5,
         "T5_C_INITIAL_REGIMEN_BP_TARGET_NOT_REACHED",
-        "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION",
+        "T5_INFERENCE_COMBINE_FIXED_DOSE_A_C_D_ONE_PILL",
         True,
     ),
-    _entered(T5, "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION"),
+    _entered(T5, "T5_INFERENCE_COMBINE_FIXED_DOSE_A_C_D_ONE_PILL"),
     _candidate(
         T5,
-        "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION",
+        "T5_INFERENCE_COMBINE_FIXED_DOSE_A_C_D_ONE_PILL",
         "T5_LINK_THREE_DRUG_TO_TREE_6",
         True,
     ),
@@ -223,13 +223,16 @@ T5_ESCALATED_TARGET_NOT_REACHED = [
     _candidate(
         T5,
         "T5_C_ESCALATED_REGIMEN_BP_TARGET_NOT_REACHED",
-        "T5_INF_RESISTANT_HYPERTENSION_TREATMENT_STEP",
+        "T5_INFERENCE_SELECT_MRA_OR_ANOTHER_DIURETIC_OR_ALPHA_BLOCKER_OR_BETA_BLOCKER_FOR_RESISTANT_HYPERTENSION",
         True,
     ),
-    _entered(T5, "T5_INF_RESISTANT_HYPERTENSION_TREATMENT_STEP"),
+    _entered(
+        T5,
+        "T5_INFERENCE_SELECT_MRA_OR_ANOTHER_DIURETIC_OR_ALPHA_BLOCKER_OR_BETA_BLOCKER_FOR_RESISTANT_HYPERTENSION",
+    ),
     _candidate(
         T5,
-        "T5_INF_RESISTANT_HYPERTENSION_TREATMENT_STEP",
+        "T5_INFERENCE_SELECT_MRA_OR_ANOTHER_DIURETIC_OR_ALPHA_BLOCKER_OR_BETA_BLOCKER_FOR_RESISTANT_HYPERTENSION",
         "T5_LINK_RESISTANT_HYPERTENSION",
         True,
     ),
@@ -433,7 +436,7 @@ def test_tree_3_medication_follow_up_restores_and_uses_target(
         entry
         for entry in result.trace
         if entry.event is TraceEvent.NODE_ENTERED
-        and entry.node_key == "T3_INF_RESTORE_ACTIVE_BP_TARGET"
+        and entry.node_key == "T3_INFERENCE_RESTORE_ACTIVE_BP_TARGET"
     )
     assert restore_entry.changed_context_paths == ["context.treatment.bp_target"]
     target_evaluation = next(
@@ -508,13 +511,13 @@ DRUG_COMBINATION_STARTED_MISSING_HEART_FAILURE_INPUT = [
     _candidate(
         "drug-combination",
         "T6_C_FOLLOW_UP_VISIT",
-        "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
+        "T6_INFERENCE_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
         True,
     ),
-    _entered("drug-combination", "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS"),
+    _entered("drug-combination", "T6_INFERENCE_DETERMINE_PRIOR_PRESCRIPTION_STATUS"),
     _candidate(
         "drug-combination",
-        "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
+        "T6_INFERENCE_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
         "T6_C_HAS_PRIOR_PRESCRIPTION",
         True,
     ),
@@ -522,19 +525,19 @@ DRUG_COMBINATION_STARTED_MISSING_HEART_FAILURE_INPUT = [
     _candidate(
         "drug-combination",
         "T6_C_HAS_PRIOR_PRESCRIPTION",
-        "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION",
+        "T6_INFERENCE_COMPARE_WITH_CURRENT_PRESCRIPTION",
         True,
     ),
-    _entered("drug-combination", "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION"),
+    _entered("drug-combination", "T6_INFERENCE_COMPARE_WITH_CURRENT_PRESCRIPTION"),
     _candidate(
         "drug-combination",
-        "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION",
+        "T6_INFERENCE_COMPARE_WITH_CURRENT_PRESCRIPTION",
         "T6_C_DOSAGE_ADJUSTMENT_REQUESTED",
         False,
     ),
     _candidate(
         "drug-combination",
-        "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION",
+        "T6_INFERENCE_COMPARE_WITH_CURRENT_PRESCRIPTION",
         "T6_C_NO_DOSAGE_ADJUSTMENT_REQUESTED",
         True,
     ),
@@ -542,26 +545,28 @@ DRUG_COMBINATION_STARTED_MISSING_HEART_FAILURE_INPUT = [
     _candidate(
         "drug-combination",
         "T6_C_NO_DOSAGE_ADJUSTMENT_REQUESTED",
-        "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT",
+        "T6_INFERENCE_MAINTAIN_CURRENT_REGIMEN_NO_CHANGE_AFTER_NO_ADJUSTMENT",
         True,
     ),
-    _entered("drug-combination", "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT"),
+    _entered(
+        "drug-combination", "T6_INFERENCE_MAINTAIN_CURRENT_REGIMEN_NO_CHANGE_AFTER_NO_ADJUSTMENT"
+    ),
     _candidate(
         "drug-combination",
-        "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT",
-        "T6_INF_DETERMINE_CONTRAINDICATIONS",
+        "T6_INFERENCE_MAINTAIN_CURRENT_REGIMEN_NO_CHANGE_AFTER_NO_ADJUSTMENT",
+        "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS",
         True,
     ),
-    _entered("drug-combination", "T6_INF_DETERMINE_CONTRAINDICATIONS"),
+    _entered("drug-combination", "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS"),
     _candidate(
         "drug-combination",
-        "T6_INF_DETERMINE_CONTRAINDICATIONS",
+        "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS",
         "T6_C_HAS_DUPLICATE_DRUG_CLASS",
         False,
     ),
     _candidate(
         "drug-combination",
-        "T6_INF_DETERMINE_CONTRAINDICATIONS",
+        "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS",
         "T6_C_NO_DUPLICATE_DRUG_CLASS",
         True,
     ),
@@ -569,19 +574,21 @@ DRUG_COMBINATION_STARTED_MISSING_HEART_FAILURE_INPUT = [
     _candidate(
         "drug-combination",
         "T6_C_NO_DUPLICATE_DRUG_CLASS",
-        "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE",
+        "T6_INFERENCE_MAINTAIN_CURRENT_REGIMEN_NO_CHANGE_AFTER_NO_DUPLICATE",
         True,
     ),
-    _entered("drug-combination", "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE"),
+    _entered(
+        "drug-combination", "T6_INFERENCE_MAINTAIN_CURRENT_REGIMEN_NO_CHANGE_AFTER_NO_DUPLICATE"
+    ),
     _candidate(
         "drug-combination",
-        "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE",
+        "T6_INFERENCE_MAINTAIN_CURRENT_REGIMEN_NO_CHANGE_AFTER_NO_DUPLICATE",
         "T6_C_IS_FIRST_VISIT_FOR_REGIMEN",
         False,
     ),
     _candidate(
         "drug-combination",
-        "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE",
+        "T6_INFERENCE_MAINTAIN_CURRENT_REGIMEN_NO_CHANGE_AFTER_NO_DUPLICATE",
         "T6_C_IS_FOLLOW_UP_FOR_REGIMEN",
         True,
     ),
@@ -601,19 +608,19 @@ DRUG_COMBINATION_STARTED_MISSING_HEART_FAILURE_INPUT = [
     _candidate(
         "drug-combination",
         "T6_C_FOLLOWUP_INITIAL_STAGE",
-        "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY",
+        "T6_INFERENCE_DETERMINE_PRIOR_REGIMEN_INTENSITY",
         True,
     ),
-    _entered("drug-combination", "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY"),
+    _entered("drug-combination", "T6_INFERENCE_DETERMINE_PRIOR_REGIMEN_INTENSITY"),
     _candidate(
         "drug-combination",
-        "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY",
+        "T6_INFERENCE_DETERMINE_PRIOR_REGIMEN_INTENSITY",
         "T6_C_WAS_ON_MONOTHERAPY",
         False,
     ),
     _candidate(
         "drug-combination",
-        "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY",
+        "T6_INFERENCE_DETERMINE_PRIOR_REGIMEN_INTENSITY",
         "T6_C_WAS_NOT_ON_MONOTHERAPY",
         True,
     ),
@@ -621,17 +628,17 @@ DRUG_COMBINATION_STARTED_MISSING_HEART_FAILURE_INPUT = [
     _candidate(
         "drug-combination",
         "T6_C_WAS_NOT_ON_MONOTHERAPY",
-        "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG",
+        "T6_INFERENCE_ESCALATE_TWO_DRUG_DOSE_OR_COMBINE_A_C_AND_D",
         True,
     ),
-    _entered("drug-combination", "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG"),
+    _entered("drug-combination", "T6_INFERENCE_ESCALATE_TWO_DRUG_DOSE_OR_COMBINE_A_C_AND_D"),
     _candidate(
         "drug-combination",
-        "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG",
-        "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION",
+        "T6_INFERENCE_ESCALATE_TWO_DRUG_DOSE_OR_COMBINE_A_C_AND_D",
+        "T6_INFERENCE_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION",
         True,
     ),
-    _entered("drug-combination", "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION"),
+    _entered("drug-combination", "T6_INFERENCE_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION"),
 ]
 
 
@@ -683,20 +690,9 @@ def test_tree_5_initial_regimen_not_reached_resolves_link_then_needs_more_input(
             ],
         },
     }
-    # T6's own compare/adjust/duplicate-check steps are INFERENCE nodes now (they
-    # only ever fed context forward), so drug-combination contributes no action of
-    # its own here -- T5's fixed-dose recommendation is the only one collected.
-    assert [
-        (action.tree_key, action.node_key, action.text_vi, action.payload["action_type"])
-        for action in state.actions
-    ] == [
-        (
-            T5,
-            "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION",
-            "VIÊN PHỐI HỢP 3 THUỐC (1 viên): A+C+D",
-            "FIXED_DOSE_THREE_DRUG_COMBINATION",
-        ),
-    ]
+    # The canonical seed normalizes prescribing steps into INFERENCE nodes.
+    # They update regimen context but are not collected as terminal actions.
+    assert state.actions == []
     _assert_trace(
         state,
         [
@@ -708,11 +704,11 @@ def test_tree_5_initial_regimen_not_reached_resolves_link_then_needs_more_input(
     _assert_references(
         state,
         [
-            (T5, "T5_ACTION_FIXED_DOSE_THREE_DRUG_COMBINATION", 1),
+            (T5, "T5_INFERENCE_COMBINE_FIXED_DOSE_A_C_D_ONE_PILL", 1),
             ("drug-combination", "T6_START_PATIENT_INFO_AND_PRESCRIPTIONS", 1),
-            ("drug-combination", "T6_INF_DETERMINE_CONTRAINDICATIONS", 1),
-            ("drug-combination", "T6_INF_DETERMINE_CONTRAINDICATIONS", 2),
-            ("drug-combination", "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG", 1),
+            ("drug-combination", "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS", 1),
+            ("drug-combination", "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS", 2),
+            ("drug-combination", "T6_INFERENCE_ESCALATE_TWO_DRUG_DOSE_OR_COMBINE_A_C_AND_D", 1),
         ],
     )
 
@@ -781,7 +777,11 @@ def test_tree_5_escalated_regimen_resolves_link_and_reaches_resistant_hypertensi
     _assert_references(
         result,
         [
-            (T5, "T5_INF_RESISTANT_HYPERTENSION_TREATMENT_STEP", 1),
+            (
+                T5,
+                "T5_INFERENCE_SELECT_MRA_OR_ANOTHER_DIURETIC_OR_ALPHA_BLOCKER_OR_BETA_BLOCKER_FOR_RESISTANT_HYPERTENSION",
+                1,
+            ),
             ("resistant-hypertension", "T13_START", 1),
             ("resistant-hypertension", "T13_C_FULL", 1),
             ("resistant-hypertension", "T13_A_CONSIDER_DEVICE", 1),

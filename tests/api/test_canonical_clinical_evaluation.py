@@ -192,6 +192,52 @@ def test_combination_hover_uses_complete_database_catalog() -> None:
     ]
 
 
+def test_explicit_orders_keep_additional_traversed_drugs_without_duplicates() -> None:
+    bundle = json.loads(next(iter(sorted(FIXTURE_DIR.glob("*.json")))).read_text(encoding="utf-8"))
+    parsed = parse_clinical_bundle(bundle)
+    aspirin = {
+        "drug_id": "aspirin",
+        "name": "Aspirin",
+        "drug_class": "ANTIPLATELET",
+        "dose_low": "81 mg",
+        "available": True,
+    }
+    spironolactone = {
+        "drug_id": "spironolactone",
+        "name": "Spironolactone",
+        "drug_class": "MRA",
+        "dose_low": "12.5 mg",
+        "available": True,
+    }
+    action = ExecutedAction(
+        tree_key="example",
+        node_key="multi-step-regimen",
+        node_type=NodeType.END,
+        text_en="Use the traversed regimen",
+        text_vi="Use the traversed regimen",
+        payload={
+            "recommended_orders": [
+                {
+                    "id": "explicit-aspirin",
+                    "type": "medication",
+                    "name_en": "Aspirin",
+                    "name_vi": "Aspirin",
+                    "dose": "81 mg",
+                    "medicine_ids": ["aspirin"],
+                }
+            ],
+            "medicines": [aspirin, spironolactone],
+        },
+    )
+
+    orders = build_presentation(action, parsed, [])["recommended_orders"]
+
+    assert [(order["name_en"], order.get("dose")) for order in orders] == [
+        ("Aspirin", "81 mg"),
+        ("Spironolactone", "12.5 mg"),
+    ]
+
+
 def test_legacy_parameters_resource_is_rejected() -> None:
     bundle = {
         "resourceType": "Bundle",

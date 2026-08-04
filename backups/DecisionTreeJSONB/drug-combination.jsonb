@@ -112,7 +112,7 @@
           {
             "edge_id": "c35c399f-392b-4134-9366-110b96da0a60",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
+            "to_node_key": "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS",
             "candidate_condition": null
           }
         ]
@@ -141,14 +141,14 @@
           {
             "edge_id": "0aa46c7c-e1a2-4c66-acc3-dc10645af309",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
+            "to_node_key": "T6_INFERENCE_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
             "candidate_condition": null
           }
         ]
       },
-      "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS": {
+      "T6_INFERENCE_DETERMINE_PRIOR_PRESCRIPTION_STATUS": {
         "id": "e6ce4a56-4b14-433f-b8fd-5c04096f103e",
-        "node_key": "T6_INF_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
+        "node_key": "T6_INFERENCE_DETERMINE_PRIOR_PRESCRIPTION_STATUS",
         "node_type": "INFERENCE",
         "text_en": "Determine whether a prior prescription exists",
         "text_vi": "Xác định có đơn thuốc trước đó hay không",
@@ -221,7 +221,7 @@
           {
             "edge_id": "17ae5cb4-aa0a-4327-b4bf-352dc54e6a3b",
             "traversal_order": 1,
-            "to_node_key": "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION",
+            "to_node_key": "T6_INFERENCE_COMPARE_WITH_CURRENT_PRESCRIPTION",
             "candidate_condition": null
           }
         ]
@@ -250,14 +250,14 @@
           {
             "edge_id": "4ceeef05-33ba-4a9b-83a3-0de63dc75bb8",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
+            "to_node_key": "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS",
             "candidate_condition": null
           }
         ]
       },
-      "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION": {
+      "T6_INFERENCE_COMPARE_WITH_CURRENT_PRESCRIPTION": {
         "id": "d9b335f6-6b90-41cb-8b33-99e05e6a1e02",
-        "node_key": "T6_ACTION_COMPARE_WITH_CURRENT_PRESCRIPTION",
+        "node_key": "T6_INFERENCE_COMPARE_WITH_CURRENT_PRESCRIPTION",
         "node_type": "INFERENCE",
         "text_en": "Compare with current prescription",
         "text_vi": "So sánh với đơn thuốc hiện tại",
@@ -330,7 +330,7 @@
           {
             "edge_id": "799b7cd8-b5a2-4b5f-8b16-c7122bba6015",
             "traversal_order": 1,
-            "to_node_key": "T6_ACTION_ADJUST_REGIMEN",
+            "to_node_key": "T6_INFERENCE_ADJUST_REGIMEN",
             "candidate_condition": null
           }
         ]
@@ -359,14 +359,14 @@
           {
             "edge_id": "00c80789-c420-4aa2-974d-678c344853ab",
             "traversal_order": 1,
-            "to_node_key": "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT",
+            "to_node_key": "T6_INFERENCE_MAINTAIN_CURRENT_REGIMEN_NO_CHANGE_AFTER_NO_ADJUSTMENT",
             "candidate_condition": null
           }
         ]
       },
-      "T6_ACTION_ADJUST_REGIMEN": {
+      "T6_INFERENCE_ADJUST_REGIMEN": {
         "id": "e4bf6aee-e795-4eab-8bc2-dfc5613a06da",
-        "node_key": "T6_ACTION_ADJUST_REGIMEN",
+        "node_key": "T6_INFERENCE_ADJUST_REGIMEN",
         "node_type": "INFERENCE",
         "text_en": "Adjust regimen",
         "text_vi": "Điều chỉnh phác đồ",
@@ -388,20 +388,25 @@
           {
             "edge_id": "e79a8a91-b8d2-439b-a27d-6023d1e66ce6",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
+            "to_node_key": "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS",
             "candidate_condition": null
           }
         ]
       },
-      "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT": {
+      "T6_INFERENCE_MAINTAIN_CURRENT_REGIMEN_NO_CHANGE_AFTER_NO_ADJUSTMENT": {
         "id": "5dd8e03f-953a-40e4-a2f5-eae62f0353d2",
-        "node_key": "T6_ACTION_MAINTAIN_REGIMEN_NO_ADJUSTMENT",
+        "node_key": "T6_INFERENCE_MAINTAIN_CURRENT_REGIMEN_NO_CHANGE_AFTER_NO_ADJUSTMENT",
         "node_type": "INFERENCE",
-        "text_en": "Maintain regimen",
-        "text_vi": "Duy trì phác đồ",
+        "text_en": "Maintain the current regimen without changes",
+        "text_vi": "Duy trì phác đồ hiện tại, không thay đổi",
         "condition_definition": null,
         "context_patch": null,
-        "action_payload": null,
+        "action_payload": {
+          "regimen_update": {
+            "operation": "MAINTAIN",
+            "components": []
+          }
+        },
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
@@ -413,14 +418,14 @@
           {
             "edge_id": "f9fea92e-c64c-48da-a6c1-494be04d0cc6",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
+            "to_node_key": "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS",
             "candidate_condition": null
           }
         ]
       },
-      "T6_INF_DETERMINE_CONTRAINDICATIONS": {
+      "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS": {
         "id": "dbf3fc69-278c-4e51-9487-242f9de4a9cc",
-        "node_key": "T6_INF_DETERMINE_CONTRAINDICATIONS",
+        "node_key": "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS",
         "node_type": "INFERENCE",
         "text_en": "Determine contraindicated drug classes based on patient information and current regimen",
         "text_vi": "Xác định thuốc chống chỉ định dựa trên thông tin bệnh nhân và phác đồ hiện tại",
@@ -709,7 +714,7 @@
           {
             "edge_id": "49917e4c-7d31-4e9a-b82c-1d1f075501b7",
             "traversal_order": 1,
-            "to_node_key": "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE",
+            "to_node_key": "T6_INFERENCE_MAINTAIN_CURRENT_REGIMEN_NO_CHANGE_AFTER_NO_DUPLICATE",
             "candidate_condition": null
           }
         ]
@@ -738,7 +743,7 @@
           {
             "edge_id": "4b5ba756-3893-4775-87bf-35e5880186c1",
             "traversal_order": 1,
-            "to_node_key": "T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH",
+            "to_node_key": "T6_INFERENCE_KEEP_ONE_OR_REMOVE_BOTH",
             "candidate_condition": null
           }
         ]
@@ -767,14 +772,14 @@
           {
             "edge_id": "fe804a8f-ea53-4de5-94b5-e3c9579451df",
             "traversal_order": 1,
-            "to_node_key": "T6_ACTION_KEEP_ONE_DRUG",
+            "to_node_key": "T6_INFERENCE_KEEP_ONE_DRUG",
             "candidate_condition": null
           }
         ]
       },
-      "T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH": {
+      "T6_INFERENCE_KEEP_ONE_OR_REMOVE_BOTH": {
         "id": "f0c3396e-aaf3-48e9-9198-aa9b1a701e98",
-        "node_key": "T6_ACTION_KEEP_ONE_OR_REMOVE_BOTH",
+        "node_key": "T6_INFERENCE_KEEP_ONE_OR_REMOVE_BOTH",
         "node_type": "INFERENCE",
         "text_en": "Keep only 1 drug or remove both; prefer keeping the one already in use, only remove both for a special requirement",
         "text_vi": "Chỉ giữ lại 1 thuốc hoặc loại bỏ cả hai. Ưu tiên giữ lại thuốc đã hoặc đang dùng trước đó, chỉ loại bỏ cả hai khi có yêu cầu đặc biệt",
@@ -832,9 +837,9 @@
           }
         ]
       },
-      "T6_ACTION_KEEP_ONE_DRUG": {
+      "T6_INFERENCE_KEEP_ONE_DRUG": {
         "id": "1d806eec-96f8-45e5-ac29-0ba677bea528",
-        "node_key": "T6_ACTION_KEEP_ONE_DRUG",
+        "node_key": "T6_INFERENCE_KEEP_ONE_DRUG",
         "node_type": "INFERENCE",
         "text_en": "Keep only 1 drug",
         "text_vi": "Chỉ giữ lại 1 thuốc",
@@ -871,15 +876,20 @@
           }
         ]
       },
-      "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE": {
+      "T6_INFERENCE_MAINTAIN_CURRENT_REGIMEN_NO_CHANGE_AFTER_NO_DUPLICATE": {
         "id": "b6da12a7-922a-4c29-98c0-d6315bd7804f",
-        "node_key": "T6_ACTION_MAINTAIN_REGIMEN_NO_DUPLICATE",
+        "node_key": "T6_INFERENCE_MAINTAIN_CURRENT_REGIMEN_NO_CHANGE_AFTER_NO_DUPLICATE",
         "node_type": "INFERENCE",
-        "text_en": "Maintain regimen",
-        "text_vi": "Duy trì phác đồ",
+        "text_en": "Maintain the current regimen without changes",
+        "text_vi": "Duy trì phác đồ hiện tại, không thay đổi",
         "condition_definition": null,
         "context_patch": null,
-        "action_payload": null,
+        "action_payload": {
+          "regimen_update": {
+            "operation": "MAINTAIN",
+            "components": []
+          }
+        },
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
@@ -1103,7 +1113,7 @@
           {
             "edge_id": "da4207a3-b288-4b25-8251-762f1b1d8eba",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_INITIATE_MONOTHERAPY",
+            "to_node_key": "T6_INFERENCE_START_A_C_OR_D_MONOTHERAPY",
             "candidate_condition": null
           }
         ]
@@ -1148,14 +1158,14 @@
           {
             "edge_id": "a896d15b-f58c-44ef-b615-97329faa2b3f",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_INITIATE_TWO_DRUG_LOW_DOSE",
+            "to_node_key": "T6_INFERENCE_START_LOW_DOSE_A_PLUS_C_OR_A_PLUS_D",
             "candidate_condition": null
           }
         ]
       },
-      "T6_INF_INITIATE_MONOTHERAPY": {
+      "T6_INFERENCE_START_A_C_OR_D_MONOTHERAPY": {
         "id": "b50e184c-1830-4d00-93d4-f95a5bf02330",
-        "node_key": "T6_INF_INITIATE_MONOTHERAPY",
+        "node_key": "T6_INFERENCE_START_A_C_OR_D_MONOTHERAPY",
         "node_type": "INFERENCE",
         "text_en": "Drug therapy: start with 1 drug (A, C, or D)",
         "text_vi": "Điều trị thuốc KHỞI ĐẦU BẰNG 1 THUỐC (A, C, hoặc D)",
@@ -1209,7 +1219,7 @@
           {
             "edge_id": "a5e4e0f8-924f-4c51-977a-6c0f2af0bf97",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY",
+            "to_node_key": "T6_INFERENCE_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY",
             "candidate_condition": null
           }
         ]
@@ -1237,12 +1247,12 @@
         "references": [],
         "transitions": []
       },
-      "T6_INF_INITIATE_TWO_DRUG_LOW_DOSE": {
+      "T6_INFERENCE_START_LOW_DOSE_A_PLUS_C_OR_A_PLUS_D": {
         "id": "5543a801-eb27-49fd-ac53-d66968aa5d85",
-        "node_key": "T6_INF_INITIATE_TWO_DRUG_LOW_DOSE",
+        "node_key": "T6_INFERENCE_START_LOW_DOSE_A_PLUS_C_OR_A_PLUS_D",
         "node_type": "INFERENCE",
-        "text_en": "Drug therapy: start with 2 low-dose drugs (A combined with C or D)",
-        "text_vi": "Điều trị thuốc KHỞI ĐẦU BẰNG 2 THUỐC LIỀU THẤP (kết hợp A cùng C hoặc D)",
+        "text_en": "Start one low-dose regimen: A + C or A + D",
+        "text_vi": "Khởi trị một phác đồ liều thấp: A + C hoặc A + D",
         "condition_definition": null,
         "context_patch": {
           "treatment_preferences": {
@@ -1259,7 +1269,41 @@
             ]
           }
         },
-        "action_payload": null,
+        "action_payload": {
+          "regimen_update": {
+            "operation": "START",
+            "alternatives": [
+              {
+                "components": [
+                  {
+                    "selector_kind": "class",
+                    "code": "A",
+                    "dose_strategy": "LOW_DOSE"
+                  },
+                  {
+                    "selector_kind": "class",
+                    "code": "C",
+                    "dose_strategy": "LOW_DOSE"
+                  }
+                ]
+              },
+              {
+                "components": [
+                  {
+                    "selector_kind": "class",
+                    "code": "A",
+                    "dose_strategy": "LOW_DOSE"
+                  },
+                  {
+                    "selector_kind": "class",
+                    "code": "D",
+                    "dose_strategy": "LOW_DOSE"
+                  }
+                ]
+              }
+            ]
+          }
+        },
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
@@ -1292,14 +1336,14 @@
           {
             "edge_id": "c6fa9f2d-9281-482a-9b3d-09f48ad585b2",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS",
+            "to_node_key": "T6_INFERENCE_DETERMINE_SPECIFIC_CLINICAL_FLAGS",
             "candidate_condition": null
           }
         ]
       },
-      "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS": {
+      "T6_INFERENCE_DETERMINE_SPECIFIC_CLINICAL_FLAGS": {
         "id": "3ad64952-2466-4c45-abc4-454a7312c8e8",
-        "node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS",
+        "node_key": "T6_INFERENCE_DETERMINE_SPECIFIC_CLINICAL_FLAGS",
         "node_type": "INFERENCE",
         "text_en": "Determine specific clinical situations relevant to beta-blocker add-on",
         "text_vi": "Xác định tình huống lâm sàng đặc hiệu liên quan đến việc thêm chẹn Beta",
@@ -1510,7 +1554,7 @@
           {
             "edge_id": "b655f2db-db39-4c55-a2d8-602586019249",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_ADD_BETA_BLOCKER",
+            "to_node_key": "T6_INFERENCE_ADD_LOW_DOSE_B_BETA_BLOCKER",
             "candidate_condition": null
           }
         ]
@@ -1575,12 +1619,12 @@
           }
         ]
       },
-      "T6_INF_ADD_BETA_BLOCKER": {
+      "T6_INFERENCE_ADD_LOW_DOSE_B_BETA_BLOCKER": {
         "id": "bfa41aac-49c8-4783-a749-c16d1ab6630b",
-        "node_key": "T6_INF_ADD_BETA_BLOCKER",
+        "node_key": "T6_INFERENCE_ADD_LOW_DOSE_B_BETA_BLOCKER",
         "node_type": "INFERENCE",
-        "text_en": "Add beta-blocker",
-        "text_vi": "Thêm thuốc chẹn Beta",
+        "text_en": "Add low-dose class B beta-blocker",
+        "text_vi": "Thêm thuốc chẹn beta nhóm B liều thấp",
         "condition_definition": null,
         "context_patch": {
           "treatment_preferences": {
@@ -1589,7 +1633,19 @@
             ]
           }
         },
-        "action_payload": null,
+        "action_payload": {
+          "regimen_update": {
+            "operation": "ADD",
+            "components": [
+              {
+                "selector_kind": "class",
+                "code": "B",
+                "name": "Beta-blocker",
+                "dose_strategy": "LOW_DOSE"
+              }
+            ]
+          }
+        },
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,
@@ -1809,7 +1865,7 @@
           {
             "edge_id": "80a27155-0200-49c3-878a-afdc99596c52",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY",
+            "to_node_key": "T6_INFERENCE_DETERMINE_PRIOR_REGIMEN_INTENSITY",
             "candidate_condition": null
           }
         ]
@@ -1843,9 +1899,9 @@
           }
         ]
       },
-      "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY": {
+      "T6_INFERENCE_DETERMINE_PRIOR_REGIMEN_INTENSITY": {
         "id": "94fda433-bcf3-4f59-9f9f-19a26e18ea1f",
-        "node_key": "T6_INF_DETERMINE_PRIOR_REGIMEN_INTENSITY",
+        "node_key": "T6_INFERENCE_DETERMINE_PRIOR_REGIMEN_INTENSITY",
         "node_type": "INFERENCE",
         "text_en": "Determine whether the prior regimen was monotherapy or a 2-drug combination",
         "text_vi": "Xác định phác đồ trước đó là đơn trị hay phối hợp 2 thuốc",
@@ -1918,7 +1974,7 @@
           {
             "edge_id": "1c6f975f-67c0-46d7-82d5-6f2d7ac62ff9",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_INITIATE_TWO_DRUG_LOW_DOSE",
+            "to_node_key": "T6_INFERENCE_START_LOW_DOSE_A_PLUS_C_OR_A_PLUS_D",
             "candidate_condition": null
           }
         ]
@@ -1947,14 +2003,14 @@
           {
             "edge_id": "fa5df9bc-84ae-49fd-913a-3863e556cec1",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG",
+            "to_node_key": "T6_INFERENCE_ESCALATE_TWO_DRUG_DOSE_OR_COMBINE_A_C_AND_D",
             "candidate_condition": null
           }
         ]
       },
-      "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG": {
+      "T6_INFERENCE_ESCALATE_TWO_DRUG_DOSE_OR_COMBINE_A_C_AND_D": {
         "id": "1f681bf7-e18d-4a04-927e-5d0a1cf08174",
-        "node_key": "T6_INF_ESCALATE_TO_FULL_DOSE_OR_THREE_DRUG",
+        "node_key": "T6_INFERENCE_ESCALATE_TWO_DRUG_DOSE_OR_COMBINE_A_C_AND_D",
         "node_type": "INFERENCE",
         "text_en": "Increase dose of 2-drug combination, or move to 3-drug combination (A+C+D)",
         "text_vi": "Tăng liều phối hợp 2 thuốc, hoặc chuyển phối hợp 3 thuốc (A+C+D)",
@@ -2009,7 +2065,7 @@
           {
             "edge_id": "430a309e-ffc0-44c0-bc06-d483f569218a",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION",
+            "to_node_key": "T6_INFERENCE_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION",
             "candidate_condition": null
           }
         ]
@@ -2076,9 +2132,9 @@
         ],
         "transitions": []
       },
-      "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY": {
+      "T6_INFERENCE_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY": {
         "id": "c76f5495-f86f-4ab5-b1c7-95367d21eaad",
-        "node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY",
+        "node_key": "T6_INFERENCE_DETERMINE_SPECIFIC_CLINICAL_FLAGS_MONOTHERAPY",
         "node_type": "INFERENCE",
         "text_en": "Determine specific clinical situations relevant to beta-blocker add-on (monotherapy tier)",
         "text_vi": "Xác định tình huống lâm sàng đặc hiệu liên quan đến việc thêm chẹn Beta (bậc đơn trị)",
@@ -2289,7 +2345,7 @@
           {
             "edge_id": "e1f6967d-6a67-4069-96c6-3aa3feb74ac0",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_MONOTHERAPY_ADD_BETA_BLOCKER",
+            "to_node_key": "T6_INFERENCE_START_BETA_BLOCKER_MONOTHERAPY",
             "candidate_condition": null
           }
         ]
@@ -2354,9 +2410,9 @@
           }
         ]
       },
-      "T6_INF_MONOTHERAPY_ADD_BETA_BLOCKER": {
+      "T6_INFERENCE_START_BETA_BLOCKER_MONOTHERAPY": {
         "id": "d7d01197-dad4-4378-aeac-cf5c8645a7fc",
-        "node_key": "T6_INF_MONOTHERAPY_ADD_BETA_BLOCKER",
+        "node_key": "T6_INFERENCE_START_BETA_BLOCKER_MONOTHERAPY",
         "node_type": "INFERENCE",
         "text_en": "Mandate beta-blocker monotherapy",
         "text_vi": "Bắt buộc đơn trị bằng chẹn Beta",
@@ -2410,9 +2466,9 @@
         "references": [],
         "transitions": []
       },
-      "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION": {
+      "T6_INFERENCE_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION": {
         "id": "fa4f7d03-e5d2-4dc5-b57b-224aec159421",
-        "node_key": "T6_INF_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION",
+        "node_key": "T6_INFERENCE_DETERMINE_SPECIFIC_CLINICAL_FLAGS_ESCALATION",
         "node_type": "INFERENCE",
         "text_en": "Determine specific clinical situations relevant to beta-blocker add-on (escalation tier)",
         "text_vi": "Xác định tình huống lâm sàng đặc hiệu liên quan đến việc thêm chẹn Beta (bậc leo thang)",
@@ -2623,7 +2679,7 @@
           {
             "edge_id": "18402157-c98b-4503-8f16-d4399d624a4e",
             "traversal_order": 1,
-            "to_node_key": "T6_INF_ESCALATE_ADD_BETA_BLOCKER",
+            "to_node_key": "T6_INFERENCE_ADD_LOW_DOSE_B_BETA_BLOCKER_TO_ESCALATED_REGIMEN",
             "candidate_condition": null
           }
         ]
@@ -2688,12 +2744,12 @@
           }
         ]
       },
-      "T6_INF_ESCALATE_ADD_BETA_BLOCKER": {
+      "T6_INFERENCE_ADD_LOW_DOSE_B_BETA_BLOCKER_TO_ESCALATED_REGIMEN": {
         "id": "a115f19f-3daa-48dd-ae07-51c72fd81f35",
-        "node_key": "T6_INF_ESCALATE_ADD_BETA_BLOCKER",
+        "node_key": "T6_INFERENCE_ADD_LOW_DOSE_B_BETA_BLOCKER_TO_ESCALATED_REGIMEN",
         "node_type": "INFERENCE",
-        "text_en": "Add beta-blocker to escalated regimen",
-        "text_vi": "Thêm chẹn Beta vào phác đồ leo thang",
+        "text_en": "Add low-dose class B beta-blocker to the escalated regimen",
+        "text_vi": "Thêm thuốc chẹn beta nhóm B liều thấp vào phác đồ đã tăng cường",
         "condition_definition": null,
         "context_patch": {
           "treatment_preferences": {
@@ -2702,7 +2758,19 @@
             ]
           }
         },
-        "action_payload": null,
+        "action_payload": {
+          "regimen_update": {
+            "operation": "ADD",
+            "components": [
+              {
+                "selector_kind": "class",
+                "code": "B",
+                "name": "Beta-blocker",
+                "dose_strategy": "LOW_DOSE"
+              }
+            ]
+          }
+        },
         "global_config": null,
         "link_target_tree_key": null,
         "link_target_node_key": null,

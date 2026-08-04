@@ -40,8 +40,25 @@ check_build_capacity() {
     require_positive_integer MIN_BUILD_MEMORY_MB "$MIN_BUILD_MEMORY_MB"
 
     docker_root="$(docker info --format '{{.DockerRootDir}}')"
-    available_kb="$(df -Pk "$docker_root" | awk 'NR == 2 {print $4}')"
     required_kb=$((MIN_DOCKER_FREE_GB * 1024 * 1024))
+
+    recheck_available_kb() {
+        available_kb="$(df -Pk "$docker_root" | awk 'NR == 2 {print $4}')"
+    }
+
+    recheck_available_kb
+    if [ -z "$available_kb" ] || [ "$available_kb" -lt "$required_kb" ]; then
+        echo "Docker storage is below ${MIN_DOCKER_FREE_GB} GiB; reclaiming unused BuildKit cache..."
+        # Build cache is safe to remove: it is not a live container, image, or
+        # rollback database volume. Recheck before refusing the build.
+        if ! docker builder prune --all --force; then
+            echo "ERROR: unable to reclaim unused Docker build cache." >&2
+            docker system df >&2 || true
+            exit 1
+        fi
+        recheck_available_kb
+    fi
+
     memory_mb="$(awk '/^MemAvailable:/ {print int($2 / 1024)}' /proc/meminfo)"
     cpu_count="$(nproc)"
 
