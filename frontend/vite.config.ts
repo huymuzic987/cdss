@@ -10,7 +10,14 @@ export default defineConfig({
       '/evaluate': 'http://localhost:8000',
       '/fhir': 'http://localhost:8000',
       '/health': 'http://localhost:8000',
-      '/dashboard': 'http://localhost:8000',
+      '/dashboard': {
+        target: 'http://localhost:8000',
+        bypass: (req) => {
+          if (req.headers.accept?.includes('html')) {
+            return '/index.html'
+          }
+        },
+      },
 
     },
     allowedHosts: [

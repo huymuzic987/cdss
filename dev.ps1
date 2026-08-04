@@ -64,8 +64,13 @@ Write-Host "-> Database connection established!" -ForegroundColor Green
 Write-Host "`n[3/4] Applying latest Alembic schema migrations..." -ForegroundColor Yellow
 uv run alembic upgrade head
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Error: Alembic migration failed." -ForegroundColor Red
-    exit 1
+    Write-Host "Alembic upgrade failed (likely orphaned revision). Stamping head..." -ForegroundColor Yellow
+    uv run alembic stamp --purge head
+    uv run alembic upgrade head
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Error: Alembic migration failed." -ForegroundColor Red
+        exit 1
+    }
 }
 
 # 4. Overwrite DB data with seed.sql

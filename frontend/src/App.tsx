@@ -18,9 +18,9 @@ const TraversalResultModal = lazy(() => import('./panels/TraversalResultModal').
 // highlight-sync effect on every unrelated App re-render.
 const EMPTY_HIGHLIGHTS: ReadonlySet<string> = new Set()
 
-function WorkbenchApp() {
+function WorkbenchApp({ initialShowDashboard = false }: { initialShowDashboard?: boolean }) {
   const { theme, toggleTheme } = useTheme()
-  const [showDashboard, setShowDashboard] = useState(false)
+  const [showDashboard, setShowDashboard] = useState(initialShowDashboard)
   const graphs = useTreeGraphs()
   const traversal = useTraversal({
     ensureGraph: graphs.ensureGraph,
@@ -121,7 +121,7 @@ function App() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
   return path === '/showcase'
     ? <Suspense fallback={<LoadingState label="Loading showcase…" />}><ShowcasePage /></Suspense>
-    : <WorkbenchApp />
+    : <WorkbenchApp initialShowDashboard={path === '/dashboard'} />
 }
 
 export default App

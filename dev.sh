@@ -36,7 +36,11 @@ echo "-> Database connection established!"
 
 echo ""
 echo "[3/4] Applying latest Alembic schema migrations..."
-uv run alembic upgrade head
+uv run alembic upgrade head || {
+    echo "Alembic upgrade failed (likely orphaned revision). Stamping head..."
+    uv run alembic stamp --purge head
+    uv run alembic upgrade head
+}
 
 echo ""
 echo "[4/4] Overwriting database data with backups/seed.sql..."
