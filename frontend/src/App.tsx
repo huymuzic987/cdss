@@ -21,7 +21,7 @@ const ContributionPage = lazy(() => import('./contribution/ContributionPage').th
 const EMPTY_HIGHLIGHTS: ReadonlySet<string> = new Set()
 
 function getInitialView(): 'tree' | 'dashboard' | 'contribution' {
-  const path = window.location.pathname
+  const path = window.location.pathname.replace(/\/+$/, '') || '/'
   const hash = window.location.hash
   if (path === '/contribution' || hash === '#contribution' || hash === '#/contribution') return 'contribution'
   if (path === '/dashboard' || hash === '#dashboard' || hash === '#/dashboard') return 'dashboard'
