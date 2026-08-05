@@ -140,9 +140,7 @@ def filter_medicine_options(
         or any(item["severity"] == "INSUFFICIENT_DATA" for item in findings)
         else "COMPLETE"
     )
-    profile["requires_override_reason"] = any(
-        item["severity"] == "RELATIVE" for item in findings
-    )
+    profile["requires_override_reason"] = any(item["severity"] == "RELATIVE" for item in findings)
     return safe, profile
 
 

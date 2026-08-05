@@ -267,9 +267,7 @@ def test_evaluation_response_thaws_nested_frozen_json_values() -> None:
     body = response.model_dump(mode="json")
 
     assert body["context"] == {"diagnosis": {"class": "NORMAL_BP"}}
-    assert body["actions"][0]["payload"] == {
-        "presentation": {"schema_version": "1.0"}
-    }
+    assert body["actions"][0]["payload"] == {"presentation": {"schema_version": "1.0"}}
 
 
 def _canonical_bundle() -> dict[str, Any]:

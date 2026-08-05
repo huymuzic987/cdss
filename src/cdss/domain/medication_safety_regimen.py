@@ -160,8 +160,7 @@ def filter_medication_regimen_plan(
                 "components": [
                     component
                     for component in step.components
-                    if step.keyword is RegimenKeyword.REMOVE
-                    or component_is_safe(component)
+                    if step.keyword is RegimenKeyword.REMOVE or component_is_safe(component)
                 ],
                 "alternatives": [
                     alternative
@@ -211,4 +210,6 @@ def filter_medication_regimen_plan(
             "catalog_by_class": filtered_catalog_by_class,
         }
     )
+
+
 __all__ = ["filter_medication_regimen_plan"]

@@ -466,9 +466,8 @@ def _wholesale_blocked_classes(
     blocked_targets: set[str],
     runtime: Mapping[str, Any] | None,
 ) -> set[str]:
-    if (
-        "THIAZIDE_LIKE_DIURETIC" in blocked_targets
-        and not _has_subgroup_contraindication(runtime, "THIAZIDE_LIKE_DIURETIC")
+    if "THIAZIDE_LIKE_DIURETIC" in blocked_targets and not _has_subgroup_contraindication(
+        runtime, "THIAZIDE_LIKE_DIURETIC"
     ):
         return {"D"}
     return set()

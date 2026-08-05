@@ -82,9 +82,7 @@ def test_condition_code_is_matched_before_tree_traversal_and_blocks_target() -> 
     assert parsed.runtime_input["contraindicated_drug_classes"] == ["BETA_BLOCKER"]
     assert beta["status"] == "ABSOLUTE"
     assert beta["findings"][0]["reason_code"] == "ASTHMA"
-    assert beta["findings"][0]["evidence"][0]["source"] == (
-        "Condition/preset-0001-cond-asthma"
-    )
+    assert beta["findings"][0]["evidence"][0]["source"] == ("Condition/preset-0001-cond-asthma")
 
 
 def test_same_finding_keeps_each_contraindicated_drug_subgroup() -> None:
@@ -130,6 +128,7 @@ def test_same_finding_keeps_each_contraindicated_drug_subgroup() -> None:
 
     prepare_contraindication_input(parsed.runtime_input, bundle, rules)
 
-    assert [
-        item["drug_group"] for item in parsed.runtime_input["contraindication_findings"]
-    ] == ["LT Thiazide", "LT Thiazide-like"]
+    assert [item["drug_group"] for item in parsed.runtime_input["contraindication_findings"]] == [
+        "LT Thiazide",
+        "LT Thiazide-like",
+    ]

@@ -131,16 +131,13 @@ def _catalog_findings(runtime: Mapping[str, Any], target: str) -> list[JsonObjec
     if not isinstance(raw, list):
         return []
     return [
-        dict(item)
-        for item in raw
-        if isinstance(item, Mapping) and item.get("target") == target
+        dict(item) for item in raw if isinstance(item, Mapping) and item.get("target") == target
     ]
 
 
 def _extend_unique(findings: list[JsonObject], additions: Sequence[Mapping[str, Any]]) -> None:
     existing = {
-        (item.get("target"), item.get("reason_code"), item.get("severity"))
-        for item in findings
+        (item.get("target"), item.get("reason_code"), item.get("severity")) for item in findings
     }
     for item in additions:
         key = (item.get("target"), item.get("reason_code"), item.get("severity"))

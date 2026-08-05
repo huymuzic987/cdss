@@ -61,9 +61,7 @@ def test_medications_are_presentation_details_even_when_not_runtime_inputs() -> 
 
 
 def test_medication_statement_is_added_to_active_regimen() -> None:
-    bundle = json.loads(
-        (FIXTURE_DIR / "PT0001.json").read_text(encoding="utf-8")
-    )
+    bundle = json.loads((FIXTURE_DIR / "PT0001.json").read_text(encoding="utf-8"))
     bundle["entry"].append(
         {
             "resource": {
@@ -276,9 +274,7 @@ def test_final_presentation_scrubs_gout_contraindicated_d_regimen() -> None:
                     }
                 ],
                 "effective_regimen": {
-                    "base_options": [
-                        {"components": [{"selector_kind": "class", "code": "D"}]}
-                    ],
+                    "base_options": [{"components": [{"selector_kind": "class", "code": "D"}]}],
                     "additions": [],
                     "adjustments": [],
                     "stopped_components": [],
@@ -288,9 +284,7 @@ def test_final_presentation_scrubs_gout_contraindicated_d_regimen() -> None:
                 "catalog_by_class": {"D": catalog},
                 "catalog": catalog,
             },
-            "medicine_options": [
-                {"classes": ["D"], "medicines": {"D": catalog}}
-            ],
+            "medicine_options": [{"classes": ["D"], "medicines": {"D": catalog}}],
             "medicine_catalog_by_class": {"D": catalog},
         },
     )
