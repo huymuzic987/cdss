@@ -7,6 +7,7 @@ from typing import Any
 
 from cdss.api.schemas.clinical_evaluation import ParsedClinicalBundle
 from cdss.domain.decision_tree import ExecutedAction, ExecutedReference, JsonObject
+from cdss.domain.medication_safety import target_for_medicine
 
 
 def attach_terminal_presentation(
@@ -48,12 +49,21 @@ def build_presentation(
         presentation["evidence_level"] = _coded_label(payload["evidence_level"])
     if isinstance(payload.get("regimen_plan"), dict):
         presentation["regimen_plan"] = deepcopy(payload["regimen_plan"])
+    if isinstance(payload.get("medication_safety"), dict):
+        presentation["medication_safety"] = deepcopy(payload["medication_safety"])
+    if isinstance(payload.get("current_regimen_safety"), dict):
+        presentation["current_regimen_safety"] = deepcopy(payload["current_regimen_safety"])
+    if payload.get("current_regimen_review_required") is True:
+        presentation["current_regimen_review_required"] = True
+    if payload.get("recommendation_status") == "NO_SAFE_OPTION":
+        presentation["recommendation_status"] = "NO_SAFE_OPTION"
     return presentation
 
 
 def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
     payload = action.payload
     excluded = _excluded_medicines(payload)
+    blocked_targets = _blocked_targets(payload)
     blocked_text = f"{_presentation_text(payload)} {action.text_en} {action.text_vi}".casefold()
     existing = payload.get("recommended_orders")
     orders: list[JsonObject] = []
@@ -69,6 +79,7 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
                 not isinstance(raw, dict)
                 or raw.get("available") is False
                 or _medicine_name(raw) in excluded
+                or _medicine_is_blocked(raw, blocked_targets)
             ):
                 continue
             name = _string(raw.get("name"), _string(raw.get("drug_name"), "Medication"))
@@ -80,6 +91,7 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
                 "LOW_TO_USUAL_DOSE",
                 excluded,
                 blocked_text,
+                blocked_targets,
             )
             group_label = _string(raw.get("drug_class"), _string(raw.get("subgroup")))
             orders.append(
@@ -116,7 +128,7 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
             if class_catalog:
                 display_option["medicines"] = class_catalog
             drug_classes = _drug_class_details(
-                display_option, classes, dose_strategy, excluded, blocked_text
+                display_option, classes, dose_strategy, excluded, blocked_text, blocked_targets
             )
             labels_en = [f"Drug Class {code}" for code in classes]
             labels_vi = [f"Nhóm thuốc {code}" for code in classes]
@@ -188,6 +200,7 @@ def _drug_class_details(
     dose_strategy: str,
     excluded: set[str],
     blocked_text: str,
+    blocked_targets: set[str],
 ) -> list[JsonObject]:
     medicine_map = option.get("medicines")
     if not isinstance(medicine_map, dict):
@@ -203,6 +216,7 @@ def _drug_class_details(
                     or raw.get("available") is False
                     or _medicine_name(raw) in excluded
                     or _is_negated(_medicine_name(raw), blocked_text)
+                    or _medicine_is_blocked(raw, blocked_targets)
                 ):
                     continue
                 name = _string(raw.get("name"), _string(raw.get("drug_name")))
@@ -245,6 +259,26 @@ def _excluded_medicines(payload: JsonObject) -> set[str]:
             if name and _is_negated(name, combined):
                 excluded.add(name)
     return excluded
+
+
+def _blocked_targets(payload: JsonObject) -> set[str]:
+    safety = payload.get("medication_safety")
+    if not isinstance(safety, dict):
+        return set()
+    blocked = {str(value) for value in safety.get("blocked_targets", []) if isinstance(value, str)}
+    for item in safety.get("findings", []) if isinstance(safety.get("findings"), list) else []:
+        if isinstance(item, dict) and item.get("severity") == "INSUFFICIENT_DATA":
+            target = item.get("target")
+            if isinstance(target, str):
+                blocked.add(target)
+    return blocked
+
+
+def _medicine_is_blocked(raw: JsonObject, blocked_targets: set[str]) -> bool:
+    status = raw.get("safety_status")
+    if status in {"ABSOLUTE", "INSUFFICIENT_DATA"}:
+        return True
+    return target_for_medicine(raw) in blocked_targets
 
 
 def _presentation_text(payload: JsonObject) -> str:

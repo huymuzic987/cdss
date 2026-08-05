@@ -56,7 +56,36 @@ def test_medications_are_presentation_details_even_when_not_runtime_inputs() -> 
     parsed = parse_clinical_bundle(json.loads(path.read_text(encoding="utf-8")))
 
     assert "medications" not in parsed.runtime_input
+    assert parsed.runtime_input["active_medication_regimen"]
     assert any(item["category"] == "medication" for item in parsed.clinical_details)
+
+
+def test_medication_statement_is_added_to_active_regimen() -> None:
+    bundle = json.loads(
+        (FIXTURE_DIR / "PT0001.json").read_text(encoding="utf-8")
+    )
+    bundle["entry"].append(
+        {
+            "resource": {
+                "resourceType": "MedicationStatement",
+                "id": "statement-1",
+                "status": "active",
+                "medicationCodeableConcept": {"text": "Enalapril"},
+                "subject": {"reference": "Patient/PT0001"},
+                "effectiveDateTime": "2026-08-04",
+            }
+        }
+    )
+
+    parsed = parse_clinical_bundle(bundle)
+
+    statement = next(
+        item
+        for item in parsed.runtime_input["active_medication_regimen"]
+        if item["source_reference"] == "MedicationStatement/statement-1"
+    )
+    assert statement["name"] == "Enalapril"
+    assert statement["effective_time"] == "2026-08-04"
 
 
 def test_low_dose_combination_presents_class_medicines_with_only_low_doses() -> None:
