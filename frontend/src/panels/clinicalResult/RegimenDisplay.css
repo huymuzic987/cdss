@@ -32,6 +32,9 @@
 .cds-regimen-catalog-heading small { color: var(--text-secondary); font-weight: 500; }
 .cds-regimen-catalog-heading button { border: 0; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 18px; }
 .cds-regimen-medicine-detail { display: grid; gap: 6px; padding-top: 8px; border-top: 1px solid var(--border); }
+.cds-regimen-medicine-detail--relative { padding: 8px; border: 1px solid color-mix(in srgb, #ef4444 48%, var(--border)); border-radius: 6px; background: color-mix(in srgb, #fca5a5 18%, var(--bg-panel)); }
+.cds-regimen-medicine-warning { color: #b91c1c; font-size: 10px; font-weight: 800; }
+:root[data-theme="dark"] .cds-regimen-medicine-warning { color: #fecaca; }
 .cds-regimen-medicine-detail strong { color: var(--text-bright); }
 .cds-regimen-medicine-detail .cds-active-dose { color: var(--text-bright); font-weight: 850; }
 .cds-regimen-medicine-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }

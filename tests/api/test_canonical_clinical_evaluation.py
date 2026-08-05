@@ -221,6 +221,90 @@ def test_combination_hover_uses_complete_database_catalog() -> None:
     ]
 
 
+def test_final_presentation_scrubs_gout_contraindicated_d_regimen() -> None:
+    bundle = json.loads((FIXTURE_DIR / "PT0001.json").read_text(encoding="utf-8"))
+    parsed = parse_clinical_bundle(bundle)
+    parsed.runtime_input["clinical_facts"]["gout_status"] = {
+        "status": "present",
+        "value": True,
+        "evidence": [{"source": "test"}],
+    }
+    parsed.runtime_input["contraindication_findings"] = [
+        {
+            "target": "THIAZIDE_LIKE_DIURETIC",
+            "severity": "ABSOLUTE",
+            "reason_code": "GOUT",
+        }
+    ]
+    catalog = [
+        {
+            "drug_id": "thiazide",
+            "name": "Hydrochlorothiazide",
+            "drug_class": "D",
+            "subgroup": "Thiazide",
+            "available": True,
+        },
+        {
+            "drug_id": "loop",
+            "name": "Furosemide",
+            "drug_class": "D",
+            "subgroup": "Loop diuretic",
+            "available": True,
+        },
+    ]
+    action = ExecutedAction(
+        tree_key="drug-combination",
+        node_key="terminal",
+        node_type=NodeType.END,
+        text_en="Start D",
+        text_vi="",
+        payload={
+            "regimen_plan": {
+                "schema_version": "1.0",
+                "steps": [
+                    {
+                        "id": "start-d",
+                        "trace_step": 1,
+                        "tree_key": "drug-combination",
+                        "node_key": "start-d",
+                        "keyword": "START",
+                        "text_en": "Start D",
+                        "text_vi": "",
+                        "source": "context",
+                        "components": [{"selector_kind": "class", "code": "D"}],
+                        "alternatives": [],
+                    }
+                ],
+                "effective_regimen": {
+                    "base_options": [
+                        {"components": [{"selector_kind": "class", "code": "D"}]}
+                    ],
+                    "additions": [],
+                    "adjustments": [],
+                    "stopped_components": [],
+                    "constraints": [],
+                    "status": "complete",
+                },
+                "catalog_by_class": {"D": catalog},
+                "catalog": catalog,
+            },
+            "medicine_options": [
+                {"classes": ["D"], "medicines": {"D": catalog}}
+            ],
+            "medicine_catalog_by_class": {"D": catalog},
+        },
+    )
+
+    presentation = build_presentation(action, parsed, [])
+    plan = presentation["regimen_plan"]
+
+    assert plan["effective_regimen"]["base_options"] == []
+    assert plan["steps"][0]["components"] == []
+    assert "D" not in plan["catalog_by_class"]
+    assert "Hydrochlorothiazide" not in {item["name"] for item in plan["catalog"]}
+    assert presentation["recommended_orders"] == []
+
+
 def test_explicit_orders_keep_additional_traversed_drugs_without_duplicates() -> None:
     bundle = json.loads(next(iter(sorted(FIXTURE_DIR.glob("*.json")))).read_text(encoding="utf-8"))
     parsed = parse_clinical_bundle(bundle)

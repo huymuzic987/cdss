@@ -194,4 +194,68 @@ describe('parseRegimenPlan', () => {
 
     expect(options[0]?.components.map((component) => component.label)).toEqual(['A', 'C'])
   })
+
+  it('does not recreate removed components from the final REMOVE step', () => {
+    const options = parseFinalRegimenOptions({
+      schema_version: '1.0',
+      steps: [{
+        id: 'remove',
+        keyword: 'REMOVE',
+        components: [
+          { selector_kind: 'class', code: 'B' },
+          { selector_kind: 'class', code: 'C' },
+        ],
+        alternatives: [],
+      }],
+      effective_regimen: {
+        base_options: [],
+        additions: [],
+        stopped_components: [
+          { selector_kind: 'class', code: 'B' },
+          { selector_kind: 'class', code: 'C' },
+        ],
+      },
+    }, 'en')
+
+    expect(options).toEqual([])
+  })
+
+  it('keeps a D option when only a D subgroup is stopped', () => {
+    const options = parseFinalRegimenOptions({
+      schema_version: '1.0',
+      steps: [{
+        id: 'remove-thiazide',
+        keyword: 'REMOVE',
+        text_en: 'Remove D (LT Thiazide)',
+        components: [{ selector_kind: 'class', code: 'D', subgroup: 'LT Thiazide' }],
+        alternatives: [],
+      }],
+      effective_regimen: {
+        base_options: [
+          { components: [{ selector_kind: 'class', code: 'A' }, { selector_kind: 'class', code: 'D' }] },
+        ],
+        additions: [],
+        stopped_components: [{ selector_kind: 'class', code: 'D', subgroup: 'LT Thiazide' }],
+      },
+    }, 'en')
+
+    expect(options[0]?.components.map((component) => component.label)).toEqual(['A', 'D'])
+  })
+
+  it('shows the removed subgroup in a REMOVE step', () => {
+    const [step] = parseRegimenPlan({
+      schema_version: '1.0',
+      steps: [{
+        id: 'remove-thiazide',
+        keyword: 'REMOVE',
+        text_en: 'Remove matched contraindicated drug groups: D (LT Thiazide)',
+        text_vi: 'Loại bỏ: D (LT Thiazide)',
+        components: [{ selector_kind: 'class', code: 'D', subgroup: 'LT Thiazide' }],
+        alternatives: [],
+      }],
+    }, 'en')
+
+    expect(step?.componentLabel).toBe('D (LT Thiazide)')
+    expect(step?.instruction).toContain('D (LT Thiazide)')
+  })
 })

@@ -1,7 +1,8 @@
 """SQLAlchemy ORM models for the decision-tree schema.
 
-Fourteen tables: decision_trees, decision_nodes, decision_edges,
+Fifteen tables: decision_trees, decision_nodes, decision_edges,
 node_source_references, tree_layouts, development_runtime_logs, medicines,
+contraindication_drugs,
 patients, patient_conditions, visits, visit_observations, visit_medications,
 fhir_import_batches. medicines is a static drug reference catalog (with an
 ATC code column for the future drugs-table integration). patients/
@@ -11,6 +12,7 @@ statistics dashboard. Condition/Observation coded identifiers (ICD-10,
 SNOMED CT, LOINC) are stored as plain string columns rather than foreign
 keys, since the planned `diseases`/findings reference table doesn't exist
 yet -- joining on those codes once it does is additive, not a migration.
+``contraindication_drugs`` is a static drug-disease/finding safety catalog.
 """
 
 from __future__ import annotations
@@ -294,6 +296,42 @@ class Symptom(Base):
     __table_args__ = (
         Index("ix_symptoms_type", "type"),
         Index("ix_symptoms_subgroup", "subgroup"),
+    )
+
+
+class ContraindicationDrug(Base):
+    """Static drug contraindication catalog, seeded from the VNHA CSV.
+
+    The first seven fields mirror the source CSV. ``target`` and the optional
+    fact/comparison fields are normalized execution metadata so the runtime
+    does not have to interpret Vietnamese drug-group labels or hard-code every
+    catalog row.
+    """
+
+    __tablename__ = "contraindication_drugs"
+
+    contraindication_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    disease_finding_vn: Mapped[str] = mapped_column(Text, nullable=False)
+    disease_finding_eng: Mapped[str] = mapped_column(Text, nullable=False)
+    contraindication_type: Mapped[str] = mapped_column(Text, nullable=False)
+    drug_group: Mapped[str] = mapped_column(Text, nullable=False)
+    drugs: Mapped[str | None] = mapped_column(Text, nullable=True)
+    icd10_vn_1_decimal: Mapped[str | None] = mapped_column(Text, nullable=True)
+    snomedct_2026_06_01: Mapped[str | None] = mapped_column(Text, nullable=True)
+    target: Mapped[str] = mapped_column(Text, nullable=False)
+    finding_key: Mapped[str] = mapped_column(Text, nullable=False)
+    fact_key: Mapped[str | None] = mapped_column(Text, nullable=True)
+    operator: Mapped[str | None] = mapped_column(Text, nullable=True)
+    threshold: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    __table_args__ = (
+        CheckConstraint(
+            "contraindication_type IN ('absolute', 'relative')",
+            name="ck_contraindication_drugs_type",
+        ),
+        Index("ix_contraindication_drugs_target", "target"),
+        Index("ix_contraindication_drugs_icd10", "icd10_vn_1_decimal"),
+        Index("ix_contraindication_drugs_snomed", "snomedct_2026_06_01"),
     )
 
 

@@ -27,6 +27,8 @@ LOINC_EGFR = "98979-8"
 LOINC_POTASSIUM = "6298-4"
 LOINC_ACR = "9318-7"
 LOINC_PROTEINURIA_24H = "2889-4"
+LOINC_HEART_RATE = "8867-4"
+LOINC_LVEF = "10230-1"
 CLINICAL_FLAG_SYSTEM = "http://cdss.local/fhir/CodeSystem/clinical-flag"
 READING_ROLE_EXTENSION = f"{EXT_BASE}/reading-role"
 INPUT_EXTENSION_PREFIX = f"{EXT_BASE}/input/"
@@ -111,6 +113,14 @@ KNOWN_BOOLEAN_FLAGS = frozenset(
         "active_bronchospasm",
         "pacemaker_present",
         "symptomatic_bradycardia",
+        "metabolic_syndrome",
+        "glucose_intolerance",
+        "sinoatrial_block",
+        "heart_failure_reduced_ef_nyha_3_or_4",
+        "severe_leg_edema_history",
+        "constipation",
+        "acute_kidney_injury",
+        "woman_of_childbearing_potential_not_using_contraception",
     }
 )
 
@@ -138,6 +148,13 @@ SAFETY_FACT_KEYS = frozenset(
         "renal_artery_stenosis",
         "athlete_status",
         "monitoring_plan",
+        "metabolic_syndrome",
+        "glucose_intolerance",
+        "sinoatrial_block",
+        "heart_failure_reduced_ef_nyha_3_or_4",
+        "severe_leg_edema_history",
+        "constipation",
+        "woman_of_childbearing_potential_not_using_contraception",
         "is_pregnant",
         "is_breastfeeding",
         "is_postpartum",
@@ -279,7 +296,15 @@ def parse_clinical_bundle(bundle: Any) -> ParsedClinicalBundle:
                 _invalid(f"conflicting {side} values for Encounter/{encounter_id or 'snapshot'}")
             bucket[side] = (value, observation)
         elif (
-            code in {LOINC_EGFR, LOINC_POTASSIUM, LOINC_ACR, LOINC_PROTEINURIA_24H}
+            code
+            in {
+                LOINC_EGFR,
+                LOINC_POTASSIUM,
+                LOINC_ACR,
+                LOINC_PROTEINURIA_24H,
+                LOINC_HEART_RATE,
+                LOINC_LVEF,
+            }
             and value is not None
         ):
             label_en, label_vi, runtime_key = _lab_metadata(code)
@@ -654,6 +679,12 @@ def _lab_metadata(code: str) -> tuple[str, str, str | None]:
             "24-hour urine protein",
             "Protein niệu 24 giờ",
             "proteinuria_24h_mg",
+        ),
+        LOINC_HEART_RATE: ("Heart rate", "Nhịp tim", "heart_rate"),
+        LOINC_LVEF: (
+            "Left ventricular ejection fraction",
+            "Phân suất tống máu thất trái",
+            "LVEF",
         ),
     }[code]
 

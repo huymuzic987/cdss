@@ -52,12 +52,13 @@ def _node(
     )
 
 
-def _plan(*nodes: NodeDefinition):
+def _plan(*nodes: NodeDefinition, runtime: Mapping[str, Any] | None = None):
     graph = SimpleNamespace(nodes_by_key={node.node_key: node for node in nodes})
     repository = SimpleNamespace(get_tree=lambda _key: graph)
     result = cast(
         TraversalResult,
         SimpleNamespace(
+            input_snapshot=FrozenJsonObject(runtime or {}),
             trace=[
                 SimpleNamespace(
                     step=index,
@@ -75,6 +76,141 @@ def _plan(*nodes: NodeDefinition):
         cast(TreeGraphRepository, repository),
         _Medicines(),
     )
+
+
+def test_t6_contraindications_are_applied_as_the_final_regimen_operation() -> None:
+    start = _node(
+        "T6_INFERENCE_START_LOW_DOSE_A_PLUS_C_OR_A_PLUS_D",
+        "Start A with C or D",
+        context_patch={
+            "treatment_preferences": {
+                "combination_options": [["A", "C"], ["A", "D"]],
+            }
+        },
+    )
+    t6 = _node(
+        "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS",
+        "Determine contraindicated drug classes based on patient information and current regimen",
+    )
+
+    plan = _plan(
+        start,
+        t6,
+        runtime={
+            "contraindication_findings": [
+                {"target": "THIAZIDE_LIKE_DIURETIC", "severity": "ABSOLUTE", "reason_code": "GOUT"}
+            ]
+        },
+    )
+
+    assert plan.steps[-1].node_key == "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS"
+    assert plan.steps[-1].keyword is RegimenKeyword.REMOVE
+    assert [item.code for item in plan.steps[-1].components] == ["D"]
+    assert plan.steps[-1].text_en.endswith(": D")
+    assert plan.steps[-1].warnings == ["CONTRAINDICATION:THIAZIDE_LIKE_DIURETIC:D"]
+    assert all(
+        component.code != "D"
+        for option in plan.effective_regimen.base_options
+        for component in option.components
+    )
+    assert plan.effective_regimen.stopped_components[-1].code == "D"
+
+
+def test_t6_without_a_matched_finding_does_not_remove_a_regimen_class() -> None:
+    start = _node(
+        "T6_INFERENCE_START_LOW_DOSE_A_PLUS_D",
+        "Start A with D",
+        context_patch={"treatment_preferences": {"combination_options": [["A", "D"]]}},
+    )
+    t6 = _node(
+        "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS",
+        "Determine contraindicated drug classes based on patient information and current regimen",
+    )
+
+    plan = _plan(start, t6, runtime={"contraindication_findings": []})
+
+    assert all(step.keyword is not RegimenKeyword.REMOVE for step in plan.steps)
+    assert [item.code for item in plan.effective_regimen.base_options[0].components] == ["A", "D"]
+
+
+def test_t6_subgroup_contraindication_preserves_the_remaining_class() -> None:
+    start = _node(
+        "T6_INFERENCE_START_LOW_DOSE_A_PLUS_C_OR_A_PLUS_D",
+        "Start A with C or D",
+        context_patch={
+            "treatment_preferences": {
+                "combination_options": [["A", "C"], ["A", "D"]],
+            }
+        },
+    )
+    t6 = _node(
+        "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS",
+        "Determine contraindicated drug groups",
+    )
+
+    plan = _plan(
+        start,
+        t6,
+        runtime={
+            "contraindication_findings": [
+                {
+                    "target": "THIAZIDE_LIKE_DIURETIC",
+                    "severity": "ABSOLUTE",
+                    "reason_code": "GOUT",
+                    "drug_group": "LT Thiazide",
+                }
+            ]
+        },
+    )
+
+    assert plan.steps[-1].components[0].code == "D"
+    assert plan.steps[-1].components[0].subgroup == "LT Thiazide"
+    assert "D (LT Thiazide)" in plan.steps[-1].text_en
+    assert plan.steps[-1].warnings == [
+        "CONTRAINDICATION:THIAZIDE_LIKE_DIURETIC:D (LT Thiazide)"
+    ]
+    assert [
+        [item.code for item in option.components]
+        for option in plan.effective_regimen.base_options
+    ] == [["A", "C"], ["A", "D"]]
+    assert plan.effective_regimen.stopped_components[-1].subgroup == "LT Thiazide"
+
+
+def test_t6_relative_contraindication_does_not_remove_the_drug_subgroup() -> None:
+    start = _node(
+        "T6_INFERENCE_START_LOW_DOSE_A_PLUS_C_OR_A_PLUS_D",
+        "Start A with C or D",
+        context_patch={
+            "treatment_preferences": {
+                "combination_options": [["A", "C"], ["A", "D"]],
+            }
+        },
+    )
+    t6 = _node(
+        "T6_INFERENCE_DETERMINE_CONTRAINDICATIONS",
+        "Determine contraindicated drug groups",
+    )
+
+    plan = _plan(
+        start,
+        t6,
+        runtime={
+            "contraindication_findings": [
+                {
+                    "target": "THIAZIDE_LIKE_DIURETIC",
+                    "severity": "RELATIVE",
+                    "reason_code": "GLUCOSE_INTOLERANCE",
+                    "drug_group": "LT Thiazide",
+                }
+            ]
+        },
+    )
+
+    assert all(step.keyword is not RegimenKeyword.REMOVE for step in plan.steps)
+    assert [
+        [item.code for item in option.components]
+        for option in plan.effective_regimen.base_options
+    ] == [["A", "C"], ["A", "D"]]
 
 
 def test_start_stays_first_and_add_keeps_its_own_default_low_dose() -> None:
@@ -238,6 +374,29 @@ def test_explicit_add_dose_does_not_inherit_start_dose() -> None:
 
     assert plan.steps[0].alternatives[0].components[0].dose_strategy == "LOW_DOSE"
     assert plan.steps[1].components[0].dose_strategy == "USUAL_DOSE"
+
+
+def test_structured_remove_keeps_the_removed_subgroup_detail() -> None:
+    remove = _node(
+        "T6_INFERENCE_REMOVE_CONTRAINDICATED_D",
+        "Remove contraindicated D subgroup",
+        action_payload={
+            "regimen_update": {
+                "operation": "REMOVE",
+                "components": [
+                    {
+                        "selector_kind": "class",
+                        "code": "D",
+                        "subgroup": "LT Thiazide",
+                    }
+                ],
+            }
+        },
+    )
+
+    plan = _plan(remove)
+
+    assert plan.steps[0].components[0].subgroup == "LT Thiazide"
 
 
 def test_persisted_frozen_json_preserves_start_alternatives() -> None:

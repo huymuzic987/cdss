@@ -25,6 +25,7 @@ from cdss.domain.decision_tree import (
     TraversalResult,
     TreeGraphRepository,
     build_traversed_medication_regimen,
+    filter_medication_regimen_plan,
 )
 from cdss.domain.decision_tree.medicine_catalog import Medicine, MedicineRepository
 from cdss.domain.medication_safety_catalog import (
@@ -102,6 +103,7 @@ def enrich_inferred_medications(
         repository,
         medicine_repository,
     )
+    regimen_plan = filter_medication_regimen_plan(regimen_plan, runtime_input)
     return [
         _merge_regimen(
             action,
@@ -132,11 +134,18 @@ def _merge_regimen(
     context = "acute_emergency" if payload.get("target_timing") else "chronic_hypertension"
     options, safety = filter_medicine_options(options, runtime_input, clinical_context=context)
     represented_ids = option_medicine_ids(options)
-    medicines = [
+    raw_medicines = [
         medicine
         for medicine in unique_medicines([*action_medicines, *traversed_medicines])
         if medicine_identity(medicine) not in represented_ids
     ]
+    medicines, _ = filter_raw_medicines(
+        raw_medicines,
+        runtime_input,
+        clinical_context=context,
+    )
+    for key in ("medicines", "medicine_options", "medicine_catalog_by_class"):
+        payload.pop(key, None)
     if medicines:
         payload["medicines"] = medicines
     if options:

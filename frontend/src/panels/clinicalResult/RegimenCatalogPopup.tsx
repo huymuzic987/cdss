@@ -31,11 +31,19 @@ export function ComponentCatalogDetails({
       {medicines.length === 0 ? (
         <small>No catalogued medicines are available for this group.</small>
       ) : medicines.map((medicine) => (
-        <div className="cds-regimen-medicine-detail" key={medicine.id || medicine.name}>
+        <div
+          className={`cds-regimen-medicine-detail${medicine.safetyStatus === 'RELATIVE' ? ' cds-regimen-medicine-detail--relative' : ''}`}
+          key={medicine.id || medicine.name}
+        >
           <div className="cds-regimen-medicine-heading">
             {!isSpecificMedicine && <strong>{medicine.name}</strong>}
             <span>{medicine.route || 'Route not recorded'} / SNOMED CT: {medicine.snomedCode || 'Not recorded'}</span>
           </div>
+          {medicine.safetyStatus === 'RELATIVE' && (
+            <div className="cds-regimen-medicine-warning">
+              Relative contraindication — review before use
+            </div>
+          )}
           <div className="cds-regimen-dose-comparison">
             <span className={activeDose(component.dose) === 'low' ? 'cds-active-dose' : ''}>
               Low: {medicine.doseLow || '-'}

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -13,11 +14,16 @@ import pytest
 from fastapi.testclient import TestClient
 
 from cdss.api.dependencies import get_tree_graph_repository
+from cdss.api.routes.evaluation_medication_values import unique_objects
+from cdss.api.schemas.evaluation import EvaluationResponse
 from cdss.core.config import Settings, get_settings
 from cdss.domain.decision_tree import (
     EdgeDefinition,
+    ExecutedAction,
+    FrozenJsonObject,
     NodeDefinition,
     NodeType,
+    TraversalResult,
     TreeDefinition,
     TreeGraph,
     TreeNotFound,
@@ -46,6 +52,32 @@ class RecordingRepository:
 class ApiTestContext:
     client: TestClient
     repository: RecordingRepository
+
+
+def test_medication_option_deduplication_thaws_nested_frozen_json() -> None:
+    option = {
+        "classes": ["A", "D"],
+        "medicines": FrozenJsonObject(
+            {
+                "D": [
+                    FrozenJsonObject(
+                        {
+                            "drug_id": "DRUG-LOOP",
+                            "name": "Furosemide",
+                            "subgroup": "LT quai",
+                        }
+                    )
+                ]
+            }
+        ),
+    }
+
+    normalized = unique_objects([option])
+
+    assert json.dumps(normalized, ensure_ascii=False)
+    assert isinstance(normalized[0]["medicines"], dict)
+    assert isinstance(normalized[0]["medicines"]["D"], list)
+    assert isinstance(normalized[0]["medicines"]["D"][0], dict)
 
 
 @pytest.fixture
@@ -211,6 +243,33 @@ def test_request_completion_does_not_persist_patient_data(
     assert response.status_code == 200
     assert api_context.repository.persisted_patient_data == []
     assert api_context.repository.read_tree_keys[-1] == "hypertension-diagnosis"
+
+
+def test_evaluation_response_thaws_nested_frozen_json_values() -> None:
+    started_at = datetime(2026, 6, 28, 8, 0, tzinfo=UTC)
+    action = ExecutedAction(
+        tree_key="example",
+        node_key="recommendation",
+        node_type=NodeType.END,
+        text_en="Recommendation",
+        text_vi="Recommendation",
+        payload={"presentation": FrozenJsonObject({"schema_version": "1.0"})},
+    )
+    result = TraversalResult(
+        input_snapshot=FrozenJsonObject({"resourceType": "Bundle"}),
+        context={"diagnosis": FrozenJsonObject({"class": "NORMAL_BP"})},
+        actions=[action],
+        started_at=started_at,
+        completed_at=started_at,
+    )
+
+    response = EvaluationResponse.from_result(result)
+    body = response.model_dump(mode="json")
+
+    assert body["context"] == {"diagnosis": {"class": "NORMAL_BP"}}
+    assert body["actions"][0]["payload"] == {
+        "presentation": {"schema_version": "1.0"}
+    }
 
 
 def _canonical_bundle() -> dict[str, Any]:

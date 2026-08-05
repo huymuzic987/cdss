@@ -1,6 +1,7 @@
 import type { JsonValue } from '../../api/types'
 import type { ClinicalDecisionSupportLocale } from '../clinicalDecisionSupportMessages'
 import type { FinalRegimenComponent, FinalRegimenOption, RegimenMedicine, RegimenStep } from './types'
+import { componentLabel, isStopped } from './regimenLabels'
 import { localized, objectValue, stringValue } from './values'
 
 const DOSE_LABELS: Record<string, { en: string, vi: string }> = {
@@ -20,10 +21,9 @@ const GROUP_DETAILS = {
   GLP1RA: 'GLP-1 receptor agonist',
 } as const
 
-type CanonicalGroup = FinalRegimenComponent['group']
 type ParsedComponent = FinalRegimenComponent & { generic: boolean, identity: string }
 
-function canonicalGroup(code: string, name: string): CanonicalGroup {
+function canonicalGroup(code: string, name: string): FinalRegimenComponent['group'] {
   const value = `${code} ${name}`.toLocaleLowerCase()
   if (/(\bsglt2i?\b|sglt2[_ -]?inhibitor|dapagliflozin|empagliflozin)/i.test(value)) return 'SGLT2i'
   if (/(\bglp-?1\s*ra\b|glp1ra|glp1[_ -]?receptor[_ -]?agonist)/i.test(value)) return 'GLP1RA'
@@ -35,7 +35,7 @@ function canonicalGroup(code: string, name: string): CanonicalGroup {
   return 'Others'
 }
 
-function genericGroupName(value: string, group: CanonicalGroup): boolean {
+function genericGroupName(value: string, group: FinalRegimenComponent['group']): boolean {
   const normalized = value.trim().toLocaleLowerCase()
   if (normalized === group.toLocaleLowerCase()) return true
   return [
@@ -56,6 +56,7 @@ function parseComponent(
   const code = stringValue(component.code)
   const name = stringValue(component.name, code)
   if (!name) return null
+  const subgroup = stringValue(component.subgroup)
   const group = canonicalGroup(code, name)
   const generic = genericGroupName(name, group) || genericGroupName(code, group)
   const detail = generic && group !== 'Others'
@@ -67,7 +68,15 @@ function parseComponent(
   const dose = stringValue(component.dose)
     || DOSE_LABELS[strategy]?.[locale]
     || (locale === 'vi' ? 'Liều thấp' : 'Low dose')
-  return { label, detail, group, dose, generic, identity }
+  return {
+    label,
+    detail,
+    group,
+    dose,
+    ...(subgroup ? { subgroup } : {}),
+    generic,
+    identity,
+  }
 }
 
 function components(
@@ -86,13 +95,7 @@ function alternativeComponents(
   return components(objectValue(value)?.components, locale)
 }
 
-function alternativeLabel(value: JsonValue, locale: ClinicalDecisionSupportLocale): string {
-  return alternativeComponents(value, locale).map(componentLabel).join(' + ')
-}
-
-function componentLabel(item: ParsedComponent): string {
-  return item.generic || item.detail === item.label ? item.label : `${item.label} (${item.detail})`
-}
+function alternativeLabel(value: JsonValue, locale: ClinicalDecisionSupportLocale): string { return alternativeComponents(value, locale).map(componentLabel).join(' + ') }
 
 function deduplicate(items: ParsedComponent[]): FinalRegimenComponent[] {
   const selected = new Map<string, ParsedComponent>()
@@ -150,19 +153,13 @@ export function parseFinalRegimenOptions(
     ? effective.base_options.map((item) => alternativeComponents(item, locale)).filter((item) => item.length > 0)
     : []
   const additions = components(effective.additions, locale)
-  const stopped = new Set(
-    components(effective.stopped_components, locale).map((item) => item.label.toLocaleUpperCase()),
-  )
+  const stopped = components(effective.stopped_components, locale)
   let candidates = bases.length > 0 ? bases : additions.length > 0 ? [[]] : []
   let fallbackAdditions = additions
   if (candidates.length === 0) {
-    const rawSteps = objectValue(value)?.steps
-    const steps = Array.isArray(rawSteps) ? rawSteps : []
+    const steps = Array.isArray(objectValue(value)?.steps) ? objectValue(value)?.steps : []
     const lastMaterialStep = [...steps].reverse().map((item) => objectValue(item))
-      .find((step) => step && (
-        components(step.components, locale).length > 0
-        || (Array.isArray(step.alternatives) && step.alternatives.length > 0)
-      ))
+      .find((step) => step && !['REMOVE', 'STOP', 'AVOID'].includes(stringValue(step.keyword).toLocaleUpperCase()) && (components(step.components, locale).length > 0 || (Array.isArray(step.alternatives) && step.alternatives.length > 0)))
     const alternatives = Array.isArray(lastMaterialStep?.alternatives)
       ? lastMaterialStep.alternatives.map((item) => alternativeComponents(item, locale))
         .filter((item) => item.length > 0)
@@ -175,7 +172,7 @@ export function parseFinalRegimenOptions(
   return candidates.map((base, index) => ({
     id: `regimen-option-${index + 1}`,
     components: deduplicate([...base, ...fallbackAdditions])
-      .filter((item) => !stopped.has(item.label.toLocaleUpperCase())),
+      .filter((item) => !stopped.some((stop) => isStopped(item, stop))),
   })).filter((option) => option.components.length > 0)
 }
 
@@ -209,6 +206,7 @@ function parseCatalogMedicines(rawItems: JsonValue[], fallbackGroup: string): Re
       doseUsual: stringValue(item.dose_usual),
       doseMax: stringValue(item.dose_max),
       snomedCode: stringValue(item.snomed_code),
+      safetyStatus: stringValue(item.safety_status) || undefined,
     }]
   })
 }

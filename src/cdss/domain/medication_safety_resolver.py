@@ -9,9 +9,7 @@ from cdss.domain.medication_safety import (
     evaluate_target,
     target_for_medicine,
 )
-from cdss.domain.medication_safety_action_catalog import (
-    ACTION_SELECTORS,
-)
+from cdss.domain.medication_safety_action_catalog import ACTION_SELECTORS
 from cdss.domain.medication_safety_catalog import (
     has_safety_data,
     medicine_json,
@@ -63,6 +61,15 @@ def _filter_option(
     findings: list[JsonObject] = []
     requires_override_reason = False
     for selector in classes:
+        if selector == "D":
+            class_safety = evaluate_target(
+                "THIAZIDE_LIKE_DIURETIC", runtime, clinical_context=context
+            )
+            # D contains multiple subgroups. Keep the D option when at least
+            # one subgroup (for example loop or potassium-sparing diuretics)
+            # remains eligible; the medicine loop below removes only the
+            # contraindicated subgroup medicines.
+            findings.extend(class_safety["findings"])
         raw_items = raw_map.get(selector)
         if not isinstance(raw_items, list):
             return None, findings

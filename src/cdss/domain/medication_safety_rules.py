@@ -107,17 +107,46 @@ def evaluate_target(
             ("hypokalaemia", "HYPOKALAEMIA", "Hypokalaemia"),
         ):
             if present(runtime, key):
+                reason_en = (
+                    "Gout is an absolute contraindication to thiazide therapy"
+                    if key == "gout_status"
+                    else reason + " may be worsened by thiazide therapy"
+                )
                 findings.append(
                     finding(
                         target=target,
-                        severity=RELATIVE,
+                        severity=ABSOLUTE if key == "gout_status" else RELATIVE,
                         reason_code=code,
-                        reason_en=reason + " may be worsened by thiazide therapy",
+                        reason_en=reason_en,
                         evidence=evidence(runtime, (key,)),
-                        override_allowed=True,
+                        override_allowed=key != "gout_status",
                     )
                 )
+    _extend_unique(findings, _catalog_findings(runtime, target))
     return {"target": target, "status": _severity(findings), "findings": findings}
+
+
+def _catalog_findings(runtime: Mapping[str, Any], target: str) -> list[JsonObject]:
+    raw = runtime.get("contraindication_findings")
+    if not isinstance(raw, list):
+        return []
+    return [
+        dict(item)
+        for item in raw
+        if isinstance(item, Mapping) and item.get("target") == target
+    ]
+
+
+def _extend_unique(findings: list[JsonObject], additions: Sequence[Mapping[str, Any]]) -> None:
+    existing = {
+        (item.get("target"), item.get("reason_code"), item.get("severity"))
+        for item in findings
+    }
+    for item in additions:
+        key = (item.get("target"), item.get("reason_code"), item.get("severity"))
+        if key not in existing:
+            findings.append(dict(item))
+            existing.add(key)
 
 
 def _severity(findings: Sequence[Mapping[str, Any]]) -> str:

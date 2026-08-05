@@ -461,7 +461,8 @@ Loads one of three bundled FHIR datasets via the same import path as
 `POST /fhir/import`. Query param `source` (required):
 `"preset"` | `"synthetic"` | `"real_test_case"`.
 
-- `preset` / `synthetic` load `data/fhir/preset_patients.json` (20 patients)
+- `preset` / `synthetic` load `data/fhir/preset_patients.json` (40 patients,
+  including 20 drug-contraindication cases)
   or `data/fhir/synthetic_patients.json` (1,000 patients) - see
   [Operations](../operations.md).
 - `real_test_case` imports every `backups/test_case/*.json` file (a

@@ -4,7 +4,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from cdss.api.dependencies import get_medicine_repository, get_tree_graph_repository
+from cdss.api.dependencies import (
+    get_contraindication_repository,
+    get_medicine_repository,
+    get_tree_graph_repository,
+)
 from cdss.api.routes import evaluation_follow_up
 from cdss.api.routes.evaluation_presentation import (
     enrich_inferred_medications,
@@ -15,6 +19,8 @@ from cdss.api.schemas import EvaluationErrorResponse, EvaluationResponse
 from cdss.api.schemas.clinical_evaluation import parse_clinical_bundle
 from cdss.api.schemas.clinical_presentation import attach_terminal_presentation
 from cdss.core.config import Settings, get_settings
+from cdss.domain.contraindication_catalog import ContraindicationDrugRepository
+from cdss.domain.contraindication_evaluator import prepare_contraindication_input
 from cdss.domain.decision_tree import (
     DecisionTreeError,
     ExecutedAction,
@@ -58,10 +64,17 @@ def evaluate(
     bundle: JsonObject,
     repository: Annotated[TreeGraphRepository, Depends(get_tree_graph_repository)],
     medicine_repository: Annotated[MedicineRepository, Depends(get_medicine_repository)],
+    contraindication_repository: Annotated[
+        ContraindicationDrugRepository, Depends(get_contraindication_repository)
+    ],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> EvaluationResponse:
     parsed = parse_clinical_bundle(bundle)
-    runtime_input = parsed.runtime_input
+    runtime_input = prepare_contraindication_input(
+        parsed.runtime_input,
+        parsed.raw_bundle,
+        contraindication_repository,
+    )
     inference = None
     start_tree_key = _INITIAL_VISIT_TREE_KEY
     start_node_key = None

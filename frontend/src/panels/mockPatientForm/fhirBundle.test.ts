@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { PATIENT_PRESETS } from '../patientPresets'
 import {
+  CONTRAINDICATION,
   FOLLOW_UP,
   PREGNANCY,
   PREGNANCY_FOLLOW_UP,
@@ -46,6 +47,74 @@ describe('canonical FHIR patient presets', () => {
       expect(rebuiltEntries.some((entry) => (entry as { resource?: { resourceType?: string } }).resource?.resourceType === 'Patient')).toBe(true)
     },
   )
+
+  it('gives every contraindication preset both clinic and home blood pressure readings', () => {
+    const presets = PATIENT_PRESETS.filter(({ category }) => category === CONTRAINDICATION)
+    expect(presets).toHaveLength(20)
+
+    for (const preset of presets) {
+      const entries = preset.bundle.entry as Array<{ resource: Record<string, unknown> }>
+      const observations = entries
+        .map(({ resource }) => resource)
+        .filter((resource) => resource.resourceType === 'Observation')
+      const roles = observations.map((resource) => {
+        const extensions = resource.extension as Array<{ url?: string, valueCode?: string }> | undefined
+        return extensions?.find(({ url }) => url?.endsWith('/reading-role'))?.valueCode
+      })
+
+      expect(roles, preset.id).toContain('current_clinic')
+      expect(roles, preset.id).toContain('home')
+      expect(bundleToFlat(preset.bundle).home_sbp, preset.id).not.toBeUndefined()
+      expect(bundleToFlat(preset.bundle).home_dbp, preset.id).not.toBeUndefined()
+    }
+  })
+
+  it('layers contraindication findings onto copied working presets', () => {
+    const preset = PATIENT_PRESETS.find(({ id }) => id === 'contra-03-pregnancy-thiazide')
+    expect(preset).toBeDefined()
+    const entries = preset!.bundle.entry as Array<{ resource: Record<string, any> }>
+    const patient = entries.find(({ resource }) => resource.resourceType === 'Patient')!.resource
+    const pregnancy = entries.find(({ resource }) => resource.id?.endsWith('-cond-pregnancy'))!.resource
+    const medications = entries.filter(({ resource }) => resource.resourceType === 'MedicationRequest')
+    const input = (patient.extension as Array<Record<string, any>>).find(({ url }) => url.endsWith('/is_pregnant'))
+
+    expect(input?.valueBoolean).toBe(true)
+    expect(bundleToFlat(preset!.bundle).has_hypertension_after_week_20).toBe(true)
+    expect(bundleToFlat(preset!.bundle).weeks_persisting_postpartum).toBe(0)
+    expect(bundleToFlat(preset!.bundle).proteinuria_24h_mg).toBe(0)
+    expect(bundleToFlat(preset!.bundle).acr_mg_mmol).toBe(0)
+    expect(pregnancy.code.coding).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'Z32' }),
+      expect.objectContaining({ code: '77386006' }),
+    ]))
+    expect(medications.some(({ resource }) => resource.medicationCodeableConcept?.text === 'CHLORTHALIDONE')).toBe(true)
+    expect(bundleToFlat(preset!.bundle).is_pregnant).toBe(true)
+  })
+
+  it('gives every pregnancy contraindication bundle a usable hypertension classification', () => {
+    const pregnancyContraindications = PATIENT_PRESETS.filter(
+      ({ category, id }) => category === CONTRAINDICATION && id.includes('pregnancy'),
+    )
+
+    expect(pregnancyContraindications).toHaveLength(4)
+    for (const preset of pregnancyContraindications) {
+      const flat = bundleToFlat(preset.bundle)
+      expect(flat.is_pregnant, preset.id).toBe(true)
+      expect(flat.has_hypertension_after_week_20, preset.id).toBe(true)
+      expect(flat.home_sbp, preset.id).not.toBeUndefined()
+      expect(flat.home_dbp, preset.id).not.toBeUndefined()
+      expect(flat.proteinuria_24h_mg, preset.id).toBe(0)
+      expect(flat.acr_mg_mmol, preset.id).toBe(0)
+    }
+  })
+
+  it('keeps every contraindication bundle valid for the same form workflow', () => {
+    for (const preset of PATIENT_PRESETS.filter(({ category }) => category === CONTRAINDICATION)) {
+      const form = bundleToForm(preset.bundle)
+      const validation = validatePatientForm(form)
+      expect(validation.error, preset.id).toBeNull()
+    }
+  })
 
   it('keeps aspirin prophylaxis as a normotensive high-risk follow-up', () => {
     const preset = PATIENT_PRESETS.find(

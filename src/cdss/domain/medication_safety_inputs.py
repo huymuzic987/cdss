@@ -118,11 +118,13 @@ def target_for_medicine(medicine: Medicine | Mapping[str, Any], selector: str | 
         return "BETA_BLOCKER"
     if (
         name.casefold() in THIAZIDE_NAMES
-        or selector == "D"
         or "thiazide" in lowered
         or "thiazide-like" in lowered
+        or (selector == "D" and not name.strip() and not subgroup.strip())
     ):
         return "THIAZIDE_LIKE_DIURETIC"
+    if selector == "D":
+        return "OTHER"
     return str(selector or "OTHER")
 
 

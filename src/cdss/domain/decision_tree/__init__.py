@@ -65,6 +65,7 @@ from cdss.domain.decision_tree.validator import (
     validate_tree_graph,
 )
 from cdss.domain.decision_tree.walker import DEFAULT_MAX_STEPS, walk_tree
+from cdss.domain.medication_safety_regimen import filter_medication_regimen_plan
 
 __all__ = [
     "ContextPatchError",
@@ -121,6 +122,7 @@ __all__ = [
     "EffectiveMedicationRegimen",
     "apply_context_patch",
     "build_traversed_medication_regimen",
+    "filter_medication_regimen_plan",
     "validate_condition_definition",
     "validate_tree_graph",
     "walk_tree",

@@ -27,6 +27,7 @@ export const FOLLOW_UP = 'Follow-Up Visits'
 export const MODIFIER_TREES = 'Modifier & Complication Trees'
 export const PREGNANCY = 'Pregnancy & Postpartum'
 export const PREGNANCY_FOLLOW_UP = 'Pregnancy Follow-Up Sequence'
+export const CONTRAINDICATION = 'Drug Contraindication Tests'
 
 export const MEDICATION_TARGET: Pick<
   PatientFormData,

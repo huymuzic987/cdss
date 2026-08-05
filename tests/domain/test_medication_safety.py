@@ -3,7 +3,20 @@ from __future__ import annotations
 from typing import Any
 from uuid import UUID
 
-from cdss.domain.decision_tree import Medicine, NodeDefinition, NodeType, RunState, collect_action
+from cdss.domain.decision_tree import (
+    EffectiveMedicationRegimen,
+    MedicationRegimenPlan,
+    Medicine,
+    NodeDefinition,
+    NodeType,
+    RegimenAlternative,
+    RegimenComponent,
+    RegimenKeyword,
+    RegimenUpdateStep,
+    RunState,
+    collect_action,
+    filter_medication_regimen_plan,
+)
 from cdss.domain.medication_safety import evaluate_medication_safety, evaluate_target
 from cdss.domain.medication_safety_resolver import filter_medicine_options
 
@@ -118,6 +131,255 @@ def test_stable_asthma_is_relative_for_cardioselective_beta_blocker() -> None:
 
     assert cardioselective["status"] == "RELATIVE"
     assert nonselective["status"] == "ABSOLUTE"
+
+
+def test_gout_filters_thiazides_from_trace_derived_final_regimen() -> None:
+    thiazide = {
+        "drug_id": "D-THIAZIDE",
+        "name": "Hydrochlorothiazide",
+        "drug_class": "D",
+        "subgroup": "LT Thiazide",
+        "available": True,
+    }
+    loop_diuretic = {
+        "drug_id": "D-LOOP",
+        "name": "Furosemide",
+        "drug_class": "D",
+        "subgroup": "LT quai",
+        "available": True,
+    }
+    plan = MedicationRegimenPlan(
+        steps=[
+            RegimenUpdateStep(
+                id="start-d",
+                trace_step=1,
+                tree_key="drug-combination",
+                node_key="start-d",
+                keyword=RegimenKeyword.START,
+                text_en="Start D",
+                text_vi="",
+                source="context",
+                components=[RegimenComponent(selector_kind="class", code="D")],
+            ),
+            RegimenUpdateStep(
+                id="remove-thiazide",
+                trace_step=2,
+                tree_key="drug-combination",
+                node_key="T6_INFERENCE_DETERMINE_CONTRAINDICATIONS",
+                keyword=RegimenKeyword.REMOVE,
+                text_en="Remove contraindicated thiazide subgroup",
+                text_vi="",
+                source="context",
+                components=[
+                    RegimenComponent(
+                        selector_kind="class",
+                        code="D",
+                        subgroup="LT Thiazide",
+                    )
+                ],
+            ),
+        ],
+        effective_regimen=EffectiveMedicationRegimen(
+            base_options=[
+                RegimenAlternative(
+                    components=[
+                        RegimenComponent(selector_kind="class", code="A"),
+                        RegimenComponent(selector_kind="class", code="C"),
+                    ]
+                ),
+                RegimenAlternative(
+                    components=[
+                        RegimenComponent(selector_kind="class", code="A"),
+                        RegimenComponent(selector_kind="class", code="D"),
+                    ]
+                ),
+            ],
+            additions=[RegimenComponent(selector_kind="class", code="D")],
+            status="choice_required",
+        ),
+        catalog=[thiazide, loop_diuretic],
+        catalog_by_class={"D": [thiazide, loop_diuretic]},
+    )
+    runtime = _runtime(gout_status=_fact("present", True))
+    runtime["contraindication_findings"] = [
+        {
+            "target": "THIAZIDE_LIKE_DIURETIC",
+            "severity": "ABSOLUTE",
+            "reason_code": "GOUT",
+            "drug_group": "LT Thiazide",
+        }
+    ]
+
+    filtered = filter_medication_regimen_plan(plan, runtime)
+
+    assert [item["name"] for item in filtered.catalog] == ["Furosemide"]
+    assert [
+        [component.code for component in option.components]
+        for option in filtered.effective_regimen.base_options
+    ] == [["A", "C"], ["A", "D"]]
+    assert [component.code for component in filtered.effective_regimen.additions] == ["D"]
+    assert filtered.steps[-1].components[0].subgroup == "LT Thiazide"
+    assert [item["name"] for item in filtered.catalog_by_class["D"]] == ["Furosemide"]
+
+
+def test_relative_contraindication_keeps_catalog_medicine_and_marks_warning() -> None:
+    thiazide = {
+        "drug_id": "D-THIAZIDE",
+        "name": "Hydrochlorothiazide",
+        "drug_class": "D",
+        "subgroup": "LT Thiazide",
+        "available": True,
+    }
+    loop_diuretic = {
+        "drug_id": "D-LOOP",
+        "name": "Furosemide",
+        "drug_class": "D",
+        "subgroup": "LT quai",
+        "available": True,
+    }
+    plan = MedicationRegimenPlan(
+        steps=[
+            RegimenUpdateStep(
+                id="start-d",
+                trace_step=1,
+                tree_key="drug-combination",
+                node_key="start-d",
+                keyword=RegimenKeyword.START,
+                text_en="Start D",
+                text_vi="",
+                source="context",
+                components=[RegimenComponent(selector_kind="class", code="D")],
+            )
+        ],
+        effective_regimen=EffectiveMedicationRegimen(
+            base_options=[
+                RegimenAlternative(
+                    components=[
+                        RegimenComponent(selector_kind="class", code="A"),
+                        RegimenComponent(selector_kind="class", code="D"),
+                    ]
+                )
+            ],
+            additions=[],
+            status="complete",
+        ),
+        catalog=[thiazide, loop_diuretic],
+        catalog_by_class={"D": [thiazide, loop_diuretic]},
+    )
+    runtime = _runtime()
+    runtime["contraindication_findings"] = [
+        {
+            "target": "THIAZIDE_LIKE_DIURETIC",
+            "severity": "RELATIVE",
+            "reason_code": "GLUCOSE_INTOLERANCE",
+            "drug_group": "LT Thiazide",
+        }
+    ]
+
+    filtered = filter_medication_regimen_plan(plan, runtime)
+
+    assert [item["name"] for item in filtered.catalog] == [
+        "Hydrochlorothiazide",
+        "Furosemide",
+    ]
+    assert filtered.catalog[0]["safety_status"] == "RELATIVE"
+    assert filtered.catalog[0]["requires_override_reason"] is True
+    assert "safety_findings" in filtered.catalog[0]
+    assert filtered.effective_regimen.base_options[0].components[-1].code == "D"
+
+
+def test_empty_filtered_class_is_not_left_in_the_final_regimen() -> None:
+    b = RegimenComponent(selector_kind="class", code="B")
+    removed_b = RegimenComponent(selector_kind="class", code="B", subgroup="CB")
+    plan = MedicationRegimenPlan(
+        steps=[
+            RegimenUpdateStep(
+                id="start-b",
+                trace_step=1,
+                tree_key="drug-combination",
+                node_key="start-b",
+                keyword=RegimenKeyword.START,
+                text_en="Start B",
+                text_vi="",
+                source="context",
+                components=[b],
+            ),
+            RegimenUpdateStep(
+                id="remove-b",
+                trace_step=2,
+                tree_key="drug-combination",
+                node_key="T6_INFERENCE_DETERMINE_CONTRAINDICATIONS",
+                keyword=RegimenKeyword.REMOVE,
+                text_en="Remove B",
+                text_vi="",
+                source="context",
+                components=[removed_b],
+            ),
+        ],
+        effective_regimen=EffectiveMedicationRegimen(
+            base_options=[RegimenAlternative(components=[b])],
+            additions=[],
+            status="complete",
+        ),
+        catalog=[],
+        catalog_by_class={"B": []},
+    )
+    runtime = _runtime()
+    runtime["contraindication_findings"] = [
+        {"target": "BETA_BLOCKER", "severity": "ABSOLUTE", "drug_group": "CB"}
+    ]
+
+    filtered = filter_medication_regimen_plan(plan, runtime)
+
+    assert filtered.effective_regimen.base_options == []
+
+
+def test_loop_diuretic_in_class_d_is_not_misclassified_as_thiazide() -> None:
+    result = evaluate_target(
+        "D",
+        _runtime(gout_status=_fact("present", True)),
+        medicine=_medicine("Furosemide", "D", "LT quai"),
+    )
+
+    assert result["target"] == "OTHER"
+    assert result["status"] == "ELIGIBLE"
+
+
+def test_d_option_keeps_safe_diuretic_subgroups_when_thiazides_are_contraindicated() -> None:
+    options, profile = filter_medicine_options(
+        [
+            {
+                "classes": ["A", "D", "SGLT2i"],
+                "medicines": {
+                    "A": [{"name": "Losartan", "drug_class": "A", "subgroup": "CTTA"}],
+                    "D": [
+                        {
+                            "name": "Hydrochlorothiazide",
+                            "drug_class": "D",
+                            "subgroup": "LT Thiazide",
+                        },
+                        {
+                            "name": "Furosemide",
+                            "drug_class": "D",
+                            "subgroup": "LT quai",
+                        },
+                    ],
+                    "SGLT2i": [
+                        {
+                            "name": "Empagliflozin",
+                            "drug_class": "SGLT2i",
+                            "subgroup": "SGLT2i",
+                        }
+                    ],
+                },
+            }
+        ],
+        _runtime(gout_status=_fact("present", True)),
+    )
+
+    assert len(options) == 1
+    assert [item["name"] for item in options[0]["medicines"]["D"]] == ["Furosemide"]
+    assert "THIAZIDE_LIKE_DIURETIC" in profile["blocked_targets"]
 
 
 class _Repository:

@@ -10,6 +10,7 @@ import {
   pregnancyPresets,
 } from './patientPresets/pregnancy'
 import { renalModifierPresets } from './patientPresets/modifiersRenal'
+import { contraindicationPresets } from './patientPresets/contraindication'
 import type { PatientPreset, PatientPresetDefinition } from './patientPresets/shared'
 
 export type { PatientPreset } from './patientPresets/shared'
@@ -21,6 +22,7 @@ const definitions: PatientPresetDefinition[] = [
   ...comorbidityFollowUpEpisodePresets,
   ...cardioModifierPresets,
   ...renalModifierPresets,
+  ...contraindicationPresets,
   ...pregnancyPresets,
   ...pregnancyFollowUpPresets,
 ]

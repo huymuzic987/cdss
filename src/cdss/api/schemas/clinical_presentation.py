@@ -2,12 +2,27 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from copy import deepcopy
 from typing import Any
 
 from cdss.api.schemas.clinical_evaluation import ParsedClinicalBundle
 from cdss.domain.decision_tree import ExecutedAction, ExecutedReference, JsonObject
-from cdss.domain.medication_safety import target_for_medicine
+from cdss.domain.decision_tree.medication_regimen_contracts import MedicationRegimenPlan
+from cdss.domain.medication_safety import evaluate_target, target_for_medicine
+from cdss.domain.medication_safety_regimen import filter_medication_regimen_plan
+
+_SAFETY_TARGETS = (
+    "ACE_INHIBITOR",
+    "ARB",
+    "DIRECT_RENIN_INHIBITOR",
+    "MRA",
+    "BETA_BLOCKER",
+    "DIHYDROPYRIDINE_CCB",
+    "NON_DIHYDROPYRIDINE_CCB",
+    "THIAZIDE_LIKE_DIURETIC",
+    "NICARDIPINE",
+)
 
 
 def attach_terminal_presentation(
@@ -37,7 +52,7 @@ def build_presentation(
         },
         "trigger_evidence": [deepcopy(item) for item in parsed.trigger_evidence],
         "recommendation": {"text_en": action.text_en, "text_vi": action.text_vi},
-        "recommended_orders": _recommended_orders(action),
+        "recommended_orders": _recommended_orders(action, parsed.runtime_input),
         "additional_actions": _additional_actions(payload),
         "acknowledgement_options": _acknowledgements(),
         "clinical_details": [deepcopy(item) for item in parsed.clinical_details],
@@ -48,7 +63,9 @@ def build_presentation(
     if isinstance(payload.get("evidence_level"), str):
         presentation["evidence_level"] = _coded_label(payload["evidence_level"])
     if isinstance(payload.get("regimen_plan"), dict):
-        presentation["regimen_plan"] = deepcopy(payload["regimen_plan"])
+        presentation["regimen_plan"] = _scrub_regimen_plan(
+            payload["regimen_plan"], parsed.runtime_input, payload
+        )
     if isinstance(payload.get("medication_safety"), dict):
         presentation["medication_safety"] = deepcopy(payload["medication_safety"])
     if isinstance(payload.get("current_regimen_safety"), dict):
@@ -60,15 +77,24 @@ def build_presentation(
     return presentation
 
 
-def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
+def _recommended_orders(
+    action: ExecutedAction,
+    runtime: Mapping[str, Any] | None = None,
+) -> list[JsonObject]:
     payload = action.payload
     excluded = _excluded_medicines(payload)
-    blocked_targets = _blocked_targets(payload)
+    blocked_targets = _blocked_targets(payload, runtime)
+    wholesale_classes = _wholesale_blocked_classes(blocked_targets, runtime)
     blocked_text = f"{_presentation_text(payload)} {action.text_en} {action.text_vi}".casefold()
     existing = payload.get("recommended_orders")
     orders: list[JsonObject] = []
     if isinstance(existing, list):
-        orders.extend(deepcopy(item) for item in existing if isinstance(item, dict))
+        for item in existing:
+            if not isinstance(item, dict):
+                continue
+            scrubbed = _scrub_existing_order(item, blocked_targets, runtime, wholesale_classes)
+            if scrubbed is not None:
+                orders.append(scrubbed)
     medicines = payload.get("medicines")
     class_catalog = payload.get("medicine_catalog_by_class")
     if not isinstance(class_catalog, dict):
@@ -79,7 +105,7 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
                 not isinstance(raw, dict)
                 or raw.get("available") is False
                 or _medicine_name(raw) in excluded
-                or _medicine_is_blocked(raw, blocked_targets)
+                or _medicine_is_blocked(raw, blocked_targets, wholesale_classes, runtime)
             ):
                 continue
             name = _string(raw.get("name"), _string(raw.get("drug_name"), "Medication"))
@@ -92,6 +118,8 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
                 excluded,
                 blocked_text,
                 blocked_targets,
+                wholesale_classes,
+                runtime,
             )
             group_label = _string(raw.get("drug_class"), _string(raw.get("subgroup")))
             orders.append(
@@ -128,8 +156,17 @@ def _recommended_orders(action: ExecutedAction) -> list[JsonObject]:
             if class_catalog:
                 display_option["medicines"] = class_catalog
             drug_classes = _drug_class_details(
-                display_option, classes, dose_strategy, excluded, blocked_text, blocked_targets
+                display_option,
+                classes,
+                dose_strategy,
+                excluded,
+                blocked_text,
+                blocked_targets,
+                wholesale_classes,
+                runtime,
             )
+            if not drug_classes or all(not item.get("medicines") for item in drug_classes):
+                continue
             labels_en = [f"Drug Class {code}" for code in classes]
             labels_vi = [f"Nhóm thuốc {code}" for code in classes]
             orders.append(
@@ -201,6 +238,8 @@ def _drug_class_details(
     excluded: set[str],
     blocked_text: str,
     blocked_targets: set[str],
+    wholesale_classes: set[str],
+    runtime: Mapping[str, Any] | None = None,
 ) -> list[JsonObject]:
     medicine_map = option.get("medicines")
     if not isinstance(medicine_map, dict):
@@ -216,7 +255,7 @@ def _drug_class_details(
                     or raw.get("available") is False
                     or _medicine_name(raw) in excluded
                     or _is_negated(_medicine_name(raw), blocked_text)
-                    or _medicine_is_blocked(raw, blocked_targets)
+                    or _medicine_is_blocked(raw, blocked_targets, wholesale_classes, runtime)
                 ):
                     continue
                 name = _string(raw.get("name"), _string(raw.get("drug_name")))
@@ -261,24 +300,178 @@ def _excluded_medicines(payload: JsonObject) -> set[str]:
     return excluded
 
 
-def _blocked_targets(payload: JsonObject) -> set[str]:
+def _blocked_targets(
+    payload: JsonObject,
+    runtime: Mapping[str, Any] | None = None,
+) -> set[str]:
     safety = payload.get("medication_safety")
-    if not isinstance(safety, dict):
-        return set()
-    blocked = {str(value) for value in safety.get("blocked_targets", []) if isinstance(value, str)}
-    for item in safety.get("findings", []) if isinstance(safety.get("findings"), list) else []:
-        if isinstance(item, dict) and item.get("severity") == "INSUFFICIENT_DATA":
-            target = item.get("target")
-            if isinstance(target, str):
+    blocked: set[str] = set()
+    if isinstance(safety, dict):
+        blocked.update(
+            str(value) for value in safety.get("blocked_targets", []) if isinstance(value, str)
+        )
+        for item in safety.get("findings", []) if isinstance(safety.get("findings"), list) else []:
+            if isinstance(item, dict) and item.get("severity") == "INSUFFICIENT_DATA":
+                target = item.get("target")
+                if isinstance(target, str):
+                    blocked.add(target)
+    if runtime is not None:
+        for item in runtime.get("contraindication_findings", []):
+            if (
+                isinstance(item, Mapping)
+                and item.get("severity") in {"ABSOLUTE", "INSUFFICIENT_DATA"}
+                and isinstance(item.get("target"), str)
+            ):
+                blocked.add(item["target"])
+        for target in _SAFETY_TARGETS:
+            result = evaluate_target(target, runtime)
+            if result["status"] in {"ABSOLUTE", "INSUFFICIENT_DATA"}:
                 blocked.add(target)
     return blocked
 
 
-def _medicine_is_blocked(raw: JsonObject, blocked_targets: set[str]) -> bool:
+def _scrub_regimen_plan(
+    raw_plan: JsonObject,
+    runtime: Mapping[str, Any],
+    payload: JsonObject,
+) -> JsonObject:
+    """Re-apply medication safety immediately before exposing the UI contract."""
+
+    effective_runtime: JsonObject = dict(runtime)
+    safety_targets = _blocked_targets(payload, runtime)
+    findings = [
+        dict(item)
+        for item in runtime.get("contraindication_findings", [])
+        if isinstance(item, Mapping)
+    ]
+    findings.extend(
+        {
+            "target": target,
+            "severity": "ABSOLUTE",
+            "reason_code": "FINAL_OUTPUT_SAFETY_GATE",
+        }
+        for target in safety_targets
+        if not any(item.get("target") == target for item in findings)
+    )
+    if findings:
+        effective_runtime["contraindication_findings"] = findings
+    try:
+        plan = MedicationRegimenPlan.model_validate(raw_plan)
+    except (TypeError, ValueError):
+        return deepcopy(raw_plan)
+    return filter_medication_regimen_plan(plan, effective_runtime).model_dump(mode="json")
+
+
+def _scrub_existing_order(
+    raw: JsonObject,
+    blocked_targets: set[str],
+    runtime: Mapping[str, Any] | None = None,
+    wholesale_classes: set[str] | None = None,
+) -> JsonObject | None:
+    order = deepcopy(raw)
+    raw_classes = order.get("drug_classes")
+    if not isinstance(raw_classes, list):
+        return order
+    safe_classes: list[JsonObject] = []
+    for raw_class in raw_classes:
+        if not isinstance(raw_class, dict):
+            continue
+        code = _string(raw_class.get("code"))
+        # D is a tree-level thiazide/thiazide-like option. A and C can contain
+        # multiple subgroups, so those groups must be filtered medicine by
+        # medicine instead of being removed wholesale.
+        if (
+            code == "D"
+            and target_for_medicine({"drug_class": code}) in blocked_targets
+            and not _has_subgroup_contraindication(runtime, "THIAZIDE_LIKE_DIURETIC")
+        ):
+            continue
+        raw_medicines = raw_class.get("medicines")
+        if isinstance(raw_medicines, list):
+            medicines = [
+                medicine
+                for medicine in raw_medicines
+                if isinstance(medicine, dict)
+                and not _medicine_is_blocked(
+                    {**medicine, "drug_class": code or medicine.get("drug_class")},
+                    blocked_targets,
+                    wholesale_classes or set(),
+                    runtime,
+                )
+            ]
+            if not medicines:
+                continue
+            raw_class["medicines"] = medicines
+        safe_classes.append(raw_class)
+    if not safe_classes:
+        return None
+    order["drug_classes"] = safe_classes
+    return order
+
+
+def _has_subgroup_contraindication(
+    runtime: Mapping[str, Any] | None,
+    target: str,
+) -> bool:
+    if runtime is None:
+        return False
+    findings = runtime.get("contraindication_findings")
+    if not isinstance(findings, list):
+        return False
+    return any(
+        isinstance(item, Mapping)
+        and item.get("target") == target
+        and isinstance(item.get("drug_group"), str)
+        and bool(item["drug_group"].strip())
+        for item in findings
+    )
+
+
+def _medicine_is_blocked(
+    raw: JsonObject,
+    blocked_targets: set[str],
+    wholesale_classes: set[str],
+    runtime: Mapping[str, Any] | None = None,
+) -> bool:
+    if raw.get("drug_class") in wholesale_classes:
+        return True
     status = raw.get("safety_status")
     if status in {"ABSOLUTE", "INSUFFICIENT_DATA"}:
         return True
-    return target_for_medicine(raw) in blocked_targets
+    target = target_for_medicine(raw)
+    if target not in blocked_targets:
+        return False
+    if runtime is None:
+        return True
+    scoped_findings = [
+        item
+        for item in runtime.get("contraindication_findings", [])
+        if isinstance(item, Mapping)
+        and item.get("target") == target
+        and item.get("severity") in {"ABSOLUTE", "INSUFFICIENT_DATA"}
+        and isinstance(item.get("drug_group"), str)
+        and item["drug_group"].strip()
+    ]
+    if scoped_findings:
+        subgroup = _normalized_text(raw.get("subgroup"))
+        return any(_normalized_text(item["drug_group"]) == subgroup for item in scoped_findings)
+    return True
+
+
+def _normalized_text(value: object) -> str:
+    return " ".join(str(value or "").casefold().split())
+
+
+def _wholesale_blocked_classes(
+    blocked_targets: set[str],
+    runtime: Mapping[str, Any] | None,
+) -> set[str]:
+    if (
+        "THIAZIDE_LIKE_DIURETIC" in blocked_targets
+        and not _has_subgroup_contraindication(runtime, "THIAZIDE_LIKE_DIURETIC")
+    ):
+        return {"D"}
+    return set()
 
 
 def _presentation_text(payload: JsonObject) -> str:

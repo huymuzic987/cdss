@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from copy import deepcopy
 
+from cdss.api.routes.evaluation_medication_values import copy_json_object
 from cdss.domain.decision_tree.contracts import JsonObject
 from cdss.domain.decision_tree.medicine_catalog import Medicine
 
@@ -23,11 +23,19 @@ def collect_payload(
     options: list[JsonObject],
 ) -> None:
     raw_medicines = payload.get("medicines")
-    if isinstance(raw_medicines, list):
-        medicines.extend(deepcopy(item) for item in raw_medicines if isinstance(item, dict))
+    if isinstance(raw_medicines, (list, tuple)):
+        medicines.extend(
+            copied
+            for item in raw_medicines
+            if (copied := copy_json_object(item)) is not None
+        )
     raw_options = payload.get("medicine_options")
-    if isinstance(raw_options, list):
-        options.extend(deepcopy(item) for item in raw_options if isinstance(item, dict))
+    if isinstance(raw_options, (list, tuple)):
+        options.extend(
+            copied
+            for item in raw_options
+            if (copied := copy_json_object(item)) is not None
+        )
 
 
 def selected_classes(medicines: list[JsonObject], options: list[JsonObject]) -> set[str]:
