@@ -72,6 +72,16 @@ def _thaw_json(value: Any) -> JsonValue:
     return value
 
 
+def _thaw_runtime_value(value: Any) -> Any:
+    if isinstance(value, FrozenJsonObject):
+        return {key: _thaw_runtime_value(item) for key, item in value.items()}
+    if isinstance(value, Mapping):
+        return {key: _thaw_runtime_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_thaw_runtime_value(item) for item in value]
+    return value
+
+
 def copy_json_value(value: Any) -> JsonValue:
     """Return a detached mutable copy of a JSON value."""
 
@@ -98,6 +108,10 @@ class RuntimeModel(BaseModel):
         extra="forbid",
         validate_assignment=True,
     )
+
+    @field_serializer("*", check_fields=False)
+    def _serialize_frozen_values(self, value: Any) -> Any:
+        return _thaw_runtime_value(value)
 
 
 class NodeType(StrEnum):
@@ -174,10 +188,6 @@ class RunState(RuntimeModel):
             raise TypeError("input_snapshot must be a JSON object")
         return FrozenJsonObject(value)
 
-    @field_serializer("input_snapshot")
-    def _serialize_input_snapshot(self, value: FrozenJsonObject) -> JsonObject:
-        return value.to_dict()
-
     @classmethod
     def initialize(cls, runtime_input: Mapping[str, Any]) -> RunState:
         """Start a run with an immutable snapshot and empty execution state."""
@@ -225,10 +235,6 @@ class TraversalResult(RuntimeModel):
         if not isinstance(value, Mapping):
             raise TypeError("input_snapshot must be a JSON object")
         return FrozenJsonObject(value)
-
-    @field_serializer("input_snapshot")
-    def _serialize_input_snapshot(self, value: FrozenJsonObject) -> JsonObject:
-        return value.to_dict()
 
     @classmethod
     def from_run_state(

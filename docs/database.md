@@ -163,6 +163,22 @@ descriptions). Seeded from `backups/seed.sql`. Standalone - no foreign keys
 to or from any other table, and not currently read by any route or by the
 traversal engine.
 
+### `contraindication_drugs`
+
+Static VNHA 2022 drug-disease/finding safety catalog, seeded from
+`backups/contraindication_drugs_vnha_2022.csv` through `backups/seed.sql`.
+Each row preserves the source Vietnamese/English finding, severity, drug
+group, drug names, ICD-10 and SNOMED CT codes. The normalized `target`,
+`fact_key`, `operator`, and `threshold` columns are execution metadata used by
+the `/evaluate` routes before `walk_tree()`.
+
+The evaluator matches exact FHIR R4 `Condition.code.coding` values or explicit
+structured facts extracted from `Observation` resources and input extensions.
+It never uses a Condition display string as a safety match. Matched rules are
+added to the runtime as `contraindication_findings` and
+`contraindicated_drug_classes`; medication actions still run their existing
+safety gate as a second check.
+
 ## Clinical/dashboard data
 
 Everything below is imported from FHIR R4 bundles

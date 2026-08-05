@@ -4,8 +4,12 @@ Self-contained SQL snapshots and seed scripts for the CDSS database.
 
 ## Contents
 
-- `backup.sql` — full self-contained snapshot (DDL schema + data) for 14 clinical decision trees and the 65-drug reference catalog.
+The backup artifacts include the static drug contraindication catalog sourced
+from `contraindication_drugs_vnha_2022.csv`.
+
+- `backup.sql` — full self-contained snapshot (DDL schema + data) for the decision trees and medicine reference catalog.
 - `seed.sql` — pure data seed script (**INSERT statements only**, no schema DDL). Designed to populate an empty database initialized by `uv run alembic upgrade head`.
+- `contraindication_drugs_vnha_2022.csv` — source rows for the `contraindication_drugs` catalog.
 - `dump.py` — read-only backup generator script.
 - `restore.py` — restores a snapshot into a local PostgreSQL database.
 

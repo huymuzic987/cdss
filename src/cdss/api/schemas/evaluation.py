@@ -17,6 +17,7 @@ from cdss.domain.decision_tree import (
     TreeMetadata,
     select_output_actions,
 )
+from cdss.domain.decision_tree.contracts import copy_json_value
 from cdss.domain.follow_up import FollowUpType
 from cdss.domain.pregnancy_follow_up import (
     PregnancyFollowUpPhase,
@@ -73,7 +74,7 @@ class EvaluationResponse(ApiModel):
         return cls(
             status=result.status,
             input_snapshot=input_snapshot or result.input_snapshot.to_dict(),
-            context=result.context,
+            context=_json_object(result.context),
             actions=(
                 actions
                 if actions is not None
@@ -105,7 +106,7 @@ class PartialRunStateResponse(ApiModel):
     def from_run_state(cls, run_state: RunState) -> PartialRunStateResponse:
         return cls(
             input_snapshot=run_state.input_snapshot.to_dict(),
-            context=run_state.context,
+            context=_json_object(run_state.context),
             actions=run_state.actions,
             traversal_log=run_state.trace,
             references=run_state.references,
@@ -119,3 +120,10 @@ class EvaluationErrorResponse(ApiModel):
     node_key: str | None = None
     details: JsonObject = Field(default_factory=dict)
     partial_run_state: PartialRunStateResponse | None = None
+
+
+def _json_object(value: JsonObject) -> JsonObject:
+    copied = copy_json_value(value)
+    if not isinstance(copied, dict):
+        raise TypeError("response value must be a JSON object")
+    return copied

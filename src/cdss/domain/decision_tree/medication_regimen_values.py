@@ -157,6 +157,7 @@ def _parse_components(value: object, defaults: Mapping[str, Any]) -> list[Regime
         code = _string(raw.get("code"))
         medicine_id = _string(raw.get("medicine_id"))
         name = _string(raw.get("name"))
+        subgroup = _string(raw.get("subgroup"))
         kind = raw.get("selector_kind")
         if kind not in {"class", "medicine"}:
             kind = "class" if code else "medicine"
@@ -168,6 +169,7 @@ def _parse_components(value: object, defaults: Mapping[str, Any]) -> list[Regime
                 code=code,
                 medicine_id=medicine_id,
                 name=name,
+                subgroup=subgroup,
                 dose_strategy=_string(raw.get("dose_strategy"))
                 or _string(defaults.get("dose_strategy"))
                 or DEFAULT_REGIMEN_DOSE_STRATEGY,

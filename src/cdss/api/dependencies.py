@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from cdss.core.config import Settings, get_settings
 from cdss.core.database import get_db
+from cdss.domain.contraindication_catalog import ContraindicationDrugRepository
 from cdss.domain.decision_tree import MedicineRepository, TreeGraphRepository
 from cdss.infrastructure.db.caching_medicine_repository import (
     CachingMedicineRepository,
@@ -15,6 +16,9 @@ from cdss.infrastructure.db.caching_medicine_repository import (
 from cdss.infrastructure.db.caching_repository import (
     CachingTreeGraphRepository,
     get_graph_cache,
+)
+from cdss.infrastructure.db.contraindication_repository import (
+    SqlAlchemyContraindicationDrugRepository,
 )
 from cdss.infrastructure.db.dashboard_repository import DashboardRepository
 from cdss.infrastructure.db.decision_tree_repository import SqlAlchemyTreeGraphRepository
@@ -40,6 +44,12 @@ def get_medicine_repository(
     if settings.cdss_medicine_cache_enabled:
         repository = CachingMedicineRepository(repository, get_medicine_catalog_cache())
     return repository
+
+
+def get_contraindication_repository(
+    session: Annotated[Session, Depends(get_db)],
+) -> ContraindicationDrugRepository:
+    return SqlAlchemyContraindicationDrugRepository(session)
 
 
 def get_dashboard_repository(session: Annotated[Session, Depends(get_db)]) -> DashboardRepository:

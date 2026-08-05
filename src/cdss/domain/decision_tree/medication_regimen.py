@@ -2,11 +2,7 @@
 
 from __future__ import annotations
 
-from cdss.domain.decision_tree.contracts import (
-    NodeType,
-    TraceEvent,
-    TraversalResult,
-)
+from cdss.domain.decision_tree.contracts import NodeType, TraceEvent, TraversalResult
 from cdss.domain.decision_tree.errors import DecisionTreeError
 from cdss.domain.decision_tree.graph import TreeGraphRepository
 from cdss.domain.decision_tree.medication_regimen_contracts import (
@@ -17,6 +13,9 @@ from cdss.domain.decision_tree.medication_regimen_contracts import (
     RegimenComponent,
     RegimenKeyword,
     RegimenUpdateStep,
+)
+from cdss.domain.decision_tree.medication_regimen_contraindications import (
+    contraindication_removal_step,
 )
 from cdss.domain.decision_tree.medication_regimen_state import (
     derive_effective_regimen,
@@ -63,12 +62,24 @@ def build_traversed_medication_regimen(
             steps.append(step)
 
     steps.sort(key=lambda step: (step.keyword is not RegimenKeyword.START, step.trace_step))
+    removal_step = contraindication_removal_step(result, steps)
+    if removal_step is not None:
+        # T6 is an inference node, so it has no action payload for the normal
+        # action collector. Represent its safety decision as the final regimen
+        # operation after every treatment class has been collected.
+        steps.append(removal_step)
+    effective = derive_effective_regimen(sorted(steps, key=lambda step: step.trace_step))
     selected_classes = {
         component.code
-        for step in steps
-        for component in step_components(step)
+        for option in effective.base_options
+        for component in option.components
         if component.selector_kind == "class" and component.code
     }
+    selected_classes.update(
+        component.code
+        for component in effective.additions
+        if component.selector_kind == "class" and component.code
+    )
     selected_medicines = [
         component
         for step in steps
@@ -91,7 +102,7 @@ def build_traversed_medication_regimen(
             selected_classes.add("MRA")
     return MedicationRegimenPlan(
         steps=steps,
-        effective_regimen=derive_effective_regimen(sorted(steps, key=lambda step: step.trace_step)),
+        effective_regimen=effective,
         catalog=[medicine_json(item) for item in catalog],
         catalog_by_class={
             code: [

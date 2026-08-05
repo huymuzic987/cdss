@@ -21,11 +21,14 @@ from cdss.api.schemas.fhir_clinical import (
     LOINC_SBP_CODE,
 )
 from cdss.domain.decision_tree import InvalidFhirInput, JsonObject
+from cdss.domain.medication_safety_contracts import unknown_fact
 
 LOINC_EGFR = "98979-8"
 LOINC_POTASSIUM = "6298-4"
 LOINC_ACR = "9318-7"
 LOINC_PROTEINURIA_24H = "2889-4"
+LOINC_HEART_RATE = "8867-4"
+LOINC_LVEF = "10230-1"
 CLINICAL_FLAG_SYSTEM = "http://cdss.local/fhir/CodeSystem/clinical-flag"
 READING_ROLE_EXTENSION = f"{EXT_BASE}/reading-role"
 INPUT_EXTENSION_PREFIX = f"{EXT_BASE}/input/"
@@ -101,6 +104,60 @@ KNOWN_BOOLEAN_FLAGS = frozenset(
         "drug_replacement_required",
         "adherence_adequate",
         "dose_adequate",
+        "has_asthma",
+        "has_gout",
+        "hypercalcaemia",
+        "hypokalaemia",
+        "angioedema_history",
+        "renal_artery_stenosis",
+        "active_bronchospasm",
+        "pacemaker_present",
+        "symptomatic_bradycardia",
+        "metabolic_syndrome",
+        "glucose_intolerance",
+        "sinoatrial_block",
+        "heart_failure_reduced_ef_nyha_3_or_4",
+        "severe_leg_edema_history",
+        "constipation",
+        "acute_kidney_injury",
+        "woman_of_childbearing_potential_not_using_contraception",
+    }
+)
+
+SAFETY_FACT_KEYS = frozenset(
+    {
+        "pregnancy_status",
+        "pregnancy_intention",
+        "contraception_status",
+        "breastfeeding_status",
+        "serum_potassium",
+        "eGFR",
+        "acute_kidney_injury",
+        "heart_rate",
+        "heart_rhythm",
+        "AV_block_grade",
+        "pacemaker_present",
+        "LVEF",
+        "NYHA_class",
+        "asthma_severity",
+        "active_bronchospasm",
+        "gout_status",
+        "hypercalcaemia",
+        "hypokalaemia",
+        "angioedema_history",
+        "renal_artery_stenosis",
+        "athlete_status",
+        "monitoring_plan",
+        "metabolic_syndrome",
+        "glucose_intolerance",
+        "sinoatrial_block",
+        "heart_failure_reduced_ef_nyha_3_or_4",
+        "severe_leg_edema_history",
+        "constipation",
+        "woman_of_childbearing_potential_not_using_contraception",
+        "is_pregnant",
+        "is_breastfeeding",
+        "is_postpartum",
     }
 )
 
@@ -161,6 +218,8 @@ def parse_clinical_bundle(bundle: Any) -> ParsedClinicalBundle:
     runtime: JsonObject = {
         key: False for key in KNOWN_BOOLEAN_FLAGS if key not in OPTIONAL_DEFAULT_TRUE_FLAGS
     }
+    runtime["clinical_facts"] = {key: unknown_fact() for key in SAFETY_FACT_KEYS}
+    runtime["active_medication_regimen"] = []
     runtime["facility_capability"] = "FULL_RESOURCES"
     runtime["risk_factor_count"] = 0
     _apply_birth_date(patient, runtime)
@@ -177,6 +236,7 @@ def parse_clinical_bundle(bundle: Any) -> ParsedClinicalBundle:
         mirrored = bundle.get(key)
         if isinstance(mirrored, bool):
             runtime[key] = mirrored
+            _record_fact(runtime, key, mirrored, source_reference="Bundle")
 
     encounters = by_type.get("Encounter", [])
     encounter_dates: dict[str, str] = {}
@@ -236,7 +296,15 @@ def parse_clinical_bundle(bundle: Any) -> ParsedClinicalBundle:
                 _invalid(f"conflicting {side} values for Encounter/{encounter_id or 'snapshot'}")
             bucket[side] = (value, observation)
         elif (
-            code in {LOINC_EGFR, LOINC_POTASSIUM, LOINC_ACR, LOINC_PROTEINURIA_24H}
+            code
+            in {
+                LOINC_EGFR,
+                LOINC_POTASSIUM,
+                LOINC_ACR,
+                LOINC_PROTEINURIA_24H,
+                LOINC_HEART_RATE,
+                LOINC_LVEF,
+            }
             and value is not None
         ):
             label_en, label_vi, runtime_key = _lab_metadata(code)
@@ -255,6 +323,13 @@ def parse_clinical_bundle(bundle: Any) -> ParsedClinicalBundle:
             labs.append(item)
             if runtime_key:
                 runtime[runtime_key] = value
+                _record_fact(
+                    runtime,
+                    runtime_key,
+                    value,
+                    source_reference=item["source_reference"],
+                    effective_time=item["effective_date_time"],
+                )
 
     if encounters:
         if None in bp_by_encounter:
@@ -319,7 +394,22 @@ def parse_clinical_bundle(bundle: Any) -> ParsedClinicalBundle:
 
     trigger = _current_bp_evidence(runtime)
     details.extend(labs)
-    _apply_medications(by_type.get("MedicationRequest", []), patient_ref, encounter_dates, details)
+    runtime["active_medication_regimen"] = [
+        *_apply_medications(
+            by_type.get("MedicationRequest", []),
+            patient_ref,
+            encounter_dates,
+            details,
+            resource_type="MedicationRequest",
+        ),
+        *_apply_medications(
+            by_type.get("MedicationStatement", []),
+            patient_ref,
+            encounter_dates,
+            details,
+            resource_type="MedicationStatement",
+        ),
+    ]
     declared_follow_up_number = runtime.get("pregnancy_follow_up_number")
     derived_follow_up_number = max(0, len(ordered) - 1)
     if declared_follow_up_number is not None and (
@@ -382,6 +472,8 @@ def _apply_extensions(resource: Mapping[str, Any], runtime: JsonObject) -> None:
         value = _typed_extension_value(extension)
         if value is not None:
             runtime[key] = value
+            if key in SAFETY_FACT_KEYS:
+                _record_fact(runtime, key, value, source_reference=url, source="manual")
 
 
 def _apply_conditions(
@@ -408,6 +500,29 @@ def _apply_conditions(
                 and code in KNOWN_BOOLEAN_FLAGS
             ):
                 runtime[code] = active
+                _record_fact(
+                    runtime,
+                    code,
+                    active,
+                    source_reference=f"Condition/{condition.get('id')}"
+                    if condition.get("id")
+                    else "Condition",
+                )
+                fact_key = {
+                    "is_pregnant": "pregnancy_status",
+                    "is_breastfeeding": "breastfeeding_status",
+                    "is_postpartum": "is_postpartum",
+                    "has_gout": "gout_status",
+                }.get(code)
+                if fact_key:
+                    _record_fact(
+                        runtime,
+                        fact_key,
+                        active,
+                        source_reference=f"Condition/{condition.get('id')}"
+                        if condition.get("id")
+                        else "Condition",
+                    )
         codes = {str(code) for _, code in pairs if code is not None}
         if any(code == "E11" or code.startswith("E11.") for code in codes) or "44054006" in codes:
             runtime["has_type_2_diabetes"] = runtime["has_diabetes"] = active
@@ -440,7 +555,10 @@ def _apply_medications(
     patient_ref: str,
     encounter_dates: Mapping[str, str],
     details: list[JsonObject],
-) -> None:
+    *,
+    resource_type: str,
+) -> list[JsonObject]:
+    active_regimen: list[JsonObject] = []
     for medication in medications:
         _require_subject(medication, patient_ref)
         encounter_id = (
@@ -451,7 +569,7 @@ def _apply_medications(
         if encounter_id is not None and encounter_id not in encounter_dates:
             _invalid(f"MedicationRequest references unknown Encounter/{encounter_id}")
         concept = medication.get("medicationCodeableConcept") or {}
-        name = concept.get("text") if isinstance(concept, Mapping) else None
+        name = _medication_name(concept)
         dose = None
         instructions = medication.get("dosageInstruction") or []
         if instructions and isinstance(instructions[0], Mapping):
@@ -461,6 +579,16 @@ def _apply_medications(
         value = str(name or "Medication")
         if isinstance(dose, Mapping) and dose.get("value") is not None:
             value += f" {dose['value']} {dose.get('unit', '')}".rstrip()
+        effective_time = (
+            medication.get("authoredOn")
+            or medication.get("effectiveDateTime")
+            or (
+                (medication.get("effectivePeriod") or {}).get("start")
+                if isinstance(medication.get("effectivePeriod"), Mapping)
+                else None
+            )
+            or (encounter_dates.get(encounter_id) if encounter_id else None)
+        )
         details.append(
             {
                 "id": str(medication.get("id") or f"medication-{len(details)}"),
@@ -468,13 +596,55 @@ def _apply_medications(
                 "label_en": "Medication",
                 "label_vi": "Thuốc đang dùng",
                 "value": value,
-                "effective_date_time": medication.get("authoredOn")
-                or (encounter_dates.get(encounter_id) if encounter_id else None),
-                "source_reference": f"MedicationRequest/{medication.get('id')}"
+                "effective_date_time": effective_time,
+                "source_reference": f"{resource_type}/{medication.get('id')}"
                 if medication.get("id")
                 else None,
             }
         )
+        status = medication.get("status")
+        if status not in {"completed", "stopped", "cancelled", "entered-in-error"}:
+            active_regimen.append(
+                {
+                    "id": str(medication.get("id") or f"medication-{len(active_regimen)}"),
+                    "name": name or value,
+                    "code": _medication_code(concept),
+                    "status": status or "active",
+                    "effective_time": effective_time,
+                    "source_reference": f"{resource_type}/{medication.get('id')}"
+                    if medication.get("id")
+                    else None,
+                }
+            )
+    return active_regimen
+
+
+def _medication_code(concept: object) -> str | None:
+    if not isinstance(concept, Mapping):
+        return None
+    codings = concept.get("coding")
+    if not isinstance(codings, list):
+        return None
+    for coding in codings:
+        if isinstance(coding, Mapping) and isinstance(coding.get("code"), str):
+            return coding["code"]
+    return None
+
+
+def _medication_name(concept: object) -> str | None:
+    if not isinstance(concept, Mapping):
+        return None
+    text = concept.get("text")
+    if isinstance(text, str) and text:
+        return text
+    codings = concept.get("coding")
+    if isinstance(codings, list):
+        for coding in codings:
+            if isinstance(coding, Mapping):
+                display = coding.get("display")
+                if isinstance(display, str) and display:
+                    return display
+    return None
 
 
 def _current_bp_evidence(runtime: Mapping[str, Any]) -> list[JsonObject]:
@@ -498,8 +668,8 @@ def _current_bp_evidence(runtime: Mapping[str, Any]) -> list[JsonObject]:
 
 def _lab_metadata(code: str) -> tuple[str, str, str | None]:
     return {
-        LOINC_EGFR: ("eGFR", "eGFR", None),
-        LOINC_POTASSIUM: ("Potassium", "Kali", None),
+        LOINC_EGFR: ("eGFR", "eGFR", "eGFR"),
+        LOINC_POTASSIUM: ("Potassium", "Kali", "serum_potassium"),
         LOINC_ACR: (
             "Urine albumin/creatinine ratio",
             "Tỷ số albumin/creatinin niệu",
@@ -510,7 +680,80 @@ def _lab_metadata(code: str) -> tuple[str, str, str | None]:
             "Protein niệu 24 giờ",
             "proteinuria_24h_mg",
         ),
+        LOINC_HEART_RATE: ("Heart rate", "Nhịp tim", "heart_rate"),
+        LOINC_LVEF: (
+            "Left ventricular ejection fraction",
+            "Phân suất tống máu thất trái",
+            "LVEF",
+        ),
     }[code]
+
+
+def _record_fact(
+    runtime: JsonObject,
+    key: str,
+    value: object,
+    *,
+    source_reference: str | None = None,
+    effective_time: object = None,
+    source: str = "FHIR",
+) -> None:
+    if key not in SAFETY_FACT_KEYS and key not in KNOWN_BOOLEAN_FLAGS:
+        return
+    facts = runtime.setdefault("clinical_facts", {})
+    if not isinstance(facts, dict):
+        return
+    if isinstance(value, Mapping) and value.get("status") in {
+        "present",
+        "absent",
+        "unknown",
+        "conflicting",
+    }:
+        status = value["status"]
+        normalized_value = value.get("value")
+    elif isinstance(value, str) and value.casefold() in {
+        "present",
+        "absent",
+        "unknown",
+        "conflicting",
+    }:
+        status = value.casefold()
+        normalized_value = None
+    elif isinstance(value, bool):
+        status = "present" if value else "absent"
+        normalized_value = value
+    else:
+        status = "present" if value is not None else "unknown"
+        normalized_value = value
+    evidence: JsonObject = {"source": source}
+    if source_reference:
+        evidence["source"] = source_reference
+    if effective_time is not None:
+        evidence["effective_time"] = effective_time
+    previous = facts.get(key)
+    previous_status = previous.get("status") if isinstance(previous, Mapping) else "unknown"
+    previous_value = previous.get("value") if isinstance(previous, Mapping) else None
+    if previous_status not in {"unknown", status} and not (
+        previous_status == "present" and status == "present" and previous_value == normalized_value
+    ):
+        facts[key] = {"status": "conflicting", "evidence": _fact_evidence(previous, evidence)}
+        return
+    if previous_status == "present" and previous_value != normalized_value:
+        facts[key] = {"status": "conflicting", "evidence": _fact_evidence(previous, evidence)}
+        return
+    existing_evidence = previous.get("evidence", []) if isinstance(previous, Mapping) else []
+    facts[key] = {
+        "status": status,
+        "value": normalized_value,
+        "evidence": [*existing_evidence, evidence]
+        if isinstance(existing_evidence, list)
+        else [evidence],
+    }
+
+
+def _fact_evidence(previous: object, current: JsonObject) -> list[JsonObject]:
+    prior = previous.get("evidence", []) if isinstance(previous, Mapping) else []
+    return [*(prior if isinstance(prior, list) else []), current]
 
 
 def _require_subject(resource: Mapping[str, Any], patient_ref: str) -> None:

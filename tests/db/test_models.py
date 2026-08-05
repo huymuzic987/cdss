@@ -47,6 +47,7 @@ def test_table_names() -> None:
         "fhir_import_batches",
         "tree_layouts",
         "symptoms",
+        "contraindication_drugs",
         "git_contributions",
     }
 

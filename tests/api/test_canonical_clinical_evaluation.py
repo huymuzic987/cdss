@@ -56,7 +56,36 @@ def test_medications_are_presentation_details_even_when_not_runtime_inputs() -> 
     parsed = parse_clinical_bundle(json.loads(path.read_text(encoding="utf-8")))
 
     assert "medications" not in parsed.runtime_input
+    assert parsed.runtime_input["active_medication_regimen"]
     assert any(item["category"] == "medication" for item in parsed.clinical_details)
+
+
+def test_medication_statement_is_added_to_active_regimen() -> None:
+    bundle = json.loads(
+        (FIXTURE_DIR / "PT0001.json").read_text(encoding="utf-8")
+    )
+    bundle["entry"].append(
+        {
+            "resource": {
+                "resourceType": "MedicationStatement",
+                "id": "statement-1",
+                "status": "active",
+                "medicationCodeableConcept": {"text": "Enalapril"},
+                "subject": {"reference": "Patient/PT0001"},
+                "effectiveDateTime": "2026-08-04",
+            }
+        }
+    )
+
+    parsed = parse_clinical_bundle(bundle)
+
+    statement = next(
+        item
+        for item in parsed.runtime_input["active_medication_regimen"]
+        if item["source_reference"] == "MedicationStatement/statement-1"
+    )
+    assert statement["name"] == "Enalapril"
+    assert statement["effective_time"] == "2026-08-04"
 
 
 def test_low_dose_combination_presents_class_medicines_with_only_low_doses() -> None:
@@ -190,6 +219,90 @@ def test_combination_hover_uses_complete_database_catalog() -> None:
         "Amlodipine",
         "Nicardipine",
     ]
+
+
+def test_final_presentation_scrubs_gout_contraindicated_d_regimen() -> None:
+    bundle = json.loads((FIXTURE_DIR / "PT0001.json").read_text(encoding="utf-8"))
+    parsed = parse_clinical_bundle(bundle)
+    parsed.runtime_input["clinical_facts"]["gout_status"] = {
+        "status": "present",
+        "value": True,
+        "evidence": [{"source": "test"}],
+    }
+    parsed.runtime_input["contraindication_findings"] = [
+        {
+            "target": "THIAZIDE_LIKE_DIURETIC",
+            "severity": "ABSOLUTE",
+            "reason_code": "GOUT",
+        }
+    ]
+    catalog = [
+        {
+            "drug_id": "thiazide",
+            "name": "Hydrochlorothiazide",
+            "drug_class": "D",
+            "subgroup": "Thiazide",
+            "available": True,
+        },
+        {
+            "drug_id": "loop",
+            "name": "Furosemide",
+            "drug_class": "D",
+            "subgroup": "Loop diuretic",
+            "available": True,
+        },
+    ]
+    action = ExecutedAction(
+        tree_key="drug-combination",
+        node_key="terminal",
+        node_type=NodeType.END,
+        text_en="Start D",
+        text_vi="",
+        payload={
+            "regimen_plan": {
+                "schema_version": "1.0",
+                "steps": [
+                    {
+                        "id": "start-d",
+                        "trace_step": 1,
+                        "tree_key": "drug-combination",
+                        "node_key": "start-d",
+                        "keyword": "START",
+                        "text_en": "Start D",
+                        "text_vi": "",
+                        "source": "context",
+                        "components": [{"selector_kind": "class", "code": "D"}],
+                        "alternatives": [],
+                    }
+                ],
+                "effective_regimen": {
+                    "base_options": [
+                        {"components": [{"selector_kind": "class", "code": "D"}]}
+                    ],
+                    "additions": [],
+                    "adjustments": [],
+                    "stopped_components": [],
+                    "constraints": [],
+                    "status": "complete",
+                },
+                "catalog_by_class": {"D": catalog},
+                "catalog": catalog,
+            },
+            "medicine_options": [
+                {"classes": ["D"], "medicines": {"D": catalog}}
+            ],
+            "medicine_catalog_by_class": {"D": catalog},
+        },
+    )
+
+    presentation = build_presentation(action, parsed, [])
+    plan = presentation["regimen_plan"]
+
+    assert plan["effective_regimen"]["base_options"] == []
+    assert plan["steps"][0]["components"] == []
+    assert "D" not in plan["catalog_by_class"]
+    assert "Hydrochlorothiazide" not in {item["name"] for item in plan["catalog"]}
+    assert presentation["recommended_orders"] == []
 
 
 def test_explicit_orders_keep_additional_traversed_drugs_without_duplicates() -> None:

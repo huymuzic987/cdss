@@ -41,6 +41,7 @@ REQUIRED_TABLES = {
     "fhir_import_batches",
     "tree_layouts",
     "symptoms",
+    "contraindication_drugs",
 }
 ENUM_LABELS = ["START", "CONDITION", "INFERENCE", "ACTION", "END", "LINK", "GLOBAL"]
 

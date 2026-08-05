@@ -1,0 +1,41 @@
+﻿disease_finding_vn,disease_finding_eng,contraindication_type,drug_group,drugs,icd10_vn_1_decimal,snomedct_2026_06_01
+Gút,Gout,absolute,LT Thiazide,,M10.9,90560007
+Gút,Gout,absolute,LT Thiazide-like,,M10.9,90560007
+Hội chứng chuyển hóa,Metabolic syndrome,relative,LT Thiazide,,E88.8,237602007
+Hội chứng chuyển hóa,Metabolic syndrome,relative,LT Thiazide-like,,E88.8,237602007
+Hội chứng chuyển hóa,Metabolic syndrome,relative,CB,,E88.8,237602007
+Rối loạn dung nạp glucose,Impaired glucose tolerance,relative,LT Thiazide,,R73.0,9414007
+Rối loạn dung nạp glucose,Impaired glucose tolerance,relative,LT Thiazide-like,,R73.0,9414007
+Rối loạn dung nạp glucose,Impaired glucose tolerance,relative,CB,,R73.0,9414007
+Đang mang thai,Pregnancy,relative,LT Thiazide,,Z32,77386006
+Đang mang thai,Pregnancy,relative,LT Thiazide-like,,Z32,77386006
+Đang mang thai,Pregnancy,absolute,ƯCMC,,Z32,77386006
+Đang mang thai,Pregnancy,absolute,CTTA,,Z32,77386006
+Đang mang thai,Pregnancy,absolute,Ức chế Renin trực tiếp,Aliskiren,Z32,77386006
+Tăng canxi máu,Hypercalcaemia,relative,LT Thiazide,,E83.5,66931009
+Tăng canxi máu,Hypercalcaemia,relative,LT Thiazide-like,,E83.5,66931009
+Kali máu thấp,Hypokalemia,relative,LT Thiazide,,E87.6,43339004
+Kali máu thấp,Hypokalemia,relative,LT Thiazide-like,,E87.6,43339004
+Hen,Asthma,absolute,CB,,J45.9,195967001
+Bloc xoang nhĩ,Sinoatrial block,absolute,CB,,I45.5,65778007
+Bloc xoang nhĩ,Sinoatrial block,absolute,CKCa Non-DHP,,I45.5,65778007
+Bloc nhĩ-thất cao độ,High-grade atrioventricular block,absolute,CB,,I44.1,28189009
+Bloc nhĩ-thất cao độ,High-grade atrioventricular block,absolute,CKCa Non-DHP,,I44.1,28189009
+Nhịp tim chậm (<60 lần/phút),Bradycardia (<60 beats/min),absolute,CB,,R00.1,48867003
+Nhịp tim chậm (<60 lần/phút),Bradycardia (<60 beats/min),absolute,CKCa Non-DHP,,R00.1,48867003
+Vận động viên,Athlete,relative,CB,,Z02.5,
+Nhịp tim nhanh,Tachycardia,relative,CKCa DHP,,R00.0,3424008
+"Suy tim EF giảm, NYHA III hoặc IV","Heart failure with reduced EF, NYHA class III or IV",relative,CKCa DHP,,I50.2,417996009
+Tiền sử phù chân nặng,History of severe leg oedema,relative,CKCa DHP,,R60.0,271809000
+Rối loạn chức năng tâm thu thất trái (LVEF <40%),Left ventricular systolic dysfunction (LVEF <40%),absolute,CKCa Non-DHP,,I51.9,134401001
+Táo bón,Constipation,relative,CKCa Non-DHP,,K59.0,14760008
+Tiền sử phù mạch,History of angioedema,absolute,ƯCMC,,T78.3,41291007
+Kali máu cao,Hyperkalemia,absolute,ƯCMC,,E87.5,14140009
+Kali máu cao,Hyperkalemia,absolute,CTTA,,E87.5,14140009
+Kali máu cao,Hyperkalemia,absolute,MRA (LT giữ Kali),,E87.5,14140009
+Hẹp động mạch thận hai bên,Bilateral renal artery stenosis,absolute,ƯCMC,,I70.1,425414000
+Hẹp động mạch thận hai bên,Bilateral renal artery stenosis,absolute,CTTA,,I70.1,425414000
+Suy thận cấp,Acute kidney injury,absolute,MRA (LT giữ Kali),,N17.9,14669001
+Suy thận nặng (eGFR <30 mL/phút),Severe renal impairment (eGFR <30 mL/min),absolute,MRA (LT giữ Kali),,N18.4,431857002
+Phụ nữ trong độ tuổi sinh sản không sử dụng biện pháp tránh thai,Woman of childbearing potential not using contraception,relative,ƯCMC,,Z30.9,
+Phụ nữ trong độ tuổi sinh sản không sử dụng biện pháp tránh thai,Woman of childbearing potential not using contraception,relative,CTTA,,Z30.9,

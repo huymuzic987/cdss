@@ -34,6 +34,7 @@ _TREATMENT_KEYWORDS = frozenset(
         RegimenKeyword.ESCALATE,
         RegimenKeyword.REDUCE,
         RegimenKeyword.STOP,
+        RegimenKeyword.REMOVE,
         RegimenKeyword.KEEP,
         RegimenKeyword.MAINTAIN,
         RegimenKeyword.MONITOR,

@@ -29,6 +29,7 @@ class RegimenKeyword(StrEnum):
     ESCALATE = "ESCALATE"
     REDUCE = "REDUCE"
     STOP = "STOP"
+    REMOVE = "REMOVE"
     KEEP = "KEEP"
     MAINTAIN = "MAINTAIN"
     MONITOR = "MONITOR"
@@ -40,6 +41,7 @@ class RegimenComponent(RuntimeModel):
     code: str | None = None
     medicine_id: str | None = None
     name: str | None = None
+    subgroup: str | None = None
     dose_strategy: str = DEFAULT_REGIMEN_DOSE_STRATEGY
     dose: str | None = None
     route: str | None = None

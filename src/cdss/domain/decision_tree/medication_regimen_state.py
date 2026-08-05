@@ -40,6 +40,32 @@ def derive_effective_regimen(steps: list[RegimenUpdateStep]) -> EffectiveMedicat
             continue
         elif step.keyword is RegimenKeyword.STOP:
             effective.stopped_components.extend(step_components(step))
+        elif step.keyword is RegimenKeyword.REMOVE:
+            removed = step_components(step)
+            effective.stopped_components.extend(removed)
+            effective.base_options = [
+                RegimenAlternative(
+                    components=[
+                        component
+                        for component in option.components
+                        if not any(_matches_removal(component, item) for item in removed)
+                    ]
+                )
+                for option in effective.base_options
+            ]
+            effective.base_options = [
+                option for option in effective.base_options if option.components
+            ]
+            effective.additions = [
+                component
+                for component in effective.additions
+                if not any(_matches_removal(component, item) for item in removed)
+            ]
+            effective.status = (
+                "choice_required"
+                if len(effective.base_options) > 1
+                else "complete"
+            )
         elif step.keyword is RegimenKeyword.AVOID:
             effective.constraints.extend(step_components(step))
     effective.additions = _unique_components(effective.additions)
@@ -64,6 +90,7 @@ def _unique_components(components: list[RegimenComponent]) -> list[RegimenCompon
             component.code,
             component.medicine_id,
             component.name,
+            component.subgroup,
             component.dose_strategy,
             component.dose,
             component.route,
@@ -74,6 +101,31 @@ def _unique_components(components: list[RegimenComponent]) -> list[RegimenCompon
             seen.add(identity)
             output.append(component)
     return output
+
+
+def _matches_removal(component: RegimenComponent, removed: RegimenComponent) -> bool:
+    """Match final class removals without confusing A/B/C/D subgroups."""
+
+    if removed.selector_kind != component.selector_kind:
+        return False
+    if removed.selector_kind == "class":
+        return (
+            component.code == removed.code
+            and (
+                removed.subgroup is None
+                or (
+                    component.subgroup is not None
+                    and component.subgroup.casefold() == removed.subgroup.casefold()
+                )
+            )
+        )
+    if removed.medicine_id and component.medicine_id:
+        return removed.medicine_id == component.medicine_id
+    return bool(
+        removed.name
+        and component.name
+        and removed.name.casefold() == component.name.casefold()
+    )
 
 
 def _merge_alternative_choices(
@@ -124,6 +176,7 @@ def _choice_identity(component: RegimenComponent) -> tuple[str | None, ...]:
         component.code,
         component.medicine_id,
         component.name,
+        component.subgroup,
     )
 
 
@@ -133,6 +186,7 @@ def _component_identity(component: RegimenComponent) -> tuple[str | None, ...]:
         component.code,
         component.medicine_id,
         component.name,
+        component.subgroup,
         component.dose_strategy,
         component.dose,
         component.route,

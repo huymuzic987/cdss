@@ -4,7 +4,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from cdss.api.dependencies import get_medicine_repository, get_tree_graph_repository
+from cdss.api.dependencies import (
+    get_contraindication_repository,
+    get_medicine_repository,
+    get_tree_graph_repository,
+)
 from cdss.api.routes.evaluation_presentation import (
     enrich_inferred_medications,
     restore_raw_bundle,
@@ -14,6 +18,8 @@ from cdss.api.schemas import EvaluationErrorResponse, EvaluationResponse
 from cdss.api.schemas.clinical_evaluation import parse_clinical_bundle
 from cdss.api.schemas.clinical_presentation import attach_terminal_presentation
 from cdss.core.config import Settings, get_settings
+from cdss.domain.contraindication_catalog import ContraindicationDrugRepository
+from cdss.domain.contraindication_evaluator import prepare_contraindication_input
 from cdss.domain.decision_tree import (
     DecisionTreeError,
     InvalidFhirInput,
@@ -42,6 +48,9 @@ def evaluate_follow_up(
     bundle: JsonObject,
     repository: Annotated[TreeGraphRepository, Depends(get_tree_graph_repository)],
     medicine_repository: Annotated[MedicineRepository, Depends(get_medicine_repository)],
+    contraindication_repository: Annotated[
+        ContraindicationDrugRepository, Depends(get_contraindication_repository)
+    ],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> EvaluationResponse:
     """Evaluate a medication follow-up whose stage and BP target are already known.
@@ -54,7 +63,11 @@ def evaluate_follow_up(
     """
 
     parsed = parse_clinical_bundle(bundle)
-    runtime_input = dict(parsed.runtime_input)
+    runtime_input = prepare_contraindication_input(
+        dict(parsed.runtime_input),
+        parsed.raw_bundle,
+        contraindication_repository,
+    )
 
     stage = runtime_input.get("medication_follow_up_stage")
     sbp_upper = runtime_input.pop("active_bp_target_sbp_upper", None)

@@ -5977,4 +5977,65 @@ FROM (VALUES
 ) AS codes(drug_id, snomed_code)
 WHERE medicine.drug_id = codes.drug_id;
 
+-- 8. DRUG CONTRAINDICATION REFERENCE CATALOG (40 rules)
+-- Source: backups/contraindication_drugs_vnha_2022.csv
+INSERT INTO public.contraindication_drugs (
+    contraindication_id, disease_finding_vn, disease_finding_eng,
+    contraindication_type, drug_group, drugs, icd10_vn_1_decimal,
+    snomedct_2026_06_01, target, finding_key, fact_key, operator, threshold
+) VALUES
+    ('CD0001', 'Gút', 'Gout', 'absolute', 'LT Thiazide', NULL, 'M10.9', '90560007', 'THIAZIDE_LIKE_DIURETIC', 'GOUT', 'gout_status', NULL, NULL),
+    ('CD0035', 'Gút', 'Gout', 'absolute', 'LT Thiazide-like', NULL, 'M10.9', '90560007', 'THIAZIDE_LIKE_DIURETIC', 'GOUT', 'gout_status', NULL, NULL),
+    ('CD0002', 'Hội chứng chuyển hóa', 'Metabolic syndrome', 'relative', 'LT Thiazide', NULL, 'E88.8', '237602007', 'THIAZIDE_LIKE_DIURETIC', 'METABOLIC_SYNDROME', 'metabolic_syndrome', NULL, NULL),
+    ('CD0036', 'Hội chứng chuyển hóa', 'Metabolic syndrome', 'relative', 'LT Thiazide-like', NULL, 'E88.8', '237602007', 'THIAZIDE_LIKE_DIURETIC', 'METABOLIC_SYNDROME', 'metabolic_syndrome', NULL, NULL),
+    ('CD0003', 'Hội chứng chuyển hóa', 'Metabolic syndrome', 'relative', 'CB', NULL, 'E88.8', '237602007', 'BETA_BLOCKER', 'METABOLIC_SYNDROME', 'metabolic_syndrome', NULL, NULL),
+    ('CD0004', 'Rối loạn dung nạp glucose', 'Impaired glucose tolerance', 'relative', 'LT Thiazide', NULL, 'R73.0', '9414007', 'THIAZIDE_LIKE_DIURETIC', 'IMPAIRED_GLUCOSE_TOLERANCE', 'glucose_intolerance', NULL, NULL),
+    ('CD0037', 'Rối loạn dung nạp glucose', 'Impaired glucose tolerance', 'relative', 'LT Thiazide-like', NULL, 'R73.0', '9414007', 'THIAZIDE_LIKE_DIURETIC', 'IMPAIRED_GLUCOSE_TOLERANCE', 'glucose_intolerance', NULL, NULL),
+    ('CD0005', 'Rối loạn dung nạp glucose', 'Impaired glucose tolerance', 'relative', 'CB', NULL, 'R73.0', '9414007', 'BETA_BLOCKER', 'IMPAIRED_GLUCOSE_TOLERANCE', 'glucose_intolerance', NULL, NULL),
+    ('CD0006', 'Đang mang thai', 'Pregnancy', 'relative', 'LT Thiazide', NULL, 'Z32', '77386006', 'THIAZIDE_LIKE_DIURETIC', 'PREGNANCY', 'pregnancy_status', NULL, NULL),
+    ('CD0038', 'Đang mang thai', 'Pregnancy', 'relative', 'LT Thiazide-like', NULL, 'Z32', '77386006', 'THIAZIDE_LIKE_DIURETIC', 'PREGNANCY', 'pregnancy_status', NULL, NULL),
+    ('CD0007', 'Đang mang thai', 'Pregnancy', 'absolute', 'ƯCMC', NULL, 'Z32', '77386006', 'ACE_INHIBITOR', 'PREGNANCY', 'pregnancy_status', NULL, NULL),
+    ('CD0008', 'Đang mang thai', 'Pregnancy', 'absolute', 'CTTA', NULL, 'Z32', '77386006', 'ARB', 'PREGNANCY', 'pregnancy_status', NULL, NULL),
+    ('CD0009', 'Đang mang thai', 'Pregnancy', 'absolute', 'Ức chế Renin trực tiếp', 'Aliskiren', 'Z32', '77386006', 'DIRECT_RENIN_INHIBITOR', 'PREGNANCY', 'pregnancy_status', NULL, NULL),
+    ('CD0010', 'Tăng canxi máu', 'Hypercalcaemia', 'relative', 'LT Thiazide', NULL, 'E83.5', '66931009', 'THIAZIDE_LIKE_DIURETIC', 'HYPERCALCAEMIA', 'hypercalcaemia', NULL, NULL),
+    ('CD0039', 'Tăng canxi máu', 'Hypercalcaemia', 'relative', 'LT Thiazide-like', NULL, 'E83.5', '66931009', 'THIAZIDE_LIKE_DIURETIC', 'HYPERCALCAEMIA', 'hypercalcaemia', NULL, NULL),
+    ('CD0011', 'Kali máu thấp', 'Hypokalemia', 'relative', 'LT Thiazide', NULL, 'E87.6', '43339004', 'THIAZIDE_LIKE_DIURETIC', 'HYPOKALAEMIA', 'hypokalaemia', NULL, NULL),
+    ('CD0040', 'Kali máu thấp', 'Hypokalemia', 'relative', 'LT Thiazide-like', NULL, 'E87.6', '43339004', 'THIAZIDE_LIKE_DIURETIC', 'HYPOKALAEMIA', 'hypokalaemia', NULL, NULL),
+    ('CD0012', 'Hen', 'Asthma', 'absolute', 'CB', NULL, 'J45.9', '195967001', 'BETA_BLOCKER', 'ASTHMA', 'asthma_severity', NULL, NULL),
+    ('CD0013', 'Bloc xoang nhĩ', 'Sinoatrial block', 'absolute', 'CB', NULL, 'I45.5', '65778007', 'BETA_BLOCKER', 'SINOATRIAL_BLOCK', 'sinoatrial_block', NULL, NULL),
+    ('CD0014', 'Bloc xoang nhĩ', 'Sinoatrial block', 'absolute', 'CKCa Non-DHP', NULL, 'I45.5', '65778007', 'NON_DIHYDROPYRIDINE_CCB', 'SINOATRIAL_BLOCK', 'sinoatrial_block', NULL, NULL),
+    ('CD0015', 'Bloc nhĩ-thất cao độ', 'High-grade atrioventricular block', 'absolute', 'CB', NULL, 'I44.1', '28189009', 'BETA_BLOCKER', 'HIGH_GRADE_ATRIOVENTRICULAR_BLOCK', 'AV_block_grade', NULL, NULL),
+    ('CD0016', 'Bloc nhĩ-thất cao độ', 'High-grade atrioventricular block', 'absolute', 'CKCa Non-DHP', NULL, 'I44.1', '28189009', 'NON_DIHYDROPYRIDINE_CCB', 'HIGH_GRADE_ATRIOVENTRICULAR_BLOCK', 'AV_block_grade', NULL, NULL),
+    ('CD0017', 'Nhịp tim chậm (<60 lần/phút)', 'Bradycardia (<60 beats/min)', 'absolute', 'CB', NULL, 'R00.1', '48867003', 'BETA_BLOCKER', 'BRADYCARDIA_60_BEATS_MIN', 'heart_rate', '<', 60),
+    ('CD0018', 'Nhịp tim chậm (<60 lần/phút)', 'Bradycardia (<60 beats/min)', 'absolute', 'CKCa Non-DHP', NULL, 'R00.1', '48867003', 'NON_DIHYDROPYRIDINE_CCB', 'BRADYCARDIA_60_BEATS_MIN', 'heart_rate', '<', 60),
+    ('CD0019', 'Vận động viên', 'Athlete', 'relative', 'CB', NULL, 'Z02.5', NULL, 'BETA_BLOCKER', 'ATHLETE', 'athlete_status', NULL, NULL),
+    ('CD0020', 'Nhịp tim nhanh', 'Tachycardia', 'relative', 'CKCa DHP', NULL, 'R00.0', '3424008', 'DIHYDROPYRIDINE_CCB', 'TACHYCARDIA', 'heart_rate', '>', 100),
+    ('CD0021', 'Suy tim EF giảm, NYHA III hoặc IV', 'Heart failure with reduced EF, NYHA class III or IV', 'relative', 'CKCa DHP', NULL, 'I50.2', '417996009', 'DIHYDROPYRIDINE_CCB', 'HEART_FAILURE_WITH_REDUCED_EF_NYHA_CLASS_III_OR_IV', 'heart_failure_reduced_ef_nyha_3_or_4', NULL, NULL),
+    ('CD0022', 'Tiền sử phù chân nặng', 'History of severe leg oedema', 'relative', 'CKCa DHP', NULL, 'R60.0', '271809000', 'DIHYDROPYRIDINE_CCB', 'HISTORY_OF_SEVERE_LEG_OEDEMA', 'severe_leg_edema_history', NULL, NULL),
+    ('CD0023', 'Rối loạn chức năng tâm thu thất trái (LVEF <40%)', 'Left ventricular systolic dysfunction (LVEF <40%)', 'absolute', 'CKCa Non-DHP', NULL, 'I51.9', '134401001', 'NON_DIHYDROPYRIDINE_CCB', 'LEFT_VENTRICULAR_SYSTOLIC_DYSFUNCTION_LVEF_40', 'LVEF', '<', 40),
+    ('CD0024', 'Táo bón', 'Constipation', 'relative', 'CKCa Non-DHP', NULL, 'K59.0', '14760008', 'NON_DIHYDROPYRIDINE_CCB', 'CONSTIPATION', 'constipation', NULL, NULL),
+    ('CD0025', 'Tiền sử phù mạch', 'History of angioedema', 'absolute', 'ƯCMC', NULL, 'T78.3', '41291007', 'ACE_INHIBITOR', 'HISTORY_OF_ANGIOEDEMA', 'angioedema_history', NULL, NULL),
+    ('CD0026', 'Kali máu cao', 'Hyperkalemia', 'absolute', 'ƯCMC', NULL, 'E87.5', '14140009', 'ACE_INHIBITOR', 'HYPERKALAEMIA_5_5_MMOL_L', 'serum_potassium', '>', 5.5),
+    ('CD0027', 'Kali máu cao', 'Hyperkalemia', 'absolute', 'CTTA', NULL, 'E87.5', '14140009', 'ARB', 'HYPERKALAEMIA_5_5_MMOL_L', 'serum_potassium', '>', 5.5),
+    ('CD0028', 'Kali máu cao', 'Hyperkalemia', 'absolute', 'MRA (LT giữ Kali)', NULL, 'E87.5', '14140009', 'MRA', 'HYPERKALAEMIA', 'serum_potassium', '>', 5.5),
+    ('CD0029', 'Hẹp động mạch thận hai bên', 'Bilateral renal artery stenosis', 'absolute', 'ƯCMC', NULL, 'I70.1', '425414000', 'ACE_INHIBITOR', 'BILATERAL_RENAL_ARTERY_STENOSIS', 'renal_artery_stenosis', NULL, NULL),
+    ('CD0030', 'Hẹp động mạch thận hai bên', 'Bilateral renal artery stenosis', 'absolute', 'CTTA', NULL, 'I70.1', '425414000', 'ARB', 'BILATERAL_RENAL_ARTERY_STENOSIS', 'renal_artery_stenosis', NULL, NULL),
+    ('CD0031', 'Suy thận cấp', 'Acute kidney injury', 'absolute', 'MRA (LT giữ Kali)', NULL, 'N17.9', '14669001', 'MRA', 'ACUTE_KIDNEY_INJURY', 'acute_kidney_injury', NULL, NULL),
+    ('CD0032', 'Suy thận nặng (eGFR <30 mL/phút)', 'Severe renal impairment (eGFR <30 mL/min)', 'absolute', 'MRA (LT giữ Kali)', NULL, 'N18.4', '431857002', 'MRA', 'SEVERE_RENAL_IMPAIRMENT_EGFR_30_ML_MIN', 'eGFR', '<', 30),
+    ('CD0033', 'Phụ nữ trong độ tuổi sinh sản không sử dụng biện pháp tránh thai', 'Woman of childbearing potential not using contraception', 'relative', 'ƯCMC', NULL, 'Z30.9', NULL, 'ACE_INHIBITOR', 'WOMAN_OF_CHILDBEARING_POTENTIAL_NOT_USING_CONTRACEPTION', 'woman_of_childbearing_potential_not_using_contraception', NULL, NULL),
+    ('CD0034', 'Phụ nữ trong độ tuổi sinh sản không sử dụng biện pháp tránh thai', 'Woman of childbearing potential not using contraception', 'relative', 'CTTA', NULL, 'Z30.9', NULL, 'ARB', 'WOMAN_OF_CHILDBEARING_POTENTIAL_NOT_USING_CONTRACEPTION', 'woman_of_childbearing_potential_not_using_contraception', NULL, NULL)
+ON CONFLICT (contraindication_id) DO UPDATE SET
+    disease_finding_vn = EXCLUDED.disease_finding_vn,
+    disease_finding_eng = EXCLUDED.disease_finding_eng,
+    contraindication_type = EXCLUDED.contraindication_type,
+    drug_group = EXCLUDED.drug_group,
+    drugs = EXCLUDED.drugs,
+    icd10_vn_1_decimal = EXCLUDED.icd10_vn_1_decimal,
+    snomedct_2026_06_01 = EXCLUDED.snomedct_2026_06_01,
+    target = EXCLUDED.target,
+    finding_key = EXCLUDED.finding_key,
+    fact_key = EXCLUDED.fact_key,
+    operator = EXCLUDED.operator,
+    threshold = EXCLUDED.threshold;
+
 COMMIT;
