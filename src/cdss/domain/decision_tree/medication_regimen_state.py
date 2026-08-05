@@ -61,11 +61,7 @@ def derive_effective_regimen(steps: list[RegimenUpdateStep]) -> EffectiveMedicat
                 for component in effective.additions
                 if not any(_matches_removal(component, item) for item in removed)
             ]
-            effective.status = (
-                "choice_required"
-                if len(effective.base_options) > 1
-                else "complete"
-            )
+            effective.status = "choice_required" if len(effective.base_options) > 1 else "complete"
         elif step.keyword is RegimenKeyword.AVOID:
             effective.constraints.extend(step_components(step))
     effective.additions = _unique_components(effective.additions)
@@ -109,22 +105,17 @@ def _matches_removal(component: RegimenComponent, removed: RegimenComponent) -> 
     if removed.selector_kind != component.selector_kind:
         return False
     if removed.selector_kind == "class":
-        return (
-            component.code == removed.code
-            and (
-                removed.subgroup is None
-                or (
-                    component.subgroup is not None
-                    and component.subgroup.casefold() == removed.subgroup.casefold()
-                )
+        return component.code == removed.code and (
+            removed.subgroup is None
+            or (
+                component.subgroup is not None
+                and component.subgroup.casefold() == removed.subgroup.casefold()
             )
         )
     if removed.medicine_id and component.medicine_id:
         return removed.medicine_id == component.medicine_id
     return bool(
-        removed.name
-        and component.name
-        and removed.name.casefold() == component.name.casefold()
+        removed.name and component.name and removed.name.casefold() == component.name.casefold()
     )
 
 

@@ -116,9 +116,7 @@ def test_active_regimen_dual_ras_blockade_is_an_interaction_finding() -> None:
         ],
     )
 
-    assert any(
-        item["reason_code"] == "DUAL_RAS_BLOCKADE" for item in profile["findings"]
-    )
+    assert any(item["reason_code"] == "DUAL_RAS_BLOCKADE" for item in profile["findings"])
     assert "RAS_COMBINATION" in profile["blocked_targets"]
 
 

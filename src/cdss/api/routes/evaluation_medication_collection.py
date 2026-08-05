@@ -25,16 +25,12 @@ def collect_payload(
     raw_medicines = payload.get("medicines")
     if isinstance(raw_medicines, (list, tuple)):
         medicines.extend(
-            copied
-            for item in raw_medicines
-            if (copied := copy_json_object(item)) is not None
+            copied for item in raw_medicines if (copied := copy_json_object(item)) is not None
         )
     raw_options = payload.get("medicine_options")
     if isinstance(raw_options, (list, tuple)):
         options.extend(
-            copied
-            for item in raw_options
-            if (copied := copy_json_object(item)) is not None
+            copied for item in raw_options if (copied := copy_json_object(item)) is not None
         )
 
 

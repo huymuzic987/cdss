@@ -88,13 +88,9 @@ def contraindication_removal_step(
         node_key=_NODE_KEY,
         keyword=RegimenKeyword.REMOVE,
         text_en=(
-            "Remove matched contraindicated drug groups from the final regimen: "
-            f"{details_en}"
+            f"Remove matched contraindicated drug groups from the final regimen: {details_en}"
         ),
-        text_vi=(
-            "Loại bỏ các nhóm thuốc chống chỉ định khỏi phác đồ cuối cùng: "
-            f"{details_vi}"
-        ),
+        text_vi=(f"Loại bỏ các nhóm thuốc chống chỉ định khỏi phác đồ cuối cùng: {details_vi}"),
         source="context",
         components=components,
         warnings=warnings,

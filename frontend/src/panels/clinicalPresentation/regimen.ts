@@ -157,7 +157,8 @@ export function parseFinalRegimenOptions(
   let candidates = bases.length > 0 ? bases : additions.length > 0 ? [[]] : []
   let fallbackAdditions = additions
   if (candidates.length === 0) {
-    const steps = Array.isArray(objectValue(value)?.steps) ? objectValue(value)?.steps : []
+    const rawSteps = objectValue(value)?.steps
+    const steps = Array.isArray(rawSteps) ? rawSteps : []
     const lastMaterialStep = [...steps].reverse().map((item) => objectValue(item))
       .find((step) => step && !['REMOVE', 'STOP', 'AVOID'].includes(stringValue(step.keyword).toLocaleUpperCase()) && (components(step.components, locale).length > 0 || (Array.isArray(step.alternatives) && step.alternatives.length > 0)))
     const alternatives = Array.isArray(lastMaterialStep?.alternatives)

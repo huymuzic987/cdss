@@ -68,7 +68,7 @@ def _plan(*nodes: NodeDefinition, runtime: Mapping[str, Any] | None = None):
                     node_type=NodeType.INFERENCE,
                 )
                 for index, node in enumerate(nodes, start=1)
-            ]
+            ],
         ),
     )
     return build_traversed_medication_regimen(
@@ -166,12 +166,9 @@ def test_t6_subgroup_contraindication_preserves_the_remaining_class() -> None:
     assert plan.steps[-1].components[0].code == "D"
     assert plan.steps[-1].components[0].subgroup == "LT Thiazide"
     assert "D (LT Thiazide)" in plan.steps[-1].text_en
-    assert plan.steps[-1].warnings == [
-        "CONTRAINDICATION:THIAZIDE_LIKE_DIURETIC:D (LT Thiazide)"
-    ]
+    assert plan.steps[-1].warnings == ["CONTRAINDICATION:THIAZIDE_LIKE_DIURETIC:D (LT Thiazide)"]
     assert [
-        [item.code for item in option.components]
-        for option in plan.effective_regimen.base_options
+        [item.code for item in option.components] for option in plan.effective_regimen.base_options
     ] == [["A", "C"], ["A", "D"]]
     assert plan.effective_regimen.stopped_components[-1].subgroup == "LT Thiazide"
 
@@ -208,8 +205,7 @@ def test_t6_relative_contraindication_does_not_remove_the_drug_subgroup() -> Non
 
     assert all(step.keyword is not RegimenKeyword.REMOVE for step in plan.steps)
     assert [
-        [item.code for item in option.components]
-        for option in plan.effective_regimen.base_options
+        [item.code for item in option.components] for option in plan.effective_regimen.base_options
     ] == [["A", "C"], ["A", "D"]]
 
 

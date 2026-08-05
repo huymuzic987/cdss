@@ -15,9 +15,7 @@ def raw_matches_removal(raw: Mapping[str, Any], removed: RegimenComponent) -> bo
             return True
         name = removed.name
         return bool(
-            name
-            and isinstance(raw.get("name"), str)
-            and raw["name"].casefold() == name.casefold()
+            name and isinstance(raw.get("name"), str) and raw["name"].casefold() == name.casefold()
         )
     drug_class = raw.get("drug_class")
     if removed.code != drug_class and not (
@@ -34,19 +32,13 @@ def component_matches_removal(
     if removed.selector_kind != component.selector_kind:
         return False
     if removed.selector_kind == "class":
-        return (
-            removed.code == component.code
-            and (
-                removed.subgroup is None
-                or subgroup_matches(component.subgroup, removed.subgroup)
-            )
+        return removed.code == component.code and (
+            removed.subgroup is None or subgroup_matches(component.subgroup, removed.subgroup)
         )
     if removed.medicine_id and component.medicine_id:
         return removed.medicine_id == component.medicine_id
     return bool(
-        removed.name
-        and component.name
-        and removed.name.casefold() == component.name.casefold()
+        removed.name and component.name and removed.name.casefold() == component.name.casefold()
     )
 
 
