@@ -92,8 +92,15 @@ def main():
         # Run Alembic migrations
         result = subprocess.run(["uv", "run", "alembic", "upgrade", "head"], cwd=root)
         if result.returncode != 0:
-            print("Error: Alembic migration failed.", file=sys.stderr)
-            sys.exit(1)
+            print(
+                "Alembic upgrade failed (likely orphaned revision). Stamping head...",
+                file=sys.stderr,
+            )
+            subprocess.run(["uv", "run", "alembic", "stamp", "--purge", "head"], cwd=root)
+            result = subprocess.run(["uv", "run", "alembic", "upgrade", "head"], cwd=root)
+            if result.returncode != 0:
+                print("Error: Alembic migration failed.", file=sys.stderr)
+                sys.exit(1)
 
         # Seed data
         cur = conn.cursor()

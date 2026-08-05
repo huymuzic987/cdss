@@ -92,8 +92,16 @@ ${LOCK_PROBE_LOCATION}
         proxy_pass http://backend:8000/fhir/;
     }
 
-    location /dashboard {
-        proxy_pass http://backend:8000/dashboard;
+    location = /dashboard {
+        try_files \$uri \$uri/ /index.html;
+    }
+
+    location = /dashboard/ {
+        try_files \$uri \$uri/ /index.html;
+    }
+
+    location /dashboard/ {
+        proxy_pass http://backend:8000/dashboard/;
     }
 
     location / {
