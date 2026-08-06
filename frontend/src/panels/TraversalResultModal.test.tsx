@@ -177,7 +177,7 @@ describe('TraversalResultModal', () => {
     expect(screen.queryByRole('dialog', { name: 'B drug details' })).toBeNull()
   })
 
-  it('shows subgroup detail and collects only medicines from that subgroup', async () => {
+  it('keeps the final row at group level and filters the popup by explicit subgroup', async () => {
     const regimenPresentation = {
       ...presentation,
       regimen_plan: {
@@ -211,7 +211,8 @@ describe('TraversalResultModal', () => {
     renderModal({ ...result, actions: [action] })
 
     const component = document.querySelector('.cds-regimen-component') as HTMLElement
-    expect(within(component).getByText('C (DHP)')).toBeTruthy()
+    expect(within(component).getByText('C')).toBeTruthy()
+    expect(within(component).queryByText('C (DHP)')).toBeNull()
     expect(within(component).getByText('Low dose')).toBeTruthy()
     expect(within(component).queryByText('2.5 mg')).toBeNull()
     expect(within(component).queryByText('120 mg')).toBeNull()
@@ -220,6 +221,47 @@ describe('TraversalResultModal', () => {
     const dialog = screen.getByRole('dialog', { name: 'C drug details' })
     expect(within(dialog).getByText('Amlodipine')).toBeTruthy()
     expect(within(dialog).queryByText('Diltiazem')).toBeNull()
+  })
+
+  it('shows every medicine in a group when no subgroup is explicit', async () => {
+    const regimenPresentation = {
+      ...presentation,
+      regimen_plan: {
+        schema_version: '1.0',
+        steps: [],
+        effective_regimen: {
+          base_options: [],
+          additions: [{ selector_kind: 'class', code: 'C' }],
+          stopped_components: [],
+          constraints: [],
+        },
+        catalog_by_class: {
+          C: [
+            {
+              drug_id: 'DRUG-DHP', name: 'Amlodipine', drug_class: 'C', subgroup: 'CKCa DHP',
+              route: 'Oral', dose_low: '2.5 mg', dose_usual: '5 mg', dose_max: '10 mg', snomed_code: '1',
+            },
+            {
+              drug_id: 'DRUG-NON-DHP', name: 'Diltiazem', drug_class: 'C', subgroup: 'CKCa Non-DHP',
+              route: 'Oral', dose_low: '120 mg', dose_usual: '180 mg', dose_max: '240 mg', snomed_code: '2',
+            },
+          ],
+        },
+      },
+    }
+    const action = {
+      ...result.actions[0]!,
+      payload: { ...result.actions[0]!.payload, presentation: regimenPresentation },
+    }
+
+    renderModal({ ...result, actions: [action] })
+
+    const component = document.querySelector('.cds-regimen-component') as HTMLElement
+    expect(within(component).getByText('C')).toBeTruthy()
+    await userEvent.setup().click(component)
+    const dialog = screen.getByRole('dialog', { name: 'C drug details' })
+    expect(within(dialog).getByText('Amlodipine')).toBeTruthy()
+    expect(within(dialog).getByText('Diltiazem')).toBeTruthy()
   })
 
   it('toggles the drug collection path independently from the final regimen', async () => {

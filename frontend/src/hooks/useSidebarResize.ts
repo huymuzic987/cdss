@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 export function useSidebarResize() {
-  const [width, setWidth] = useState(320)
+  const [width, setWidth] = useState(380)
   const [isResizing, setIsResizing] = useState(false)
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -14,8 +14,8 @@ export function useSidebarResize() {
 
     const handleMouseMove = (e: MouseEvent) => {
       const newWidth = window.innerWidth - e.clientX
-      // Constrain sidebar width between 240px and 600px
-      if (newWidth >= 240 && newWidth <= 600) {
+      // Keep the detail panel useful without allowing it to take over the canvas.
+      if (newWidth >= 280 && newWidth <= 640) {
         setWidth(newWidth)
       }
     }

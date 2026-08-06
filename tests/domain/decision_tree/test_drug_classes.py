@@ -142,6 +142,19 @@ def test_build_medicine_options_expands_combination_options() -> None:
     assert "Amlodipine" in _medicine_names(options[0], "C")
 
 
+def test_build_medicine_options_deduplicates_reordered_combinations() -> None:
+    context = {
+        "treatment_preferences": {
+            "combination_options": [["A", "C"], ["C", "A"], ["A", "D"]],
+        }
+    }
+
+    options = build_medicine_options(context, _FakeMedicineRepository())
+
+    assert options is not None
+    assert [option["classes"] for option in options] == [["A", "C"], ["A", "D"]]
+
+
 def test_build_medicine_options_excludes_iv_only_and_unavailable_drugs() -> None:
     context = {"treatment_preferences": {"combination_options": [["C"]]}}
 

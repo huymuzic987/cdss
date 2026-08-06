@@ -31,7 +31,11 @@ ACTION_SELECTORS: dict[str, list[list[str]]] = {
     ],
     "ACUTE_ISCHEMIC_STROKE_THERAPY": [["Labetalol"], ["Nicardipine"], ["Nitroprusside"]],
     "ACUTE_INTRACEREBRAL_HEMORRHAGE_THERAPY": [["Nitroglycerin"], ["Labetalol"], ["Urapidil"]],
-    "ACUTE_CARDIOGENIC_PULMONARY_EDEMA_THERAPY": [["Labetalol"], ["Metoprolol Succinate"]],
+    "ACUTE_CARDIOGENIC_PULMONARY_EDEMA_THERAPY": [
+        ["Labetalol"],
+        ["Metoprolol Succinate"],
+        ["Metoprolol Tartrate"],
+    ],
     "ECLAMPSIA_SEVERE_PREECLAMPSIA_HELLP_THERAPY": [["Labetalol"], ["Nicardipine"]],
     "MALIGNANT_HYPERTENSION_TMA_AKI_THERAPY": [
         ["Labetalol"],

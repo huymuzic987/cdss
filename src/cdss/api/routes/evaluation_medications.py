@@ -6,6 +6,7 @@ from typing import Any
 
 from cdss.api.routes.evaluation_medication_collection import (
     collect_action_type_ids,
+    collect_inference_group_ids,
     collect_payload,
     collect_text_ids,
     selected_classes,
@@ -75,6 +76,12 @@ def enrich_inferred_medications(
             catalog,
             drug_ids,
             text=f"{node.text_en} {node.text_vi}",
+        )
+        collect_inference_group_ids(
+            f"{node.text_en} {node.text_vi}",
+            catalog,
+            drug_ids,
+            node_key=entry.node_key,
         )
 
     medicines, _ = filter_raw_medicines(medicines, runtime_input, clinical_context=clinical_context)
@@ -154,8 +161,14 @@ def _merge_regimen(
         payload["medication_safety"] = safety
     classes = selected_classes(medicines, options)
     if classes:
+        plan_catalog_by_class = regimen_plan.get("catalog_by_class")
         payload["medicine_catalog_by_class"] = {
-            code: [medicine_json(item) for item in catalog if item.drug_class == code]
+            code: (
+                plan_catalog_by_class[code]
+                if isinstance(plan_catalog_by_class, Mapping)
+                and isinstance(plan_catalog_by_class.get(code), list)
+                else [medicine_json(item) for item in catalog if item.drug_class == code]
+            )
             for code in sorted(classes)
         }
     if regimen_plan.get("steps"):

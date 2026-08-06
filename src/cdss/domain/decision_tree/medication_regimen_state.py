@@ -7,6 +7,11 @@ from cdss.domain.decision_tree.medication_regimen_contracts import (
     RegimenKeyword,
     RegimenUpdateStep,
 )
+from cdss.domain.decision_tree.medication_regimen_state_helpers import (
+    matches_removal,
+    merge_alternative_choices,
+    unique_components,
+)
 
 
 def derive_effective_regimen(steps: list[RegimenUpdateStep]) -> EffectiveMedicationRegimen:
@@ -14,10 +19,10 @@ def derive_effective_regimen(steps: list[RegimenUpdateStep]) -> EffectiveMedicat
     for step in steps:
         if step.keyword is RegimenKeyword.START:
             incoming = step.alternatives or [RegimenAlternative(components=step.components)]
-            effective.base_options = _merge_alternative_choices(effective.base_options, incoming)
+            effective.base_options = merge_alternative_choices(effective.base_options, incoming)
         elif step.keyword is RegimenKeyword.SELECT:
             if step.alternatives:
-                effective.base_options = _merge_alternative_choices(
+                effective.base_options = merge_alternative_choices(
                     effective.base_options, step.alternatives
                 )
                 if len(effective.base_options) > 1:
@@ -48,7 +53,7 @@ def derive_effective_regimen(steps: list[RegimenUpdateStep]) -> EffectiveMedicat
                     components=[
                         component
                         for component in option.components
-                        if not any(_matches_removal(component, item) for item in removed)
+                        if not any(matches_removal(component, item) for item in removed)
                     ]
                 )
                 for option in effective.base_options
@@ -59,14 +64,14 @@ def derive_effective_regimen(steps: list[RegimenUpdateStep]) -> EffectiveMedicat
             effective.additions = [
                 component
                 for component in effective.additions
-                if not any(_matches_removal(component, item) for item in removed)
+                if not any(matches_removal(component, item) for item in removed)
             ]
             effective.status = "choice_required" if len(effective.base_options) > 1 else "complete"
         elif step.keyword is RegimenKeyword.AVOID:
             effective.constraints.extend(step_components(step))
-    effective.additions = _unique_components(effective.additions)
-    effective.stopped_components = _unique_components(effective.stopped_components)
-    effective.constraints = _unique_components(effective.constraints)
+    effective.additions = unique_components(effective.additions)
+    effective.stopped_components = unique_components(effective.stopped_components)
+    effective.constraints = unique_components(effective.constraints)
     return effective
 
 
@@ -75,112 +80,3 @@ def step_components(step: RegimenUpdateStep) -> list[RegimenComponent]:
         *step.components,
         *(component for alternative in step.alternatives for component in alternative.components),
     ]
-
-
-def _unique_components(components: list[RegimenComponent]) -> list[RegimenComponent]:
-    output: list[RegimenComponent] = []
-    seen: set[tuple[str | None, ...]] = set()
-    for component in components:
-        identity = (
-            component.selector_kind,
-            component.code,
-            component.medicine_id,
-            component.name,
-            component.subgroup,
-            component.dose_strategy,
-            component.dose,
-            component.route,
-            component.frequency,
-            component.duration,
-        )
-        if identity not in seen:
-            seen.add(identity)
-            output.append(component)
-    return output
-
-
-def _matches_removal(component: RegimenComponent, removed: RegimenComponent) -> bool:
-    """Match final class removals without confusing A/B/C/D subgroups."""
-
-    if removed.selector_kind != component.selector_kind:
-        return False
-    if removed.selector_kind == "class":
-        return component.code == removed.code and (
-            removed.subgroup is None
-            or (
-                component.subgroup is not None
-                and component.subgroup.casefold() == removed.subgroup.casefold()
-            )
-        )
-    if removed.medicine_id and component.medicine_id:
-        return removed.medicine_id == component.medicine_id
-    return bool(
-        removed.name and component.name and removed.name.casefold() == component.name.casefold()
-    )
-
-
-def _merge_alternative_choices(
-    existing: list[RegimenAlternative],
-    incoming: list[RegimenAlternative],
-) -> list[RegimenAlternative]:
-    """Preserve independent OR choices without duplicating an existing choice."""
-
-    incoming = [option for option in incoming if option.components]
-    if not incoming:
-        return existing
-    if not existing:
-        return incoming
-    if all(
-        any(_contains_components(option.components, choice.components) for choice in incoming)
-        for option in existing
-    ):
-        return existing
-
-    merged = [
-        RegimenAlternative(components=_unique_components([*base.components, *choice.components]))
-        for base in existing
-        for choice in incoming
-    ]
-    output: list[RegimenAlternative] = []
-    seen: set[tuple[tuple[str | None, ...], ...]] = set()
-    for option in merged:
-        signature = tuple(_component_identity(item) for item in option.components)
-        if signature not in seen:
-            seen.add(signature)
-            output.append(option)
-    return output
-
-
-def _contains_components(
-    available: list[RegimenComponent],
-    required: list[RegimenComponent],
-) -> bool:
-    identities = {_choice_identity(item) for item in available}
-    return all(_choice_identity(item) in identities for item in required)
-
-
-def _choice_identity(component: RegimenComponent) -> tuple[str | None, ...]:
-    """Identify a selected drug independently of its step-specific dose."""
-
-    return (
-        component.selector_kind,
-        component.code,
-        component.medicine_id,
-        component.name,
-        component.subgroup,
-    )
-
-
-def _component_identity(component: RegimenComponent) -> tuple[str | None, ...]:
-    return (
-        component.selector_kind,
-        component.code,
-        component.medicine_id,
-        component.name,
-        component.subgroup,
-        component.dose_strategy,
-        component.dose,
-        component.route,
-        component.frequency,
-        component.duration,
-    )

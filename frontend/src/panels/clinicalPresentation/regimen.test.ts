@@ -157,7 +157,7 @@ describe('parseRegimenPlan', () => {
     ])
   })
 
-  it('preserves subgroup detail from structured class names', () => {
+  it('uses explicit subgroup fields for popup filtering while keeping group labels', () => {
     const catalog = {
       A: [
         { id: 'ace', name: 'ACE', group: 'A', subgroup: 'UCMC', route: '', doseLow: '', doseUsual: '', doseMax: '', snomedCode: '' },
@@ -173,12 +173,12 @@ describe('parseRegimenPlan', () => {
       effective_regimen: {
         base_options: [
           { components: [
-            { selector_kind: 'class', code: 'A', name: 'A (ARNI or CTTA or UCMC)' },
-            { selector_kind: 'class', code: 'C', name: 'Dihydropyridine CCB' },
+            { selector_kind: 'class', code: 'A', name: 'A', subgroup: 'UCMC / CTTA' },
+            { selector_kind: 'class', code: 'C', name: 'C', subgroup: 'CKCa DHP' },
           ] },
           { components: [
-            { selector_kind: 'class', code: 'A', name: 'A (ARNI or CTTA or UCMC)' },
-            { selector_kind: 'class', code: 'C', name: 'Non-DHP CCB' },
+            { selector_kind: 'class', code: 'A', name: 'A', subgroup: 'UCMC / CTTA' },
+            { selector_kind: 'class', code: 'C', name: 'C', subgroup: 'CKCa Non-DHP' },
           ] },
         ],
         additions: [],
@@ -201,6 +201,80 @@ describe('parseRegimenPlan', () => {
         { label: 'C', detail: 'Calcium-channel blocker', group: 'C', dose: 'Low dose', subgroup: 'CKCa Non-DHP' },
       ],
     ])
+  })
+
+  it('lets an explicit A subgroup override an earlier generic A component', () => {
+    const options = parseFinalRegimenOptions({
+      schema_version: '1.0',
+      effective_regimen: {
+        base_options: [{ components: [{ selector_kind: 'class', code: 'A' }] }],
+        additions: [{ selector_kind: 'class', code: 'A', subgroup: 'CTTA' }],
+      },
+    }, 'en')
+
+    expect(options[0]?.components).toEqual([{
+      label: 'A', detail: 'RAS (ACE inhibitor / ARB / ARNI)', group: 'A',
+      dose: 'Low dose', subgroup: 'CTTA',
+    }])
+  })
+
+  it('does not infer a popup subgroup from a component name alone', () => {
+    const options = parseFinalRegimenOptions({
+      schema_version: '1.0',
+      effective_regimen: {
+        base_options: [{ components: [{
+          selector_kind: 'class', code: 'C', name: 'Dihydropyridine CCB',
+        }] }],
+        additions: [],
+      },
+    }, 'en', {
+      C: [
+        { id: 'dhp', name: 'DHP', group: 'C', subgroup: 'CKCa DHP', route: '', doseLow: '', doseUsual: '', doseMax: '', snomedCode: '' },
+        { id: 'non-dhp', name: 'Non-DHP', group: 'C', subgroup: 'CKCa Non-DHP', route: '', doseLow: '', doseUsual: '', doseMax: '', snomedCode: '' },
+      ],
+    })
+
+    expect(options[0]?.components[0]).toEqual({
+      label: 'C', detail: 'Calcium-channel blocker', group: 'C', dose: 'Low dose',
+    })
+  })
+
+  it('promotes a class component named MRA to the MRA group', () => {
+    const options = parseFinalRegimenOptions({
+      schema_version: '1.0',
+      effective_regimen: {
+        base_options: [{ components: [{
+          selector_kind: 'class', code: 'D', name: 'Mineralocorticoid receptor antagonist',
+        }] }],
+        additions: [],
+      },
+    }, 'en')
+
+    expect(options[0]?.components[0]).toEqual({
+      label: 'MRA', detail: 'Mineralocorticoid receptor antagonist', group: 'MRA', dose: 'Low dose',
+    })
+  })
+
+  it('uses the regimen dose label for subgroup rows instead of medicine doses', () => {
+    const options = parseFinalRegimenOptions({
+      schema_version: '1.0',
+      effective_regimen: {
+        base_options: [{ components: [{
+          selector_kind: 'class',
+          code: 'C',
+          name: 'Dihydropyridine CCB',
+          subgroup: 'CKCa DHP',
+          dose: '2.5 mg / 5 - 10 mg / 10 mg',
+          dose_strategy: 'LOW_DOSE',
+        }] }],
+        additions: [],
+      },
+    }, 'en')
+
+    expect(options[0]?.components[0]).toEqual({
+      label: 'C', detail: 'Calcium-channel blocker', group: 'C',
+      dose: 'Low dose', subgroup: 'CKCa DHP',
+    })
   })
 
   it('uses MRA as a separate group and prioritizes a specific medicine name', () => {
@@ -304,7 +378,7 @@ describe('parseRegimenPlan', () => {
     expect(options[0]?.components.map((component) => component.label)).toEqual(['A', 'D'])
   })
 
-  it('shows the removed subgroup in a REMOVE step', () => {
+  it('keeps a REMOVE step at group level while preserving source text', () => {
     const [step] = parseRegimenPlan({
       schema_version: '1.0',
       steps: [{
@@ -317,7 +391,7 @@ describe('parseRegimenPlan', () => {
       }],
     }, 'en')
 
-    expect(step?.componentLabel).toBe('D (LT Thiazide)')
+    expect(step?.componentLabel).toBe('D')
     expect(step?.instruction).toContain('D (LT Thiazide)')
   })
 })

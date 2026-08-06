@@ -22,6 +22,9 @@ from cdss.domain.decision_tree.medication_regimen_state import (
     step_components,
 )
 from cdss.domain.decision_tree.medication_regimen_steps import keyword_for_node, step_for_node
+from cdss.domain.decision_tree.medication_regimen_subgroups import (
+    catalog_for_regimen_components,
+)
 from cdss.domain.decision_tree.medication_regimen_values import (
     medicine_json,
 )
@@ -100,6 +103,10 @@ def build_traversed_medication_regimen(
             selected_classes.add(matched.drug_class)
         if matched and matched.subgroup and "MRA" in matched.subgroup.upper():
             selected_classes.add("MRA")
+    selected_components = [
+        component for option in effective.base_options for component in option.components
+    ] + list(effective.additions)
+    catalog_by_regimen = catalog_for_regimen_components(selected_components, catalog)
     return MedicationRegimenPlan(
         steps=steps,
         effective_regimen=effective,
@@ -107,7 +114,7 @@ def build_traversed_medication_regimen(
         catalog_by_class={
             code: [
                 medicine_json(item)
-                for item in catalog
+                for item in catalog_by_regimen
                 if item.drug_class == code
                 or (code == "MRA" and item.subgroup is not None and "MRA" in item.subgroup.upper())
             ]

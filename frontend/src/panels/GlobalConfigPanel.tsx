@@ -13,7 +13,12 @@ export function GlobalConfigPanel({ globalNodes }: GlobalConfigPanelProps) {
       <div className="detail-field-label" style={{ marginBottom: '8px' }}>Global config</div>
       {globalNodes.map((node) => {
         const configStr = node.global_config ? JSON.stringify(node.global_config, null, 2) : ''
-        const copyText = `${node.text_en}${configStr ? '\n' + configStr : ''}`
+        const copyText = [
+          `Key: ${node.node_key}`,
+          `English: ${node.text_en}`,
+          `Vietnamese: ${node.text_vi}`,
+          configStr,
+        ].filter(Boolean).join('\n')
         return (
           <div key={node.node_key} className="detail-field" style={{ borderBottom: '1px solid var(--border-soft)', paddingBottom: '8px', marginBottom: '8px' }}>
             <div className="detail-field-header">

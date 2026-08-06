@@ -1,7 +1,7 @@
 import { createShapeId, type Editor, type TLShapeId } from 'tldraw'
 import type { TreeEdgeLayout, TreeGraphEdge, TreeGraphNode } from '../api/types'
 import type { NodePosition } from '../layout/elkLayout'
-import { NODE_HEIGHT, NODE_WIDTH } from '../layout/elkLayout'
+import { NODE_HEIGHT, NODE_WIDTH } from '../layout/nodeDimensions'
 
 export function buildTreeScene(
   editor: Editor,
@@ -41,19 +41,29 @@ export function buildTreeScene(
 
     const edgeKey = `${edge.from_node_key}->${edge.to_node_key}`
     const saved = edgeLayouts[edgeKey]
+    const fromPosition = positions.get(edge.from_node_key) ?? { x: 0, y: 0 }
+    const toPosition = positions.get(edge.to_node_key) ?? { x: 0, y: 0 }
+    // Older saved layouts did not persist binding anchors. Their absolute
+    // arrow coordinates can become detached after a node or edge is added,
+    // so use a fresh node-to-node geometry until a fully bound layout exists.
+    const boundSavedLayout = saved?.start_anchor && saved?.end_anchor ? saved : undefined
     const arrowId = createShapeId()
     editor.createShape({
       id: arrowId,
       type: 'arrow',
-      x: saved?.x ?? 0,
-      y: saved?.y ?? 0,
+      x: boundSavedLayout?.x ?? 0,
+      y: boundSavedLayout?.y ?? 0,
       meta: { edgeKey },
       props: {
         kind: arrowKind === 'elbow' ? 'elbow' : 'arc',
-        bend: saved?.bend ?? 0,
-        elbowMidPoint: saved?.elbowMidPoint ?? 0.5,
-        start: saved?.start ?? { x: 0, y: 0 },
-        end: saved?.end ?? { x: 1, y: 1 },
+        bend: boundSavedLayout?.bend ?? 0,
+        elbowMidPoint: boundSavedLayout?.elbowMidPoint ?? 0.5,
+        start: boundSavedLayout
+          ? boundSavedLayout.start
+          : { x: fromPosition.x + NODE_WIDTH / 2, y: fromPosition.y + NODE_HEIGHT },
+        end: boundSavedLayout
+          ? boundSavedLayout.end
+          : { x: toPosition.x + NODE_WIDTH / 2, y: toPosition.y },
       },
     })
     editor.createBindings([

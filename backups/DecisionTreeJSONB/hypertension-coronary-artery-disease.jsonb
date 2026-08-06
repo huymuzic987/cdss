@@ -290,6 +290,12 @@
               "path": "input.has_cabg",
               "value": true
             }
+          },
+          {
+            "edge_id": "f8e52a10-9f6d-4a2e-9a77-2c5e9e0c7d84",
+            "traversal_order": 5,
+            "to_node_key": "T9_LINK_ESSENTIAL",
+            "candidate_condition": null
           }
         ]
       },

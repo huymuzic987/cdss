@@ -11,6 +11,7 @@ from cdss.domain.decision_tree.medication_regimen_contracts import (
     RegimenAlternative,
     RegimenComponent,
 )
+from cdss.domain.decision_tree.medication_regimen_subgroups import catalog_group_matches
 from cdss.domain.decision_tree.medicine_catalog import Medicine
 
 _CLASS_TOKEN_PATTERN = re.compile(r"(?<![A-Z0-9])([ABCD])(?![A-Z0-9])")
@@ -101,11 +102,13 @@ def components_from_text(text: str, catalog: list[Medicine]) -> list[RegimenComp
     lowered = text.casefold()
     components: list[RegimenComponent] = []
     seen: set[str] = set()
+    named_medicines: list[Medicine] = []
     for medicine in catalog:
         if medicine.name.casefold() in lowered and not _negated(medicine.name, lowered):
             key = f"medicine:{medicine.drug_id}"
             if key not in seen:
                 seen.add(key)
+                named_medicines.append(medicine)
                 components.append(
                     RegimenComponent(
                         selector_kind="medicine",
@@ -113,11 +116,18 @@ def components_from_text(text: str, catalog: list[Medicine]) -> list[RegimenComp
                         name=medicine.name,
                     )
                 )
-    for code in _CLASS_TOKEN_PATTERN.findall(text.upper()):
-        key = f"class:{code}"
+    group_matches = (
+        catalog_group_matches(text, catalog)
+        if catalog
+        else [(code, None) for code in _CLASS_TOKEN_PATTERN.findall(text.upper())]
+    )
+    for code, subgroup in group_matches:
+        if any(_medicine_in_group(medicine, code) for medicine in named_medicines):
+            continue
+        key = f"class:{code}:{subgroup or ''}"
         if key not in seen:
             seen.add(key)
-            components.append(class_component(code, DEFAULT_REGIMEN_DOSE_STRATEGY))
+            components.append(class_component(code, DEFAULT_REGIMEN_DOSE_STRATEGY, subgroup))
     return components
 
 
@@ -150,6 +160,12 @@ def class_component(
         subgroup=subgroup,
         dose_strategy=dose_strategy or DEFAULT_REGIMEN_DOSE_STRATEGY,
     )
+
+
+def _medicine_in_group(medicine: Medicine, group: str) -> bool:
+    if group == "MRA":
+        return bool(medicine.subgroup and "MRA" in medicine.subgroup.upper())
+    return bool(medicine.drug_class and medicine.drug_class.casefold() == group.casefold())
 
 
 def _parse_components(value: object, defaults: Mapping[str, Any]) -> list[RegimenComponent]:

@@ -166,6 +166,20 @@ Every medication inference must store `action_payload.regimen_update`.
 The structured payload is authoritative; keys and bilingual text are
 human-readable descriptions.
 
+For legacy inference payloads, the regimen collector recognizes treatment
+groups from the inference operation/key and readable node text, then matches
+any subgroup terms against the medicine catalog. For example, phrases such as
+`dihydropyridine CCB`, `thiazide-like D`, and `A (CTTA or UCMC)` restrict the
+collected medicines to those catalog subgroups. New action types do not need a
+code mapping, but new medication inferences should still use the structured
+payload above. Avoid/stop/remove inferences are not collected as positive
+medication recommendations.
+
+An explicit subgroup selection takes precedence over an earlier generic
+mention of the same class. The catalog is filtered after that selection, so a
+valid subgroup with no cataloged medicines (for example, ARNI) contributes no
+medicine rows rather than falling back to every medicine in class A.
+
 The payload operation must match the key operation:
 
 ```json

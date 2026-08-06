@@ -2,7 +2,7 @@ import type { JsonValue } from '../../api/types'
 import type { ClinicalDecisionSupportLocale } from '../clinicalDecisionSupportMessages'
 import type { FinalRegimenComponent, FinalRegimenOption, RegimenMedicine, RegimenStep } from './types'
 import { componentLabel, isStopped } from './regimenLabels'
-import { parseRegimenCatalog, recognizeRegimenSubgroup } from './regimenCatalog'
+import { parseRegimenCatalog } from './regimenCatalog'
 import { uniqueRegimenOptions } from './regimenOptions'
 import { localized, objectValue, stringValue } from './values'
 
@@ -25,8 +25,8 @@ const GROUP_DETAILS = {
 
 type ParsedComponent = FinalRegimenComponent & { generic: boolean, identity: string }
 
-function canonicalGroup(code: string, name: string): FinalRegimenComponent['group'] {
-  const value = `${code} ${name}`.toLocaleLowerCase()
+function canonicalGroup(code: string, name: string, subgroup = ''): FinalRegimenComponent['group'] {
+  const value = `${code} ${name} ${subgroup}`.toLocaleLowerCase()
   if (/(\bsglt2i?\b|sglt2[_ -]?inhibitor|dapagliflozin|empagliflozin)/i.test(value)) return 'SGLT2i'
   if (/(\bglp-?1\s*ra\b|glp1ra|glp1[_ -]?receptor[_ -]?agonist)/i.test(value)) return 'GLP1RA'
   if (/(\bmra\b|mineralocorticoid|aldosterone antagonist|spironolactone|eplerenone)/i.test(value)) return 'MRA'
@@ -52,25 +52,26 @@ function genericGroupName(value: string, group: FinalRegimenComponent['group']):
 function parseComponent(
   value: JsonValue,
   locale: ClinicalDecisionSupportLocale,
-  catalog: Record<string, RegimenMedicine[]>,
 ): ParsedComponent | null {
   const component = objectValue(value)
   if (!component) return null
   const code = stringValue(component.code)
   const name = stringValue(component.name, code)
   if (!name) return null
-  const group = canonicalGroup(code, name)
-  const subgroup = stringValue(component.subgroup) || recognizeRegimenSubgroup(name, group, catalog)
-  const generic = genericGroupName(name, group)
+  const subgroup = stringValue(component.subgroup)
+  const group = canonicalGroup(code, name, subgroup)
+  const selectorKind = stringValue(component.selector_kind)
+  const classComponent = selectorKind === 'class' || Boolean(code && !component.medicine_id)
+  const generic = classComponent
+    || genericGroupName(name, group)
     || genericGroupName(code, group)
-    || Boolean(subgroup)
   const detail = generic && group !== 'Others'
     ? GROUP_DETAILS[group as keyof typeof GROUP_DETAILS]
     : group
   const label = generic ? group : name
   const identity = group === 'Others' ? `Others:${name.toLocaleLowerCase()}` : group
   const strategy = stringValue(component.dose_strategy, 'LOW_DOSE')
-  const dose = stringValue(component.dose)
+  const dose = (generic ? undefined : stringValue(component.dose))
     || DOSE_LABELS[strategy]?.[locale]
     || (locale === 'vi' ? 'Liều thấp' : 'Low dose')
   return {
@@ -87,10 +88,10 @@ function parseComponent(
 function components(
   value: JsonValue | undefined,
   locale: ClinicalDecisionSupportLocale,
-  catalog: Record<string, RegimenMedicine[]>,
+  _catalog: Record<string, RegimenMedicine[]>,
 ): ParsedComponent[] {
   if (!Array.isArray(value)) return []
-  return value.map((item) => parseComponent(item, locale, catalog))
+  return value.map((item) => parseComponent(item, locale))
     .filter((item): item is ParsedComponent => item !== null)
 }
 
@@ -111,11 +112,27 @@ function alternativeLabel(
     .map((item) => componentLabel(item, locale)).join(' + ')
 }
 
+function mergeSubgroups(first: string | undefined, second: string | undefined): string | undefined {
+  const values = [first, second]
+    .flatMap((value) => value?.split('/').map((part) => part.trim()) ?? [])
+    .filter(Boolean)
+  return values.length > 0 ? [...new Set(values)].join(' / ') : undefined
+}
+
 function deduplicate(items: ParsedComponent[]): FinalRegimenComponent[] {
   const selected = new Map<string, ParsedComponent>()
   for (const item of items) {
     const previous = selected.get(item.identity)
-    if (!previous || (previous.generic && !item.generic)) selected.set(item.identity, item)
+    if (!previous || (previous.generic && !item.generic)) {
+      selected.set(item.identity, item)
+    } else if (!previous.subgroup && item.subgroup) {
+      selected.set(item.identity, item)
+    } else if (previous.subgroup && item.subgroup) {
+      selected.set(item.identity, {
+        ...previous,
+        subgroup: mergeSubgroups(previous.subgroup, item.subgroup),
+      })
+    }
   }
   return [...selected.values()].map(({ generic: _generic, identity: _identity, ...item }) => item)
 }

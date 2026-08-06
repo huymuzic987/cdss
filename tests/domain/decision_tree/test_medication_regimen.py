@@ -486,6 +486,66 @@ def test_legacy_heart_failure_action_type_keeps_every_regimen_class() -> None:
     assert all(item.dose_strategy == "LOW_DOSE" for item in plan.steps[0].components)
 
 
+def test_group_mentions_do_not_turn_d_into_the_mra_subgroup() -> None:
+    combine = _node(
+        "T10_INFERENCE_COMBINE_LOW_DOSE_D_PLUS_MRA",
+        "Combine D and MRA",
+        action_payload={"action_type": "COMBINE_D_MRA"},
+    )
+
+    plan = _plan(
+        combine,
+        catalog=(
+            _catalog_item("mra-drug", "D", "MRA (LT giữ Kali)"),
+            _catalog_item("thiazide", "D", "LT Thiazide"),
+            _catalog_item("spironolactone", "MRA", "MRA (LT giữ Kali)"),
+        ),
+    )
+
+    assert [item.code for item in plan.steps[0].components] == ["D", "MRA"]
+    assert all(item.subgroup is None for item in plan.steps[0].components)
+
+
+def test_explicit_A_subgroup_limits_the_regimen_catalog() -> None:
+    add_a = _node(
+        "T10_INFERENCE_ADD_A_ARNI_OR_ARB_FOR_HFPEF",
+        "Add A (ARNI and CTTA)",
+        action_payload={"action_type": "ADD_A_ARNI_CTTA"},
+    )
+
+    plan = _plan(
+        add_a,
+        catalog=(
+            _catalog_item("ace", "A", "ƯCMC"),
+            _catalog_item("arb", "A", "CTTA"),
+        ),
+    )
+
+    assert plan.steps[0].components[0].subgroup == "CTTA"
+    assert [item["drug_id"] for item in plan.catalog_by_class["A"]] == ["arb"]
+
+
+def test_legacy_action_type_uses_inference_group_words_without_a_mapping() -> None:
+    combine = _node(
+        "T7_INFERENCE_COMBINE_THIAZIDE_LIKE_D_AND_C_FOR_AGE_70_TO_79",
+        "Prescribe D + C combination, prioritize thiazide-like D",
+        action_payload={"action_type": "PRESCRIBE_D_C_THIAZIDE_PRIORITY"},
+    )
+
+    plan = _plan(
+        combine,
+        catalog=(
+            _catalog_item("thiazide", "D", "LT Thiazide-like"),
+            _catalog_item("loop", "D", "LT quai"),
+            _catalog_item("dhp", "C", "CKCa DHP"),
+        ),
+    )
+
+    assert [item.code for item in plan.steps[0].components] == ["D", "C"]
+    assert plan.steps[0].components[0].subgroup == "LT Thiazide-like"
+    assert plan.steps[0].components[1].subgroup is None
+
+
 def test_specific_legacy_actions_recognize_catalog_subgroups() -> None:
     add_a = _node(
         "T10_INFERENCE_ADD_A_ARNI_ARB_OR_ACE_INHIBITOR_FOR_HFMREF",
@@ -657,6 +717,108 @@ def test_independent_select_survives_later_base_selection_and_repeated_start() -
         ["GLP1RA", "A", "C"],
         ["GLP1RA", "A", "D"],
     ]
+
+
+def test_repeated_a_c_or_a_d_choices_do_not_cross_product_on_subgroup_detail() -> None:
+    diabetes_choice = _node(
+        "T8_INFERENCE_SELECT_A_WITH_C_OR_D",
+        (
+            "A + C, or A + D (ACE inhibitor/ARB + calcium-channel blocker, or "
+            "ACE inhibitor/ARB + thiazide-like diuretic)"
+        ),
+        context_patch={"treatment_preferences": {"combination_options": [["A", "C"], ["A", "D"]]}},
+    )
+    generic_start = _node(
+        "T6_INFERENCE_START_LOW_DOSE_A_PLUS_C_OR_A_PLUS_D",
+        "Start one low-dose regimen: A + C or A + D",
+        action_payload={
+            "regimen_update": {
+                "operation": "START",
+                "alternatives": [
+                    {
+                        "components": [
+                            {"selector_kind": "class", "code": "A"},
+                            {"selector_kind": "class", "code": "C"},
+                        ]
+                    },
+                    {
+                        "components": [
+                            {"selector_kind": "class", "code": "A"},
+                            {"selector_kind": "class", "code": "D"},
+                        ]
+                    },
+                ],
+            }
+        },
+    )
+
+    plan = _plan(
+        diabetes_choice,
+        generic_start,
+        catalog=(_catalog_item("thiazide", "D", "LT Thiazide-like"),),
+    )
+
+    assert [
+        [component.code for component in option.components]
+        for option in plan.effective_regimen.base_options
+    ] == [["A", "C"], ["A", "D"]]
+    assert plan.effective_regimen.base_options[1].components[1].subgroup == "LT Thiazide-like"
+
+
+def test_alternative_component_order_is_not_a_distinct_regimen() -> None:
+    start = _node(
+        "T6_INFERENCE_START_LOW_DOSE_A_PLUS_C_OR_A_PLUS_D",
+        "Start A + C or A + D",
+        action_payload={
+            "regimen_update": {
+                "operation": "START",
+                "alternatives": [
+                    {
+                        "components": [
+                            {"selector_kind": "class", "code": "A"},
+                            {"selector_kind": "class", "code": "C"},
+                        ]
+                    },
+                    {
+                        "components": [
+                            {"selector_kind": "class", "code": "A"},
+                            {"selector_kind": "class", "code": "D"},
+                        ]
+                    },
+                ],
+            }
+        },
+    )
+    repeated = _node(
+        "T6_INFERENCE_SELECT_A_WITH_C_OR_D",
+        "Select C + A or D + A",
+        action_payload={
+            "regimen_update": {
+                "operation": "SELECT",
+                "alternatives": [
+                    {
+                        "components": [
+                            {"selector_kind": "class", "code": "C"},
+                            {"selector_kind": "class", "code": "A"},
+                        ]
+                    },
+                    {
+                        "components": [
+                            {"selector_kind": "class", "code": "D"},
+                            {"selector_kind": "class", "code": "A"},
+                        ]
+                    },
+                ],
+            }
+        },
+    )
+
+    plan = _plan(start, repeated)
+
+    assert [
+        [component.code for component in option.components]
+        for option in plan.effective_regimen.base_options
+    ] == [["A", "C"], ["A", "D"]]
 
 
 def test_vietnamese_word_endings_are_not_parsed_as_abcd_classes() -> None:

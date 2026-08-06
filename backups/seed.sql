@@ -1247,7 +1247,7 @@ VALUES ('247dbdb6-5338-4a9c-8138-10b7578bc149', (SELECT id FROM public.decision_
 ON CONFLICT (id) DO UPDATE SET tree_id = EXCLUDED.tree_id, node_key = EXCLUDED.node_key, node_type = EXCLUDED.node_type, text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
-VALUES ('4ce0d75e-7416-4381-b4eb-18e83f1df2c1', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency'), 'T14_ACTION_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA', 'ACTION'::public.node_type, 'Acute cardiogenic pulmonary edema: Labetalol or Metoprolol; target SBP <140 mmHg, immediate', 'Phù phổi cấp do tim: Labetalol hoặc Metoprolol; mục tiêu HATT <140 mmHg, ngay lập tức', NULL, NULL, '{"action_type": "ACUTE_CARDIOGENIC_PULMONARY_EDEMA_THERAPY", "target_timing": "IMMEDIATE", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false, "target_sbp_upper_mmhg": 140}'::jsonb, NULL, NULL, NULL, 19, '2026-07-25 11:46:28.205822+00:00', '2026-07-25 11:46:28.205822+00:00')
+VALUES ('4ce0d75e-7416-4381-b4eb-18e83f1df2c1', (SELECT id FROM public.decision_trees WHERE tree_key = 'hypertensive-emergency'), 'T14_ACTION_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA', 'ACTION'::public.node_type, 'Acute cardiogenic pulmonary edema: Labetalol or Metoprolol Succinate or Metoprolol Tartrate; target SBP <140 mmHg, immediate', 'Phù phổi cấp do tim: Labetalol hoặc Metoprolol Succinate hoặc Metoprolol Tartrate; mục tiêu HATT <140 mmHg, ngay lập tức', NULL, NULL, '{"action_type": "ACUTE_CARDIOGENIC_PULMONARY_EDEMA_THERAPY", "target_timing": "IMMEDIATE", "follow_up_mode": "NEW_ENCOUNTER", "follow_up_required": false, "target_sbp_upper_mmhg": 140}'::jsonb, NULL, NULL, NULL, 19, '2026-07-25 11:46:28.205822+00:00', '2026-07-25 11:46:28.205822+00:00')
 ON CONFLICT (id) DO UPDATE SET tree_id = EXCLUDED.tree_id, node_key = EXCLUDED.node_key, node_type = EXCLUDED.node_type, text_en = EXCLUDED.text_en, text_vi = EXCLUDED.text_vi, condition_definition = EXCLUDED.condition_definition, context_patch = EXCLUDED.context_patch, action_payload = EXCLUDED.action_payload, global_config = EXCLUDED.global_config, link_target_tree_key = EXCLUDED.link_target_tree_key, link_target_node_key = EXCLUDED.link_target_node_key, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at;
 
 INSERT INTO public.decision_nodes (id, tree_id, node_key, node_type, text_en, text_vi, condition_definition, context_patch, action_payload, global_config, link_target_tree_key, link_target_node_key, display_order, created_at, updated_at)
@@ -2281,6 +2281,12 @@ ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
 VALUES ('6d2f8535-c9ac-42df-b0ab-946bfe57b8c3', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-coronary-artery-disease' AND n.node_key = 'T9_C_BP1'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-coronary-artery-disease' AND n.node_key = 'T9_C_CABG'), 4)
+ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
+
+-- Generic CAD has no subtype-specific beta-blocker indication; continue with
+-- the essential-treatment strategy when none of the four CAD details match.
+INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
+VALUES ('f8e52a10-9f6d-4a2e-9a77-2c5e9e0c7d84', (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-coronary-artery-disease' AND n.node_key = 'T9_C_BP1'), (SELECT n.id FROM public.decision_nodes n JOIN public.decision_trees t ON t.id = n.tree_id WHERE t.tree_key = 'hypertension-coronary-artery-disease' AND n.node_key = 'T9_LINK_ESSENTIAL'), 5)
 ON CONFLICT (from_node_id, to_node_id) DO UPDATE SET traversal_order = EXCLUDED.traversal_order;
 
 INSERT INTO public.decision_edges (id, from_node_id, to_node_id, traversal_order)
@@ -4857,7 +4863,7 @@ VALUES ('DRUG0031', 'Bumetanide', 'D', 'LT quai', 'Thuốc Uống', '0.5 mg', '1
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0032', 'Furosemide', 'D', 'LT quai', 'Thuốc Uống/Thuốc Truyền Tĩnh Mạch', '20 mg BID', '40 mg BID', 'Variable', 'Bảng 10', NULL, TRUE, 'C03CA01')
+VALUES ('DRUG0032', 'Furosemide', 'D', 'LT quai', 'Thuốc Uống/Thuốc Truyền Tĩnh Mạch', '20 mg', '20 - 40 mg', '40 mg', 'Bảng 10', NULL, TRUE, 'C03CA01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
@@ -4985,7 +4991,7 @@ VALUES ('DRUG0063', 'Empagliflozin', 'SGLT2i', 'SGLT2i', 'Thuốc Uống', '10 m
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0064', 'Urapidil', NULL, 'Ức chế thụ thể Alpha giao cảm', 'Thuốc Uống/Thuốc Truyền Tĩnh Mạch', NULL, NULL, NULL, 'Mục 3.6.5', NULL, TRUE, 'C02CA06')
+VALUES ('DRUG0064', 'Urapidil', NULL, 'Ức chế thụ thể Alpha giao cảm', 'Thuốc Uống/Thuốc Truyền Tĩnh Mạch', '5 mg/giờ', '9 mg/giờ', '120 mg/giờ', 'Mục 3.6.5', NULL, TRUE, 'C02CA06')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
@@ -5429,7 +5435,7 @@ SET node_type = 'INFERENCE'::public.node_type,
       WHEN 'T13_ACTION_ADD_POTASSIUM_SPARING_DIURETIC_HIGHER_DIURETIC_DOSE_BISOPROLOL_OR_DOXAZOSIN' THEN 'Add K-sparing D, Increase D dose, or Add Bisoprolol/Doxazosin'
       WHEN 'T13_ACTION_ADD_LOW_DOSE_SPIRONOLACTONE' THEN 'Add low-dose Spironolactone to current regimen'
       WHEN 'T13_ACTION_COMBINE_A_C_D_AND_MRA' THEN 'Combine A + C + D and MRA'
-      WHEN 'T14_ACTION_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA' THEN 'Labetalol or Metoprolol'
+      WHEN 'T14_ACTION_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA' THEN 'Labetalol or Metoprolol Succinate or Metoprolol Tartrate'
       WHEN 'T14_ACTION_SELECT_NITROPRUSSIDE_OR_NITROGLYCERINE_WITH_LOOP_DIURETIC_OR_URAPIDIL_FOR_ACS' THEN 'Primary Nitroprusside or Nitroglycerine (with a loop diuretic); alternative Urapidil (with a loop diuretic)'
       WHEN 'T14_ACTION_SELECT_LABETALOL_PLUS_MAGNESIUM_SULFATE_OR_NICARDIPINE_PLUS_MAGNESIUM_SULFATE_FOR_ECLAMPSIA_PREECLAMPSIA_OR_HELLP' THEN 'Labetalol or Nicardipine plus magnesium sulfate'
       WHEN 'T14_ACTION_SELECT_LABETALOL_NICARDIPINE_OR_URAPIDIL_FOR_AIS_THROMBOLYSIS' THEN 'Primary Labetalol/Nicardipine; alternative Urapidil'
@@ -5442,7 +5448,7 @@ SET node_type = 'INFERENCE'::public.node_type,
       WHEN 'T13_ACTION_ADD_POTASSIUM_SPARING_DIURETIC_HIGHER_DIURETIC_DOSE_BISOPROLOL_OR_DOXAZOSIN' THEN 'Thêm nhóm D giữ kali, tăng liều nhóm D, hoặc thêm Bisoprolol/Doxazosin'
       WHEN 'T13_ACTION_ADD_LOW_DOSE_SPIRONOLACTONE' THEN 'Thêm Spironolactone liều thấp kết hợp với liều thuốc điều trị hiện có'
       WHEN 'T13_ACTION_COMBINE_A_C_D_AND_MRA' THEN 'Phối hợp 3 nhóm thuốc A + C + D và MRA'
-      WHEN 'T14_ACTION_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA' THEN 'Labetalol hoặc Metoprolol'
+      WHEN 'T14_ACTION_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA' THEN 'Labetalol hoặc Metoprolol Succinate hoặc Metoprolol Tartrate'
       WHEN 'T14_ACTION_SELECT_NITROPRUSSIDE_OR_NITROGLYCERINE_WITH_LOOP_DIURETIC_OR_URAPIDIL_FOR_ACS' THEN 'Ưu tiên Nitroprusside hoặc Nitroglycerine (kèm lợi tiểu quai); thay thế Urapidil (kèm lợi tiểu quai)'
       WHEN 'T14_ACTION_SELECT_LABETALOL_PLUS_MAGNESIUM_SULFATE_OR_NICARDIPINE_PLUS_MAGNESIUM_SULFATE_FOR_ECLAMPSIA_PREECLAMPSIA_OR_HELLP' THEN 'Labetalol hoặc Nicardipine phối hợp Magnesium sulfate'
       WHEN 'T14_ACTION_SELECT_LABETALOL_NICARDIPINE_OR_URAPIDIL_FOR_AIS_THROMBOLYSIS' THEN 'Ưu tiên Labetalol/Nicardipine; thay thế Urapidil'
@@ -5850,7 +5856,7 @@ WITH regimen_payloads (node_key, regimen_update) AS (
     ('T14_INFERENCE_SELECT_LABETALOL_OR_NICARDIPINE_OR_NITROPRUSSIDE_FOR_SEVERE_AIS', '{"operation":"SELECT","alternatives":[{"components":[{"selector_kind":"medicine","name":"Labetalol"}]},{"components":[{"selector_kind":"medicine","name":"Nicardipine"}]},{"components":[{"selector_kind":"medicine","name":"Nitroprusside"}]}]}'::jsonb),
     ('T14_INFERENCE_SELECT_NITROGLYCERINE_OR_LABETALOL_OR_URAPIDIL_FOR_ACUTE_ICH', '{"operation":"SELECT","alternatives":[{"components":[{"selector_kind":"medicine","name":"Nitroglycerine"}]},{"components":[{"selector_kind":"medicine","name":"Labetalol"}]},{"components":[{"selector_kind":"medicine","name":"Urapidil"}]}]}'::jsonb),
     ('T14_INFERENCE_SELECT_NITROPRUSSIDE_OR_NITROGLYCERINE_WITH_LOOP_DIURETIC_OR_URAPIDIL_FOR_ACS', '{"operation":"SELECT","alternatives":[{"components":[{"selector_kind":"medicine","name":"Nitroprusside"}]},{"components":[{"selector_kind":"medicine","name":"Nitroglycerine"},{"selector_kind":"medicine","name":"Loop diuretic"}]},{"components":[{"selector_kind":"medicine","name":"Urapidil"},{"selector_kind":"medicine","name":"Loop diuretic"}]}]}'::jsonb),
-    ('T14_INFERENCE_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA', '{"operation":"SELECT","alternatives":[{"components":[{"selector_kind":"medicine","name":"Labetalol"}]},{"components":[{"selector_kind":"medicine","name":"Metoprolol"}]}]}'::jsonb),
+    ('T14_INFERENCE_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA', '{"operation":"SELECT","alternatives":[{"components":[{"selector_kind":"medicine","name":"Labetalol"}]},{"components":[{"selector_kind":"medicine","name":"Metoprolol Succinate"}]},{"components":[{"selector_kind":"medicine","name":"Metoprolol Tartrate"}]}]}'::jsonb),
     ('T14_INFERENCE_SELECT_LABETALOL_OR_NICARDIPINE_OR_NITROPRUSSIDE_OR_URAPIDIL_FOR_MALIGNANT_HTN_TMA_AKI', '{"operation":"SELECT","alternatives":[{"components":[{"selector_kind":"medicine","name":"Labetalol"}]},{"components":[{"selector_kind":"medicine","name":"Nicardipine"}]},{"components":[{"selector_kind":"medicine","name":"Nitroprusside"}]},{"components":[{"selector_kind":"medicine","name":"Urapidil"}]}]}'::jsonb)
     ,('T9_INFERENCE_SELECT_BETA_BLOCKER_OR_CCB', '{"operation":"SELECT","alternatives":[{"components":[{"selector_kind":"class","code":"B","name":"Beta-blocker"}]},{"components":[{"selector_kind":"class","code":"C","name":"Calcium-channel blocker"}]}]}'::jsonb)
     ,('T9_INFERENCE_ADD_BETA_BLOCKER_FOR_THREE_YEARS', '{"operation":"ADD","components":[{"selector_kind":"class","code":"B","name":"Beta-blocker","duration":"3 years"}]}'::jsonb)

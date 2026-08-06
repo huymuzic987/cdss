@@ -17,26 +17,26 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 14px 10px;
+  padding: 10px 12px 8px;
   border-bottom: 1px solid var(--accent-divider);
 }
 
 .ps-header-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.ps-header-icon { font-size: 20px; line-height: 1; }
+.ps-header-icon { font-size: 18px; line-height: 1; }
 
 .ps-header-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-bright);
 }
 
 .ps-header-sub {
-  font-size: 13px;
+  font-size: 11px;
   color: var(--text-muted);
   margin-top: 1px;
 }
@@ -46,10 +46,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--bg-panel);
   color: var(--text-secondary);
   cursor: pointer;
@@ -65,7 +65,7 @@
 /* --- Starting tree selector (sticky below header) --- */
 .ps-starting-tree {
   flex-shrink: 0;
-  padding: 8px 14px;
+  padding: 7px 12px;
   border-bottom: 1px solid var(--accent-divider-soft);
   display: flex;
   flex-direction: column;

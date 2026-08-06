@@ -15,11 +15,11 @@ export function componentLabel(
   item: ParsedComponent,
   locale: ClinicalDecisionSupportLocale = 'en',
 ): string {
+  void locale
   const base = item.generic || item.detail === item.label
     ? item.label
     : `${item.label} (${item.detail})`
-  const subgroup = regimenSubgroupLabel(item.subgroup, locale)
-  return subgroup ? `${base} (${subgroup})` : base
+  return base
 }
 
 export function isStopped(item: ParsedComponent, stop: ParsedComponent): boolean {

@@ -109,7 +109,9 @@ def step_for_node(
         source = "context"
     if not components and not alternatives:
         components, alternatives = components_from_action_payload(
-            getattr(node, "action_payload", None)
+            getattr(node, "action_payload", None),
+            text=node_text,
+            catalog=catalog,
         )
         source = "legacy"
     if not components and not alternatives:

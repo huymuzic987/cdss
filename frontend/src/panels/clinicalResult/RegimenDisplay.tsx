@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom'
 import type { ExecutedReference } from '../../api/types'
 import type { ClinicalDecisionSupportLocale } from '../clinicalDecisionSupportMessages'
 import type { ClinicalPresentation, FinalRegimenComponent } from '../clinicalPresentation/types'
-import { regimenSubgroupLabel } from '../clinicalPresentation/regimenLabels'
 import { ClinicalSection } from './ClinicalSection'
 import { ComponentCatalogDetails } from './RegimenCatalogPopup'
 import { GROUP_NAMES, recommendedDoseSummary } from './RegimenCatalog'
@@ -34,8 +33,8 @@ function componentDisplayLabel(
   component: FinalRegimenComponent,
   locale: ClinicalDecisionSupportLocale,
 ): string {
-  const subgroup = regimenSubgroupLabel(component.subgroup, locale)
-  return subgroup ? `${component.label} (${subgroup})` : component.label
+  void locale
+  return component.label
 }
 
 export function RegimenDisplay({

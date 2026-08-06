@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import replace
 from types import SimpleNamespace
 from typing import cast
 
@@ -86,6 +87,74 @@ def test_malformed_medicine_class_is_ignored_when_enriching_actions() -> None:
             }
         ]
     }
+
+
+def test_hfpef_arni_ctta_inference_collects_only_catalogued_ctta_medicines() -> None:
+    ace = Medicine(
+        drug_id="DRUG-ACE",
+        name="Enalapril",
+        drug_class="A",
+        subgroup="ƯCMC",
+        route="Oral",
+        dose_low="5 mg",
+        dose_usual="10 mg",
+        dose_max="40 mg",
+        source="test",
+        link=None,
+        available=True,
+    )
+    arb = replace(
+        ace,
+        drug_id="DRUG-ARB",
+        name="Losartan",
+        subgroup="CTTA",
+    )
+    terminal = ExecutedAction(
+        tree_key="hypertension-heart-failure",
+        node_key="terminal",
+        node_type=NodeType.END,
+        text_en="Use the selected regimen",
+        text_vi="Use the selected regimen",
+        payload={},
+    )
+    node_key = "T10_INFERENCE_ADD_A_ARNI_OR_ARB_FOR_HFPEF"
+    nodes = {
+        node_key: SimpleNamespace(
+            node_type=NodeType.INFERENCE,
+            text_en="Add A (ARNI and CTTA)",
+            text_vi="Phối hợp thêm A (ARNI và CTTA)",
+            action_payload={"action_type": "ADD_A_ARNI_CTTA"},
+        )
+    }
+    repository = SimpleNamespace(get_tree=lambda _tree_key: SimpleNamespace(nodes_by_key=nodes))
+    result = cast(
+        TraversalResult,
+        SimpleNamespace(
+            context={},
+            trace=[
+                SimpleNamespace(
+                    event=TraceEvent.NODE_ENTERED,
+                    tree_key="hypertension-heart-failure",
+                    node_key=node_key,
+                )
+            ],
+            actions=[terminal],
+        ),
+    )
+
+    enriched = enrich_inferred_medications(
+        [terminal],
+        result,
+        cast(TreeGraphRepository, repository),
+        _MedicineRepository([ace, arb]),
+    )
+
+    payload = enriched[0].payload
+    assert [item["name"] for item in payload["medicines"]] == ["Losartan"]
+    assert [item["name"] for item in payload["medicine_catalog_by_class"]["A"]] == ["Losartan"]
+    assert [item["subgroup"] for item in payload["regimen_plan"]["steps"][0]["components"]] == [
+        "CTTA"
+    ]
 
 
 def test_every_positive_traversed_drug_and_regimen_reaches_terminal_presentation() -> None:
