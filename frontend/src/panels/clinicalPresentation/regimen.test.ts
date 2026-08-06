@@ -102,6 +102,22 @@ describe('parseRegimenPlan', () => {
     ])
   })
 
+  it('removes complete regimens that differ only by component order', () => {
+    const options = parseFinalRegimenOptions({
+      schema_version: '1.0',
+      effective_regimen: {
+        base_options: [
+          { components: [{ code: 'A' }, { code: 'B' }, { code: 'C' }, { code: 'D' }] },
+          { components: [{ code: 'A' }, { code: 'C' }, { code: 'D' }, { code: 'B' }] },
+        ],
+        additions: [],
+      },
+    }, 'en')
+
+    expect(options).toHaveLength(1)
+    expect(options[0]?.components.map((component) => component.label)).toEqual(['A', 'B', 'C', 'D'])
+  })
+
   it('keeps a SELECT medicine list as separate OR options', () => {
     const options = parseFinalRegimenOptions({
       schema_version: '1.0',
@@ -138,6 +154,52 @@ describe('parseRegimenPlan', () => {
 
     expect(options[0]?.components).toEqual([
       { label: 'B', detail: 'Beta-blocker', group: 'B', dose: 'Low dose' },
+    ])
+  })
+
+  it('preserves subgroup detail from structured class names', () => {
+    const catalog = {
+      A: [
+        { id: 'ace', name: 'ACE', group: 'A', subgroup: 'UCMC', route: '', doseLow: '', doseUsual: '', doseMax: '', snomedCode: '' },
+        { id: 'arb', name: 'ARB', group: 'A', subgroup: 'CTTA', route: '', doseLow: '', doseUsual: '', doseMax: '', snomedCode: '' },
+      ],
+      C: [
+        { id: 'dhp', name: 'DHP', group: 'C', subgroup: 'CKCa DHP', route: '', doseLow: '', doseUsual: '', doseMax: '', snomedCode: '' },
+        { id: 'non-dhp', name: 'Non-DHP', group: 'C', subgroup: 'CKCa Non-DHP', route: '', doseLow: '', doseUsual: '', doseMax: '', snomedCode: '' },
+      ],
+    }
+    const options = parseFinalRegimenOptions({
+      schema_version: '1.0',
+      effective_regimen: {
+        base_options: [
+          { components: [
+            { selector_kind: 'class', code: 'A', name: 'A (ARNI or CTTA or UCMC)' },
+            { selector_kind: 'class', code: 'C', name: 'Dihydropyridine CCB' },
+          ] },
+          { components: [
+            { selector_kind: 'class', code: 'A', name: 'A (ARNI or CTTA or UCMC)' },
+            { selector_kind: 'class', code: 'C', name: 'Non-DHP CCB' },
+          ] },
+        ],
+        additions: [],
+      },
+    }, 'en', catalog)
+
+    expect(options.map((option) => option.components)).toEqual([
+      [
+        {
+          label: 'A', detail: 'RAS (ACE inhibitor / ARB / ARNI)', group: 'A',
+          dose: 'Low dose', subgroup: 'UCMC / CTTA',
+        },
+        { label: 'C', detail: 'Calcium-channel blocker', group: 'C', dose: 'Low dose', subgroup: 'CKCa DHP' },
+      ],
+      [
+        {
+          label: 'A', detail: 'RAS (ACE inhibitor / ARB / ARNI)', group: 'A',
+          dose: 'Low dose', subgroup: 'UCMC / CTTA',
+        },
+        { label: 'C', detail: 'Calcium-channel blocker', group: 'C', dose: 'Low dose', subgroup: 'CKCa Non-DHP' },
+      ],
     ])
   })
 

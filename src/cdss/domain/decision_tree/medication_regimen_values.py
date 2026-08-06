@@ -138,11 +138,16 @@ def medicine_json(medicine: Medicine) -> dict[str, Any]:
     }
 
 
-def class_component(code: str, dose_strategy: str) -> RegimenComponent:
+def class_component(
+    code: str,
+    dose_strategy: str,
+    subgroup: str | None = None,
+) -> RegimenComponent:
     normalized_code = _CANONICAL_CLASS_ALIASES.get(code.strip().upper(), code.strip())
     return RegimenComponent(
         selector_kind="class",
         code=normalized_code,
+        subgroup=subgroup,
         dose_strategy=dose_strategy or DEFAULT_REGIMEN_DOSE_STRATEGY,
     )
 

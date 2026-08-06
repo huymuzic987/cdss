@@ -19,8 +19,11 @@ from cdss.domain.decision_tree.medicine_catalog import Medicine
 
 
 class _Medicines:
+    def __init__(self, catalog: tuple[Medicine, ...] = ()) -> None:
+        self.catalog = catalog
+
     def list_all(self) -> tuple[Medicine, ...]:
-        return ()
+        return self.catalog
 
     def list_by_class(self, drug_class: str) -> tuple[Medicine, ...]:
         del drug_class
@@ -29,6 +32,22 @@ class _Medicines:
     def get_by_id(self, drug_id: str) -> Medicine | None:
         del drug_id
         return None
+
+
+def _catalog_item(drug_id: str, drug_class: str, subgroup: str) -> Medicine:
+    return Medicine(
+        drug_id=drug_id,
+        name=drug_id,
+        drug_class=drug_class,
+        subgroup=subgroup,
+        route="Oral",
+        dose_low="1 mg",
+        dose_usual="2 mg",
+        dose_max="4 mg",
+        source="test",
+        link=None,
+        available=True,
+    )
 
 
 def _node(
@@ -52,7 +71,11 @@ def _node(
     )
 
 
-def _plan(*nodes: NodeDefinition, runtime: Mapping[str, Any] | None = None):
+def _plan(
+    *nodes: NodeDefinition,
+    runtime: Mapping[str, Any] | None = None,
+    catalog: tuple[Medicine, ...] = (),
+):
     graph = SimpleNamespace(nodes_by_key={node.node_key: node for node in nodes})
     repository = SimpleNamespace(get_tree=lambda _key: graph)
     result = cast(
@@ -74,7 +97,7 @@ def _plan(*nodes: NodeDefinition, runtime: Mapping[str, Any] | None = None):
     return build_traversed_medication_regimen(
         result,
         cast(TreeGraphRepository, repository),
-        _Medicines(),
+        _Medicines(catalog),
     )
 
 
@@ -461,6 +484,58 @@ def test_legacy_heart_failure_action_type_keeps_every_regimen_class() -> None:
 
     assert [item.code for item in plan.steps[0].components] == ["D", "SGLT2i", "MRA"]
     assert all(item.dose_strategy == "LOW_DOSE" for item in plan.steps[0].components)
+
+
+def test_specific_legacy_actions_recognize_catalog_subgroups() -> None:
+    add_a = _node(
+        "T10_INFERENCE_ADD_A_ARNI_ARB_OR_ACE_INHIBITOR_FOR_HFMREF",
+        "Add A (ARNI or CTTA or UCMC)",
+        action_payload={"action_type": "ADD_A_ARNI_CTTA_UCMC"},
+    )
+    add_c = _node(
+        "T10_INFERENCE_ADD_DIHYDROPYRIDINE_CCB",
+        "Add Dihydropyridine CCB",
+        action_payload={"action_type": "ADD_DIHYDROPYRIDINE_CCB"},
+    )
+
+    plan = _plan(
+        add_a,
+        add_c,
+        catalog=(
+            _catalog_item("ace", "A", "ƯCMC"),
+            _catalog_item("arb", "A", "CTTA"),
+            _catalog_item("dhp", "C", "CKCa DHP"),
+            _catalog_item("non-dhp", "C", "CKCa Non-DHP"),
+        ),
+    )
+
+    assert plan.steps[0].components[0].subgroup == "ƯCMC / CTTA"
+    assert plan.steps[1].components[0].subgroup == "CKCa DHP"
+
+
+def test_structured_subgroup_names_match_catalog_values_when_omitted() -> None:
+    add_c = _node(
+        "T10_INFERENCE_ADD_DIHYDROPYRIDINE_CCB",
+        "Add Dihydropyridine CCB",
+        action_payload={
+            "regimen_update": {
+                "operation": "ADD",
+                "components": [
+                    {"selector_kind": "class", "code": "C", "name": "Dihydropyridine CCB"}
+                ],
+            }
+        },
+    )
+
+    plan = _plan(
+        add_c,
+        catalog=(
+            _catalog_item("dhp", "C", "CKCa DHP"),
+            _catalog_item("non-dhp", "C", "CKCa Non-DHP"),
+        ),
+    )
+
+    assert plan.steps[0].components[0].subgroup == "CKCa DHP"
 
 
 def test_complete_regimen_sequence_preserves_alternatives_and_no_op_maintain() -> None:

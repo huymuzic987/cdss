@@ -2,6 +2,8 @@ import type { JsonValue } from '../../api/types'
 import type { ClinicalDecisionSupportLocale } from '../clinicalDecisionSupportMessages'
 import type { FinalRegimenComponent, FinalRegimenOption, RegimenMedicine, RegimenStep } from './types'
 import { componentLabel, isStopped } from './regimenLabels'
+import { parseRegimenCatalog, recognizeRegimenSubgroup } from './regimenCatalog'
+import { uniqueRegimenOptions } from './regimenOptions'
 import { localized, objectValue, stringValue } from './values'
 
 const DOSE_LABELS: Record<string, { en: string, vi: string }> = {
@@ -50,15 +52,18 @@ function genericGroupName(value: string, group: FinalRegimenComponent['group']):
 function parseComponent(
   value: JsonValue,
   locale: ClinicalDecisionSupportLocale,
+  catalog: Record<string, RegimenMedicine[]>,
 ): ParsedComponent | null {
   const component = objectValue(value)
   if (!component) return null
   const code = stringValue(component.code)
   const name = stringValue(component.name, code)
   if (!name) return null
-  const subgroup = stringValue(component.subgroup)
   const group = canonicalGroup(code, name)
-  const generic = genericGroupName(name, group) || genericGroupName(code, group)
+  const subgroup = stringValue(component.subgroup) || recognizeRegimenSubgroup(name, group, catalog)
+  const generic = genericGroupName(name, group)
+    || genericGroupName(code, group)
+    || Boolean(subgroup)
   const detail = generic && group !== 'Others'
     ? GROUP_DETAILS[group as keyof typeof GROUP_DETAILS]
     : group
@@ -82,20 +87,29 @@ function parseComponent(
 function components(
   value: JsonValue | undefined,
   locale: ClinicalDecisionSupportLocale,
+  catalog: Record<string, RegimenMedicine[]>,
 ): ParsedComponent[] {
   if (!Array.isArray(value)) return []
-  return value.map((item) => parseComponent(item, locale))
+  return value.map((item) => parseComponent(item, locale, catalog))
     .filter((item): item is ParsedComponent => item !== null)
 }
 
 function alternativeComponents(
   value: JsonValue,
   locale: ClinicalDecisionSupportLocale,
+  catalog: Record<string, RegimenMedicine[]>,
 ): ParsedComponent[] {
-  return components(objectValue(value)?.components, locale)
+  return components(objectValue(value)?.components, locale, catalog)
 }
 
-function alternativeLabel(value: JsonValue, locale: ClinicalDecisionSupportLocale): string { return alternativeComponents(value, locale).map(componentLabel).join(' + ') }
+function alternativeLabel(
+  value: JsonValue,
+  locale: ClinicalDecisionSupportLocale,
+  catalog: Record<string, RegimenMedicine[]>,
+): string {
+  return alternativeComponents(value, locale, catalog)
+    .map((item) => componentLabel(item, locale)).join(' + ')
+}
 
 function deduplicate(items: ParsedComponent[]): FinalRegimenComponent[] {
   const selected = new Map<string, ParsedComponent>()
@@ -109,23 +123,25 @@ function deduplicate(items: ParsedComponent[]): FinalRegimenComponent[] {
 export function parseRegimenPlan(
   value: JsonValue | undefined,
   locale: ClinicalDecisionSupportLocale,
+  catalog: Record<string, RegimenMedicine[]> = {},
 ): RegimenStep[] {
   const plan = objectValue(value)
   if (!plan || plan.schema_version !== '1.0' || !Array.isArray(plan.steps)) return []
+  const sourceCatalog = Object.keys(catalog).length > 0 ? catalog : parseRegimenCatalog(value)
   return plan.steps.flatMap((raw, index) => {
     const step = objectValue(raw)
     if (!step) return []
     const operation = stringValue(step.keyword)
-    const direct = components(step.components, locale)
+    const direct = components(step.components, locale, sourceCatalog)
     const alternatives = Array.isArray(step.alternatives)
-      ? step.alternatives.map((item) => alternativeLabel(item, locale)).filter(Boolean)
+      ? step.alternatives.map((item) => alternativeLabel(item, locale, sourceCatalog)).filter(Boolean)
       : []
-    const stepComponentLabel = direct.map(componentLabel).join(' + ')
+    const stepComponentLabel = direct.map((item) => componentLabel(item, locale)).join(' + ')
       || alternatives.join(locale === 'vi' ? ' hoặc ' : ' or ')
     const doses = Array.from(new Set(direct.map((item) => item.dose)))
     if (doses.length === 0 && Array.isArray(step.alternatives)) {
       for (const rawAlternative of step.alternatives) {
-        for (const item of alternativeComponents(rawAlternative, locale)) {
+        for (const item of alternativeComponents(rawAlternative, locale, sourceCatalog)) {
           if (!doses.includes(item.dose)) doses.push(item.dose)
         }
       }
@@ -145,69 +161,39 @@ export function parseRegimenPlan(
 export function parseFinalRegimenOptions(
   value: JsonValue | undefined,
   locale: ClinicalDecisionSupportLocale,
+  catalog: Record<string, RegimenMedicine[]> = {},
 ): FinalRegimenOption[] {
   const effective = objectValue(objectValue(value)?.effective_regimen)
   if (!effective) return []
+  const sourceCatalog = Object.keys(catalog).length > 0 ? catalog : parseRegimenCatalog(value)
 
   const bases = Array.isArray(effective.base_options)
-    ? effective.base_options.map((item) => alternativeComponents(item, locale)).filter((item) => item.length > 0)
+    ? effective.base_options.map((item) => alternativeComponents(item, locale, sourceCatalog)).filter((item) => item.length > 0)
     : []
-  const additions = components(effective.additions, locale)
-  const stopped = components(effective.stopped_components, locale)
+  const additions = components(effective.additions, locale, sourceCatalog)
+  const stopped = components(effective.stopped_components, locale, sourceCatalog)
   let candidates = bases.length > 0 ? bases : additions.length > 0 ? [[]] : []
   let fallbackAdditions = additions
   if (candidates.length === 0) {
     const rawSteps = objectValue(value)?.steps
     const steps = Array.isArray(rawSteps) ? rawSteps : []
     const lastMaterialStep = [...steps].reverse().map((item) => objectValue(item))
-      .find((step) => step && !['REMOVE', 'STOP', 'AVOID'].includes(stringValue(step.keyword).toLocaleUpperCase()) && (components(step.components, locale).length > 0 || (Array.isArray(step.alternatives) && step.alternatives.length > 0)))
+      .find((step) => step && !['REMOVE', 'STOP', 'AVOID'].includes(stringValue(step.keyword).toLocaleUpperCase()) && (components(step.components, locale, sourceCatalog).length > 0 || (Array.isArray(step.alternatives) && step.alternatives.length > 0)))
     const alternatives = Array.isArray(lastMaterialStep?.alternatives)
-      ? lastMaterialStep.alternatives.map((item) => alternativeComponents(item, locale))
+      ? lastMaterialStep.alternatives.map((item) => alternativeComponents(item, locale, sourceCatalog))
         .filter((item) => item.length > 0)
       : []
-    const direct = components(lastMaterialStep?.components, locale)
+    const direct = components(lastMaterialStep?.components, locale, sourceCatalog)
     candidates = alternatives.length > 0 ? alternatives : direct.length > 0 ? [[]] : []
     fallbackAdditions = alternatives.length > 0 ? [] : direct
   }
 
-  return candidates.map((base, index) => ({
+  const options = candidates.map((base, index) => ({
     id: `regimen-option-${index + 1}`,
     components: deduplicate([...base, ...fallbackAdditions])
       .filter((item) => !stopped.some((stop) => isStopped(item, stop))),
   })).filter((option) => option.components.length > 0)
+  return uniqueRegimenOptions(options)
 }
 
-export function parseRegimenCatalog(
-  value: JsonValue | undefined,
-): Record<string, RegimenMedicine[]> {
-  const plan = objectValue(value)
-  const rawCatalog = plan?.catalog_by_class
-  const classEntries = rawCatalog && typeof rawCatalog === 'object' && !Array.isArray(rawCatalog)
-    ? Object.entries(rawCatalog)
-    : []
-  const parsed = Object.fromEntries(classEntries.map(([group, rawItems]) => {
-    if (!Array.isArray(rawItems)) return [group, []]
-    return [group, parseCatalogMedicines(rawItems, group)]
-  }))
-  if (Array.isArray(plan?.catalog)) parsed.__all__ = parseCatalogMedicines(plan.catalog, 'Others')
-  return parsed
-}
-
-function parseCatalogMedicines(rawItems: JsonValue[], fallbackGroup: string): RegimenMedicine[] {
-  return rawItems.flatMap((raw) => {
-    const item = objectValue(raw)
-    if (!item) return []
-    return [{
-      id: stringValue(item.drug_id),
-      name: stringValue(item.name),
-      group: stringValue(item.drug_class, fallbackGroup),
-      subgroup: stringValue(item.subgroup),
-      route: stringValue(item.route),
-      doseLow: stringValue(item.dose_low),
-      doseUsual: stringValue(item.dose_usual),
-      doseMax: stringValue(item.dose_max),
-      snomedCode: stringValue(item.snomed_code),
-      safetyStatus: stringValue(item.safety_status) || undefined,
-    }]
-  })
-}
+export { parseRegimenCatalog } from './regimenCatalog'

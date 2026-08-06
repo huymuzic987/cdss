@@ -1,5 +1,5 @@
 import { ChevronDown } from 'lucide-react'
-import type { ReactNode } from 'react'
+import type { ReactNode, SyntheticEvent } from 'react'
 import './ClinicalSection.css'
 import './ClinicalSectionTypography.css'
 import './RecommendationModalShared.css'
@@ -10,13 +10,14 @@ interface ClinicalSectionProps {
   children: ReactNode
   className?: string
   defaultOpen?: boolean
+  onToggle?: (event: SyntheticEvent<HTMLDetailsElement>) => void
 }
 
 export function ClinicalSection({
-  title, subtitle, children, className = '', defaultOpen = true,
+  title, subtitle, children, className = '', defaultOpen = true, onToggle,
 }: ClinicalSectionProps) {
   return (
-    <details className={`cds-section ${className}`} open={defaultOpen || undefined}>
+    <details className={`cds-section ${className}`} open={defaultOpen || undefined} onToggle={onToggle}>
       <summary className="cds-section-title">
         <span><strong>{title}</strong>{subtitle && <small>{subtitle}</small>}</span>
         {!defaultOpen && (

@@ -15,6 +15,8 @@ _ACTION_TYPE_CLASSES: dict[str, tuple[str, ...]] = {
     "COMBINE_ABD_ALDO_SGLT2I": ("A", "B", "D", "SGLT2i", "MRA"),
     "ADD_A_ARNI_CTTA_UCMC": ("A",),
     "ADD_A_ARNI_CTTA": ("A",),
+    "ADD_A_ARNI_ARB_OR_ACE_INHIBITOR_FOR_HFMREF": ("A",),
+    "ADD_DIHYDROPYRIDINE_CCB": ("C",),
     "COMBINE_ACD_MRA": ("A", "C", "D", "MRA"),
 }
 

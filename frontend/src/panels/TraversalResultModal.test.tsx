@@ -130,7 +130,7 @@ describe('TraversalResultModal', () => {
           B: [{
             drug_id: 'DRUG-BISOPROLOL', name: 'Bisoprolol', drug_class: 'B',
             route: 'Thuốc Uống', dose_low: '1.25 mg', dose_usual: '5 mg',
-            dose_max: '10 mg', snomed_code: '386872004',
+            dose_max: '10 mg', snomed_code: '386872004', safety_status: 'RELATIVE',
           }],
         },
       },
@@ -145,6 +145,9 @@ describe('TraversalResultModal', () => {
     expect(screen.getByText('Drug collection path')).toBeTruthy()
     expect(screen.getByText('ADD')).toBeTruthy()
     expect(screen.getByText('Final drug regimen')).toBeTruthy()
+    const finalRegimen = screen.getByText('Final drug regimen').closest('.cds-section')
+    expect(finalRegimen?.parentElement?.classList.contains('cds-modal-body')).toBe(true)
+    expect(screen.queryByText('Medication and orders')).toBeNull()
     expect(screen.queryByText('Option 1')).toBeNull()
     expect(screen.getAllByText('B')).toHaveLength(2)
     expect(screen.getAllByText('Low dose')).toHaveLength(2)
@@ -164,10 +167,59 @@ describe('TraversalResultModal', () => {
     expect(within(drugDialog).getByText('Low: 1.25 mg').classList.contains('cds-active-dose')).toBe(true)
     expect(within(drugDialog).getByText('Usual: 5 mg')).toBeTruthy()
     expect(within(drugDialog).getByText('Maximum: 10 mg')).toBeTruthy()
+    expect(within(drugDialog).getByText('Relative contraindication')).toBeTruthy()
+    expect(within(drugDialog).queryByText(/review before use/)).toBeNull()
+    expect(drugDialog.querySelector('.cds-regimen-medicine-detail--relative')).toBeTruthy()
+    expect(drugDialog.querySelector('.cds-regimen-medicine-name .cds-regimen-medicine-warning')).toBeTruthy()
     expect(drugDialog.textContent).toContain('SNOMED CT: 386872004')
 
     await userEvent.setup().click(document.querySelector('.cds-regimen-component') as HTMLElement)
     expect(screen.queryByRole('dialog', { name: 'B drug details' })).toBeNull()
+  })
+
+  it('shows subgroup detail and collects only medicines from that subgroup', async () => {
+    const regimenPresentation = {
+      ...presentation,
+      regimen_plan: {
+        schema_version: '1.0',
+        steps: [],
+        effective_regimen: {
+          base_options: [],
+          additions: [{ selector_kind: 'class', code: 'C', subgroup: 'DHP' }],
+          stopped_components: [],
+          constraints: [],
+        },
+        catalog_by_class: {
+          C: [
+            {
+              drug_id: 'DRUG-DHP', name: 'Amlodipine', drug_class: 'C', subgroup: 'CKCa DHP',
+              route: 'Oral', dose_low: '2.5 mg', dose_usual: '5 mg', dose_max: '10 mg', snomed_code: '1',
+            },
+            {
+              drug_id: 'DRUG-NON-DHP', name: 'Diltiazem', drug_class: 'C', subgroup: 'CKCa Non-DHP',
+              route: 'Oral', dose_low: '120 mg', dose_usual: '180 mg', dose_max: '240 mg', snomed_code: '2',
+            },
+          ],
+        },
+      },
+    }
+    const action = {
+      ...result.actions[0]!,
+      payload: { ...result.actions[0]!.payload, presentation: regimenPresentation },
+    }
+
+    renderModal({ ...result, actions: [action] })
+
+    const component = document.querySelector('.cds-regimen-component') as HTMLElement
+    expect(within(component).getByText('C (DHP)')).toBeTruthy()
+    expect(within(component).getByText('Low dose')).toBeTruthy()
+    expect(within(component).queryByText('2.5 mg')).toBeNull()
+    expect(within(component).queryByText('120 mg')).toBeNull()
+
+    await userEvent.setup().click(component)
+    const dialog = screen.getByRole('dialog', { name: 'C drug details' })
+    expect(within(dialog).getByText('Amlodipine')).toBeTruthy()
+    expect(within(dialog).queryByText('Diltiazem')).toBeNull()
   })
 
   it('toggles the drug collection path independently from the final regimen', async () => {

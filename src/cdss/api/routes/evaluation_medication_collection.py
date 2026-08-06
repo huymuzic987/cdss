@@ -6,12 +6,19 @@ from collections.abc import Mapping
 
 from cdss.api.routes.evaluation_medication_values import copy_json_object
 from cdss.domain.decision_tree.contracts import JsonObject
+from cdss.domain.decision_tree.medication_regimen_subgroups import (
+    catalog_subgroups,
+    subgroup_matches,
+)
 from cdss.domain.decision_tree.medicine_catalog import Medicine
 
 ACTION_TYPE_CLASSES: dict[str, tuple[str, ...]] = {
     "COMBINE_D_SGLT2I_ALDO": ("D", "SGLT2i", "MRA"),
     "COMBINE_ABD_ALDO_SGLT2I": ("A", "B", "D", "SGLT2i", "MRA"),
     "ADD_A_ARNI_CTTA_UCMC": ("A",),
+    "ADD_A_ARNI_CTTA": ("A",),
+    "ADD_A_ARNI_ARB_OR_ACE_INHIBITOR_FOR_HFMREF": ("A",),
+    "ADD_DIHYDROPYRIDINE_CCB": ("C",),
 }
 MRA_NAMES = frozenset({"eplerenone", "spironolactone"})
 
@@ -60,25 +67,37 @@ def collect_action_type_ids(
     action_payload: object,
     catalog: list[Medicine],
     output: set[str],
+    *,
+    text: str = "",
 ) -> None:
     if not isinstance(action_payload, Mapping):
         return
     action_type = action_payload.get("action_type")
     if not isinstance(action_type, str):
         return
+    recognition_text = text or action_type
     for selector in ACTION_TYPE_CLASSES.get(action_type, ()):
+        subgroups = catalog_subgroups(recognition_text, selector, catalog)
         output.update(
             medicine.drug_id
             for medicine in catalog
-            if medicine.available and matches_selector(medicine, selector)
+            if medicine.available and matches_selector(medicine, selector, subgroups)
         )
 
 
-def matches_selector(medicine: Medicine, selector: str) -> bool:
+def matches_selector(
+    medicine: Medicine,
+    selector: str,
+    subgroups: str | None = None,
+) -> bool:
     if selector == "MRA":
         return medicine.name.casefold().strip() in MRA_NAMES
     drug_class = medicine.drug_class
-    return isinstance(drug_class, str) and drug_class.casefold() == selector.casefold()
+    return (
+        isinstance(drug_class, str)
+        and drug_class.casefold() == selector.casefold()
+        and (subgroups is None or subgroup_matches(medicine.subgroup, subgroups))
+    )
 
 
 def negated(name: str, text: str) -> bool:

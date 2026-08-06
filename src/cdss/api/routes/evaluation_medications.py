@@ -74,6 +74,7 @@ def enrich_inferred_medications(
             getattr(node, "action_payload", None),
             catalog,
             drug_ids,
+            text=f"{node.text_en} {node.text_vi}",
         )
 
     medicines, _ = filter_raw_medicines(medicines, runtime_input, clinical_context=clinical_context)
