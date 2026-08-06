@@ -8,19 +8,16 @@ from cdss.domain.decision_tree.medication_regimen_contracts import (
     RegimenAlternative,
     RegimenComponent,
 )
+from cdss.domain.decision_tree.medication_regimen_subgroups import catalog_group_matches
 from cdss.domain.decision_tree.medication_regimen_values import class_component
-
-_ACTION_TYPE_CLASSES: dict[str, tuple[str, ...]] = {
-    "COMBINE_D_SGLT2I_ALDO": ("D", "SGLT2i", "MRA"),
-    "COMBINE_ABD_ALDO_SGLT2I": ("A", "B", "D", "SGLT2i", "MRA"),
-    "ADD_A_ARNI_CTTA_UCMC": ("A",),
-    "ADD_A_ARNI_CTTA": ("A",),
-    "COMBINE_ACD_MRA": ("A", "C", "D", "MRA"),
-}
+from cdss.domain.decision_tree.medicine_catalog import Medicine
 
 
 def components_from_action_payload(
     payload: Mapping[str, Any] | None,
+    *,
+    text: str = "",
+    catalog: Sequence[Medicine] = (),
 ) -> tuple[list[RegimenComponent], list[RegimenAlternative]]:
     if not isinstance(payload, Mapping):
         return [], []
@@ -53,8 +50,10 @@ def components_from_action_payload(
         )
     action_type = payload.get("action_type")
     if isinstance(action_type, str):
+        recognition_text = f"{action_type} {text}"
         components.extend(
-            class_component(code, dose) for code in _ACTION_TYPE_CLASSES.get(action_type, ())
+            class_component(code, dose, subgroup)
+            for code, subgroup in catalog_group_matches(recognition_text, catalog)
         )
     return components, [option for option in alternatives if option.components]
 

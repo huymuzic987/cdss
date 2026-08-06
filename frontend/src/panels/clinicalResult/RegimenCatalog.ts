@@ -1,4 +1,5 @@
 import type { FinalRegimenComponent, RegimenMedicine } from '../clinicalPresentation/types'
+import { subgroupMatches } from '../clinicalPresentation/regimenCatalog'
 
 export const GROUP_NAMES = {
   A: 'RAS: ACE inhibitor / ARB / ARNI',
@@ -15,12 +16,8 @@ export function recommendedDoseSummary(
   component: FinalRegimenComponent,
   catalog: Record<string, RegimenMedicine[]>,
 ): string {
-  if (!isSpecific(component)) return component.dose
-  const doseKey = activeDose(component.dose)
-  const doses = Array.from(new Set(componentMedicines(component, catalog).map((medicine) => (
-    doseKey === 'max' ? medicine.doseMax : doseKey === 'usual' ? medicine.doseUsual : medicine.doseLow
-  )).filter(Boolean)))
-  return doses.length > 0 ? doses.join(' / ') : component.dose
+  void catalog
+  return component.dose
 }
 
 export function activeDose(strategy: string): 'low' | 'usual' | 'max' {
@@ -37,11 +34,15 @@ export function componentMedicines(
   const allMedicines = catalog.__all__ ?? Array.from(
     new Map(Object.values(catalog).flat().map((medicine) => [medicine.id || medicine.name, medicine])).values(),
   )
-  if (!isSpecific(component)) {
-    const grouped = catalog[component.group]
-    if (grouped && grouped.length > 0) return grouped
-    return allMedicines.filter((medicine) => medicineInGroup(medicine, component.group))
+  const grouped = catalog[component.group]
+  const groupMedicines = grouped && grouped.length > 0
+    ? grouped
+    : allMedicines.filter((medicine) => medicineInGroup(medicine, component.group))
+  const subgroup = component.subgroup
+  if (subgroup) {
+    return groupMedicines.filter((medicine) => subgroupMatches(medicine.subgroup, subgroup))
   }
+  if (!isSpecific(component)) return groupMedicines
   const label = component.label.toLocaleLowerCase()
   return allMedicines.filter((medicine) => {
     const name = medicine.name.toLocaleLowerCase()
@@ -58,5 +59,6 @@ function medicineInGroup(medicine: RegimenMedicine, group: FinalRegimenComponent
 }
 
 export function isSpecific(component: FinalRegimenComponent): boolean {
-  return component.label.toLocaleLowerCase() !== component.group.toLocaleLowerCase()
+  return Boolean(component.subgroup)
+    || component.label.toLocaleLowerCase() !== component.group.toLocaleLowerCase()
 }

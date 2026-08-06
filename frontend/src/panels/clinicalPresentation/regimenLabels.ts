@@ -1,12 +1,25 @@
+import type { ClinicalDecisionSupportLocale } from '../clinicalDecisionSupportMessages'
 import type { FinalRegimenComponent } from './types'
 
 type ParsedComponent = FinalRegimenComponent & { generic?: boolean }
 
-export function componentLabel(item: ParsedComponent): string {
+export function regimenSubgroupLabel(
+  subgroup: string | undefined,
+  locale: ClinicalDecisionSupportLocale = 'en',
+): string | undefined {
+  void locale
+  return subgroup
+}
+
+export function componentLabel(
+  item: ParsedComponent,
+  locale: ClinicalDecisionSupportLocale = 'en',
+): string {
+  void locale
   const base = item.generic || item.detail === item.label
     ? item.label
     : `${item.label} (${item.detail})`
-  return item.subgroup ? `${base} (${item.subgroup})` : base
+  return base
 }
 
 export function isStopped(item: ParsedComponent, stop: ParsedComponent): boolean {

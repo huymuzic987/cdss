@@ -33,6 +33,7 @@ TREE_KEYS = [
     "treatment-threshold-and-bp-target",
     "essential-treatment-strategy",
     "optimal-treatment-strategy",
+    "hypertension-coronary-artery-disease",
 ]
 
 
@@ -102,6 +103,34 @@ def test_tree_1_emergency_link_resolves_into_seeded_tree(
         for entry in partial.trace
     )
     assert any(entry.tree_key == "hypertensive-emergency" for entry in partial.trace)
+
+
+def test_tree_9_generic_cad_uses_fallback_link_without_subtype_flags(
+    seeded_trees: SeededTrees,
+) -> None:
+    graph = seeded_trees.graphs["hypertension-coronary-artery-disease"]
+    node = graph.nodes_by_key["T9_C_BP1"]
+
+    state = _walk_from_exact_node(
+        seeded_trees,
+        graph,
+        node,
+        {
+            "age": 55,
+            "current_clinic_sbp": 135,
+            "current_clinic_dbp": 88,
+            "facility_capability": "FULL_RESOURCES",
+            "has_mi_acs": False,
+            "has_ccs_angina": False,
+            "has_ccs_revasc": False,
+            "has_cabg": False,
+        },
+    )
+
+    assert any(
+        entry.tree_key == graph.tree.tree_key and entry.node_key == "T9_LINK_ESSENTIAL"
+        for entry in state.trace
+    )
 
 
 def test_tree_3_restore_operation_copies_active_target_before_transfer(

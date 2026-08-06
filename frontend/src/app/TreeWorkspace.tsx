@@ -12,6 +12,7 @@ import { useMobileDrawer } from '../hooks/useMobileDrawer'
 
 const TreeCanvas = lazy(() => import('../canvas/TreeCanvas').then(({ TreeCanvas: canvas }) => ({ default: canvas })))
 const MOBILE_LAYOUT_QUERY = '(max-width: 780px)'
+const LEFT_SIDEBAR_WIDTH = 320
 
 interface TreeWorkspaceProps {
   graph?: TreeGraphResponse
@@ -61,7 +62,7 @@ export function TreeWorkspace(props: TreeWorkspaceProps) {
       <div
         ref={leftPanelRef}
         className={`left-panel ${isMobile && mobileDrawer === 'patient' ? 'mobile-drawer-open' : ''}`}
-        style={{ width: leftCollapsed ? 0 : 280 }}
+        style={{ width: leftCollapsed ? 0 : LEFT_SIDEBAR_WIDTH }}
         aria-hidden={patientDrawerHidden ? true : undefined}
         inert={patientDrawerHidden ? true : undefined}
       >
@@ -79,7 +80,7 @@ export function TreeWorkspace(props: TreeWorkspaceProps) {
         ref={leftToggleRef}
         type="button"
         className="panel-toggle-btn panel-toggle-left"
-        style={{ left: leftCollapsed ? 14 : 280 }}
+        style={{ left: leftCollapsed ? 14 : LEFT_SIDEBAR_WIDTH }}
         onClick={() => {
           if (isMobile) {
             toggleMobileDrawer('patient')

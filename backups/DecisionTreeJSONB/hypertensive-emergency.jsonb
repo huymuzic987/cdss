@@ -975,17 +975,17 @@
           {
             "edge_id": "d0f1f6ad-b6d5-4f35-a871-c9f92eebe479",
             "traversal_order": 1,
-            "to_node_key": "T14_ACTION_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
+            "to_node_key": "T14_INFERENCE_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
             "candidate_condition": null
           }
         ]
       },
-      "T14_ACTION_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA": {
+      "T14_INFERENCE_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA": {
         "id": "4ce0d75e-7416-4381-b4eb-18e83f1df2c1",
-        "node_key": "T14_ACTION_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
-        "node_type": "ACTION",
-        "text_en": "Acute cardiogenic pulmonary edema: Labetalol or Metoprolol; target SBP <140 mmHg, immediate",
-        "text_vi": "Phù phổi cấp do tim: Labetalol hoặc Metoprolol; mục tiêu HATT <140 mmHg, ngay lập tức",
+        "node_key": "T14_INFERENCE_SELECT_LABETALOL_OR_METOPROLOL_FOR_ACUTE_CARDIOGENIC_PULMONARY_EDEMA",
+        "node_type": "INFERENCE",
+        "text_en": "Labetalol or Metoprolol Succinate or Metoprolol Tartrate",
+        "text_vi": "Labetalol hoặc Metoprolol Succinate hoặc Metoprolol Tartrate",
         "condition_definition": null,
         "context_patch": null,
         "action_payload": {
@@ -993,7 +993,36 @@
           "target_timing": "IMMEDIATE",
           "follow_up_mode": "NEW_ENCOUNTER",
           "follow_up_required": false,
-          "target_sbp_upper_mmhg": 140
+          "target_sbp_upper_mmhg": 140,
+          "regimen_update": {
+            "operation": "SELECT",
+            "alternatives": [
+              {
+                "components": [
+                  {
+                    "selector_kind": "medicine",
+                    "name": "Labetalol"
+                  }
+                ]
+              },
+              {
+                "components": [
+                  {
+                    "selector_kind": "medicine",
+                    "name": "Metoprolol Succinate"
+                  }
+                ]
+              },
+              {
+                "components": [
+                  {
+                    "selector_kind": "medicine",
+                    "name": "Metoprolol Tartrate"
+                  }
+                ]
+              }
+            ]
+          }
         },
         "global_config": null,
         "link_target_tree_key": null,

@@ -49,9 +49,9 @@ export function buildClinicalPresentation(
     }
   }
   const structuredOrders = parseStructuredOrders(presentation.recommended_orders, locale)
-  const regimenSteps = parseRegimenPlan(presentation.regimen_plan, locale)
-  const regimenOptions = parseFinalRegimenOptions(presentation.regimen_plan, locale)
   const regimenCatalog = parseRegimenCatalog(presentation.regimen_plan)
+  const regimenSteps = parseRegimenPlan(presentation.regimen_plan, locale, regimenCatalog)
+  const regimenOptions = parseFinalRegimenOptions(presentation.regimen_plan, locale, regimenCatalog)
   const displayedOrders = regimenSteps.length > 0 || regimenOptions.length > 0 ? [] : structuredOrders
   const evidence = mergeEvidence(
     buildClinicalSummaryEvidence(

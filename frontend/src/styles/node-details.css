@@ -33,8 +33,8 @@
 .panel {
   background: var(--bg-panel);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: 7px;
+  padding: 10px;
   font-size: 13px;
 }
 
@@ -46,20 +46,20 @@
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 7px;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: 5px;
+  font-size: 11px;
   color: var(--text-secondary);
 }
 
 .legend-swatch {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 4px;
   display: inline-block;
   border: 1px solid var(--border-soft);
@@ -68,14 +68,15 @@
 .detail-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 6px;
+  margin-bottom: 8px;
+  justify-content: space-between;
 }
 
 .detail-badge {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 2px 7px;
   border-radius: 999px;
   text-transform: uppercase;
   border: 1px solid var(--border-soft-strong);
@@ -87,8 +88,13 @@
   color: var(--text-muted);
 }
 
+/* Keep the full key in CopyButton's payload without spending sidebar space on it. */
+.side-panels .detail-key {
+  display: none;
+}
+
 .detail-field {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .detail-field-header {
@@ -109,14 +115,14 @@
 
 .detail-text {
   color: var(--text-bright);
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .detail-json {
   background: var(--bg-inset);
   border-radius: 6px;
-  padding: 8px;
-  font-size: 12px;
+  padding: 7px;
+  font-size: 11px;
   overflow-x: auto;
   margin: 0;
   color: var(--accent-text);

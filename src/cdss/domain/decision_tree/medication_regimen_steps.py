@@ -14,6 +14,9 @@ from cdss.domain.decision_tree.medication_regimen_contracts import (
     RegimenKeyword,
     RegimenUpdateStep,
 )
+from cdss.domain.decision_tree.medication_regimen_subgroups import (
+    catalog_subgroups_for_components,
+)
 from cdss.domain.decision_tree.medication_regimen_values import (
     components_from_context,
     components_from_text,
@@ -85,6 +88,7 @@ def step_for_node(
     tree_key: str,
     catalog: list[Medicine],
 ) -> RegimenUpdateStep | None:
+    node_text = f"{node.text_en}\n{node.text_vi}"
     update = structured_update(getattr(node, "action_payload", None))
     if keyword is RegimenKeyword.MAINTAIN:
         return RegimenUpdateStep(
@@ -105,12 +109,21 @@ def step_for_node(
         source = "context"
     if not components and not alternatives:
         components, alternatives = components_from_action_payload(
-            getattr(node, "action_payload", None)
+            getattr(node, "action_payload", None),
+            text=node_text,
+            catalog=catalog,
         )
         source = "legacy"
     if not components and not alternatives:
         components = components_from_text(node.text_en, catalog)
         source = "legacy"
+    components = catalog_subgroups_for_components(components, node_text, catalog)
+    alternatives = [
+        RegimenAlternative(
+            components=catalog_subgroups_for_components(option.components, node_text, catalog)
+        )
+        for option in alternatives
+    ]
     if keyword is RegimenKeyword.SELECT and components and not alternatives:
         alternatives = [RegimenAlternative(components=[component]) for component in components]
         components = []

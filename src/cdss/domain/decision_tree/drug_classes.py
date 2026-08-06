@@ -111,7 +111,15 @@ def _base_combinations(treatment_preferences: Mapping[str, Any]) -> list[list[st
                 if classes is not None:
                     combos.append(classes)
 
-    return combos
+    output: list[list[str]] = []
+    seen: set[tuple[str, ...]] = set()
+    for combo in combos:
+        identity = tuple(sorted(dict.fromkeys(item.casefold() for item in combo)))
+        if identity in seen:
+            continue
+        seen.add(identity)
+        output.append(combo)
+    return output
 
 
 def _mandated_additional_classes(

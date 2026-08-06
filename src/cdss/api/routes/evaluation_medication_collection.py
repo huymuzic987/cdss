@@ -2,18 +2,39 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 
 from cdss.api.routes.evaluation_medication_values import copy_json_object
 from cdss.domain.decision_tree.contracts import JsonObject
+from cdss.domain.decision_tree.medication_regimen_subgroups import (
+    catalog_group_matches,
+    subgroup_matches,
+)
 from cdss.domain.decision_tree.medicine_catalog import Medicine
 
-ACTION_TYPE_CLASSES: dict[str, tuple[str, ...]] = {
-    "COMBINE_D_SGLT2I_ALDO": ("D", "SGLT2i", "MRA"),
-    "COMBINE_ABD_ALDO_SGLT2I": ("A", "B", "D", "SGLT2i", "MRA"),
-    "ADD_A_ARNI_CTTA_UCMC": ("A",),
-}
 MRA_NAMES = frozenset({"eplerenone", "spironolactone"})
+_INFERENCE_OPERATION_PATTERN = re.compile(r"_INFERENCE_([A-Z]+)(?:_|$)")
+_TREATMENT_OPERATIONS = frozenset(
+    {
+        "START",
+        "ADD",
+        "COMBINE",
+        "SELECT",
+        "ADJUST",
+        "CHANGE",
+        "ESCALATE",
+        "REDUCE",
+        "STOP",
+        "REMOVE",
+        "KEEP",
+        "MAINTAIN",
+        "MONITOR",
+        "AVOID",
+        "RESTORE",
+    }
+)
+_NON_POSITIVE_OPERATIONS = frozenset({"STOP", "REMOVE", "AVOID"})
 
 
 def collect_payload(
@@ -60,25 +81,91 @@ def collect_action_type_ids(
     action_payload: object,
     catalog: list[Medicine],
     output: set[str],
+    *,
+    text: str = "",
 ) -> None:
     if not isinstance(action_payload, Mapping):
         return
     action_type = action_payload.get("action_type")
     if not isinstance(action_type, str):
         return
-    for selector in ACTION_TYPE_CLASSES.get(action_type, ()):
+    recognition_text = f"{action_type} {text}"
+    if _negative_action(action_type, recognition_text):
+        return
+    _collect_group_ids(recognition_text, catalog, output)
+
+
+def collect_inference_group_ids(
+    text: str,
+    catalog: list[Medicine],
+    output: set[str],
+    *,
+    node_key: str,
+) -> None:
+    """Collect medicines for treatment inferences from their vocabulary.
+
+    Inference keys and text carry the operation and the clinical group. This
+    keeps legacy nodes useful while letting catalog subgroup names drive the
+    final medicine selection instead of maintaining an action-type table.
+    """
+
+    match = _INFERENCE_OPERATION_PATTERN.search(node_key)
+    if not match or match.group(1) not in _TREATMENT_OPERATIONS:
+        return
+    operation = match.group(1)
+    if operation in _NON_POSITIVE_OPERATIONS or _negative_action(operation, text):
+        return
+    _collect_group_ids(f"{node_key} {text}", catalog, output)
+
+
+def _collect_group_ids(text: str, catalog: list[Medicine], output: set[str]) -> None:
+    for selector, subgroups in catalog_group_matches(text, catalog):
         output.update(
             medicine.drug_id
             for medicine in catalog
-            if medicine.available and matches_selector(medicine, selector)
+            if medicine.available and matches_selector(medicine, selector, subgroups)
         )
 
 
-def matches_selector(medicine: Medicine, selector: str) -> bool:
+def matches_selector(
+    medicine: Medicine,
+    selector: str,
+    subgroups: str | None = None,
+) -> bool:
     if selector == "MRA":
-        return medicine.name.casefold().strip() in MRA_NAMES
+        belongs_to_mra = medicine.name.casefold().strip() in MRA_NAMES or (
+            medicine.subgroup is not None and "MRA" in medicine.subgroup.upper()
+        )
+        return belongs_to_mra and (
+            subgroups is None or subgroup_matches(medicine.subgroup, subgroups)
+        )
     drug_class = medicine.drug_class
-    return isinstance(drug_class, str) and drug_class.casefold() == selector.casefold()
+    return (
+        isinstance(drug_class, str)
+        and drug_class.casefold() == selector.casefold()
+        and (subgroups is None or subgroup_matches(medicine.subgroup, subgroups))
+    )
+
+
+def _negative_action(action_type: str, text: str) -> bool:
+    action = action_type.strip().upper()
+    if action.startswith(("NO_", "AVOID", "STOP", "REMOVE", "DISCONTINUE", "EXCLUDE")):
+        return True
+    lowered = text.casefold()
+    return any(
+        marker in lowered
+        for marker in (
+            "do not",
+            "don't",
+            "avoid",
+            "contraind",
+            "not use",
+            "no routine",
+            "exclude",
+            "discontinue",
+            "stop",
+        )
+    )
 
 
 def negated(name: str, text: str) -> bool:

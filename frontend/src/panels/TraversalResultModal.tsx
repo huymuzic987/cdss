@@ -132,22 +132,26 @@ function ResultDialog({
             )}
           </ClinicalSection>
 
-          <ClinicalSection title={messages.recommendedOrders}>
+          {presentation.regimenOptions.length > 0 && (
             <RegimenDisplay presentation={presentation} references={references} locale={locale} />
-            {displayedOrders.length === 0 && presentation.regimenOptions.length === 0
-              ? <p className="cds-empty">{messages.noRecommendedOrders}</p> : (
-              <div className="cds-order-rows">
-                {displayedOrders.filter(isSingleMedicationOrder).length > 1 && (
-                  <div className="cds-order-choice-hint">{messages.chooseOneMedicine}</div>
-                )}
-                {displayedOrders.map((order) => (
-                  <RecommendedOrderCard
-                    key={order.id} order={order} provenance={provenance} locale={locale}
-                  />
-                ))}
-              </div>
-            )}
-          </ClinicalSection>
+          )}
+
+          {(displayedOrders.length > 0 || presentation.regimenOptions.length === 0) && (
+            <ClinicalSection title={messages.recommendedOrders}>
+              {displayedOrders.length === 0 ? <p className="cds-empty">{messages.noRecommendedOrders}</p> : (
+                <div className="cds-order-rows">
+                  {displayedOrders.filter(isSingleMedicationOrder).length > 1 && (
+                    <div className="cds-order-choice-hint">{messages.chooseOneMedicine}</div>
+                  )}
+                  {displayedOrders.map((order) => (
+                    <RecommendedOrderCard
+                      key={order.id} order={order} provenance={provenance} locale={locale}
+                    />
+                  ))}
+                </div>
+              )}
+            </ClinicalSection>
+          )}
 
           <ClinicalSection
             title={messages.importantPath}

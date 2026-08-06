@@ -81,6 +81,30 @@ export function useTreeCanvasSync({
         }
       }
     }
+
+    // Keep traversed paths prominent while dimming untouched branches. Arrow
+    // geometry stays managed by tldraw; only the top-level opacity changes.
+    const nodeKeyByShapeId = new Map<string, string>()
+    for (const [nodeKey, shapeId] of shapeIdsRef.current) {
+      nodeKeyByShapeId.set(shapeId, nodeKey)
+    }
+
+    for (const shape of editor.getCurrentPageShapes()) {
+      if (shape.type !== 'arrow') continue
+
+      const connectedNodeKeys = editor
+        .getBindingsFromShape(shape.id, 'arrow')
+        .map((binding) => nodeKeyByShapeId.get(binding.toId))
+        .filter((nodeKey): nodeKey is string => Boolean(nodeKey))
+      const pathIsUsed =
+        connectedNodeKeys.length >= 2 &&
+        connectedNodeKeys.every((nodeKey) => highlightedNodeKeys?.has(nodeKey) || nodeKey === activeNodeKey)
+      const targetOpacity = hasAnyHighlight && !pathIsUsed ? 0.2 : 1
+
+      if (shape.opacity !== targetOpacity) {
+        editor.updateShape({ id: shape.id, type: 'arrow', opacity: targetOpacity })
+      }
+    }
   }, [editorRef, shapeIdsRef, highlightedNodeKeys, activeNodeKey, isSceneLoaded])
 
   // Pan / zoom to the active node during traversal

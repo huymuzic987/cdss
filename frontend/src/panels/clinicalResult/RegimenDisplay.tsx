@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import type { ExecutedReference } from '../../api/types'
 import type { ClinicalDecisionSupportLocale } from '../clinicalDecisionSupportMessages'
 import type { ClinicalPresentation, FinalRegimenComponent } from '../clinicalPresentation/types'
+import { ClinicalSection } from './ClinicalSection'
 import { ComponentCatalogDetails } from './RegimenCatalogPopup'
 import { GROUP_NAMES, recommendedDoseSummary } from './RegimenCatalog'
 import { uniqueReferenceDetails } from './RegimenReferenceDetails'
@@ -26,6 +27,14 @@ interface TooltipState {
 
 interface CatalogPopupState extends TooltipState {
   component: FinalRegimenComponent
+}
+
+function componentDisplayLabel(
+  component: FinalRegimenComponent,
+  locale: ClinicalDecisionSupportLocale,
+): string {
+  void locale
+  return component.label
 }
 
 export function RegimenDisplay({
@@ -78,12 +87,11 @@ export function RegimenDisplay({
         </details>
       )}
       {presentation.regimenOptions.length > 0 && (
-        <details
-          className="cds-regimen-panel cds-final-regimens"
-          open
+        <ClinicalSection
+          className="cds-final-regimens"
+          title={vi ? 'Phác đồ thuốc cuối cùng' : 'Final drug regimen'}
           onToggle={(event) => !event.currentTarget.open && setTooltip(null)}
         >
-          <summary>{vi ? 'Phác đồ thuốc cuối cùng' : 'Final drug regimen'}</summary>
           <div className="cds-regimen-panel-content">
             <div className="cds-regimen-guidance">
               {presentation.regimenOptions.length > 1
@@ -115,7 +123,7 @@ export function RegimenDisplay({
                 )}
                 <div className="cds-regimen-components">
                   {option.components.map((component, componentIndex) => (
-                    <div className="cds-regimen-component-group" key={`${component.group}-${component.detail}-${component.dose}`}>
+                    <div className="cds-regimen-component-group" key={`${component.group}-${component.subgroup ?? ''}-${component.detail}-${component.dose}`}>
                       {componentIndex > 0 && <span className="cds-regimen-and">+</span>}
                       <button
                         className="cds-regimen-component"
@@ -133,6 +141,7 @@ export function RegimenDisplay({
                             current
                             && current.component.group === component.group
                             && current.component.label === component.label
+                            && current.component.subgroup === component.subgroup
                               ? null
                               : {
                                   component,
@@ -144,7 +153,7 @@ export function RegimenDisplay({
                           ))
                         }}
                       >
-                        <strong>{component.label}</strong>
+                        <strong>{componentDisplayLabel(component, locale)}</strong>
                         <small>{recommendedDoseSummary(component, presentation.regimenCatalog)}</small>
                       </button>
                     </div>
@@ -153,7 +162,7 @@ export function RegimenDisplay({
               </div>
             ))}
           </div>
-        </details>
+        </ClinicalSection>
       )}
       {tooltip && activeOption && createPortal(
         <div
@@ -165,8 +174,8 @@ export function RegimenDisplay({
           <strong>{vi ? 'Chi tiết phác đồ' : 'Regimen details'}</strong>
           <div className="cds-regimen-group-details">
             {activeOption.components.map((component) => (
-              <span key={`${component.group}:${component.label}`}>
-                <b>{component.label}</b>: {GROUP_NAMES[component.group]}
+              <span key={`${component.group}:${component.subgroup ?? ''}:${component.label}`}>
+                <b>{componentDisplayLabel(component, locale)}</b>: {GROUP_NAMES[component.group]}
               </span>
             ))}
           </div>

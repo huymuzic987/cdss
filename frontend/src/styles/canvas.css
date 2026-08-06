@@ -99,8 +99,8 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 12px;
+  gap: 8px;
+  padding: 9px;
   box-sizing: border-box;
   background: var(--bg-surface);
   scrollbar-width: thin;
@@ -161,7 +161,7 @@
   .side-panels {
     right: 0;
     transform: translateX(100%);
-    padding: 12px !important;
+    padding: 9px !important;
     overflow-y: auto !important;
     overflow-x: hidden;
     min-width: 0 !important;

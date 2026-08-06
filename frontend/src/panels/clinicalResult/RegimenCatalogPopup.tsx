@@ -10,9 +10,10 @@ export function ComponentCatalogDetails({
   position: { left: number, top: number }
   onClose: () => void
 }) {
-  const isSpecificMedicine = isSpecific(component)
+  const isSpecificMedicine = isSpecific(component) && !component.subgroup
   const medicines = componentMedicines(component, catalog)
   const subgroups = Array.from(new Set(medicines.map((medicine) => medicine.subgroup).filter(Boolean)))
+  const hasRelativeContraindication = medicines.some((medicine) => medicine.safetyStatus === 'RELATIVE')
   return (
     <div
       className={`cds-regimen-catalog-details cds-regimen-catalog-${placement}`}
@@ -21,8 +22,11 @@ export function ComponentCatalogDetails({
       style={position}
     >
       <div className="cds-regimen-catalog-heading">
-        <span>
+        <span className="cds-regimen-catalog-title">
           <strong>{component.label}{isSpecificMedicine ? '' : `: ${GROUP_NAMES[component.group]}`}</strong>
+          {isSpecificMedicine && hasRelativeContraindication && (
+            <span className="cds-regimen-medicine-warning">Relative contraindication</span>
+          )}
           {!isSpecificMedicine && subgroups.length > 0 && <small>Includes: {subgroups.join(' / ')}</small>}
         </span>
         <button type="button" onClick={onClose} aria-label="Close drug details">×</button>
@@ -36,14 +40,14 @@ export function ComponentCatalogDetails({
           key={medicine.id || medicine.name}
         >
           <div className="cds-regimen-medicine-heading">
-            {!isSpecificMedicine && <strong>{medicine.name}</strong>}
-            <span>{medicine.route || 'Route not recorded'} / SNOMED CT: {medicine.snomedCode || 'Not recorded'}</span>
+            <span className="cds-regimen-medicine-name">
+              {!isSpecificMedicine && <strong>{medicine.name}</strong>}
+              {!isSpecificMedicine && medicine.safetyStatus === 'RELATIVE' && (
+                <span className="cds-regimen-medicine-warning">Relative contraindication</span>
+              )}
+            </span>
+            <span className="cds-regimen-medicine-meta">{medicine.route || 'Route not recorded'} / SNOMED CT: {medicine.snomedCode || 'Not recorded'}</span>
           </div>
-          {medicine.safetyStatus === 'RELATIVE' && (
-            <div className="cds-regimen-medicine-warning">
-              Relative contraindication — review before use
-            </div>
-          )}
           <div className="cds-regimen-dose-comparison">
             <span className={activeDose(component.dose) === 'low' ? 'cds-active-dose' : ''}>
               Low: {medicine.doseLow || '-'}

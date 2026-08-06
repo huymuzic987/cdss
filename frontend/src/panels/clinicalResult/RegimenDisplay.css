@@ -28,7 +28,8 @@
 .cds-regimen-catalog-details { position: fixed; z-index: 10001; display: grid; gap: 7px; width: min(620px,calc(100vw - 32px)); max-height: min(520px,calc(100vh - 32px)); overflow: auto; padding: 12px; border: 1px solid var(--accent-border); border-radius: 8px; background: var(--bg-panel); box-shadow: 0 16px 42px rgba(0,0,0,.5); color: var(--text-secondary); font-size: 11px; }
 .cds-regimen-catalog-above { transform: translateY(-100%); }
 .cds-regimen-catalog-heading { display: flex; align-items: flex-start; justify-content: space-between; color: var(--text-bright); }
-.cds-regimen-catalog-heading > span { display: grid; gap: 2px; }
+.cds-regimen-catalog-heading > span { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+.cds-regimen-catalog-title small { flex-basis: 100%; }
 .cds-regimen-catalog-heading small { color: var(--text-secondary); font-weight: 500; }
 .cds-regimen-catalog-heading button { border: 0; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 18px; }
 .cds-regimen-medicine-detail { display: grid; gap: 6px; padding-top: 8px; border-top: 1px solid var(--border); }
@@ -39,6 +40,8 @@
 .cds-regimen-medicine-detail .cds-active-dose { color: var(--text-bright); font-weight: 850; }
 .cds-regimen-medicine-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .cds-regimen-medicine-heading > span { color: var(--text-muted); font-size: 10px; text-align: right; }
+.cds-regimen-medicine-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px; }
+.cds-regimen-medicine-meta { flex: 0 1 auto; }
 .cds-regimen-dose-comparison { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; padding: 6px 8px; border-radius: 5px; background: var(--bg-inset); }
 .cds-regimen-specific-meta { color: var(--text-secondary); }
 .cds-regimen-catalog-heading + span { margin-top: -5px; }
