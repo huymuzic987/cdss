@@ -1,0 +1,286 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "fullUrl": "http://example.org/fhir/Patient/medication-follow-up-heart-failure-001",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "medication-follow-up-heart-failure-001",
+        "birthDate": "1968-01-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/risk-factor-count",
+            "valueInteger": 3
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/facility-capability",
+            "valueString": "FULL_RESOURCES"
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/medication_follow_up_stage",
+            "valueString": "INITIAL_REGIMEN"
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/active_bp_target_sbp_upper",
+            "valueInteger": 130
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/active_bp_target_dbp_upper",
+            "valueInteger": 80
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/minimum_regimen_days",
+            "valueInteger": 28
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/current_regimen_drug_count",
+            "valueInteger": 2
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/current_regimen_drug_classes",
+            "valueString": "A+D"
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/assessment_date",
+            "valueString": "2026-03-01"
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/regimen_effective_date",
+            "valueString": "2026-02-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-heart-failure-001-is-medication-follow-up",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-heart-failure-001-is-medication-follow-up",
+        "subject": {
+          "reference": "Patient/medication-follow-up-heart-failure-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_medication_follow_up"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-heart-failure-001-adherence-adequate",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-heart-failure-001-adherence-adequate",
+        "subject": {
+          "reference": "Patient/medication-follow-up-heart-failure-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "adherence_adequate"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-heart-failure-001-dose-adequate",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-heart-failure-001-dose-adequate",
+        "subject": {
+          "reference": "Patient/medication-follow-up-heart-failure-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "dose_adequate"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-heart-failure-001-has-heart-failure",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-heart-failure-001-has-heart-failure",
+        "subject": {
+          "reference": "Patient/medication-follow-up-heart-failure-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_heart_failure"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "84114007",
+              "display": "Heart Failure"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-heart-failure-001-has-hfmref",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-heart-failure-001-has-hfmref",
+        "subject": {
+          "reference": "Patient/medication-follow-up-heart-failure-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hfmref"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "medication-follow-up-heart-failure-001-current-clinic-sbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8459-0",
+              "display": "Sitting systolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/medication-follow-up-heart-failure-001"
+        },
+        "effectiveDateTime": "2024-02-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "current_clinic"
+          }
+        ],
+        "valueQuantity": {
+          "value": 140,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "fullUrl": "http://example.org/fhir/Observation/medication-follow-up-heart-failure-001-current-clinic-sbp"
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "medication-follow-up-heart-failure-001-current-clinic-dbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4",
+              "display": "Diastolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/medication-follow-up-heart-failure-001"
+        },
+        "effectiveDateTime": "2024-02-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "current_clinic"
+          }
+        ],
+        "valueQuantity": {
+          "value": 86,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "fullUrl": "http://example.org/fhir/Observation/medication-follow-up-heart-failure-001-current-clinic-dbp"
+    }
+  ],
+  "id": "bundle-comorbidity-episode-heart-failure-follow-up-2-escalate",
+  "identifier": {
+    "system": "http://cdss.local/fhir/CodeSystem/preset/id",
+    "value": "comorbidity-episode-heart-failure-follow-up-2-escalate"
+  },
+  "meta": {
+    "tag": [
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/category",
+        "code": "Follow-Up Visits",
+        "display": "Follow-Up Visits"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/label",
+        "code": "comorbidity-episode-heart-failure-follow-up-2-escalate",
+        "display": "Heart Failure Episode — Follow-Up 2: Escalate"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/description",
+        "code": "comorbidity-episode-heart-failure-follow-up-2-escalate",
+        "display": "At 28 days, BP remains uncontrolled on adequate A+D treatment and traversal escalates to A+C+D."
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/snomed-source",
+        "code": "database-reference-catalog",
+        "display": "SNOMED CT sourced from reference tables"
+      }
+    ]
+  }
+}

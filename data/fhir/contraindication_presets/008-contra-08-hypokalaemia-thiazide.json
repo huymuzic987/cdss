@@ -1,0 +1,1887 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "fullUrl": "http://example.org/fhir/Patient/contra-08-hypokalaemia-thiazide",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "contra-08-hypokalaemia-thiazide",
+        "birthDate": "1976-01-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/risk-factor-count",
+            "valueInteger": 2
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/facility-capability",
+            "valueString": "FULL_RESOURCES"
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/hypokalaemia",
+            "valueBoolean": true
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-is-pregnant",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-is-pregnant",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_pregnant"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "48194001",
+              "display": "Gestational (pregnancy-induced) hypertension"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-coronary-artery-disease",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-coronary-artery-disease",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_coronary_artery_disease"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-type-2-diabetes",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-type-2-diabetes",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_type_2_diabetes"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "44054006",
+              "display": "Type 2 Diabetes Mellitus"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-heart-failure",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-heart-failure",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_heart_failure"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "84114007",
+              "display": "Heart Failure"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-ckd",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-ckd",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_ckd"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive diseases"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-ckd-stage-3-or-higher",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-ckd-stage-3-or-higher",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_ckd_stage_3_or_higher"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive diseases"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-diabetes",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-diabetes",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_diabetes"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "44054006",
+              "display": "Type 2 Diabetes Mellitus"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-cardiovascular-disease",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-cardiovascular-disease",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_cardiovascular_disease"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive diseases"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-stroke",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-stroke",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_stroke"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive diseases"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-tia",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-tia",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_tia"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "266257000",
+              "display": "Transient Ischemic Attack"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-frailty-syndrome",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-frailty-syndrome",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_frailty_syndrome"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-target-organ-damage",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-target-organ-damage",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_target_organ_damage"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-mi-acs",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-mi-acs",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_mi_acs"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-ccs-angina",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-ccs-angina",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_ccs_angina"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-ccs-revasc",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-ccs-revasc",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_ccs_revasc"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-cabg",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-cabg",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_cabg"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-hfref",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-hfref",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hfref"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-hfmref",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-hfmref",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hfmref"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-hfpef",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-hfpef",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hfpef"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-lvh",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-lvh",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_lvh"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-kidney-transplant",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-kidney-transplant",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_kidney_transplant"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-prior-creatinine-test",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-prior-creatinine-test",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_prior_creatinine_test"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-still-using-ras-inhibitor",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-still-using-ras-inhibitor",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "still_using_ras_inhibitor"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-creatinine-increased-over-30-per",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-creatinine-increased-over-30-per",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "creatinine_increased_over_30_percent"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-tolerates-mra",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-tolerates-mra",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "tolerates_mra"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-tolerates-spironolactone",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-tolerates-spironolactone",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "tolerates_spironolactone"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-acute-ischemic-stroke",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-acute-ischemic-stroke",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_acute_ischemic_stroke"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-is-thrombolysis-candidate",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-is-thrombolysis-candidate",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_thrombolysis_candidate"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-acute-coronary-syndrome",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-acute-coronary-syndrome",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_acute_coronary_syndrome"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-acute-cardiogenic-pulmonary-",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-acute-cardiogenic-pulmonary-",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_acute_cardiogenic_pulmonary_edema"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-acute-aortic-syndrome",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-acute-aortic-syndrome",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_acute_aortic_syndrome"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-eclampsia-severe-preeclampsi",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-eclampsia-severe-preeclampsi",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_eclampsia_severe_preeclampsia_or_hellp"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-hypertensive-encephalopathy",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-hypertensive-encephalopathy",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hypertensive_encephalopathy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-acute-intracerebral-hemorrha",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-acute-intracerebral-hemorrha",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_acute_intracerebral_hemorrhage"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-pre-pregnancy-hypertension",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-pre-pregnancy-hypertension",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_pre_pregnancy_hypertension"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-hypertension-before-week-20",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-hypertension-before-week-20",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hypertension_before_week_20"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-hypertension-after-week-20",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-hypertension-after-week-20",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hypertension_after_week_20"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-prior-gestational-hypertensi",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-prior-gestational-hypertensi",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_prior_gestational_hypertension"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-high-preeclampsia-risk",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-high-preeclampsia-risk",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_high_preeclampsia_risk"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-proteinuria",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-proteinuria",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_proteinuria"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-autoimmune-disease",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-autoimmune-disease",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_autoimmune_disease"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-severe-headache",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-severe-headache",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_severe_headache"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-visual-disturbance",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-visual-disturbance",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_visual_disturbance"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-epigastric-pain",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-epigastric-pain",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_epigastric_pain"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-hemolysis",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-hemolysis",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hemolysis"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-elevated-liver-enzymes",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-elevated-liver-enzymes",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_elevated_liver_enzymes"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-low-platelets",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-low-platelets",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_low_platelets"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-seizure",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-seizure",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_seizure"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-pulmonary-edema",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-pulmonary-edema",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_pulmonary_edema"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-coagulopathy",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-coagulopathy",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_coagulopathy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-hypertensive-crisis",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-hypertensive-crisis",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hypertensive_crisis"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-has-tma-or-acute-kidney-injury",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-has-tma-or-acute-kidney-injury",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_tma_or_acute_kidney_injury"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-is-treatment-target-not-achieved",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-is-treatment-target-not-achieved",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_treatment_target_not_achieved"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-is-postpartum",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-is-postpartum",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_postpartum"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "86569001",
+              "display": "Postpartum Period"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-is-breastfeeding",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-is-breastfeeding",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_breastfeeding"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-is-lifestyle-follow-up",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-is-lifestyle-follow-up",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_lifestyle_follow_up"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-is-medication-follow-up",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-is-medication-follow-up",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_medication_follow_up"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "contra-08-hypokalaemia-thiazide-current-clinic-sbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8459-0",
+              "display": "Sitting systolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "effectiveDateTime": "2024-02-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "current_clinic"
+          }
+        ],
+        "valueQuantity": {
+          "value": 135,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        },
+        "encounter": {
+          "reference": "Encounter/contra-08-hypokalaemia-thiazide-contraindication-encounter"
+        }
+      },
+      "fullUrl": "http://example.org/fhir/Observation/contra-08-hypokalaemia-thiazide-current-clinic-sbp"
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "contra-08-hypokalaemia-thiazide-current-clinic-dbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4",
+              "display": "Diastolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "effectiveDateTime": "2024-02-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "current_clinic"
+          }
+        ],
+        "valueQuantity": {
+          "value": 92,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        },
+        "encounter": {
+          "reference": "Encounter/contra-08-hypokalaemia-thiazide-contraindication-encounter"
+        }
+      },
+      "fullUrl": "http://example.org/fhir/Observation/contra-08-hypokalaemia-thiazide-current-clinic-dbp"
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Encounter/contra-08-hypokalaemia-thiazide-contraindication-encounter",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "contra-08-hypokalaemia-thiazide-contraindication-encounter",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "period": {
+          "start": "2026-01-15"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-cond-htn",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-cond-htn",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "I10"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "59621000"
+            }
+          ],
+          "text": "Primary hypertension"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-cond-hypokalaemia",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-cond-hypokalaemia",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "E87.6"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "43339004"
+            }
+          ],
+          "text": "Hypokalemia"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-cond-diabetes",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-cond-diabetes",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "E11"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "44054006"
+            }
+          ],
+          "text": "Type 2 diabetes mellitus"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-08-hypokalaemia-thiazide-cond-ckd",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-08-hypokalaemia-thiazide-cond-ckd",
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "N18"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "709044004"
+            }
+          ],
+          "text": "Chronic kidney disease"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/MedicationRequest/contra-08-hypokalaemia-thiazide-med-chlorthalidone",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "contra-08-hypokalaemia-thiazide-med-chlorthalidone",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "text": "CHLORTHALIDONE"
+        },
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "encounter": {
+          "reference": "Encounter/contra-08-hypokalaemia-thiazide-contraindication-encounter"
+        },
+        "authoredOn": "2026-01-15"
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/contra-08-hypokalaemia-thiazide-obs-potassium",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "contra-08-hypokalaemia-thiazide-obs-potassium",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "6298-4"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "encounter": {
+          "reference": "Encounter/contra-08-hypokalaemia-thiazide-contraindication-encounter"
+        },
+        "valueQuantity": {
+          "value": 3.1,
+          "unit": "mmol/L",
+          "system": "http://unitsofmeasure.org",
+          "code": "mmol/L"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/contra-08-hypokalaemia-thiazide-obs-home-sbp",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "contra-08-hypokalaemia-thiazide-obs-home-sbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8459-0"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "encounter": {
+          "reference": "Encounter/contra-08-hypokalaemia-thiazide-contraindication-encounter"
+        },
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "home"
+          }
+        ],
+        "valueQuantity": {
+          "value": 130,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/contra-08-hypokalaemia-thiazide-obs-home-dbp",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "contra-08-hypokalaemia-thiazide-obs-home-dbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/contra-08-hypokalaemia-thiazide"
+        },
+        "encounter": {
+          "reference": "Encounter/contra-08-hypokalaemia-thiazide-contraindication-encounter"
+        },
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "home"
+          }
+        ],
+        "valueQuantity": {
+          "value": 80,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      }
+    }
+  ],
+  "id": "bundle-contra-08-hypokalaemia-thiazide",
+  "identifier": {
+    "system": "http://cdss.local/fhir/CodeSystem/preset/id",
+    "value": "contra-08-hypokalaemia-thiazide"
+  },
+  "meta": {
+    "tag": [
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/category",
+        "code": "Drug Contraindication Tests",
+        "display": "Drug Contraindication Tests"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/label",
+        "code": "contra-08-hypokalaemia-thiazide",
+        "display": "08 — Hypokalaemia flags thiazide subgroups"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/description",
+        "code": "contra-08-hypokalaemia-thiazide",
+        "display": "Copied from the existing CKD modifier preset; relative thiazide findings remain selectable for review."
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/snomed-source",
+        "code": "database-reference-catalog",
+        "display": "SNOMED CT sourced from reference tables"
+      }
+    ]
+  }
+}

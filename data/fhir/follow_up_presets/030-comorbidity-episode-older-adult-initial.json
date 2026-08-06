@@ -1,0 +1,119 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "fullUrl": "http://example.org/fhir/Patient/medication-follow-up-older-adult-001",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "medication-follow-up-older-adult-001",
+        "birthDate": "1944-01-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/risk-factor-count",
+            "valueInteger": 3
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/facility-capability",
+            "valueString": "FULL_RESOURCES"
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "medication-follow-up-older-adult-001-current-clinic-sbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8459-0",
+              "display": "Sitting systolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/medication-follow-up-older-adult-001"
+        },
+        "effectiveDateTime": "2024-02-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "current_clinic"
+          }
+        ],
+        "valueQuantity": {
+          "value": 158,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "fullUrl": "http://example.org/fhir/Observation/medication-follow-up-older-adult-001-current-clinic-sbp"
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "medication-follow-up-older-adult-001-current-clinic-dbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4",
+              "display": "Diastolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/medication-follow-up-older-adult-001"
+        },
+        "effectiveDateTime": "2024-02-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "current_clinic"
+          }
+        ],
+        "valueQuantity": {
+          "value": 92,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "fullUrl": "http://example.org/fhir/Observation/medication-follow-up-older-adult-001-current-clinic-dbp"
+    }
+  ],
+  "id": "bundle-comorbidity-episode-older-adult-initial",
+  "identifier": {
+    "system": "http://cdss.local/fhir/CodeSystem/preset/id",
+    "value": "comorbidity-episode-older-adult-initial"
+  },
+  "meta": {
+    "tag": [
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/category",
+        "code": "Follow-Up Visits",
+        "display": "Follow-Up Visits"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/label",
+        "code": "comorbidity-episode-older-adult-initial",
+        "display": "Older Adult Episode — Initial Visit"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/description",
+        "code": "comorbidity-episode-older-adult-initial",
+        "display": "Initial uncontrolled-hypertension visit for medication-follow-up-older-adult-001; routes through the Older Adult comorbidity branch before treatment selection."
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/snomed-source",
+        "code": "database-reference-catalog",
+        "display": "SNOMED CT sourced from reference tables"
+      }
+    ]
+  }
+}

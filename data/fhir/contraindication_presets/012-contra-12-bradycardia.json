@@ -1,0 +1,1902 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "fullUrl": "http://example.org/fhir/Patient/contra-12-bradycardia",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "contra-12-bradycardia",
+        "birthDate": "1961-01-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/risk-factor-count",
+            "valueInteger": 2
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/facility-capability",
+            "valueString": "FULL_RESOURCES"
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/heart_rate",
+            "valueDecimal": 52
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-is-pregnant",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-is-pregnant",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_pregnant"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "48194001",
+              "display": "Gestational (pregnancy-induced) hypertension"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-coronary-artery-disease",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-coronary-artery-disease",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_coronary_artery_disease"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-type-2-diabetes",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-type-2-diabetes",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_type_2_diabetes"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "44054006",
+              "display": "Type 2 Diabetes Mellitus"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-heart-failure",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-heart-failure",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_heart_failure"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "84114007",
+              "display": "Heart Failure"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-ckd",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-ckd",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_ckd"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive diseases"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-ckd-stage-3-or-higher",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-ckd-stage-3-or-higher",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_ckd_stage_3_or_higher"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive diseases"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-diabetes",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-diabetes",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_diabetes"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "44054006",
+              "display": "Type 2 Diabetes Mellitus"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-cardiovascular-disease",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-cardiovascular-disease",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_cardiovascular_disease"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive diseases"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-stroke",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-stroke",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_stroke"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive diseases"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-tia",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-tia",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_tia"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "266257000",
+              "display": "Transient Ischemic Attack"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-frailty-syndrome",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-frailty-syndrome",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_frailty_syndrome"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-target-organ-damage",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-target-organ-damage",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_target_organ_damage"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-mi-acs",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-mi-acs",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_mi_acs"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-ccs-angina",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-ccs-angina",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_ccs_angina"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-ccs-revasc",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-ccs-revasc",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_ccs_revasc"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-cabg",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-cabg",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_cabg"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-hfref",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-hfref",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hfref"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-hfmref",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-hfmref",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hfmref"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-hfpef",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-hfpef",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hfpef"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-lvh",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-lvh",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_lvh"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-kidney-transplant",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-kidney-transplant",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_kidney_transplant"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-prior-creatinine-test",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-prior-creatinine-test",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_prior_creatinine_test"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-still-using-ras-inhibitor",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-still-using-ras-inhibitor",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "still_using_ras_inhibitor"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-creatinine-increased-over-30-percent",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-creatinine-increased-over-30-percent",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "creatinine_increased_over_30_percent"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-tolerates-mra",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-tolerates-mra",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "tolerates_mra"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-tolerates-spironolactone",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-tolerates-spironolactone",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "tolerates_spironolactone"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-acute-ischemic-stroke",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-acute-ischemic-stroke",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_acute_ischemic_stroke"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-is-thrombolysis-candidate",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-is-thrombolysis-candidate",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_thrombolysis_candidate"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-acute-coronary-syndrome",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-acute-coronary-syndrome",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_acute_coronary_syndrome"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-acute-cardiogenic-pulmonary-edema",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-acute-cardiogenic-pulmonary-edema",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_acute_cardiogenic_pulmonary_edema"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-acute-aortic-syndrome",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-acute-aortic-syndrome",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_acute_aortic_syndrome"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-eclampsia-severe-preeclampsia-or-hellp",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-eclampsia-severe-preeclampsia-or-hellp",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_eclampsia_severe_preeclampsia_or_hellp"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-hypertensive-encephalopathy",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-hypertensive-encephalopathy",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hypertensive_encephalopathy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-acute-intracerebral-hemorrhage",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-acute-intracerebral-hemorrhage",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_acute_intracerebral_hemorrhage"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-pre-pregnancy-hypertension",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-pre-pregnancy-hypertension",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_pre_pregnancy_hypertension"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-hypertension-before-week-20",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-hypertension-before-week-20",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hypertension_before_week_20"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-hypertension-after-week-20",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-hypertension-after-week-20",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hypertension_after_week_20"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-prior-gestational-hypertension",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-prior-gestational-hypertension",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_prior_gestational_hypertension"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-high-preeclampsia-risk",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-high-preeclampsia-risk",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_high_preeclampsia_risk"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-proteinuria",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-proteinuria",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_proteinuria"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-autoimmune-disease",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-autoimmune-disease",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_autoimmune_disease"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-severe-headache",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-severe-headache",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_severe_headache"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-visual-disturbance",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-visual-disturbance",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_visual_disturbance"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-epigastric-pain",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-epigastric-pain",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_epigastric_pain"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-hemolysis",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-hemolysis",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hemolysis"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-elevated-liver-enzymes",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-elevated-liver-enzymes",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_elevated_liver_enzymes"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-low-platelets",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-low-platelets",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_low_platelets"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-seizure",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-seizure",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_seizure"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-pulmonary-edema",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-pulmonary-edema",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_pulmonary_edema"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-coagulopathy",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-coagulopathy",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_coagulopathy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-hypertensive-crisis",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-hypertensive-crisis",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hypertensive_crisis"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-has-tma-or-acute-kidney-injury",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-has-tma-or-acute-kidney-injury",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_tma_or_acute_kidney_injury"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-is-treatment-target-not-achieved",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-is-treatment-target-not-achieved",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_treatment_target_not_achieved"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-is-postpartum",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-is-postpartum",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_postpartum"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "86569001",
+              "display": "Postpartum Period"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-is-breastfeeding",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-is-breastfeeding",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_breastfeeding"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-is-lifestyle-follow-up",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-is-lifestyle-follow-up",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_lifestyle_follow_up"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-is-medication-follow-up",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-is-medication-follow-up",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_medication_follow_up"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "contra-12-bradycardia-current-clinic-sbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8459-0",
+              "display": "Sitting systolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "effectiveDateTime": "2024-02-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "current_clinic"
+          }
+        ],
+        "valueQuantity": {
+          "value": 159,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        },
+        "encounter": {
+          "reference": "Encounter/contra-12-bradycardia-contraindication-encounter"
+        }
+      },
+      "fullUrl": "http://example.org/fhir/Observation/contra-12-bradycardia-current-clinic-sbp"
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "contra-12-bradycardia-current-clinic-dbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4",
+              "display": "Diastolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "effectiveDateTime": "2024-02-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "current_clinic"
+          }
+        ],
+        "valueQuantity": {
+          "value": 97,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        },
+        "encounter": {
+          "reference": "Encounter/contra-12-bradycardia-contraindication-encounter"
+        }
+      },
+      "fullUrl": "http://example.org/fhir/Observation/contra-12-bradycardia-current-clinic-dbp"
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Encounter/contra-12-bradycardia-contraindication-encounter",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "contra-12-bradycardia-contraindication-encounter",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "period": {
+          "start": "2026-01-15"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-cond-htn",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-cond-htn",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "I10"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "59621000"
+            }
+          ],
+          "text": "Primary hypertension"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-cond-bradycardia",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-cond-bradycardia",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "R00.1"
+            }
+          ],
+          "text": "Bradycardia"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-cond-ckd",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-cond-ckd",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "N18"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "709044004"
+            }
+          ],
+          "text": "Chronic kidney disease"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/contra-12-bradycardia-cond-heart-failure",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "contra-12-bradycardia-cond-heart-failure",
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "I50.9"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "84114007"
+            }
+          ],
+          "text": "Heart failure"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/MedicationRequest/contra-12-bradycardia-med-bisoprolol",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "contra-12-bradycardia-med-bisoprolol",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "text": "BISOPROLOL"
+        },
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "encounter": {
+          "reference": "Encounter/contra-12-bradycardia-contraindication-encounter"
+        },
+        "authoredOn": "2026-01-15"
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/MedicationRequest/contra-12-bradycardia-med-diltiazem",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "contra-12-bradycardia-med-diltiazem",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "text": "DILTIAZEM"
+        },
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "encounter": {
+          "reference": "Encounter/contra-12-bradycardia-contraindication-encounter"
+        },
+        "authoredOn": "2026-01-15"
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/contra-12-bradycardia-obs-heart-rate",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "contra-12-bradycardia-obs-heart-rate",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8867-4"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "encounter": {
+          "reference": "Encounter/contra-12-bradycardia-contraindication-encounter"
+        },
+        "valueQuantity": {
+          "value": 52,
+          "unit": "beats/min",
+          "system": "http://unitsofmeasure.org",
+          "code": "/min"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/contra-12-bradycardia-obs-home-sbp",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "contra-12-bradycardia-obs-home-sbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8459-0"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "encounter": {
+          "reference": "Encounter/contra-12-bradycardia-contraindication-encounter"
+        },
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "home"
+          }
+        ],
+        "valueQuantity": {
+          "value": 130,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/contra-12-bradycardia-obs-home-dbp",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "contra-12-bradycardia-obs-home-dbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/contra-12-bradycardia"
+        },
+        "encounter": {
+          "reference": "Encounter/contra-12-bradycardia-contraindication-encounter"
+        },
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "home"
+          }
+        ],
+        "valueQuantity": {
+          "value": 80,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      }
+    }
+  ],
+  "id": "bundle-contra-12-bradycardia",
+  "identifier": {
+    "system": "http://cdss.local/fhir/CodeSystem/preset/id",
+    "value": "contra-12-bradycardia"
+  },
+  "meta": {
+    "tag": [
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/category",
+        "code": "Drug Contraindication Tests",
+        "display": "Drug Contraindication Tests"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/label",
+        "code": "contra-12-bradycardia",
+        "display": "12 — Bradycardia removes beta and non-DHP CCB"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/description",
+        "code": "contra-12-bradycardia",
+        "display": "Copied from the existing heart-failure modifier preset with a documented low heart rate."
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/snomed-source",
+        "code": "database-reference-catalog",
+        "display": "SNOMED CT sourced from reference tables"
+      }
+    ]
+  }
+}

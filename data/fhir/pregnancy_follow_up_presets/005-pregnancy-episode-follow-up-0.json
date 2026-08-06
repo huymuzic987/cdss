@@ -1,0 +1,410 @@
+{
+  "resourceType": "Bundle",
+  "id": "bundle-pregnancy-episode-follow-up-0",
+  "meta": {
+    "tag": [
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/category",
+        "code": "Pregnancy Follow-Up Sequence",
+        "display": "Pregnancy Follow-Up Sequence"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/label",
+        "code": "pregnancy-episode-follow-up-0",
+        "display": "Pregnancy Episode — Initial Visit"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/description",
+        "code": "pregnancy-episode-follow-up-0",
+        "display": "Longitudinal pregnancy episode with 1 FHIR Encounter resource(s); follow-up number 0."
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/snomed-source",
+        "code": "database-reference-catalog",
+        "display": "SNOMED CT sourced from reference tables"
+      }
+    ]
+  },
+  "identifier": {
+    "system": "http://cdss.local/fhir/CodeSystem/preset/id",
+    "value": "pregnancy-episode-follow-up-0"
+  },
+  "type": "collection",
+  "timestamp": "2026-01-05T08:00:00+07:00",
+  "entry": [
+    {
+      "fullUrl": "http://example.org/fhir/Patient/PGF001",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "PGF001",
+        "gender": "female",
+        "birthDate": "1997-04-12",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/risk-factor-count",
+            "valueInteger": 1
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/weeks_persisting_postpartum",
+            "valueInteger": 0
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/weeks_resolved_postpartum",
+            "valueInteger": 2
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/pregnancy_episode_id",
+            "valueString": "pregnancy-demo-001"
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/pregnancy_follow_up_number",
+            "valueInteger": 0
+          }
+        ],
+        "address": [
+          {
+            "use": "home",
+            "type": "physical",
+            "city": "Ho Chi Minh City",
+            "country": "VN"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/PGF001-is-pregnant",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "PGF001-is-pregnant",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_pregnant"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "48194001",
+              "display": "Gestational (pregnancy-induced) hypertension"
+            }
+          ],
+          "text": "Is Pregnant"
+        },
+        "subject": {
+          "reference": "Patient/PGF001"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/PGF001-has-hypertension-after-week-20",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "PGF001-has-hypertension-after-week-20",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hypertension_after_week_20"
+            }
+          ],
+          "text": "Has Hypertension After Week 20"
+        },
+        "subject": {
+          "reference": "Patient/PGF001"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Encounter/PGF001-initial",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "PGF001-initial",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "subject": {
+          "reference": "Patient/PGF001"
+        },
+        "period": {
+          "start": "2026-01-05T08:00:00+07:00",
+          "end": "2026-01-05T08:30:00+07:00"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/PGF001-initial-sbp",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "PGF001-initial-sbp",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8459-0",
+              "display": "Sitting systolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/PGF001"
+        },
+        "effectiveDateTime": "2026-01-05T08:00:00+07:00",
+        "valueQuantity": {
+          "value": 150,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        },
+        "encounter": {
+          "reference": "Encounter/PGF001-initial"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/PGF001-initial-dbp",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "PGF001-initial-dbp",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4",
+              "display": "Diastolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/PGF001"
+        },
+        "effectiveDateTime": "2026-01-05T08:00:00+07:00",
+        "valueQuantity": {
+          "value": 95,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        },
+        "encounter": {
+          "reference": "Encounter/PGF001-initial"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/PGF001-home-sbp",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "PGF001-home-sbp",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8459-0",
+              "display": "Home systolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/PGF001"
+        },
+        "effectiveDateTime": "2026-01-05T08:00:00+07:00",
+        "valueQuantity": {
+          "value": 138,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        },
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "home"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/PGF001-home-dbp",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "PGF001-home-dbp",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4",
+              "display": "Home diastolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/PGF001"
+        },
+        "effectiveDateTime": "2026-01-05T08:00:00+07:00",
+        "valueQuantity": {
+          "value": 87,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        },
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "home"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/PGF001-proteinuria",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "PGF001-proteinuria",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2889-4",
+              "display": "Protein [Mass/time] in 24 hour Urine"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/PGF001"
+        },
+        "effectiveDateTime": "2026-01-05T08:00:00+07:00",
+        "valueQuantity": {
+          "value": 50,
+          "unit": "mg/24 h",
+          "system": "http://unitsofmeasure.org",
+          "code": "mg/(24.h)"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Observation/PGF001-acr",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "PGF001-acr",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "9318-7",
+              "display": "Albumin/Creatinine [Ratio] in Urine"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/PGF001"
+        },
+        "effectiveDateTime": "2026-01-05T08:00:00+07:00",
+        "valueQuantity": {
+          "value": 5,
+          "unit": "mg/mmol",
+          "system": "http://unitsofmeasure.org",
+          "code": "mg/mmol"
+        }
+      }
+    }
+  ]
+}

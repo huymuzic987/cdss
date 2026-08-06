@@ -1,0 +1,181 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "fullUrl": "http://example.org/fhir/Patient/medication-follow-up-type2-diabetes-001",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "medication-follow-up-type2-diabetes-001",
+        "birthDate": "1968-01-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/risk-factor-count",
+            "valueInteger": 3
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/facility-capability",
+            "valueString": "FULL_RESOURCES"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-type2-diabetes-001-has-type-2-diabetes",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-type2-diabetes-001-has-type-2-diabetes",
+        "subject": {
+          "reference": "Patient/medication-follow-up-type2-diabetes-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_type_2_diabetes"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "44054006",
+              "display": "Type 2 Diabetes Mellitus"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-type2-diabetes-001-has-cardiovascular-disea",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-type2-diabetes-001-has-cardiovascular-disea",
+        "subject": {
+          "reference": "Patient/medication-follow-up-type2-diabetes-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_cardiovascular_disease"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive diseases"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "medication-follow-up-type2-diabetes-001-current-clinic-sbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8459-0",
+              "display": "Sitting systolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/medication-follow-up-type2-diabetes-001"
+        },
+        "effectiveDateTime": "2024-02-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "current_clinic"
+          }
+        ],
+        "valueQuantity": {
+          "value": 146,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "fullUrl": "http://example.org/fhir/Observation/medication-follow-up-type2-diabetes-001-current-clinic-sbp"
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "medication-follow-up-type2-diabetes-001-current-clinic-dbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4",
+              "display": "Diastolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/medication-follow-up-type2-diabetes-001"
+        },
+        "effectiveDateTime": "2024-02-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "current_clinic"
+          }
+        ],
+        "valueQuantity": {
+          "value": 90,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "fullUrl": "http://example.org/fhir/Observation/medication-follow-up-type2-diabetes-001-current-clinic-dbp"
+    }
+  ],
+  "id": "bundle-comorbidity-episode-type2-diabetes-initial",
+  "identifier": {
+    "system": "http://cdss.local/fhir/CodeSystem/preset/id",
+    "value": "comorbidity-episode-type2-diabetes-initial"
+  },
+  "meta": {
+    "tag": [
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/category",
+        "code": "Follow-Up Visits",
+        "display": "Follow-Up Visits"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/label",
+        "code": "comorbidity-episode-type2-diabetes-initial",
+        "display": "Type 2 Diabetes Episode — Initial Visit"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/description",
+        "code": "comorbidity-episode-type2-diabetes-initial",
+        "display": "Initial uncontrolled-hypertension visit for medication-follow-up-type2-diabetes-001; routes through the Type 2 Diabetes comorbidity branch before treatment selection."
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/snomed-source",
+        "code": "database-reference-catalog",
+        "display": "SNOMED CT sourced from reference tables"
+      }
+    ]
+  }
+}

@@ -1,0 +1,312 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "fullUrl": "http://example.org/fhir/Patient/medication-follow-up-cad-001",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "medication-follow-up-cad-001",
+        "birthDate": "1968-01-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/risk-factor-count",
+            "valueInteger": 3
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/facility-capability",
+            "valueString": "FULL_RESOURCES"
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/medication_follow_up_stage",
+            "valueString": "ESCALATED_REGIMEN"
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/active_bp_target_sbp_upper",
+            "valueInteger": 130
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/active_bp_target_dbp_upper",
+            "valueInteger": 80
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/minimum_regimen_days",
+            "valueInteger": 28
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/current_regimen_drug_count",
+            "valueInteger": 3
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/current_regimen_drug_classes",
+            "valueString": "A+C+D"
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/assessment_date",
+            "valueString": "2026-07-27"
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/regimen_effective_date",
+            "valueString": "2026-06-29"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-cad-001-is-medication-follow-up",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-cad-001-is-medication-follow-up",
+        "subject": {
+          "reference": "Patient/medication-follow-up-cad-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_medication_follow_up"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-cad-001-adherence-adequate",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-cad-001-adherence-adequate",
+        "subject": {
+          "reference": "Patient/medication-follow-up-cad-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "adherence_adequate"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-cad-001-dose-adequate",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-cad-001-dose-adequate",
+        "subject": {
+          "reference": "Patient/medication-follow-up-cad-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "dose_adequate"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-cad-001-has-coronary-artery-disease",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-cad-001-has-coronary-artery-disease",
+        "subject": {
+          "reference": "Patient/medication-follow-up-cad-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_coronary_artery_disease"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-cad-001-has-cardiovascular-disease",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-cad-001-has-cardiovascular-disease",
+        "subject": {
+          "reference": "Patient/medication-follow-up-cad-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_cardiovascular_disease"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive diseases"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-cad-001-has-ccs-revasc",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-cad-001-has-ccs-revasc",
+        "subject": {
+          "reference": "Patient/medication-follow-up-cad-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_ccs_revasc"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "medication-follow-up-cad-001-current-clinic-sbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8459-0",
+              "display": "Sitting systolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/medication-follow-up-cad-001"
+        },
+        "effectiveDateTime": "2024-02-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "current_clinic"
+          }
+        ],
+        "valueQuantity": {
+          "value": 127,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "fullUrl": "http://example.org/fhir/Observation/medication-follow-up-cad-001-current-clinic-sbp"
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "medication-follow-up-cad-001-current-clinic-dbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4",
+              "display": "Diastolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/medication-follow-up-cad-001"
+        },
+        "effectiveDateTime": "2024-02-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "current_clinic"
+          }
+        ],
+        "valueQuantity": {
+          "value": 77,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "fullUrl": "http://example.org/fhir/Observation/medication-follow-up-cad-001-current-clinic-dbp"
+    }
+  ],
+  "id": "bundle-comorbidity-episode-cad-follow-up-3-controlled",
+  "identifier": {
+    "system": "http://cdss.local/fhir/CodeSystem/preset/id",
+    "value": "comorbidity-episode-cad-follow-up-3-controlled"
+  },
+  "meta": {
+    "tag": [
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/category",
+        "code": "Follow-Up Visits",
+        "display": "Follow-Up Visits"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/label",
+        "code": "comorbidity-episode-cad-follow-up-3-controlled",
+        "display": "Coronary Artery Disease Episode — Follow-Up 3: Target Reached"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/description",
+        "code": "comorbidity-episode-cad-follow-up-3-controlled",
+        "display": "After 28 days on A+C+D, BP reaches target and the escalated regimen is maintained."
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/snomed-source",
+        "code": "database-reference-catalog",
+        "display": "SNOMED CT sourced from reference tables"
+      }
+    ]
+  }
+}

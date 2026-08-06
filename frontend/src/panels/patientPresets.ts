@@ -1,37 +1,32 @@
-﻿import { formToPayload } from './mockPatientForm/payload'
-import { DEFAULT_FORM } from './mockPatientForm/types'
-import { cardioModifierPresets } from './patientPresets/modifiersCardio'
-import { demographicPresets } from './patientPresets/demographic'
-import { diagnosisPresets } from './patientPresets/diagnosis'
-import { followUpPresets } from './patientPresets/followUp'
-import { comorbidityFollowUpEpisodePresets } from './patientPresets/followUpComorbidityEpisodes'
-import {
-  pregnancyFollowUpPresets,
-  pregnancyPresets,
-} from './patientPresets/pregnancy'
-import { renalModifierPresets } from './patientPresets/modifiersRenal'
-import { contraindicationPresets } from './patientPresets/contraindication'
-import type { PatientPreset, PatientPresetDefinition } from './patientPresets/shared'
+import generatedBundles from './patientPresets/presets.generated.json'
+import type { JsonObject } from '../api/types'
+import type { PatientPreset } from './patientPresets/shared'
 
 export type { PatientPreset } from './patientPresets/shared'
 
-const definitions: PatientPresetDefinition[] = [
-  ...diagnosisPresets,
-  ...demographicPresets,
-  ...followUpPresets,
-  ...comorbidityFollowUpEpisodePresets,
-  ...cardioModifierPresets,
-  ...renalModifierPresets,
-  ...contraindicationPresets,
-  ...pregnancyPresets,
-  ...pregnancyFollowUpPresets,
-]
+const PRESET_META_BASE = 'http://cdss.local/fhir/CodeSystem/preset'
 
-export const PATIENT_PRESETS: PatientPreset[] = definitions.map((definition) => {
-  if ('bundle' in definition) return definition
-  const { data, ...preset } = definition
+export const PATIENT_PRESETS: PatientPreset[] = (generatedBundles as unknown as JsonObject[]).map((bundle) => {
+  const meta = asObject(bundle.meta)
+  const tags = Array.isArray(meta?.tag)
+    ? meta.tag.map(asObject).filter((item): item is JsonObject => item !== null)
+    : []
+  const tag = (name: string) => tags.find(
+    (item) => item.system === `${PRESET_META_BASE}/${name}`,
+  )
+  const identifier = asObject(bundle.identifier)
+  const id = typeof identifier?.value === 'string' ? identifier.value : String(bundle.id)
   return {
-    ...preset,
-    bundle: formToPayload({ ...DEFAULT_FORM, ...data }),
+    id,
+    label: String(tag('label')?.display ?? id),
+    category: String(tag('category')?.display ?? 'Generated Patient Presets'),
+    description: String(tag('description')?.display ?? ''),
+    bundle,
   }
 })
+
+function asObject(value: unknown): JsonObject | null {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? value as JsonObject
+    : null
+}

@@ -1,0 +1,229 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "fullUrl": "http://example.org/fhir/Patient/medication-follow-up-review-001",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "medication-follow-up-review-001",
+        "birthDate": "1978-01-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/risk-factor-count",
+            "valueInteger": 0
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/facility-capability",
+            "valueString": "FULL_RESOURCES"
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/medication_follow_up_stage",
+            "valueString": "ESCALATED_REGIMEN"
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/active_bp_target_sbp_upper",
+            "valueInteger": 130
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/active_bp_target_dbp_upper",
+            "valueInteger": 80
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/minimum_regimen_days",
+            "valueInteger": 28
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/current_regimen_drug_count",
+            "valueInteger": 3
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/current_regimen_drug_classes",
+            "valueString": "A+C+D"
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/assessment_date",
+            "valueString": "2026-03-26"
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/input/regimen_effective_date",
+            "valueString": "2026-02-26"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-is-medication-follow-up",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-is-medication-follow-up",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_medication_follow_up"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-adherence-adequate",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-adherence-adequate",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "adherence_adequate"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-dose-adequate",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-dose-adequate",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "dose_adequate"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "medication-follow-up-review-001-current-clinic-sbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8459-0",
+              "display": "Sitting systolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "effectiveDateTime": "2024-02-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "current_clinic"
+          }
+        ],
+        "valueQuantity": {
+          "value": 126,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "fullUrl": "http://example.org/fhir/Observation/medication-follow-up-review-001-current-clinic-sbp"
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "medication-follow-up-review-001-current-clinic-dbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4",
+              "display": "Diastolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "effectiveDateTime": "2024-02-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "current_clinic"
+          }
+        ],
+        "valueQuantity": {
+          "value": 76,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "fullUrl": "http://example.org/fhir/Observation/medication-follow-up-review-001-current-clinic-dbp"
+    }
+  ],
+  "id": "bundle-med-review-episode-follow-up-4-controlled",
+  "identifier": {
+    "system": "http://cdss.local/fhir/CodeSystem/preset/id",
+    "value": "med-review-episode-follow-up-4-controlled"
+  },
+  "meta": {
+    "tag": [
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/category",
+        "code": "Follow-Up Visits",
+        "display": "Follow-Up Visits"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/label",
+        "code": "med-review-episode-follow-up-4-controlled",
+        "display": "Medication Episode — Follow-Up 4: Target Reached"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/description",
+        "code": "med-review-episode-follow-up-4-controlled",
+        "display": "On the scheduled reassessment date, BP is below target and normal traversal follows the escalated-regimen target-reached branch."
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/snomed-source",
+        "code": "database-reference-catalog",
+        "display": "SNOMED CT sourced from reference tables"
+      }
+    ]
+  }
+}

@@ -1,0 +1,1651 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "fullUrl": "http://example.org/fhir/Patient/medication-follow-up-review-001",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "medication-follow-up-review-001",
+        "birthDate": "1978-01-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/risk-factor-count",
+            "valueInteger": 0
+          },
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/facility-capability",
+            "valueString": "FULL_RESOURCES"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-is-pregnant",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-is-pregnant",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_pregnant"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "48194001",
+              "display": "Gestational (pregnancy-induced) hypertension"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-coronary-artery-disease",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-coronary-artery-disease",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_coronary_artery_disease"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-type-2-diabetes",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-type-2-diabetes",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_type_2_diabetes"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "44054006",
+              "display": "Type 2 Diabetes Mellitus"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-heart-failure",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-heart-failure",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_heart_failure"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "84114007",
+              "display": "Heart Failure"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-ckd",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-ckd",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_ckd"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive diseases"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-ckd-stage-3-or-higher",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-ckd-stage-3-or-higher",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_ckd_stage_3_or_higher"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive diseases"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-diabetes",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-diabetes",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_diabetes"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "44054006",
+              "display": "Type 2 Diabetes Mellitus"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-cardiovascular-disease",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-cardiovascular-disease",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_cardiovascular_disease"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive diseases"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-stroke",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-stroke",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_stroke"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive diseases"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-tia",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-tia",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_tia"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "266257000",
+              "display": "Transient Ischemic Attack"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-frailty-syndrome",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-frailty-syndrome",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_frailty_syndrome"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-target-organ-damage",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-target-organ-damage",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_target_organ_damage"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-mi-acs",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-mi-acs",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_mi_acs"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-ccs-angina",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-ccs-angina",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_ccs_angina"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-ccs-revasc",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-ccs-revasc",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_ccs_revasc"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-cabg",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-cabg",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_cabg"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-hfref",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-hfref",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hfref"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-hfmref",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-hfmref",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hfmref"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-hfpef",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-hfpef",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hfpef"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-lvh",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-lvh",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_lvh"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-kidney-transplant",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-kidney-transplant",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_kidney_transplant"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-prior-creatinine-test",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-prior-creatinine-test",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_prior_creatinine_test"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-still-using-ras-inhibitor",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-still-using-ras-inhibitor",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "still_using_ras_inhibitor"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-creatinine-increased-over-30-per",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-creatinine-increased-over-30-per",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "creatinine_increased_over_30_percent"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-tolerates-mra",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-tolerates-mra",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "tolerates_mra"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-tolerates-spironolactone",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-tolerates-spironolactone",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "tolerates_spironolactone"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-acute-ischemic-stroke",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-acute-ischemic-stroke",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_acute_ischemic_stroke"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-is-thrombolysis-candidate",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-is-thrombolysis-candidate",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_thrombolysis_candidate"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-acute-coronary-syndrome",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-acute-coronary-syndrome",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_acute_coronary_syndrome"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-acute-cardiogenic-pulmonary-",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-acute-cardiogenic-pulmonary-",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_acute_cardiogenic_pulmonary_edema"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-acute-aortic-syndrome",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-acute-aortic-syndrome",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_acute_aortic_syndrome"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-eclampsia-severe-preeclampsi",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-eclampsia-severe-preeclampsi",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_eclampsia_severe_preeclampsia_or_hellp"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-hypertensive-encephalopathy",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-hypertensive-encephalopathy",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hypertensive_encephalopathy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-acute-intracerebral-hemorrha",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-acute-intracerebral-hemorrha",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_acute_intracerebral_hemorrhage"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-pre-pregnancy-hypertension",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-pre-pregnancy-hypertension",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_pre_pregnancy_hypertension"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-hypertension-before-week-20",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-hypertension-before-week-20",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hypertension_before_week_20"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-hypertension-after-week-20",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-hypertension-after-week-20",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hypertension_after_week_20"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-prior-gestational-hypertensi",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-prior-gestational-hypertensi",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_prior_gestational_hypertension"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-high-preeclampsia-risk",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-high-preeclampsia-risk",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_high_preeclampsia_risk"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-proteinuria",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-proteinuria",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_proteinuria"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-autoimmune-disease",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-autoimmune-disease",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_autoimmune_disease"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-severe-headache",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-severe-headache",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_severe_headache"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-visual-disturbance",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-visual-disturbance",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_visual_disturbance"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-epigastric-pain",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-epigastric-pain",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_epigastric_pain"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-hemolysis",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-hemolysis",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hemolysis"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-elevated-liver-enzymes",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-elevated-liver-enzymes",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_elevated_liver_enzymes"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-low-platelets",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-low-platelets",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_low_platelets"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-seizure",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-seizure",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_seizure"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-pulmonary-edema",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-pulmonary-edema",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_pulmonary_edema"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-coagulopathy",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-coagulopathy",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_coagulopathy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-hypertensive-crisis",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-hypertensive-crisis",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_hypertensive_crisis"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-has-tma-or-acute-kidney-injury",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-has-tma-or-acute-kidney-injury",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "has_tma_or_acute_kidney_injury"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-is-treatment-target-not-achieved",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-is-treatment-target-not-achieved",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_treatment_target_not_achieved"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-is-postpartum",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-is-postpartum",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_postpartum"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "86569001",
+              "display": "Postpartum Period"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-is-breastfeeding",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-is-breastfeeding",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_breastfeeding"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-is-lifestyle-follow-up",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-is-lifestyle-follow-up",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_lifestyle_follow_up"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Condition/medication-follow-up-review-001-is-medication-follow-up",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "medication-follow-up-review-001-is-medication-follow-up",
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "refuted"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://cdss.local/fhir/CodeSystem/clinical-flag",
+              "code": "is_medication_follow_up"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "medication-follow-up-review-001-current-clinic-sbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8459-0",
+              "display": "Sitting systolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "effectiveDateTime": "2024-02-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "current_clinic"
+          }
+        ],
+        "valueQuantity": {
+          "value": 145,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "fullUrl": "http://example.org/fhir/Observation/medication-follow-up-review-001-current-clinic-sbp"
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "medication-follow-up-review-001-current-clinic-dbp",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4",
+              "display": "Diastolic blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/medication-follow-up-review-001"
+        },
+        "effectiveDateTime": "2024-02-01",
+        "extension": [
+          {
+            "url": "http://cdss.local/fhir/StructureDefinition/reading-role",
+            "valueCode": "current_clinic"
+          }
+        ],
+        "valueQuantity": {
+          "value": 92,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "fullUrl": "http://example.org/fhir/Observation/medication-follow-up-review-001-current-clinic-dbp"
+    }
+  ],
+  "id": "bundle-med-review-episode-initial-two-drugs",
+  "identifier": {
+    "system": "http://cdss.local/fhir/CodeSystem/preset/id",
+    "value": "med-review-episode-initial-two-drugs"
+  },
+  "meta": {
+    "tag": [
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/category",
+        "code": "Follow-Up Visits",
+        "display": "Follow-Up Visits"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/label",
+        "code": "med-review-episode-initial-two-drugs",
+        "display": "Medication Episode — Initial: Two Drugs"
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/description",
+        "code": "med-review-episode-initial-two-drugs",
+        "display": "Initial visit for review patient medication-follow-up-review-001; the current treatment tree starts with a two-drug combination."
+      },
+      {
+        "system": "http://cdss.local/fhir/CodeSystem/preset/snomed-source",
+        "code": "database-reference-catalog",
+        "display": "SNOMED CT sourced from reference tables"
+      }
+    ]
+  }
+}
