@@ -5,9 +5,11 @@ from pathlib import Path
 from typing import Any
 
 from cdss.api.schemas.clinical_evaluation import parse_clinical_bundle
-from cdss.domain.contraindication_catalog import ContraindicationDrug
-from cdss.domain.contraindication_evaluator import prepare_contraindication_input
-from cdss.domain.medication_safety import evaluate_target
+from cdss.domain.contraindications import (
+    ContraindicationDrug,
+    prepare_contraindication_input,
+)
+from cdss.domain.medication_safety.medication_safety_rules import evaluate_target
 
 PRESET_PATH = Path(__file__).parents[2] / "data" / "fhir" / "preset_patients.json"
 

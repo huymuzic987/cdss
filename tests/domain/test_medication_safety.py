@@ -17,8 +17,11 @@ from cdss.domain.decision_tree import (
     collect_action,
     filter_medication_regimen_plan,
 )
-from cdss.domain.medication_safety import evaluate_medication_safety, evaluate_target
-from cdss.domain.medication_safety_resolver import filter_medicine_options
+from cdss.domain.medication_safety import (
+    evaluate_medication_safety,
+    evaluate_target,
+)
+from cdss.domain.medication_safety.medication_safety_resolver import filter_medicine_options
 
 
 def _fact(status: str, value: Any = None) -> dict[str, Any]:

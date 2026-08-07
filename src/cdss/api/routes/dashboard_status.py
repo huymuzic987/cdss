@@ -9,7 +9,7 @@ from cdss.api.schemas.dashboard import (
     NeedsAttentionPatient,
     NeedsAttentionResponse,
 )
-from cdss.infrastructure.db.dashboard_repository import DashboardRepository
+from cdss.infrastructure.db.dashboard.dashboard_repository import DashboardRepository
 from cdss.infrastructure.db.models import Patient
 
 

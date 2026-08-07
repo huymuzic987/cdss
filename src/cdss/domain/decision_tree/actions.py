@@ -20,13 +20,16 @@ from cdss.domain.decision_tree.drug_classes import (
 from cdss.domain.decision_tree.errors import InvalidTreeStructure
 from cdss.domain.decision_tree.graph import NodeDefinition
 from cdss.domain.decision_tree.medicine_catalog import MedicineRepository
-from cdss.domain.medication_safety import evaluate_medication_safety, evaluate_target
-from cdss.domain.medication_safety_action_catalog import (
+from cdss.domain.medication_safety.medication_safety import (
+    evaluate_medication_safety,
+    evaluate_target,
+)
+from cdss.domain.medication_safety.medication_safety_action_catalog import (
     ACTION_SELECTOR_ACTION_TYPES,
     ACTION_SELECTORS,
 )
-from cdss.domain.medication_safety_metadata import candidate_regimens
-from cdss.domain.medication_safety_resolver import resolve_safe_regimens
+from cdss.domain.medication_safety.medication_safety_metadata import candidate_regimens
+from cdss.domain.medication_safety.medication_safety_resolver import resolve_safe_regimens
 
 
 def collect_action(

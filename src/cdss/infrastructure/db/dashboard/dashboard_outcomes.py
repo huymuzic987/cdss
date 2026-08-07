@@ -6,7 +6,7 @@ from typing import Any
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
 
-from cdss.infrastructure.db.dashboard_metrics import (
+from cdss.infrastructure.db.dashboard.dashboard_metrics import (
     _SBP_BUCKET_LAST,
     _SBP_BUCKETS,
     OutcomesCounts,

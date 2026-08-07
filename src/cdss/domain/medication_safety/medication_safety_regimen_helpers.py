@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from cdss.domain.decision_tree.medication_regimen_contracts import RegimenComponent
-from cdss.domain.medication_safety_inputs import target_for_medicine
+from cdss.domain.medication_safety.medication_safety_inputs import target_for_medicine
 
 
 def raw_matches_removal(raw: Mapping[str, Any], removed: RegimenComponent) -> bool:

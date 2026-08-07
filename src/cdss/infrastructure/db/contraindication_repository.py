@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from cdss.domain.contraindication_catalog import (
+from cdss.domain.contraindications import (
     ContraindicationDrug,
     ContraindicationDrugRepository,
 )

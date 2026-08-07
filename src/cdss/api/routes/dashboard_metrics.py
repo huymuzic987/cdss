@@ -12,7 +12,7 @@ from cdss.api.schemas.dashboard import (
     VisitNumberOutcome,
     VisitsResponse,
 )
-from cdss.infrastructure.db.dashboard_repository import (
+from cdss.infrastructure.db.dashboard.dashboard_repository import (
     AGE_BUCKET_ORDER,
     SBP_BUCKET_ORDER,
     DashboardRepository,

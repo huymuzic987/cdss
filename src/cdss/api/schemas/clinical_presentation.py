@@ -9,8 +9,11 @@ from typing import Any
 from cdss.api.schemas.clinical_evaluation import ParsedClinicalBundle
 from cdss.domain.decision_tree import ExecutedAction, ExecutedReference, JsonObject
 from cdss.domain.decision_tree.medication_regimen_contracts import MedicationRegimenPlan
-from cdss.domain.medication_safety import evaluate_target, target_for_medicine
-from cdss.domain.medication_safety_regimen import filter_medication_regimen_plan
+from cdss.domain.medication_safety.medication_safety_inputs import (
+    target_for_medicine,
+)
+from cdss.domain.medication_safety.medication_safety_regimen import filter_medication_regimen_plan
+from cdss.domain.medication_safety.medication_safety_rules import evaluate_target
 
 _SAFETY_TARGETS = (
     "ACE_INHIBITOR",

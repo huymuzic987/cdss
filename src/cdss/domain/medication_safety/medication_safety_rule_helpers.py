@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from cdss.domain.medication_safety_contracts import finding
-from cdss.domain.medication_safety_inputs import (
+from cdss.domain.medication_safety.medication_safety_contracts import finding
+from cdss.domain.medication_safety.medication_safety_inputs import (
     ABSOLUTE,
     INSUFFICIENT,
     NONSELECTIVE_BETA_BLOCKERS,

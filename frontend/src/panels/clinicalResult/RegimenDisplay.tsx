@@ -5,8 +5,9 @@ import type { ClinicalDecisionSupportLocale } from '../clinicalDecisionSupportMe
 import type { ClinicalPresentation, FinalRegimenComponent } from '../clinicalPresentation/types'
 import { ClinicalSection } from './ClinicalSection'
 import { ComponentCatalogDetails } from './RegimenCatalogPopup'
-import { GROUP_NAMES, recommendedDoseSummary } from './RegimenCatalog'
+import { recommendedDoseSummary } from './RegimenCatalog'
 import { uniqueReferenceDetails } from './RegimenReferenceDetails'
+import { RegimenTooltip } from './RegimenTooltip'
 import './RegimenDisplay.css'
 
 export { RegimenPathDisplay } from './RegimenPathDisplay'
@@ -181,37 +182,24 @@ export function RegimenDisplay({
           </div>
         </ClinicalSection>
       )}
-      {tooltip && activeOption && createPortal(
-        <div
-          className={`cds-regimen-row-tooltip cds-regimen-tooltip-${tooltip.placement}`}
-          id={`${activeOption.id}-details`}
-          role="tooltip"
-          style={{ left: tooltip.left, top: tooltip.top }}
-        >
-          <strong>{vi ? 'Chi tiết phác đồ' : 'Regimen details'}</strong>
-          <div className="cds-regimen-group-details">
-            {activeOption.components.map((component) => (
-              <span key={`${component.group}:${component.subgroup ?? ''}:${component.label}`}>
-                <b>{componentDisplayLabel(component, locale)}</b>: {GROUP_NAMES[component.group]}
-              </span>
-            ))}
-          </div>
-          {regimenReferences.length > 0 && (
-            <div className="cds-regimen-reference-details">
-              <strong>{regimenReferences[0]?.source_title}</strong>
-              {referenceDetails.map((detail) => <span key={detail}>{detail}</span>)}
-            </div>
-          )}
-        </div>,
-        document.body,
+      {tooltip && activeOption && (
+        <RegimenTooltip
+          activeOption={activeOption}
+          left={tooltip.left}
+          locale={locale}
+          placement={tooltip.placement}
+          referenceDetails={referenceDetails}
+          regimenReferences={regimenReferences}
+          top={tooltip.top}
+        />
       )}
       {catalogPopup && createPortal(
         <ComponentCatalogDetails
-          component={catalogPopup.component}
           catalog={presentation.regimenCatalog}
+          component={catalogPopup.component}
+          onClose={() => setCatalogPopup(null)}
           placement={catalogPopup.placement}
           position={{ left: catalogPopup.left, top: catalogPopup.top }}
-          onClose={() => setCatalogPopup(null)}
         />,
         document.body,
       )}

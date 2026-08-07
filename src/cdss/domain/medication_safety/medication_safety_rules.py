@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, Any
 
-from cdss.domain.medication_safety_contracts import finding
-from cdss.domain.medication_safety_inputs import (
+from cdss.domain.medication_safety.medication_safety_contracts import finding
+from cdss.domain.medication_safety.medication_safety_inputs import (
     ABSOLUTE,
     INSUFFICIENT,
     RELATIVE,
@@ -14,7 +14,7 @@ from cdss.domain.medication_safety_inputs import (
     present,
     target_for_medicine,
 )
-from cdss.domain.medication_safety_rule_helpers import (
+from cdss.domain.medication_safety.medication_safety_rule_helpers import (
     beta_blocker_findings,
     conduction_findings,
     mra_findings,

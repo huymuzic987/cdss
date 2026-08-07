@@ -107,7 +107,7 @@ def is_clinical_flag_key(key: str) -> bool:
     workflow/orchestration state that happens to share the has_/is_ prefix).
     """
 
-    return (key.startswith("has_") or key.startswith("is_")) and key not in _WORKFLOW_FLAG_KEYS
+    return key.startswith(("has_", "is_")) and key not in _WORKFLOW_FLAG_KEYS
 
 
 # --- Bundle -> flat input ------------------------------------------------

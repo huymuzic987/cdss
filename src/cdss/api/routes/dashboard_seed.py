@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from cdss.api.schemas.fhir_clinical import ImportResult
 from cdss.core.database import get_db
 from cdss.infrastructure.db.clinical_import import import_bundle
-from cdss.infrastructure.db.dashboard_repository import invalidate_cache
+from cdss.infrastructure.db.dashboard.dashboard_repository import invalidate_cache
 
 router = APIRouter()
 

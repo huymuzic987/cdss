@@ -1,5 +1,5 @@
 from cdss.domain.decision_tree import ExecutedAction, NodeType
-from cdss.domain.pregnancy_follow_up import (
+from cdss.domain.follow_up.pregnancy_follow_up import (
     MINIMUM_PREGNANCY_FOLLOW_UPS,
     POSTPARTUM_FOLLOW_UP_ENTRY_NODE_KEY,
     PREGNANT_FOLLOW_UP_ENTRY_NODE_KEY,

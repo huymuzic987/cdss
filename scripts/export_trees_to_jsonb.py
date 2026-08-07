@@ -250,7 +250,7 @@ def export_trees():
         nodes = tdata["nodes"]
 
         # Sort transitions by traversal_order
-        for _nkey, ndata in nodes.items():
+        for ndata in nodes.values():
             ndata["transitions"].sort(key=lambda t: t["traversal_order"])
             ndata["references"].sort(key=lambda r: r["reference_order"])
 

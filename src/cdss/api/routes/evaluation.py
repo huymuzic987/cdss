@@ -19,8 +19,8 @@ from cdss.api.schemas import EvaluationErrorResponse, EvaluationResponse
 from cdss.api.schemas.clinical_evaluation import parse_clinical_bundle
 from cdss.api.schemas.clinical_presentation import attach_terminal_presentation
 from cdss.core.config import Settings, get_settings
-from cdss.domain.contraindication_catalog import ContraindicationDrugRepository
-from cdss.domain.contraindication_evaluator import prepare_contraindication_input
+from cdss.domain.contraindications.contraindication_catalog import ContraindicationDrugRepository
+from cdss.domain.contraindications.contraindication_evaluator import prepare_contraindication_input
 from cdss.domain.decision_tree import (
     DecisionTreeError,
     ExecutedAction,
@@ -37,7 +37,7 @@ from cdss.domain.follow_up import (
     has_complete_previous_bp,
     infer_follow_up,
 )
-from cdss.domain.pregnancy_follow_up import (
+from cdss.domain.follow_up.pregnancy_follow_up import (
     PREGNANCY_TREE_KEY,
     pregnancy_follow_up_entry_node,
     summarize_pregnancy_follow_up,

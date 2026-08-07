@@ -10,10 +10,14 @@ from cdss.domain.decision_tree.medication_regimen_contracts import (
     RegimenKeyword,
     RegimenUpdateStep,
 )
-from cdss.domain.medication_safety_catalog import has_safety_data
-from cdss.domain.medication_safety_regimen_catalog import filter_regimen_catalog
-from cdss.domain.medication_safety_regimen_components import filter_effective_regimen
-from cdss.domain.medication_safety_regimen_helpers import component_matches_removal
+from cdss.domain.medication_safety.medication_safety_catalog import has_safety_data
+from cdss.domain.medication_safety.medication_safety_regimen_catalog import filter_regimen_catalog
+from cdss.domain.medication_safety.medication_safety_regimen_components import (
+    filter_effective_regimen,
+)
+from cdss.domain.medication_safety.medication_safety_regimen_helpers import (
+    component_matches_removal,
+)
 
 
 def filter_medication_regimen_plan(

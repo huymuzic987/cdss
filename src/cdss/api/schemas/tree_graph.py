@@ -112,18 +112,18 @@ class TreeGraphResponse(ApiModel):
                     )
                 )
 
-            for reference in graph.references_by_node_id.get(node.id, ()):
-                references.append(
-                    TreeGraphSourceReference(
-                        node_key=node.node_key,
-                        source_title=reference.source_title,
-                        section_path=copy_json_value(reference.section_path),
-                        reference_order=reference.reference_order,
-                        locator=reference.locator,
-                        locator_detail=reference.locator_detail,
-                        reference_note=reference.reference_note,
-                    )
+            references.extend(
+                TreeGraphSourceReference(
+                    node_key=node.node_key,
+                    source_title=reference.source_title,
+                    section_path=copy_json_value(reference.section_path),
+                    reference_order=reference.reference_order,
+                    locator=reference.locator,
+                    locator_detail=reference.locator_detail,
+                    reference_note=reference.reference_note,
                 )
+                for reference in graph.references_by_node_id.get(node.id, ())
+            )
 
         return cls(
             tree=TreeSummary(

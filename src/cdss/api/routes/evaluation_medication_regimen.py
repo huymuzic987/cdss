@@ -18,8 +18,8 @@ from cdss.api.routes.evaluation_medication_values import (
 )
 from cdss.domain.decision_tree import ExecutedAction, JsonObject
 from cdss.domain.decision_tree.medicine_catalog import Medicine
-from cdss.domain.medication_safety_catalog import filter_raw_medicines
-from cdss.domain.medication_safety_resolver import filter_medicine_options
+from cdss.domain.medication_safety.medication_safety_catalog import filter_raw_medicines
+from cdss.domain.medication_safety.medication_safety_resolver import filter_medicine_options
 
 
 def merge_regimen(

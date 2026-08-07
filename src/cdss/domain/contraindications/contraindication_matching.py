@@ -6,8 +6,8 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cdss.domain.medication_safety_contracts import fact_status, fact_value
-from cdss.domain.medication_safety_inputs import fact, number
+from cdss.domain.medication_safety.medication_safety_contracts import fact_status, fact_value
+from cdss.domain.medication_safety.medication_safety_inputs import fact, number
 
 type JsonObject = dict[str, Any]
 

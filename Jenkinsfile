@@ -68,6 +68,7 @@ pipeline {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
                 echo 'Checking out source code...'
                 checkout scm
+                sh 'git fetch --unshallow 2>/dev/null || true'
             }
         }
 
@@ -459,13 +460,36 @@ pipeline {
             options { timeout(time: 5, unit: 'MINUTES') }
             steps {
                 script { env.CDSS_CURRENT_STAGE = env.STAGE_NAME }
-                sh '''
-                    if command -v python3 >/dev/null 2>&1; then
-                        python3 scripts/update_contributions_db.py || true
-                    elif command -v python >/dev/null 2>&1; then
-                        python scripts/update_contributions_db.py || true
-                    fi
-                '''
+                sshagent(['ubuntu-vm-jenkins']) {
+                    sh '''
+                        set -e
+                        git fetch --unshallow 2>/dev/null || true
+
+                        PYTHON_CMD="python3"
+                        if ! command -v python3 >/dev/null 2>&1; then
+                            PYTHON_CMD="python"
+                        fi
+
+                        "$PYTHON_CMD" scripts/update_contributions_db.py --print-sql > /tmp/contributions-${VERSION}.sql || true
+
+                        if [ -s /tmp/contributions-${VERSION}.sql ]; then
+                            scp ${SSH_OPTS} /tmp/contributions-${VERSION}.sql \
+                                ${TARGET_USER}@${TARGET_SERVER}:${DEPLOY_PATH}/releases/${VERSION}/contributions.sql
+                            ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
+                                set -e
+                                cd ${DEPLOY_PATH}/releases/${VERSION}
+                                chmod +x deploy/lib.sh
+                                source deploy/lib.sh
+                                resolve_compose cdss-${VERSION}
+                                POSTGRES_USER=\$(dotenv_require .env POSTGRES_USER)
+                                POSTGRES_DB=\$(dotenv_require .env POSTGRES_DB)
+                                \$COMPOSE exec -T db psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" < contributions.sql
+                                rm -f contributions.sql
+                            "
+                            rm -f /tmp/contributions-${VERSION}.sql
+                        fi
+                    '''
+                }
             }
         }
     }
