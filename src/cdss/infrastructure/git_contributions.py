@@ -50,7 +50,16 @@ def resolve_canonical(name: str, email: str) -> tuple[str, str, str]:
 
 def parse_git_history(scope: str = "main") -> dict[str, dict[str, Any]]:
     """Parse commit and numstat data from the local Git history."""
-    ref = "main" if scope == "main" else "--all"
+    if scope == "main":
+        check_main = subprocess.call(
+            ["git", "rev-parse", "--verify", "main"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            cwd=PROJECT_ROOT,
+        )
+        ref = "main" if check_main == 0 else "HEAD"
+    else:
+        ref = "--all"
     cmd = [
         "git",
         "log",

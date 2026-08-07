@@ -112,6 +112,7 @@ pipeline {
                              deploy/validate_candidate_db.sh \
                              deploy/run_quality_gates.sh \
                              deploy/run_frontend_quality_gates.sh \
+                             deploy/apply_contributions.sh \
                              scripts/generate_pregnancy_fhir_presets.py; do
                         if [ ! -f "$f" ]; then
                             echo "ERROR: required file missing: $f"
@@ -478,13 +479,8 @@ pipeline {
                             ssh ${SSH_OPTS} ${TARGET_USER}@${TARGET_SERVER} "
                                 set -e
                                 cd ${DEPLOY_PATH}/releases/${VERSION}
-                                chmod +x deploy/lib.sh
-                                source deploy/lib.sh
-                                resolve_compose cdss-${VERSION}
-                                POSTGRES_USER=\$(dotenv_require .env POSTGRES_USER)
-                                POSTGRES_DB=\$(dotenv_require .env POSTGRES_DB)
-                                \$COMPOSE exec -T db psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" < contributions.sql
-                                rm -f contributions.sql
+                                chmod +x deploy/apply_contributions.sh
+                                ./deploy/apply_contributions.sh ${VERSION}
                             "
                             rm -f /tmp/contributions-${VERSION}.sql
                         fi
