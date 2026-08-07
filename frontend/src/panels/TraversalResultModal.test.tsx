@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ApiErrorResponse, EvaluationResponse, TreeGraphResponse } from '../api/types'
@@ -334,6 +334,33 @@ describe('TraversalResultModal', () => {
     expect(await screen.findByRole('tooltip')).toBeTruthy()
     await userEvent.setup().click(regimenNumber)
     expect(screen.queryByRole('tooltip')).toBeNull()
+  })
+
+  it('closes a drug catalog popup when clicking outside it', async () => {
+    const regimenPresentation = {
+      ...presentation,
+      regimen_plan: {
+        schema_version: '1.0',
+        steps: [],
+        effective_regimen: {
+          base_options: [],
+          additions: [{ code: 'A' }],
+          stopped_components: [],
+          constraints: [],
+        },
+      },
+    }
+    const action = {
+      ...result.actions[0]!,
+      payload: { ...result.actions[0]!.payload, presentation: regimenPresentation },
+    }
+    renderModal({ ...result, actions: [action] })
+    const component = document.querySelector('.cds-regimen-component') as HTMLElement
+    await userEvent.setup().click(component)
+    expect(await screen.findByRole('dialog', { name: 'A drug details' })).toBeTruthy()
+
+    fireEvent.pointerDown(document.body)
+    expect(screen.queryByRole('dialog', { name: 'A drug details' })).toBeNull()
   })
 
   it('renders alert, reason, action, drugs, and path as five ordered rows', () => {

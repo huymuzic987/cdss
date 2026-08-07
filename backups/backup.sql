@@ -1416,8 +1416,8 @@ DRUG0031	Bumetanide	D	LT quai	Thuốc Uống	0.5 mg	1 mg	1 mg	Bảng 10	\N	t	\N
 DRUG0032	Furosemide	D	LT quai	Thuốc Uống/Thuốc Truyền Tĩnh Mạch	20 mg BID	40 mg BID	Variable	Bảng 10	\N	t	\N
 DRUG0033	Torsemide	D	LT quai	Thuốc Uống	5 mg	10 mg	10 mg	Bảng 10	\N	t	\N
 DRUG0034	Amiloride	D	LT giữ Kali	Thuốc Uống	5 mg	5 - 10 mg	10 mg	Bảng 10	\N	t	\N
-DRUG0035	Eplerenone	D	LT giữ Kali (MRA)	Thuốc Uống	25 mg	50 - 100 mg	100 mg	Bảng 10	\N	t	\N
-DRUG0036	Spironolactone	D	LT giữ Kali (MRA)	Thuốc Uống	12.5 mg	25 - 50 mg	50 mg	Bảng 10	\N	t	\N
+DRUG0035	Eplerenone	MRA	MRA (LT giữ Kali)	Thuốc Uống	25 mg	50 - 100 mg	100 mg	Bảng 10	\N	t	\N
+DRUG0036	Spironolactone	MRA	MRA (LT giữ Kali)	Thuốc Uống	12.5 mg	25 - 50 mg	50 mg	Bảng 10	\N	t	\N
 DRUG0037	Triamterene	D	LT giữ Kali	Thuốc Uống	100 mg	100 mg	100 mg	Bảng 10	\N	t	\N
 DRUG0038	Acebutolol	B	CB	Thuốc Uống	200 mg	200 - 400 mg	400 mg	Bảng 10	\N	t	\N
 DRUG0039	Atenolol	B	CB	Thuốc Uống	25 mg	100 mg	100 mg	Bảng 10	\N	t	\N

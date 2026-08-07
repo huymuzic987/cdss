@@ -23,6 +23,7 @@ _SAFETY_TARGETS = (
     "THIAZIDE_LIKE_DIURETIC",
     "NICARDIPINE",
 )
+_MEDICATION_GROUPS = frozenset({"A", "B", "C", "D", "MRA", "SGLT2i", "GLP1RA"})
 
 
 def attach_terminal_presentation(
@@ -113,7 +114,7 @@ def _recommended_orders(
             class_code = _string(raw.get("drug_class"))
             drug_classes = _drug_class_details(
                 {"medicines": class_catalog},
-                [class_code] if class_code in {"A", "B", "C", "D"} else [],
+                [class_code] if class_code in _MEDICATION_GROUPS else [],
                 "LOW_TO_USUAL_DOSE",
                 excluded,
                 blocked_text,

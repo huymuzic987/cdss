@@ -14,6 +14,7 @@ export function ComponentCatalogDetails({
   const medicines = componentMedicines(component, catalog)
   const subgroups = Array.from(new Set(medicines.map((medicine) => medicine.subgroup).filter(Boolean)))
   const hasRelativeContraindication = medicines.some((medicine) => medicine.safetyStatus === 'RELATIVE')
+  const hasInsufficientSafetyData = medicines.some((medicine) => medicine.safetyStatus === 'INSUFFICIENT_DATA')
   return (
     <div
       className={`cds-regimen-catalog-details cds-regimen-catalog-${placement}`}
@@ -27,6 +28,9 @@ export function ComponentCatalogDetails({
           {isSpecificMedicine && hasRelativeContraindication && (
             <span className="cds-regimen-medicine-warning">Relative contraindication</span>
           )}
+          {isSpecificMedicine && hasInsufficientSafetyData && (
+            <span className="cds-regimen-medicine-warning">Safety data required</span>
+          )}
           {!isSpecificMedicine && subgroups.length > 0 && <small>Includes: {subgroups.join(' / ')}</small>}
         </span>
         <button type="button" onClick={onClose} aria-label="Close drug details">×</button>
@@ -36,7 +40,7 @@ export function ComponentCatalogDetails({
         <small>No catalogued medicines are available for this group.</small>
       ) : medicines.map((medicine) => (
         <div
-          className={`cds-regimen-medicine-detail${medicine.safetyStatus === 'RELATIVE' ? ' cds-regimen-medicine-detail--relative' : ''}`}
+          className={`cds-regimen-medicine-detail${medicine.safetyStatus === 'RELATIVE' || medicine.safetyStatus === 'INSUFFICIENT_DATA' ? ' cds-regimen-medicine-detail--relative' : ''}`}
           key={medicine.id || medicine.name}
         >
           <div className="cds-regimen-medicine-heading">
@@ -44,6 +48,9 @@ export function ComponentCatalogDetails({
               {!isSpecificMedicine && <strong>{medicine.name}</strong>}
               {!isSpecificMedicine && medicine.safetyStatus === 'RELATIVE' && (
                 <span className="cds-regimen-medicine-warning">Relative contraindication</span>
+              )}
+              {!isSpecificMedicine && medicine.safetyStatus === 'INSUFFICIENT_DATA' && (
+                <span className="cds-regimen-medicine-warning">Safety data required</span>
               )}
             </span>
             <span className="cds-regimen-medicine-meta">{medicine.route || 'Route not recorded'} / SNOMED CT: {medicine.snomedCode || 'Not recorded'}</span>

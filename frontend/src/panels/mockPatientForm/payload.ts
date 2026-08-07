@@ -47,6 +47,8 @@ function formToFlatInput(form: PatientFormData): JsonObject {
   // BP home (pregnancy)
   set('home_sbp', num(form.home_sbp))
   set('home_dbp', num(form.home_dbp))
+  set('eGFR', num(form.eGFR))
+  set('serum_potassium', num(form.serum_potassium))
   // Demographics
   set('age', num(form.age))
   set('risk_factor_count', num(form.risk_factor_count))

@@ -1,8 +1,8 @@
 """Candidate selectors for medication-producing tree actions."""
 
 ACTION_SELECTORS: dict[str, list[list[str]]] = {
-    "COMBINE_D_SGLT2I_ALDO": [["D", "SGLT2i", "MRA"]],
-    "COMBINE_ABD_ALDO_SGLT2I": [["A", "B", "D", "SGLT2i", "MRA"]],
+    "COMBINE_D_SGLT2I_ALDO": [["D", "SGLT2i"]],
+    "COMBINE_ABD_ALDO_SGLT2I": [["A", "B", "D", "SGLT2i"]],
     "ADD_A_ARNI_CTTA_UCMC": [["A"]],
     "ADD_A_ARNI_CTTA": [["A"]],
     "COMBINE_ACD_MRA": [["A", "C", "D", "MRA"]],

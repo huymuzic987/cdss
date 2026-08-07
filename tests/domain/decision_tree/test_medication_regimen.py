@@ -476,7 +476,7 @@ def test_select_preserves_alternatives_and_requires_a_choice() -> None:
 def test_legacy_heart_failure_action_type_keeps_every_regimen_class() -> None:
     combine = _node(
         "T10_INFERENCE_COMBINE_LOW_DOSE_D_PLUS_SGLT2I_PLUS_MRA_FOR_HFMREF",
-        "Combine D and SGLT2i and Aldosterone antagonist",
+        "Combine D and SGLT2i and mineralocorticoid receptor antagonist",
         action_payload={"action_type": "COMBINE_D_SGLT2I_ALDO"},
     )
 
@@ -484,6 +484,18 @@ def test_legacy_heart_failure_action_type_keeps_every_regimen_class() -> None:
 
     assert [item.code for item in plan.steps[0].components] == ["D", "SGLT2i", "MRA"]
     assert all(item.dose_strategy == "LOW_DOSE" for item in plan.steps[0].components)
+
+
+def test_hfpef_aldosterone_wording_does_not_infer_mra() -> None:
+    combine = _node(
+        "T10_INFERENCE_COMBINE_D_SGLT2I_AND_ALDOSTERONE_ANTAGONIST_FOR_HFPEF",
+        "Combine D and SGLT2i and Aldosterone antagonist",
+        action_payload={"action_type": "COMBINE_D_SGLT2I_ALDO"},
+    )
+
+    plan = _plan(combine)
+
+    assert [item.code for item in plan.steps[0].components] == ["D", "SGLT2i"]
 
 
 def test_group_mentions_do_not_turn_d_into_the_mra_subgroup() -> None:
@@ -611,7 +623,7 @@ def test_complete_regimen_sequence_preserves_alternatives_and_no_op_maintain() -
     )
     combine = _node(
         "T10_INFERENCE_COMBINE_LOW_DOSE_D_PLUS_SGLT2I_PLUS_MRA_FOR_HFMREF",
-        "Combine D and SGLT2i and Aldosterone antagonist",
+        "Combine D and SGLT2i and mineralocorticoid receptor antagonist",
         action_payload={"action_type": "COMBINE_D_SGLT2I_ALDO"},
     )
     add_a = _node(

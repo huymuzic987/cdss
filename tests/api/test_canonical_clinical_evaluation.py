@@ -293,7 +293,9 @@ def test_final_presentation_scrubs_gout_contraindicated_d_regimen() -> None:
     plan = presentation["regimen_plan"]
 
     assert plan["effective_regimen"]["base_options"] == []
-    assert plan["steps"][0]["components"] == []
+    assert [item["code"] for item in plan["steps"][0]["components"]] == ["D"]
+    assert plan["steps"][-1]["keyword"] == "REMOVE"
+    assert [item["code"] for item in plan["steps"][-1]["components"]] == ["D"]
     assert "D" not in plan["catalog_by_class"]
     assert "Hydrochlorothiazide" not in {item["name"] for item in plan["catalog"]}
     assert presentation["recommended_orders"] == []

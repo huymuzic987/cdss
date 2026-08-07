@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import type { ExecutedReference } from '../../api/types'
 import type { ClinicalDecisionSupportLocale } from '../clinicalDecisionSupportMessages'
@@ -42,6 +42,23 @@ export function RegimenDisplay({
 }: RegimenDisplayProps) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
   const [catalogPopup, setCatalogPopup] = useState<CatalogPopupState | null>(null)
+  useEffect(() => {
+    if (!tooltip && !catalogPopup) return
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target
+      if (!(target instanceof Element)) return
+      if (
+        target.closest('.cds-regimen-catalog-details')
+        || target.closest('.cds-regimen-row-tooltip')
+        || target.closest('.cds-regimen-component')
+        || target.closest('.cds-regimen-option-title')
+      ) return
+      setTooltip(null)
+      setCatalogPopup(null)
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [catalogPopup, tooltip])
   if (presentation.regimenSteps.length === 0 && presentation.regimenOptions.length === 0) return null
   const vi = locale === 'vi'
   const sourceKeys = new Set(

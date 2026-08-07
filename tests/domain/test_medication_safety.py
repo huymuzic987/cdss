@@ -78,6 +78,13 @@ def test_mra_requires_known_safe_potassium_and_egfr() -> None:
         }
     ]
     missing, missing_profile = filter_medicine_options(option, _runtime())
+    safe, safe_profile = filter_medicine_options(
+        option,
+        _runtime(
+            serum_potassium=_fact("present", 4.0),
+            eGFR=_fact("present", 60),
+        ),
+    )
     unsafe, unsafe_profile = filter_medicine_options(
         option,
         _runtime(
@@ -88,8 +95,94 @@ def test_mra_requires_known_safe_potassium_and_egfr() -> None:
 
     assert missing == []
     assert missing_profile["status"] == "NEEDS_REVIEW"
+    assert safe
+    assert safe_profile["status"] == "COMPLETE"
     assert unsafe == []
     assert "MRA" in unsafe_profile["blocked_targets"]
+
+
+def test_safety_removed_mra_is_announced_as_a_regimen_removal() -> None:
+    ras = {"drug_id": "A-1", "name": "Losartan", "drug_class": "A", "subgroup": "ARB"}
+    mra = {"drug_id": "MRA-1", "name": "Eplerenone", "drug_class": "MRA", "subgroup": "MRA"}
+    ras_component = RegimenComponent(selector_kind="class", code="A")
+    mra_component = RegimenComponent(selector_kind="class", code="MRA")
+    plan = MedicationRegimenPlan(
+        steps=[
+            RegimenUpdateStep(
+                id="start-mra",
+                trace_step=1,
+                tree_key="heart-failure",
+                node_key="T10_INFERENCE_COMBINE_A_MRA",
+                keyword=RegimenKeyword.COMBINE,
+                text_en="Combine A + MRA",
+                text_vi="",
+                source="structured",
+                components=[ras_component, mra_component],
+            )
+        ],
+        effective_regimen=EffectiveMedicationRegimen(
+            base_options=[RegimenAlternative(components=[ras_component, mra_component])],
+            status="complete",
+        ),
+        catalog=[ras, mra],
+        catalog_by_class={"A": [ras], "MRA": [mra]},
+    )
+
+    filtered = filter_medication_regimen_plan(
+        plan,
+        _runtime(
+            serum_potassium=_fact("present", 4.6),
+            eGFR=_fact("present", 55),
+        ),
+    )
+
+    assert filtered.effective_regimen.base_options == []
+    assert filtered.effective_regimen.status == "partial"
+    assert [item.code for item in filtered.steps[0].components] == ["A", "MRA"]
+    assert filtered.steps[-1].keyword is RegimenKeyword.REMOVE
+    assert filtered.steps[-1].components == [mra_component]
+    assert "required medication-safety checks" in filtered.steps[-1].text_en
+    assert filtered.steps[-1].warnings == ["SAFETY_REMOVED:MRA"]
+
+
+def test_safety_removed_non_mra_component_is_announced_as_a_regimen_removal() -> None:
+    thiazide = {
+        "drug_id": "D-THIAZIDE",
+        "name": "Hydrochlorothiazide",
+        "drug_class": "D",
+        "subgroup": "LT Thiazide",
+    }
+    component = RegimenComponent(selector_kind="class", code="D")
+    plan = MedicationRegimenPlan(
+        steps=[
+            RegimenUpdateStep(
+                id="start-d",
+                trace_step=1,
+                tree_key="hypertension",
+                node_key="T5_INFERENCE_START_D",
+                keyword=RegimenKeyword.START,
+                text_en="Start D",
+                text_vi="",
+                source="structured",
+                components=[component],
+            )
+        ],
+        effective_regimen=EffectiveMedicationRegimen(
+            base_options=[RegimenAlternative(components=[component])],
+            status="complete",
+        ),
+        catalog=[thiazide],
+        catalog_by_class={"D": [thiazide]},
+    )
+
+    filtered = filter_medication_regimen_plan(
+        plan,
+        _runtime(gout_status=_fact("present", True)),
+    )
+
+    assert [item.code for item in filtered.steps[0].components] == ["D"]
+    assert filtered.steps[-1].keyword is RegimenKeyword.REMOVE
+    assert [item.code for item in filtered.steps[-1].components] == ["D"]
 
 
 def test_conflicting_facts_require_review_and_current_therapy_is_not_silently_removed() -> None:

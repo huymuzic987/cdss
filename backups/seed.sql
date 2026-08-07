@@ -4875,11 +4875,11 @@ VALUES ('DRUG0034', 'Amiloride', 'D', 'LT giữ Kali', 'Thuốc Uống', '5 mg',
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0035', 'Eplerenone', 'D', 'MRA (LT giữ Kali)', 'Thuốc Uống', '25 mg', '50 - 100 mg', '100 mg', 'Bảng 10', NULL, TRUE, 'C03DA04')
+VALUES ('DRUG0035', 'Eplerenone', 'MRA', 'MRA (LT giữ Kali)', 'Thuốc Uống', '25 mg', '50 - 100 mg', '100 mg', 'Bảng 10', NULL, TRUE, 'C03DA04')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)
-VALUES ('DRUG0036', 'Spironolactone', 'D', 'MRA (LT giữ Kali)', 'Thuốc Uống', '12.5 mg', '25 - 50 mg', '50 mg', 'Bảng 10', NULL, TRUE, 'C03DA01')
+VALUES ('DRUG0036', 'Spironolactone', 'MRA', 'MRA (LT giữ Kali)', 'Thuốc Uống', '12.5 mg', '25 - 50 mg', '50 mg', 'Bảng 10', NULL, TRUE, 'C03DA01')
 ON CONFLICT (drug_id) DO UPDATE SET name = EXCLUDED.name, drug_class = EXCLUDED.drug_class, subgroup = EXCLUDED.subgroup, route = EXCLUDED.route, dose_low = EXCLUDED.dose_low, dose_usual = EXCLUDED.dose_usual, dose_max = EXCLUDED.dose_max, source = EXCLUDED.source, link = EXCLUDED.link, available = EXCLUDED.available, atc_code = EXCLUDED.atc_code;
 
 INSERT INTO public.medicines (drug_id, name, drug_class, subgroup, route, dose_low, dose_usual, dose_max, source, link, available, atc_code)

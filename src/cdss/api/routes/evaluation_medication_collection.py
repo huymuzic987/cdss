@@ -14,6 +14,7 @@ from cdss.domain.decision_tree.medication_regimen_subgroups import (
 from cdss.domain.decision_tree.medicine_catalog import Medicine
 
 MRA_NAMES = frozenset({"eplerenone", "spironolactone"})
+MEDICATION_GROUPS = frozenset({"A", "B", "C", "D", "MRA", "SGLT2i", "GLP1RA"})
 _INFERENCE_OPERATION_PATTERN = re.compile(r"_INFERENCE_([A-Z]+)(?:_|$)")
 _TREATMENT_OPERATIONS = frozenset(
     {
@@ -59,13 +60,13 @@ def selected_classes(medicines: list[JsonObject], options: list[JsonObject]) -> 
     selected: set[str] = set()
     for medicine in medicines:
         code = medicine.get("drug_class")
-        if isinstance(code, str) and code in {"A", "B", "C", "D"}:
+        if isinstance(code, str) and code in MEDICATION_GROUPS:
             selected.add(code)
     for option in options:
         classes = option.get("classes")
         if isinstance(classes, list):
             selected.update(
-                code for code in classes if isinstance(code, str) and code in {"A", "B", "C", "D"}
+                code for code in classes if isinstance(code, str) and code in MEDICATION_GROUPS
             )
     return selected
 

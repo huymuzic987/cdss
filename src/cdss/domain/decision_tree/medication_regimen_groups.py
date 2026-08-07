@@ -33,11 +33,8 @@ GROUP_ALIASES: dict[str, tuple[str, ...]] = {
     ),
     "MRA": (
         "MRA",
-        "aldosterone",
-        "aldosterone antagonist",
         "mineralocorticoid",
         "mineralocorticoid receptor antagonist",
-        "ALDO",
     ),
     "SGLT2i": ("SGLT2i", "SGLT2", "SGLT2 inhibitor"),
     "GLP1RA": (

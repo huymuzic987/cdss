@@ -69,6 +69,15 @@ describe('canonical FHIR patient presets', () => {
     }
   })
 
+  it('carries eGFR through the HFpEF preset Bundle', () => {
+    const preset = PATIENT_PRESETS.find(({ id }) => id === 'heart-failure-hfpef')
+    expect(preset).toBeDefined()
+    expect(bundleToFlat(preset!.bundle).eGFR).toBe(60)
+    expect(bundleToFlat(preset!.bundle).serum_potassium).toBe(4)
+    expect(bundleToForm(preset!.bundle).eGFR).toBe('60')
+    expect(bundleToForm(preset!.bundle).serum_potassium).toBe('4')
+  })
+
   it('layers contraindication findings onto copied working presets', () => {
     const preset = PATIENT_PRESETS.find(({ id }) => id === 'contra-03-pregnancy-thiazide')
     expect(preset).toBeDefined()
