@@ -1,11 +1,11 @@
 import { createPortal } from 'react-dom'
 import type { ExecutedReference } from '../../api/types'
 import type { ClinicalDecisionSupportLocale } from '../clinicalDecisionSupportMessages'
-import type { RegimenOption } from '../clinicalPresentation/types'
+import type { FinalRegimenComponent, FinalRegimenOption } from '../clinicalPresentation/types'
 import { GROUP_NAMES } from './RegimenCatalog'
 
 interface RegimenTooltipProps {
-  activeOption: RegimenOption
+  activeOption: FinalRegimenOption
   placement: 'above' | 'below'
   left: number
   top: number
@@ -33,7 +33,7 @@ export function RegimenTooltip({
     >
       <strong>{vi ? 'Chi tiết phác đồ' : 'Regimen details'}</strong>
       <div className="cds-regimen-group-details">
-        {activeOption.components.map((component) => (
+        {activeOption.components.map((component: FinalRegimenComponent) => (
           <span key={`${component.group}:${component.subgroup ?? ''}:${component.label}`}>
             <b>{component.label}</b>: {GROUP_NAMES[component.group]}
           </span>
