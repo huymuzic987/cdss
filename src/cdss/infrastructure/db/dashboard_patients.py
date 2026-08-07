@@ -27,7 +27,8 @@ class DashboardPatientsMixin:
     def drug_class_counts(self) -> dict[str, int]:
         drug_class_bucket = case(
             (Medicine.drug_class == "A", "RAAS (ACE / ARB / ARNI)"),
-            (Medicine.drug_class == "D", "Diuretics & MRA"),
+            (Medicine.drug_class == "D", "Diuretics"),
+            (Medicine.drug_class == "MRA", "MRA"),
             (Medicine.drug_class == "C", "CCB"),
             (Medicine.drug_class == "B", "Beta-blockers"),
             else_="Other (central agents, vasodilators, ...)",

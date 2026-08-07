@@ -13,6 +13,9 @@ export interface PatientFormData {
   // BP — home (pregnancy gestational-hypertension classification)
   home_sbp: string
   home_dbp: string
+  // Safety labs
+  eGFR: string
+  serum_potassium: string
   // Demographics
   age: string
   risk_factor_count: string
@@ -98,6 +101,8 @@ export const DEFAULT_FORM: PatientFormData = {
   previous_sbp: '', previous_dbp: '',
   previous_target_sbp: '', previous_target_dbp: '',
   home_sbp: '', home_dbp: '',
+  eGFR: '',
+  serum_potassium: '',
   age: '',
   risk_factor_count: '',
   is_pregnant: false,

@@ -18,6 +18,8 @@ export const BP_KEYS: Record<string, [string, string]> = {
 }
 
 export const LABS: Record<string, [string, string, string]> = {
+  eGFR: ['98979-8', 'Estimated glomerular filtration rate', 'mL/min'],
+  serum_potassium: ['6298-4', 'Potassium [Moles/volume] in Serum or Plasma', 'mmol/L'],
   acr_mg_mmol: ['9318-7', 'Albumin/Creatinine [Ratio] in Urine', 'mg/mmol'],
   proteinuria_24h_mg: ['2889-4', 'Protein [Mass/time] in 24 hour Urine', 'mg'],
 }

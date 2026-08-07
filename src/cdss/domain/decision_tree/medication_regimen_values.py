@@ -164,7 +164,9 @@ def class_component(
 
 def _medicine_in_group(medicine: Medicine, group: str) -> bool:
     if group == "MRA":
-        return bool(medicine.subgroup and "MRA" in medicine.subgroup.upper())
+        return medicine.drug_class == "MRA" or bool(
+            medicine.subgroup and "MRA" in medicine.subgroup.upper()
+        )
     return bool(medicine.drug_class and medicine.drug_class.casefold() == group.casefold())
 
 

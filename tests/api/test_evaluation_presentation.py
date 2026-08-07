@@ -293,7 +293,7 @@ def test_every_positive_traversed_drug_and_regimen_reaches_terminal_presentation
     assert [medicine["name"] for medicine in payload["medicines"]] == ["Spironolactone"]
     assert "Hydrochlorothiazide" not in {medicine["name"] for medicine in payload["medicines"]}
     assert payload["medicine_options"] == earlier_action.payload["medicine_options"]
-    assert set(payload["medicine_catalog_by_class"]) == {"A", "C"}
+    assert set(payload["medicine_catalog_by_class"]) == {"A", "C", "MRA"}
 
 
 def test_maintain_inference_does_not_rebuild_context_as_a_new_regimen() -> None:
@@ -407,7 +407,7 @@ def test_hfmref_action_type_resolves_sglt2i_and_aldosterone_antagonists() -> Non
     )
     nodes = {
         "T10_I_HFMREF_1": SimpleNamespace(
-            text_en="Combine D and SGLT2i and Aldosterone antagonist",
+            text_en="Combine D and SGLT2i and mineralocorticoid receptor antagonist",
             text_vi="Phá»‘i há»£p D vÃ  SGLT2i vÃ  khÃ¡ng Aldosterone",
             action_payload={"action_type": "COMBINE_D_SGLT2I_ALDO"},
         ),
@@ -460,3 +460,90 @@ def test_hfmref_action_type_resolves_sglt2i_and_aldosterone_antagonists() -> Non
         "MRA",
     ]
     assert all(item["dose_strategy"] == "LOW_DOSE" for item in regimen_steps[0]["components"])
+
+
+def test_hfref_a_b_d_mra_sglt2i_node_exposes_mra_in_final_regimen() -> None:
+    def medicine(drug_id: str, name: str, drug_class: str, subgroup: str) -> Medicine:
+        return Medicine(
+            drug_id=drug_id,
+            name=name,
+            drug_class=drug_class,
+            subgroup=subgroup,
+            route="Oral",
+            dose_low="1 mg",
+            dose_usual="2 mg",
+            dose_max="4 mg",
+            source="test",
+            link=None,
+            available=True,
+        )
+
+    node_key = "T10_INFERENCE_COMBINE_LOW_DOSE_A_PLUS_B_PLUS_D_PLUS_MRA_PLUS_SGLT2I_FOR_HFREF"
+    node = SimpleNamespace(
+        text_en="Combine low-dose A + B + D + MRA + SGLT2 inhibitor for HFrEF",
+        text_vi="Combine low-dose A + B + D + MRA + SGLT2 inhibitor for HFrEF",
+        action_payload={
+            "action_type": "COMBINE_ABD_ALDO_SGLT2I",
+            "regimen_update": {
+                "operation": "COMBINE",
+                "components": [
+                    {"selector_kind": "class", "code": code, "dose_strategy": "LOW_DOSE"}
+                    for code in ("A", "B", "D", "MRA", "SGLT2i")
+                ],
+            },
+        },
+    )
+    catalog = [
+        medicine("A", "Losartan", "A", "ARB"),
+        medicine("B", "Bisoprolol", "B", "CB"),
+        medicine("D", "Indapamide", "D", "LT Thiazide-like"),
+        medicine("MRA-1", "Eplerenone", "MRA", "MRA (LT giu Kali)"),
+        medicine("MRA-2", "Spironolactone", "MRA", "MRA (LT giu Kali)"),
+        medicine("SGLT2", "Dapagliflozin", "SGLT2i", "SGLT2i"),
+    ]
+    terminal = ExecutedAction(
+        tree_key="hypertension-heart-failure",
+        node_key="terminal",
+        node_type=NodeType.END,
+        text_en="Continue the established regimen",
+        text_vi="Continue the established regimen",
+        payload={},
+    )
+    repository = SimpleNamespace(
+        get_tree=lambda _tree_key: SimpleNamespace(nodes_by_key={node_key: node})
+    )
+    result = cast(
+        TraversalResult,
+        SimpleNamespace(
+            context={},
+            actions=[terminal],
+            input_snapshot={"clinical_facts": {}},
+            trace=[
+                SimpleNamespace(
+                    event=TraceEvent.NODE_ENTERED,
+                    tree_key="hypertension-heart-failure",
+                    node_key=node_key,
+                )
+            ],
+        ),
+    )
+
+    enriched = enrich_inferred_medications(
+        [terminal],
+        result,
+        cast(TreeGraphRepository, repository),
+        _MedicineRepository(catalog),
+    )
+
+    payload = enriched[0].payload
+    mra_catalog = payload["medicine_catalog_by_class"]["MRA"]
+    assert [item["name"] for item in mra_catalog] == ["Eplerenone", "Spironolactone"]
+    assert all(item["safety_status"] == "INSUFFICIENT_DATA" for item in mra_catalog)
+    assert payload["regimen_plan"]["effective_regimen"]["status"] == "partial"
+    assert [item["code"] for item in payload["regimen_plan"]["steps"][0]["components"]] == [
+        "A",
+        "B",
+        "D",
+        "MRA",
+        "SGLT2i",
+    ]

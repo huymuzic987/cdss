@@ -151,7 +151,7 @@ prescription rows exist in this table). Seeded from `backups/seed.sql` /
 | --- | --- | --- |
 | `drug_id` | text, PK | |
 | `name` | text, not null | |
-| `drug_class` | text, nullable, indexed | The A/B/C/D letter scheme (A = RAS inhibitor [ACEI/ARB/ARNI], B = beta-blocker, C = calcium-channel blocker, D = diuretic) used by combination-therapy trees - see [docs/cdss/json-dialect.md](cdss/json-dialect.md) §8.1 and [context-contract.md](cdss/context-contract.md) §8. |
+| `drug_class` | text, nullable, indexed | The A/B/C/D letter scheme (A = RAS inhibitor [ACEI/ARB/ARNI], B = beta-blocker, C = calcium-channel blocker, D = diuretic) plus standalone therapeutic groups such as `MRA` and `SGLT2i` used by disease-specific trees - see [docs/cdss/json-dialect.md](cdss/json-dialect.md) §8.1 and [context-contract.md](cdss/context-contract.md) §8. |
 | `subgroup`, `route`, `dose_low`, `dose_usual`, `dose_max`, `source`, `link` | text, nullable | |
 | `available` | boolean, not null, default true | Combination-therapy resolution (`drug_classes.py`) filters to oral + available drugs; single-drug references (e.g. aspirin prophylaxis) ignore this flag and always return the drug with its `available` value intact. |
 | `atc_code` | text, nullable | Added by a later migration for a planned ATC-classification integration; nullable until backfilled. |

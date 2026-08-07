@@ -29,7 +29,7 @@ function canonicalGroup(code: string, name: string, subgroup = ''): FinalRegimen
   const value = `${code} ${name} ${subgroup}`.toLocaleLowerCase()
   if (/(\bsglt2i?\b|sglt2[_ -]?inhibitor|dapagliflozin|empagliflozin)/i.test(value)) return 'SGLT2i'
   if (/(\bglp-?1\s*ra\b|glp1ra|glp1[_ -]?receptor[_ -]?agonist)/i.test(value)) return 'GLP1RA'
-  if (/(\bmra\b|mineralocorticoid|aldosterone antagonist|spironolactone|eplerenone)/i.test(value)) return 'MRA'
+  if (/(\bmra\b|mineralocorticoid|spironolactone|eplerenone)/i.test(value)) return 'MRA'
   if (/(\bbeta.?block|labetalol|metoprolol|bisoprolol|esmolol|propranolol|atenolol)/i.test(value) || code.toUpperCase() === 'B') return 'B'
   if (/(\bcalcium.?channel|\bccb\b|dihydropyridine|amlodipine|nifedipine|nicardipine)/i.test(value) || code.toUpperCase() === 'C') return 'C'
   if (/(\bdiuretic|thiazide|furosemide|indapamide|chlorthalidone)/i.test(value) || code.toUpperCase() === 'D') return 'D'
@@ -43,7 +43,7 @@ function genericGroupName(value: string, group: FinalRegimenComponent['group']):
   return [
     'ras', 'ace inhibitor', 'arb', 'arni', 'beta blocker', 'beta-blocker',
     'calcium channel blocker', 'calcium-channel blocker', 'ccb', 'diuretic',
-    'mra', 'mineralocorticoid receptor antagonist', 'aldosterone antagonist',
+    'mra', 'mineralocorticoid receptor antagonist',
     'sglt2i', 'sglt2 inhibitor', 'sglt2_inhibitor',
     'glp1ra', 'glp-1ra', 'glp-1 receptor agonist', 'glp1_receptor_agonist',
   ].includes(normalized)

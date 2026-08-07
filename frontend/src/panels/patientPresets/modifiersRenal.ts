@@ -5,10 +5,12 @@ export const renalModifierPresets: PatientPresetDefinition[] = [
     id: 'heart-failure-hfpef',
     label: 'Heart Failure — Preserved EF (HFpEF)',
     category: MODIFIER_TREES,
-    description: '65-year-old with HFpEF, BP target not yet reached — combines diuretic/SGLT2i/aldosterone antagonist then ARNI/CTTA, the third of the four EF-category branches.',
+    description: '65-year-old with HFpEF, eGFR 60 mL/min, and potassium 4.0 mmol/L, BP target not yet reached — combines diuretic/SGLT2i/aldosterone antagonist then ARNI/CTTA, the third of the four EF-category branches.',
     data: {
       current_clinic_sbp: '159', current_clinic_dbp: '97',
       age: '65', risk_factor_count: '2',
+      eGFR: '60',
+      serum_potassium: '4.0',
       has_heart_failure: true,
       has_hfpef: true,
       facility_capability: 'FULL_RESOURCES',
