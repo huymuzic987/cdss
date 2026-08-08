@@ -12,6 +12,7 @@ SCRIPT_EXPORTS = runpy.run_path(str(SCRIPT_PATH))
 
 seed_transaction_body = cast(Callable[[str], str], SCRIPT_EXPORTS["seed_transaction_body"])
 apply_seed_snapshot = cast(Callable[..., None], SCRIPT_EXPORTS["apply_seed_snapshot"])
+is_fresh_seed_database = cast(Callable[[object], bool], SCRIPT_EXPORTS["is_fresh_seed_database"])
 main = cast(Callable[[], None], SCRIPT_EXPORTS["main"])
 
 EXPECTED_GRAPH_REFRESH = """
@@ -62,6 +63,30 @@ class RecordingConnection:
 
     def close(self) -> None:
         self.closed = True
+
+
+class FreshnessCursor:
+    def __init__(self, table_rows: dict[str, int]) -> None:
+        self.table_rows = table_rows
+        self.executed: list[str] = []
+        self.closed = False
+
+    def execute(self, statement: str) -> None:
+        self.executed.append(statement)
+
+    def fetchone(self) -> tuple[bool]:
+        return (not any(self.table_rows.values()),)
+
+    def close(self) -> None:
+        self.closed = True
+
+
+class FreshnessConnection:
+    def __init__(self, table_rows: dict[str, int]) -> None:
+        self.cursor_instance = FreshnessCursor(table_rows)
+
+    def cursor(self) -> FreshnessCursor:
+        return self.cursor_instance
 
 
 def test_seed_transaction_body_removes_only_outer_transaction() -> None:
@@ -133,14 +158,52 @@ def test_apply_seed_snapshot_rolls_back_when_cursor_creation_fails() -> None:
 
 
 @pytest.mark.parametrize(
-    ("argv", "has_graph", "expected_refresh"),
-    [(["ensure_seed.py"], False, False), (["ensure_seed.py", "--force"], True, True)],
+    ("table_rows", "expected"),
+    [
+        (
+            {
+                "decision_trees": 0,
+                "medicines": 0,
+                "symptoms": 0,
+                "contraindication_drugs": 0,
+            },
+            True,
+        ),
+        (
+            {
+                "decision_trees": 0,
+                "medicines": 1,
+                "symptoms": 0,
+                "contraindication_drugs": 0,
+            },
+            False,
+        ),
+    ],
+)
+def test_is_fresh_seed_database_requires_every_seed_managed_table_to_be_empty(
+    table_rows: dict[str, int], expected: bool
+) -> None:
+    connection = FreshnessConnection(table_rows)
+
+    assert is_fresh_seed_database(connection) is expected
+    query = connection.cursor_instance.executed[0]
+    for table in ("decision_trees", "medicines", "symptoms", "contraindication_drugs"):
+        assert f"public.{table}" in query
+
+
+@pytest.mark.parametrize(
+    ("argv", "is_fresh", "expected_refresh"),
+    [
+        pytest.param(["ensure_seed.py"], True, False, id="all-empty-fresh"),
+        pytest.param(["ensure_seed.py"], False, True, id="catalog-populated-graph-empty"),
+        pytest.param(["ensure_seed.py", "--force"], False, True, id="force-existing"),
+    ],
 )
 def test_main_selects_full_or_graph_only_seed_after_migration(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
     argv: list[str],
-    has_graph: bool,
+    is_fresh: bool,
     expected_refresh: bool,
 ) -> None:
     seed_path = tmp_path / "backups" / "seed.sql"
@@ -153,7 +216,11 @@ def test_main_selects_full_or_graph_only_seed_after_migration(
     monkeypatch.setitem(script_globals, "root", tmp_path)
     monkeypatch.setitem(script_globals, "_database_url", lambda: "postgresql://test/cdss")
     monkeypatch.setitem(script_globals, "is_seeded_and_current", lambda _conn, _hash: False)
-    monkeypatch.setitem(script_globals, "has_existing_graph", lambda _conn: has_graph)
+    monkeypatch.setitem(
+        script_globals,
+        "is_fresh_seed_database",
+        lambda _conn: events.append("classification") or is_fresh,
+    )
     monkeypatch.setitem(
         script_globals,
         "apply_seed_snapshot",
@@ -183,5 +250,10 @@ def test_main_selects_full_or_graph_only_seed_after_migration(
 
     main()
 
-    assert events == ["rollback", "migration", f"snapshot:{expected_refresh}"]
+    assert events == [
+        "rollback",
+        "migration",
+        "classification",
+        f"snapshot:{expected_refresh}",
+    ]
     assert connection.closed

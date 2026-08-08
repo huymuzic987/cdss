@@ -80,20 +80,25 @@ def is_seeded_and_current(conn, seed_hash: str) -> bool:
         cur.close()
 
 
-def has_existing_graph(conn) -> bool:
-    """Return whether the database already contains decision-tree data."""
-    cur = conn.cursor()
+def is_fresh_seed_database(conn) -> bool:
+    """Return whether every seed-managed table is empty after migration."""
+    cur = None
     try:
-        cur.execute("SELECT to_regclass('public.decision_trees') IS NOT NULL;")
-        if not cur.fetchone()[0]:
-            return False
-
-        cur.execute("SELECT count(*) FROM decision_trees;")
-        return cur.fetchone()[0] > 0
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT NOT EXISTS (
+                SELECT 1 FROM public.decision_trees
+                UNION ALL SELECT 1 FROM public.medicines
+                UNION ALL SELECT 1 FROM public.symptoms
+                UNION ALL SELECT 1 FROM public.contraindication_drugs
+            );
+        """)
+        return cur.fetchone()[0]
     except Exception:
         return False
     finally:
-        cur.close()
+        if cur is not None:
+            cur.close()
 
 
 def seed_transaction_body(sql_content: str) -> str:
@@ -189,8 +194,6 @@ def main():
             print("-> Database is up-to-date with backups/seed.sql (Skipping seed).")
             return
 
-        refresh_existing_graph = has_existing_graph(conn)
-
         # Finish the read-only checksum transaction before Alembic changes the schema.
         conn.rollback()
 
@@ -212,6 +215,7 @@ def main():
                 print("Error: Alembic migration failed.", file=sys.stderr)
                 sys.exit(1)
 
+        refresh_existing_graph = not is_fresh_seed_database(conn)
         sql_content = seed_path.read_text(encoding="utf-8")
         apply_seed_snapshot(
             conn, sql_content, seed_hash, refresh_existing_graph=refresh_existing_graph
