@@ -116,9 +116,7 @@ def get_contributions(
                 lines_added_percentage=round((data["lines_added"] / added_denominator * 100), 1),
                 lines_deleted=data["lines_deleted"],
                 total_loc_changes=data["total_loc_changes"],
-                total_loc_percentage=round(
-                    (data["total_loc_changes"] / loc_denominator * 100), 1
-                ),
+                total_loc_percentage=round((data["total_loc_changes"] / loc_denominator * 100), 1),
                 primary_role=meta.get("primary_role", "Contributor"),
                 deliverables=meta.get("deliverables", []),
             )

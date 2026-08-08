@@ -56,7 +56,7 @@ def test_generate_sql_atomically_replaces_complete_commit_history() -> None:
     assert "DELETE FROM public.git_commit_history;" in sql
     assert "'abc1234', 'Huy', 'feat: add history', 1782691200" in sql
     assert "'def5678', 'Huy', 'fix: don''t guess', 1782777600" in sql
-    assert "'[\"huy\", \"quang_minh\"]'::jsonb" in sql
+    assert '\'["huy", "quang_minh"]\'::jsonb' in sql
     assert sql.rstrip().endswith("COMMIT;")
 
 
