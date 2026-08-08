@@ -15,13 +15,14 @@ from cdss.api.routes.dashboard_contribution_catalog import (
     OVERLAPPING_MATRIX,
 )
 from cdss.api.schemas.dashboard import (
+    CommitHistoryItem,
     ContributionsResponse,
     ContributionSummaryResponse,
     ContributorMetricResponse,
     OverlappingTaskResponse,
     RecentCommitItem,
 )
-from cdss.infrastructure.git_contributions import parse_git_history
+from cdss.infrastructure.git_contributions import parse_git_history_snapshot
 
 router = APIRouter()
 
@@ -33,35 +34,10 @@ def get_contributions(
 ) -> ContributionsResponse:
     """Fetch live contributor statistics, deliverable catalog, and overlapping task matrix."""
     raw_stats: dict[str, dict[str, Any]] = {}
+    history = parse_git_history_snapshot(scope=scope)
 
-    # Try fetching from PostgreSQL database table first
-    try:
-        rows = db.execute(
-            text(
-                "SELECT member_key, display_name, canonical_email, commit_count, "
-                "lines_added, lines_deleted, total_loc_changes "
-                "FROM public.git_contributions ORDER BY commit_count DESC"
-            )
-        ).fetchall()
-
-        if rows:
-            for r in rows:
-                raw_stats[r.member_key] = {
-                    "member_key": r.member_key,
-                    "display_name": r.display_name,
-                    "canonical_email": r.canonical_email,
-                    "commit_count": r.commit_count,
-                    "lines_added": r.lines_added,
-                    "lines_deleted": r.lines_deleted,
-                    "total_loc_changes": r.total_loc_changes,
-                }
-    except Exception:
-        pass
-
-    # Fallback to parsing local git log if DB table is unseeded
-    if not raw_stats:
-        git_parsed = parse_git_history(scope=scope)
-        for key, pdata in git_parsed.items():
+    if history.contributors:
+        for key, pdata in history.contributors.items():
             raw_stats[key] = {
                 "member_key": pdata["member_key"],
                 "display_name": pdata["display_name"],
@@ -71,6 +47,27 @@ def get_contributions(
                 "lines_deleted": pdata["lines_deleted"],
                 "total_loc_changes": pdata["lines_added"] + pdata["lines_deleted"],
             }
+    else:
+        try:
+            rows = db.execute(
+                text(
+                    "SELECT member_key, display_name, canonical_email, commit_count, "
+                    "lines_added, lines_deleted, total_loc_changes "
+                    "FROM public.git_contributions ORDER BY commit_count DESC"
+                )
+            ).fetchall()
+            for row in rows:
+                raw_stats[row.member_key] = {
+                    "member_key": row.member_key,
+                    "display_name": row.display_name,
+                    "canonical_email": row.canonical_email,
+                    "commit_count": row.commit_count,
+                    "lines_added": row.lines_added,
+                    "lines_deleted": row.lines_deleted,
+                    "total_loc_changes": row.total_loc_changes,
+                }
+        except Exception:
+            pass
 
     # Ensure all 5 canonical members exist in final results
     for key, meta in MEMBER_DETAILS.items():
@@ -85,10 +82,13 @@ def get_contributions(
                 "total_loc_changes": 0,
             }
 
-    total_commits = sum(s["commit_count"] for s in raw_stats.values()) or 1
-    total_added = sum(s["lines_added"] for s in raw_stats.values()) or 1
+    total_commits = sum(s["commit_count"] for s in raw_stats.values())
+    total_added = sum(s["lines_added"] for s in raw_stats.values())
     total_deleted = sum(s["lines_deleted"] for s in raw_stats.values())
-    total_loc = sum(s["total_loc_changes"] for s in raw_stats.values()) or 1
+    total_loc = sum(s["total_loc_changes"] for s in raw_stats.values())
+    commit_denominator = total_commits or 1
+    added_denominator = total_added or 1
+    loc_denominator = total_loc or 1
 
     contributors = []
     for key, data in sorted(
@@ -111,51 +111,37 @@ def get_contributions(
                 canonical_email=data["canonical_email"],
                 github_username=meta.get("github_username"),
                 commits=data["commit_count"],
-                commits_percentage=round((data["commit_count"] / total_commits * 100), 1),
+                commits_percentage=round((data["commit_count"] / commit_denominator * 100), 1),
                 lines_added=data["lines_added"],
-                lines_added_percentage=round((data["lines_added"] / total_added * 100), 1),
+                lines_added_percentage=round((data["lines_added"] / added_denominator * 100), 1),
                 lines_deleted=data["lines_deleted"],
                 total_loc_changes=data["total_loc_changes"],
-                total_loc_percentage=round((data["total_loc_changes"] / total_loc * 100), 1),
+                total_loc_percentage=round(
+                    (data["total_loc_changes"] / loc_denominator * 100), 1
+                ),
                 primary_role=meta.get("primary_role", "Contributor"),
                 deliverables=meta.get("deliverables", []),
             )
         )
 
-    # Sample recent commits
+    commit_history = [
+        CommitHistoryItem(
+            hash=commit.hash,
+            author=commit.author,
+            message=commit.message,
+            timestamp=commit.timestamp,
+            member_keys=list(commit.member_keys),
+        )
+        for commit in history.commits
+    ]
     recent_commits = [
         RecentCommitItem(
-            hash="010d9c7",
-            author="huymuzic987",
-            message=(
-                "refactor: remove legacy bp_target_reached boolean from decision trees and frontend"
-            ),
-            timestamp=1754104800,
-        ),
-        RecentCommitItem(
-            hash="72b8e37",
-            author="John Tran",
-            message="ci: add pre-deployment quality gate script and Jenkins checks",
-            timestamp=1754018400,
-        ),
-        RecentCommitItem(
-            hash="cda39d4",
-            author="NgPhUyen",
-            message="[Fix]: modify detail of pop up alert modal",
-            timestamp=1753932000,
-        ),
-        RecentCommitItem(
-            hash="8358e75",
-            author="Kh04d4n9",
-            message="Fix: display drug tolerance checkbox during full traversal",
-            timestamp=1753552800,
-        ),
-        RecentCommitItem(
-            hash="78fca52",
-            author="Quangminh_24112005",
-            message="Med lookup database & drug class mapping",
-            timestamp=1752948000,
-        ),
+            hash=commit.hash,
+            author=commit.author,
+            message=commit.message,
+            timestamp=commit.timestamp,
+        )
+        for commit in commit_history[:5]
     ]
 
     return ContributionsResponse(
@@ -176,6 +162,7 @@ def get_contributions(
             for item in OVERLAPPING_MATRIX
         ],
         recent_commits=recent_commits,
+        commit_history=commit_history,
         scope=scope,
         updated_at=datetime.now(UTC),
     )
