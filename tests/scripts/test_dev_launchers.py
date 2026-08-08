@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[2]
+SOURCE_ROOT = Path(__file__).resolve().parents[2]
 COMPOSE_FALLBACK_URL = "postgresql://cdss:cdss@127.0.0.1:54321/cdss"
 
 
@@ -58,10 +58,20 @@ exit 0
     return bin_dir
 
 
+def _isolated_launcher_root(tmp_path: Path, launcher: str) -> Path:
+    launcher_root = tmp_path / "launcher-root"
+    scripts_dir = launcher_root / "scripts"
+    scripts_dir.mkdir(parents=True)
+    shutil.copy2(SOURCE_ROOT / launcher, launcher_root / launcher)
+    shutil.copy2(SOURCE_ROOT / "scripts" / "dev_database.py", scripts_dir / "dev_database.py")
+    return launcher_root
+
+
 def run_launcher(
     launcher: str, tmp_path: Path, *, environ: Mapping[str, str], wait_exit: int = 0
 ) -> tuple[subprocess.CompletedProcess[str], list[str]]:
     bin_dir = _fake_external_commands(tmp_path)
+    launcher_root = _isolated_launcher_root(tmp_path, launcher)
     recorded_urls = tmp_path / "database-urls.txt"
     env = os.environ.copy()
     env.pop("DATABASE_URL", None)
@@ -77,7 +87,7 @@ def run_launcher(
         command = ["bash", "dev.sh"]
     else:
         command = ["pwsh", "-NoLogo", "-NoProfile", "-File", "dev.ps1"]
-    result = subprocess.run(command, cwd=ROOT, env=env, text=True, capture_output=True)
+    result = subprocess.run(command, cwd=launcher_root, env=env, text=True, capture_output=True)
     return result, recorded_urls.read_text(
         encoding="utf-8"
     ).splitlines() if recorded_urls.exists() else []
@@ -106,3 +116,11 @@ def test_powershell_launcher_reports_database_failure_not_docker_failure(tmp_pat
     assert result.returncode == 1
     assert "Could not connect to PostgreSQL at" in result.stderr
     assert "Make sure Docker Desktop or WSL Docker daemon is running" not in result.stdout
+
+
+@pytest.mark.skipif(shutil.which("pwsh") is None, reason="PowerShell is not installed")
+def test_powershell_launcher_exports_compose_fallback_to_seed_and_backend(tmp_path: Path) -> None:
+    result, recorded_urls = run_launcher("dev.ps1", tmp_path, environ={})
+
+    assert result.returncode == 0, result.stderr
+    assert recorded_urls == [COMPOSE_FALLBACK_URL, COMPOSE_FALLBACK_URL]
