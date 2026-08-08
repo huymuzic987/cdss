@@ -22,6 +22,7 @@ case "$WRITE_LOCK_ENABLED" in
     ~^(PUT|PATCH|DELETE):/trees/[^/]+/layout$ 1;
     ~^POST:/fhir/import$ 1;
     ~^POST:/dashboard/seed$ 1;
+    ~^POST:/regimen-decisions$ 1;
 EOF
 )"
         LOCK_PROBE_LOCATION="$(cat <<'EOF'
@@ -90,6 +91,14 @@ ${LOCK_PROBE_LOCATION}
 
     location /fhir/ {
         proxy_pass http://backend:8000/fhir/;
+    }
+
+    location /medicines/ {
+        proxy_pass http://backend:8000/medicines/;
+    }
+
+    location = /regimen-decisions {
+        proxy_pass http://backend:8000/regimen-decisions;
     }
 
     location = /dashboard {

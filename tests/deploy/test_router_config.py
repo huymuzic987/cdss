@@ -32,6 +32,7 @@ def test_locked_router_blocks_only_known_mutating_routes() -> None:
     assert "~^(PUT|PATCH|DELETE):/trees/[^/]+/layout$ 1;" in result.stdout
     assert "~^POST:/fhir/import$ 1;" in result.stdout
     assert "~^POST:/dashboard/seed$ 1;" in result.stdout
+    assert "~^POST:/regimen-decisions$ 1;" in result.stdout
     assert "POST:/evaluate" not in result.stdout
     assert "Retry-After" in result.stdout
     assert "location = /__deployment/write-lock-probe" in result.stdout
@@ -48,6 +49,7 @@ def test_unlocked_router_has_no_blocked_route_entries() -> None:
     assert "/trees/[^/]+/layout" not in result.stdout
     assert "POST:/fhir/import" not in result.stdout
     assert "POST:/dashboard/seed" not in result.stdout
+    assert "POST:/regimen-decisions" not in result.stdout
     assert "location = /__deployment/write-lock-probe" not in result.stdout
 
 
@@ -64,6 +66,8 @@ def test_legacy_router_serves_existing_frontend_without_self_proxy() -> None:
     assert result.returncode == 0, result.stderr
     assert "root /usr/share/nginx/html;" in result.stdout
     assert "proxy_pass http://backend:8000/health;" in result.stdout
+    assert "proxy_pass http://backend:8000/medicines/;" in result.stdout
+    assert "proxy_pass http://backend:8000/regimen-decisions;" in result.stdout
     assert "location = /dashboard {" in result.stdout
     assert "location = /dashboard/ {" in result.stdout
     assert "try_files $uri $uri/ /index.html;" in result.stdout

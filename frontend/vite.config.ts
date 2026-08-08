@@ -9,6 +9,8 @@ export default defineConfig({
     proxy: {
       '/trees': 'http://localhost:8000',
       '/evaluate': 'http://localhost:8000',
+      '/regimen-decisions': 'http://localhost:8000',
+      '/medicines': 'http://localhost:8000',
       '/fhir': 'http://localhost:8000',
       '/health': 'http://localhost:8000',
       '/dashboard': {

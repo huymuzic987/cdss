@@ -68,6 +68,9 @@ export interface FinalRegimenComponent {
   group: 'A' | 'B' | 'C' | 'D' | 'MRA' | 'SGLT2i' | 'GLP1RA' | 'Others'
   dose: string
   subgroup?: string
+  selectorKind?: 'group' | 'subgroup' | 'medicine'
+  medicineId?: string
+  doseStrategy?: 'LOW_DOSE' | 'USUAL_DOSE' | 'MAX_DOSE'
 }
 
 export interface FinalRegimenOption {

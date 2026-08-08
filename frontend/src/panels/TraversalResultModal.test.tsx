@@ -102,7 +102,10 @@ function renderModal(
   )
 }
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
 
 describe('TraversalResultModal', () => {
   it('shows a compact final regimen with click-only details', async () => {
@@ -745,5 +748,20 @@ describe('TraversalResultModal', () => {
     expect(screen.getByText('Traversal stopped after the last valid action.')).toBeTruthy()
     expect(screen.getByText('In 2 weeks')).toBeTruthy()
     expect(screen.getByText('Important decision path')).toBeTruthy()
+  })
+
+  it('opens the clinician editor over the default regimen popup', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ groups: [] }) }))
+    renderModal()
+
+    expect(screen.getByRole('button', { name: 'Accept regimen' })).toBeTruthy()
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Reject regimen' }))
+
+    expect(screen.getByRole('dialog', { name: 'Edit regimen' })).toBeTruthy()
+    expect(screen.getAllByText('Alert').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Patient findings').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Important decision path').length).toBeGreaterThan(0)
+    expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Save regimen' })).toBeTruthy()
   })
 })

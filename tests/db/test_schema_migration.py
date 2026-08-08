@@ -42,6 +42,11 @@ REQUIRED_TABLES = {
     "tree_layouts",
     "symptoms",
     "contraindication_drugs",
+    "regimen_decisions",
+    "regimen_clinical_plan_items",
+    "regimen_options",
+    "regimen_option_components",
+    "regimen_rejection_reasons",
 }
 ENUM_LABELS = ["START", "CONDITION", "INFERENCE", "ACTION", "END", "LINK", "GLOBAL"]
 
