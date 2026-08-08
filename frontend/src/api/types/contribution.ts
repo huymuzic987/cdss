@@ -37,11 +37,16 @@ export interface RecentCommitItem {
   timestamp: number
 }
 
+export interface CommitHistoryItem extends RecentCommitItem {
+  member_keys: string[]
+}
+
 export interface ContributionResponse {
   summary: ContributionSummary
   contributors: ContributorMetric[]
   overlapping_matrix: OverlappingTask[]
   recent_commits: RecentCommitItem[]
+  commit_history: CommitHistoryItem[]
   scope: string
   updated_at: string
 }

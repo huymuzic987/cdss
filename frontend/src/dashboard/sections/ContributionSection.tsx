@@ -110,7 +110,7 @@ export function ContributionSection() {
       {(activeTab === 'all' || activeTab === 'charts') && (
         <ContributionCharts
           contributors={data.contributors}
-          recentCommits={data.recent_commits}
+          commitHistory={data.commit_history}
         />
       )}
 

@@ -1,46 +1,17 @@
 import { Activity } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import type { ContributorMetric, RecentCommitItem } from '../../../api/types'
+import type { CommitHistoryItem } from '../../../api/types'
 import { ChartTooltip } from '../../charts/ChartTooltip'
+import { buildCommitVelocityData } from './commitChartData'
 
 export function CommitVelocityChart({
-  contributors = [],
-  recentCommits = [],
+  commitHistory = [],
 }: {
-  contributors?: ContributorMetric[]
-  recentCommits?: RecentCommitItem[]
+  commitHistory?: CommitHistoryItem[]
 }) {
   const [viewMode, setViewMode] = useState<'daily' | 'cumulative'>('daily')
-
-  const chartData = useMemo(() => {
-    if (!recentCommits || recentCommits.length === 0) return []
-
-    // Group commits by date formatted MMM DD
-    const countsByDate = new Map<string, number>()
-    const sorted = [...recentCommits].sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
-
-    sorted.forEach((item) => {
-      const dateStr = item.timestamp
-        ? new Date(item.timestamp * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-        : 'Recent'
-      countsByDate.set(dateStr, (countsByDate.get(dateStr) || 0) + 1)
-    })
-
-    const entries = Array.from(countsByDate.entries())
-    const totalRepoCommits = contributors.reduce((acc, c) => acc + c.commits, 0)
-    const baseline = Math.max(0, totalRepoCommits - recentCommits.length)
-
-    let runningSum = baseline
-    return entries.map(([date, count]) => {
-      runningSum += count
-      return {
-        date,
-        commits: count,
-        cumulative: runningSum,
-      }
-    })
-  }, [contributors, recentCommits])
+  const chartData = useMemo(() => buildCommitVelocityData(commitHistory), [commitHistory])
 
   return (
     <div className="contrib-chart-card">

@@ -1,6 +1,6 @@
 import { Code2 } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import type { ContributorMetric, RecentCommitItem } from '../../../api/types'
+import type { CommitHistoryItem, ContributorMetric } from '../../../api/types'
 import { ChartTooltip } from '../../charts/ChartTooltip'
 import { CommitTypeBreakdownChart } from './CommitTypeBreakdownChart'
 import { CommitVelocityChart } from './CommitVelocityChart'
@@ -8,10 +8,10 @@ import { DonutShareChart } from './DonutShareChart'
 
 interface ContributionChartsProps {
   contributors: ContributorMetric[]
-  recentCommits?: RecentCommitItem[]
+  commitHistory?: CommitHistoryItem[]
 }
 
-export function ContributionCharts({ contributors, recentCommits = [] }: ContributionChartsProps) {
+export function ContributionCharts({ contributors, commitHistory = [] }: ContributionChartsProps) {
   const locData = contributors.map((c) => ({
     label: c.display_name,
     added: c.lines_added,
@@ -25,10 +25,10 @@ export function ContributionCharts({ contributors, recentCommits = [] }: Contrib
         <DonutShareChart contributors={contributors} />
 
         {/* Top Row Chart 2: Interactive Commit Velocity Area Chart */}
-        <CommitVelocityChart contributors={contributors} recentCommits={recentCommits} />
+        <CommitVelocityChart commitHistory={commitHistory} />
 
         {/* Bottom Row Chart 3: Commit Type Breakdown Stacked Bar Chart */}
-        <CommitTypeBreakdownChart contributors={contributors} recentCommits={recentCommits} />
+        <CommitTypeBreakdownChart contributors={contributors} commitHistory={commitHistory} />
 
         {/* Bottom Row Chart 4: Code Churn (Lines Added vs Deleted) */}
         <div className="contrib-chart-card">
