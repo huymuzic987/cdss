@@ -71,6 +71,7 @@ export interface FinalRegimenComponent {
   selectorKind?: 'group' | 'subgroup' | 'medicine'
   medicineId?: string
   doseStrategy?: 'LOW_DOSE' | 'USUAL_DOSE' | 'MAX_DOSE'
+  isCustom?: boolean
 }
 
 export interface FinalRegimenOption {
@@ -89,4 +90,15 @@ export interface RegimenMedicine {
   doseMax: string
   snomedCode: string
   safetyStatus?: string
+  safetyFindings?: RegimenSafetyFinding[]
+  requiresOverrideReason?: boolean
+}
+
+export interface RegimenSafetyFinding {
+  target?: string
+  severity?: string
+  reasonCode?: string
+  reasonEn?: string
+  reasonVi?: string
+  drugGroup?: string
 }

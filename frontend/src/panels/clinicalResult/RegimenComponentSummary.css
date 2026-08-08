@@ -1,0 +1,19 @@
+.cds-component-summary { display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; text-align: left; }
+.cds-component-summary-main { display: grid; min-width: 0; gap: 2px; }
+.cds-component-summary-main > strong { display: flex; min-width: 0; align-items: baseline; gap: 6px; color: var(--text-bright); font-size: 13px; line-height: 1.2; }
+.cds-component-summary-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cds-component-summary-clarification { min-width: 0; overflow: hidden; color: var(--text-secondary); font-size: 10px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
+.cds-component-summary-clarification::before { margin-right: 6px; color: var(--text-muted); content: '·'; }
+.cds-component-summary-subgroups { overflow: hidden; color: var(--text-secondary); font-size: 10px; font-weight: 550; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.cds-component-summary-inline-label { grid-column: 1; grid-row: 1; min-width: 0; overflow: hidden; color: var(--text-bright); font-size: 13px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.cds-component-summary-inline-clarification { grid-column: 2; grid-row: 1; min-width: 0; overflow: hidden; color: var(--text-secondary); font-size: 10px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
+.cds-component-summary-inline-clarification::before { margin-right: 6px; color: var(--text-muted); content: '·'; }
+.cds-component-summary-inline-subgroups { grid-column: 1 / -1; overflow: hidden; color: var(--text-secondary); font-size: 10px; line-height: 1.25; text-overflow: ellipsis; white-space: normal; }
+.cds-component-summary-dose { grid-column: 2; grid-row: 1 / span 2; align-self: center; color: var(--accent-text); font-size: 10px; font-weight: 800; line-height: 1.2; }
+.cds-component-summary-dose::before { margin-right: 4px; color: var(--text-muted); content: 'Dose:'; font-weight: 600; }
+.cds-component-summary .cds-component-summary-dose { white-space: nowrap; }
+.cds-component-summary--editor { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(3, minmax(0, auto)); gap: 1px; min-width: 0; text-align: left; }
+.cds-component-summary--editor .cds-component-summary-label { display: block; min-width: 0; overflow: hidden; color: var(--text-bright); font-size: 11px; font-weight: 800; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+.cds-component-summary-editor-context { display: block; min-width: 0; overflow: hidden; color: var(--text-secondary); font-size: 9px; font-weight: 700; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+.cds-component-summary--editor .cds-component-summary-dose { grid-column: 1; grid-row: 3; min-width: 0; overflow: hidden; color: var(--accent-text); font-size: 9px; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+.cds-component-summary--editor .cds-component-summary-dose::before { margin-right: 3px; content: 'Dose:'; }

@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type {
   ClinicalPlanItemInput,
   DurationUnit,
   TargetMode,
   TimeframeUnit,
 } from '../../api/types'
+import { ClinicalPlanQuickStart } from './ClinicalPlanQuickStart'
 
 type PlanTab = 'NEXT_FOLLOW_UP' | 'TARGET_BP' | 'ELSE'
 
@@ -85,6 +87,17 @@ export function ClinicalPlanSidebar({
   const [timeframeUnit, setTimeframeUnit] = useState<TimeframeUnit>('weeks')
   const [text, setText] = useState('')
   const [error, setError] = useState(false)
+  const sidebarRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const dismissOutside = (event: MouseEvent) => {
+      if (!(event.target instanceof Node) || sidebarRef.current?.contains(event.target)) return
+      onCancel()
+    }
+    document.addEventListener('click', dismissOutside)
+    return () => document.removeEventListener('click', dismissOutside)
+  }, [onCancel, open])
 
   if (!open) return null
 
@@ -131,12 +144,18 @@ export function ClinicalPlanSidebar({
     onAdd({ type: tab, text: text.trim() })
   }
 
-  return (
-    <aside className="cds-plan-sidebar" role="dialog" aria-label={messages.title}>
+  return createPortal(
+    <aside ref={sidebarRef} className="cds-plan-sidebar" role="dialog" aria-label={messages.title} onKeyDown={(event) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation()
+        onCancel()
+      }
+    }}>
       <div className="cds-editor-drawer-heading">
         <strong>{messages.title}</strong>
         <button type="button" onClick={onCancel} aria-label={messages.cancel}>×</button>
       </div>
+      <ClinicalPlanQuickStart locale={locale} onAdd={onAdd} onError={() => setError(true)} />
       <div className="cds-plan-tabs" role="tablist">
         {([
           ['NEXT_FOLLOW_UP', messages.followUp],
@@ -180,6 +199,7 @@ export function ClinicalPlanSidebar({
       {tab === 'ELSE' && <label className="cds-editor-textarea-label">{messages.text}<textarea rows={7} value={text} onChange={(event) => setText(event.target.value)} /></label>}
       {error && <p className="cds-editor-validation-error">{messages.required}</p>}
       <div className="cds-editor-drawer-actions"><button type="button" onClick={onCancel}>{messages.cancel}</button><button type="button" className="primary" onClick={add}>{messages.add}</button></div>
-    </aside>
+    </aside>,
+    document.body,
   )
 }

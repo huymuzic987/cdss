@@ -184,10 +184,8 @@ def validate_rejection_reasons(request: RegimenDecisionCreateRequest) -> None:
             "Rejection reasons contain an invalid or duplicate code."
         )
     other_text = request.other_rejection_reason.strip() if request.other_rejection_reason else ""
-    if "OTHER" in reasons and len(other_text.split()) < 50:
-        raise RegimenDecisionValidationError(
-            "The Other rejection reason must contain at least 50 words."
-        )
+    if "OTHER" in reasons and not other_text:
+        raise RegimenDecisionValidationError("The Other rejection reason must include details.")
     if "OTHER" not in reasons and other_text:
         raise RegimenDecisionValidationError(
             "other_rejection_reason is allowed only when OTHER is selected."

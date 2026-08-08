@@ -42,7 +42,17 @@ function ResultDialog({ result, partial, graphs = {}, onClose, locale }: Omit<Tr
   const displayedOrders = withCurrentFollowUpRegimen(presentation.orders, context, locale)
   const careActions = deriveCareActions(presentation.recommendation, presentation.additionalActions, summary, context)
   if (medicationFollowUpMessage && !careActions.includes(medicationFollowUpMessage)) careActions.unshift(medicationFollowUpMessage)
-  const baselineClinicalPlan: ClinicalPlanItemInput[] = careActions.map((text) => ({ type: 'ELSE', text }))
+  const reviewTimingPlan = summary.followUp
+    ? [
+        `${messages.followUpTiming}: ${summary.followUp.timing}`,
+        summary.followUp.reason,
+        summary.followUp.source,
+      ].filter(Boolean).join(' · ')
+    : undefined
+  const baselineClinicalPlan: ClinicalPlanItemInput[] = [
+    ...(reviewTimingPlan ? [{ type: 'ELSE' as const, text: reviewTimingPlan }] : []),
+    ...careActions.map((text) => ({ type: 'ELSE' as const, text })),
+  ]
   const [editing, setEditing] = useState(false)
   const [savingDecision, setSavingDecision] = useState(false)
   const [decisionError, setDecisionError] = useState<string>()

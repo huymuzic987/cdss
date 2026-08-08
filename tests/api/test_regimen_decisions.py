@@ -78,7 +78,7 @@ def test_accepted_decision_persists_baseline_and_fhir_identifier() -> None:
     assert decision.final_snapshot == baseline.model_dump(mode="json")
 
 
-def test_rejected_other_reason_requires_fifty_words() -> None:
+def test_rejected_other_reason_accepts_short_details() -> None:
     request = RegimenDecisionCreateRequest(
         outcome="rejected",
         evaluation_snapshot=_evaluation_snapshot(),
@@ -88,7 +88,21 @@ def test_rejected_other_reason_requires_fifty_words() -> None:
         other_rejection_reason="Too short.",
     )
 
-    with pytest.raises(RegimenDecisionValidationError, match="50 words"):
+    decision = create_regimen_decision(_session(), request, _catalog())
+
+    assert decision.outcome == "rejected"
+
+
+def test_rejected_other_reason_requires_details() -> None:
+    request = RegimenDecisionCreateRequest(
+        outcome="rejected",
+        evaluation_snapshot=_evaluation_snapshot(),
+        baseline=RegimenSnapshotInput(),
+        final=RegimenSnapshotInput(),
+        rejection_reasons=["OTHER"],
+    )
+
+    with pytest.raises(RegimenDecisionValidationError, match="include details"):
         create_regimen_decision(_session(), request, _catalog())
 
 
