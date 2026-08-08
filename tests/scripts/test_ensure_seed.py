@@ -21,6 +21,7 @@ DELETE FROM public.tree_layouts;
 DELETE FROM public.decision_nodes;
 DELETE FROM public.decision_trees;
 """.strip()
+SEED_PATH = Path(__file__).resolve().parents[2] / "backups" / "seed.sql"
 
 
 class RecordingCursor:
@@ -39,13 +40,18 @@ class RecordingCursor:
 
 
 class RecordingConnection:
-    def __init__(self, fail_on_statement: int | None = None) -> None:
+    def __init__(
+        self, fail_on_statement: int | None = None, *, fail_on_cursor: bool = False
+    ) -> None:
         self.cursor_instance = RecordingCursor(fail_on_statement)
+        self.fail_on_cursor = fail_on_cursor
         self.commits = 0
         self.rollbacks = 0
         self.closed = False
 
     def cursor(self) -> RecordingCursor:
+        if self.fail_on_cursor:
+            raise psycopg2.DatabaseError("cursor creation failed")
         return self.cursor_instance
 
     def commit(self) -> None:
@@ -68,11 +74,11 @@ def test_seed_transaction_body_removes_only_outer_transaction() -> None:
 
 def test_apply_seed_snapshot_replaces_graph_before_seed_and_metadata() -> None:
     connection = RecordingConnection()
+    sql_content = SEED_PATH.read_text(encoding="utf-8")
 
-    apply_seed_snapshot(connection, "BEGIN;\nSELECT 'seed';\nCOMMIT;\n", "abc123")
+    apply_seed_snapshot(connection, sql_content, "abc123")
 
     assert connection.cursor_instance.executed[0] == (EXPECTED_GRAPH_REFRESH, None)
-    assert connection.cursor_instance.executed[1] == ("SELECT 'seed';\n", None)
     assert "INSERT INTO _dev_seed_meta" in connection.cursor_instance.executed[2][0]
     assert connection.cursor_instance.executed[2][1] == ("abc123",)
     assert connection.commits == 1
@@ -90,20 +96,52 @@ def test_apply_seed_snapshot_replaces_graph_before_seed_and_metadata() -> None:
         "contraindication_drugs",
     ):
         assert table not in graph_refresh
+    refresh_payload = connection.cursor_instance.executed[1][0]
+    assert "INSERT INTO public.decision_trees" in refresh_payload
+    assert "T14_LINK_ECLAMPSIA_PREECLAMPSIA_HELLP_TO_PREGNANCY_TREE" in refresh_payload
+    for catalog_table in ("medicines", "symptoms", "contraindication_drugs"):
+        assert f"public.{catalog_table}" not in refresh_payload
+
+
+def test_apply_seed_snapshot_uses_full_seed_for_a_fresh_database() -> None:
+    connection = RecordingConnection()
+    sql_content = SEED_PATH.read_text(encoding="utf-8")
+
+    apply_seed_snapshot(connection, sql_content, "abc123", refresh_existing_graph=False)
+
+    assert connection.cursor_instance.executed[0] == (seed_transaction_body(sql_content), None)
+    assert "INSERT INTO public.medicines" in connection.cursor_instance.executed[0][0]
 
 
 def test_apply_seed_snapshot_rolls_back_when_seed_fails() -> None:
     connection = RecordingConnection(fail_on_statement=2)
 
     with pytest.raises(psycopg2.DatabaseError):
-        apply_seed_snapshot(connection, "BEGIN;\nSELECT 'seed';\nCOMMIT;\n", "abc123")
+        apply_seed_snapshot(connection, SEED_PATH.read_text(encoding="utf-8"), "abc123")
 
     assert connection.commits == 0
     assert connection.rollbacks == 1
 
 
-def test_main_ends_checksum_transaction_before_migration_and_snapshot(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+def test_apply_seed_snapshot_rolls_back_when_cursor_creation_fails() -> None:
+    connection = RecordingConnection(fail_on_cursor=True)
+
+    with pytest.raises(psycopg2.DatabaseError):
+        apply_seed_snapshot(connection, SEED_PATH.read_text(encoding="utf-8"), "abc123")
+
+    assert connection.rollbacks == 1
+
+
+@pytest.mark.parametrize(
+    ("argv", "has_graph", "expected_refresh"),
+    [(["ensure_seed.py"], False, False), (["ensure_seed.py", "--force"], True, True)],
+)
+def test_main_selects_full_or_graph_only_seed_after_migration(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    argv: list[str],
+    has_graph: bool,
+    expected_refresh: bool,
 ) -> None:
     seed_path = tmp_path / "backups" / "seed.sql"
     seed_path.parent.mkdir()
@@ -115,13 +153,16 @@ def test_main_ends_checksum_transaction_before_migration_and_snapshot(
     monkeypatch.setitem(script_globals, "root", tmp_path)
     monkeypatch.setitem(script_globals, "_database_url", lambda: "postgresql://test/cdss")
     monkeypatch.setitem(script_globals, "is_seeded_and_current", lambda _conn, _hash: False)
+    monkeypatch.setitem(script_globals, "has_existing_graph", lambda _conn: has_graph)
     monkeypatch.setitem(
         script_globals,
         "apply_seed_snapshot",
-        lambda _conn, _sql, _hash: events.append("snapshot"),
+        lambda _conn, _sql, _hash, *, refresh_existing_graph: events.append(
+            f"snapshot:{refresh_existing_graph}"
+        ),
     )
     monkeypatch.setattr(script_globals["psycopg2"], "connect", lambda _url: connection)
-    monkeypatch.setattr(sys, "argv", ["ensure_seed.py"])
+    monkeypatch.setattr(sys, "argv", argv)
 
     original_rollback = connection.rollback
 
@@ -142,5 +183,5 @@ def test_main_ends_checksum_transaction_before_migration_and_snapshot(
 
     main()
 
-    assert events == ["rollback", "migration", "snapshot"]
+    assert events == ["rollback", "migration", f"snapshot:{expected_refresh}"]
     assert connection.closed

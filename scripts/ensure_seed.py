@@ -24,6 +24,10 @@ DELETE FROM public.tree_layouts;
 DELETE FROM public.decision_nodes;
 DELETE FROM public.decision_trees;
 """.strip()
+GRAPH_SECTION_START = "-- 1. DECISION TREES"
+FIRST_CATALOG_SECTION = "-- 6. MEDICINES REFERENCE CATALOG"
+GRAPH_REFRESH_PATCH_START = "-- BEGIN GRAPH REFRESH PATCHES"
+GRAPH_REFRESH_PATCH_END = "-- END GRAPH REFRESH PATCHES"
 
 
 def get_seed_hash(seed_path: Path) -> str:
@@ -76,6 +80,22 @@ def is_seeded_and_current(conn, seed_hash: str) -> bool:
         cur.close()
 
 
+def has_existing_graph(conn) -> bool:
+    """Return whether the database already contains decision-tree data."""
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT to_regclass('public.decision_trees') IS NOT NULL;")
+        if not cur.fetchone()[0]:
+            return False
+
+        cur.execute("SELECT count(*) FROM decision_trees;")
+        return cur.fetchone()[0] > 0
+    except Exception:
+        return False
+    finally:
+        cur.close()
+
+
 def seed_transaction_body(sql_content: str) -> str:
     """Remove the seed dump's outer transaction markers for a managed refresh."""
     lines = sql_content.splitlines(keepends=True)
@@ -92,12 +112,47 @@ def seed_transaction_body(sql_content: str) -> str:
     )
 
 
-def apply_seed_snapshot(conn, sql_content: str, seed_hash: str) -> None:
+def graph_seed_body(sql_content: str) -> str:
+    """Extract the graph-only seed sections before the reference catalogs."""
+    body = seed_transaction_body(sql_content)
+    lines = body.splitlines(keepends=True)
+    graph_starts = [
+        index for index, line in enumerate(lines) if line.startswith(GRAPH_SECTION_START)
+    ]
+    catalog_starts = [
+        index for index, line in enumerate(lines) if line.startswith(FIRST_CATALOG_SECTION)
+    ]
+    patch_starts = [
+        index for index, line in enumerate(lines) if line.strip() == GRAPH_REFRESH_PATCH_START
+    ]
+    patch_ends = [
+        index for index, line in enumerate(lines) if line.strip() == GRAPH_REFRESH_PATCH_END
+    ]
+
+    if (
+        len(graph_starts) != 1
+        or len(catalog_starts) != 1
+        or len(patch_starts) != 1
+        or len(patch_ends) != 1
+        or not graph_starts[0] < catalog_starts[0] < patch_starts[0] < patch_ends[0]
+    ):
+        raise ValueError("Seed SQL graph and catalog section boundaries are invalid.")
+
+    return "".join(lines[: catalog_starts[0]]) + "".join(lines[patch_starts[0] + 1 : patch_ends[0]])
+
+
+def apply_seed_snapshot(
+    conn, sql_content: str, seed_hash: str, *, refresh_existing_graph: bool = True
+) -> None:
     """Atomically replace graph data, apply the seed, and record its checksum."""
-    cur = conn.cursor()
+    cur = None
     try:
-        cur.execute(GRAPH_REFRESH_SQL)
-        cur.execute(seed_transaction_body(sql_content))
+        cur = conn.cursor()
+        if refresh_existing_graph:
+            cur.execute(GRAPH_REFRESH_SQL)
+            cur.execute(graph_seed_body(sql_content))
+        else:
+            cur.execute(seed_transaction_body(sql_content))
         cur.execute(
             """
             CREATE TABLE IF NOT EXISTS _dev_seed_meta (
@@ -114,7 +169,8 @@ def apply_seed_snapshot(conn, sql_content: str, seed_hash: str) -> None:
         conn.rollback()
         raise
     finally:
-        cur.close()
+        if cur is not None:
+            cur.close()
 
 
 def main():
@@ -129,13 +185,14 @@ def main():
     conn = psycopg2.connect(_database_url())
 
     try:
-        if not force:
-            if is_seeded_and_current(conn, seed_hash):
-                print("-> Database is up-to-date with backups/seed.sql (Skipping seed).")
-                return
+        if not force and is_seeded_and_current(conn, seed_hash):
+            print("-> Database is up-to-date with backups/seed.sql (Skipping seed).")
+            return
 
-            # Finish the read-only checksum transaction before Alembic changes the schema.
-            conn.rollback()
+        refresh_existing_graph = has_existing_graph(conn)
+
+        # Finish the read-only checksum transaction before Alembic changes the schema.
+        conn.rollback()
 
         print(
             "-> Seed is missing or backups/seed.sql was modified. "
@@ -156,7 +213,9 @@ def main():
                 sys.exit(1)
 
         sql_content = seed_path.read_text(encoding="utf-8")
-        apply_seed_snapshot(conn, sql_content, seed_hash)
+        apply_seed_snapshot(
+            conn, sql_content, seed_hash, refresh_existing_graph=refresh_existing_graph
+        )
         print("-> Database successfully seeded and tracking hash updated!")
 
     finally:
