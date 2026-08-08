@@ -19,7 +19,7 @@ from cdss.domain.decision_tree import (
 )
 from cdss.domain.decision_tree.contracts import copy_json_value
 from cdss.domain.follow_up import FollowUpType
-from cdss.domain.pregnancy_follow_up import (
+from cdss.domain.follow_up.pregnancy_follow_up import (
     PregnancyFollowUpPhase,
     PregnancyFollowUpSummary,
 )

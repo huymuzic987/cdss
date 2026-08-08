@@ -14,7 +14,7 @@ from cdss.api.schemas.fhir_clinical import ImportResult
 from cdss.core.database import get_db
 from cdss.domain.decision_tree import TreeGraphRepository
 from cdss.infrastructure.db.clinical_import import import_bundle
-from cdss.infrastructure.db.dashboard_repository import DashboardRepository
+from cdss.infrastructure.db.dashboard.dashboard_repository import DashboardRepository
 
 router = APIRouter(prefix="/fhir", tags=["fhir"])
 

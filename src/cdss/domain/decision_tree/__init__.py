@@ -1,6 +1,11 @@
-"""Public domain contracts for the generic decision-tree engine."""
+"""Decision tree execution engine, node types, conditions, actions, and graph validation."""
 
-from cdss.domain.decision_tree.actions import collect_action, select_output_actions
+from typing import Any
+
+from cdss.domain.decision_tree.actions import (
+    collect_action,
+    select_output_actions,
+)
 from cdss.domain.decision_tree.conditions import (
     ConditionEvaluation,
     evaluate_candidate_condition,
@@ -14,7 +19,6 @@ from cdss.domain.decision_tree.contracts import (
     JsonObject,
     JsonValue,
     NodeType,
-    RunState,
     TraceEvent,
     TraversalResult,
     TraversalTraceEntry,
@@ -33,6 +37,7 @@ from cdss.domain.decision_tree.errors import (
     LinkTargetNotFound,
     MissingRuntimePath,
     NoMatchingTransition,
+    RunState,
     TraversalCycleDetected,
     TraversalLimitExceeded,
     TreeNotFound,
@@ -65,7 +70,17 @@ from cdss.domain.decision_tree.validator import (
     validate_tree_graph,
 )
 from cdss.domain.decision_tree.walker import DEFAULT_MAX_STEPS, walk_tree
-from cdss.domain.medication_safety_regimen import filter_medication_regimen_plan
+
+
+def __getattr__(name: str) -> Any:
+    if name == "filter_medication_regimen_plan":
+        from cdss.domain.medication_safety.medication_safety_regimen import (
+            filter_medication_regimen_plan,
+        )
+
+        return filter_medication_regimen_plan
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "ContextPatchError",
@@ -122,7 +137,6 @@ __all__ = [
     "EffectiveMedicationRegimen",
     "apply_context_patch",
     "build_traversed_medication_regimen",
-    "filter_medication_regimen_plan",
     "validate_condition_definition",
     "validate_tree_graph",
     "walk_tree",

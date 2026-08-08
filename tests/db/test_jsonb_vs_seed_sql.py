@@ -296,25 +296,25 @@ def load_tree_graph_from_jsonb(file_path: Path) -> TreeGraph:
         )
         nodes.append(node_def)
 
-        for ref in n.get("references", []):
-            references.append(
-                SourceReferenceDefinition(
-                    id=uuid.uuid4(),
-                    node_id=nid,
-                    source_title=ref["source_title"],
-                    section_path=ref.get("section_path"),
-                    reference_order=ref.get("reference_order", 0),
-                    locator=ref.get("locator"),
-                    locator_detail=ref.get("locator_detail"),
-                    printed_page_numbers=tuple(ref["printed_page_numbers"])
-                    if ref.get("printed_page_numbers")
-                    else None,
-                    pdf_page_numbers=tuple(ref["pdf_page_numbers"])
-                    if ref.get("pdf_page_numbers")
-                    else None,
-                    reference_note=ref.get("reference_note"),
-                )
+        references.extend(
+            SourceReferenceDefinition(
+                id=uuid.uuid4(),
+                node_id=nid,
+                source_title=ref["source_title"],
+                section_path=ref.get("section_path"),
+                reference_order=ref.get("reference_order", 0),
+                locator=ref.get("locator"),
+                locator_detail=ref.get("locator_detail"),
+                printed_page_numbers=tuple(ref["printed_page_numbers"])
+                if ref.get("printed_page_numbers")
+                else None,
+                pdf_page_numbers=tuple(ref["pdf_page_numbers"])
+                if ref.get("pdf_page_numbers")
+                else None,
+                reference_note=ref.get("reference_note"),
             )
+            for ref in n.get("references", [])
+        )
 
     for node_key, n in nodes_dict.items():
         from_id = node_key_to_id[node_key]

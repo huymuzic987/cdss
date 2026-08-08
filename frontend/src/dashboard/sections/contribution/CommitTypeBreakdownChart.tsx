@@ -1,47 +1,16 @@
 import { Layers } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import type { ContributorMetric, RecentCommitItem } from '../../../api/types'
+import type { CommitHistoryItem, ContributorMetric } from '../../../api/types'
 import { ChartTooltip } from '../../charts/ChartTooltip'
+import { buildCommitTypeData } from './commitChartData'
 
 interface CommitTypeBreakdownChartProps {
   contributors: ContributorMetric[]
-  recentCommits?: RecentCommitItem[]
+  commitHistory?: CommitHistoryItem[]
 }
 
-export function CommitTypeBreakdownChart({ contributors, recentCommits = [] }: CommitTypeBreakdownChartProps) {
-  const chartData = contributors.map((c) => {
-    const authorCommits = recentCommits.filter(
-      (item) => item.author.toLowerCase().includes(c.display_name.toLowerCase()) || c.display_name.toLowerCase().includes(item.author.toLowerCase())
-    )
-
-    let feats = 0
-    let fixes = 0
-    let refactors = 0
-    let chores = 0
-
-    if (authorCommits.length > 0) {
-      authorCommits.forEach((item) => {
-        const msg = item.message.toLowerCase()
-        if (msg.startsWith('feat') || msg.includes('feature')) feats += 1
-        else if (msg.startsWith('fix')) fixes += 1
-        else if (msg.startsWith('refactor')) refactors += 1
-        else chores += 1
-      })
-    } else {
-      feats = Math.round(c.commits * 0.45)
-      fixes = Math.round(c.commits * 0.25)
-      refactors = Math.round(c.commits * 0.20)
-      chores = Math.max(1, c.commits - feats - fixes - refactors)
-    }
-
-    return {
-      name: c.display_name,
-      Feature: feats,
-      Fix: fixes,
-      Refactor: refactors,
-      DevOps: chores,
-    }
-  })
+export function CommitTypeBreakdownChart({ contributors, commitHistory = [] }: CommitTypeBreakdownChartProps) {
+  const chartData = buildCommitTypeData(contributors, commitHistory)
 
   return (
     <div className="contrib-chart-card">
@@ -73,7 +42,7 @@ export function CommitTypeBreakdownChart({ contributors, recentCommits = [] }: C
             <Bar dataKey="Feature" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} maxBarSize={28} />
             <Bar dataKey="Fix" stackId="a" fill="#f43f5e" radius={[0, 0, 0, 0]} maxBarSize={28} />
             <Bar dataKey="Refactor" stackId="a" fill="#8b5cf6" radius={[0, 0, 0, 0]} maxBarSize={28} />
-            <Bar dataKey="DevOps" stackId="a" fill="#f59e0b" radius={[4, 4, 0, 0]} maxBarSize={28} />
+            <Bar dataKey="Maintenance" stackId="a" fill="#f59e0b" radius={[4, 4, 0, 0]} maxBarSize={28} />
           </BarChart>
         </ResponsiveContainer>
       </div>

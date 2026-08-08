@@ -3,8 +3,9 @@ instances; none of them require a running database."""
 
 from typing import cast
 
-from sqlalchemy import CheckConstraint, Table, UniqueConstraint
+from sqlalchemy import BigInteger, CheckConstraint, Table, Text, UniqueConstraint
 from sqlalchemy import inspect as sa_inspect
+from sqlalchemy.dialects.postgresql import JSONB
 
 from cdss.infrastructure.db.base import Base
 from cdss.infrastructure.db.models import (
@@ -54,7 +55,17 @@ def test_table_names() -> None:
         "regimen_options",
         "regimen_option_components",
         "regimen_rejection_reasons",
+        "git_commit_history",
     }
+
+
+def test_git_commit_history_contract() -> None:
+    table = Base.metadata.tables["git_commit_history"]
+
+    assert [column.name for column in table.primary_key.columns] == ["commit_hash"]
+    assert isinstance(table.c.commit_hash.type, Text)
+    assert isinstance(table.c.committed_at.type, BigInteger)
+    assert isinstance(table.c.member_keys.type, JSONB)
 
 
 def _table(model: type) -> Table:

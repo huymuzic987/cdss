@@ -21,7 +21,7 @@ from cdss.api.schemas.fhir_clinical import (
     LOINC_SBP_CODE,
 )
 from cdss.domain.decision_tree import InvalidFhirInput, JsonObject
-from cdss.domain.medication_safety_contracts import unknown_fact
+from cdss.domain.medication_safety.medication_safety_contracts import unknown_fact
 
 LOINC_EGFR = "98979-8"
 LOINC_POTASSIUM = "6298-4"

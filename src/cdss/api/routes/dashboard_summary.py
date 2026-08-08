@@ -10,7 +10,7 @@ from cdss.api.routes.dashboard_metrics import _build_outcomes, _build_overview, 
 from cdss.api.routes.dashboard_status import _build_fhir_import_status, _build_needs_attention
 from cdss.api.routes.dashboard_usage import _build_cdss_usage, _build_efficacy
 from cdss.api.schemas.dashboard import DashboardSummaryResponse
-from cdss.infrastructure.db.dashboard_repository import DashboardRepository
+from cdss.infrastructure.db.dashboard.dashboard_repository import DashboardRepository
 
 router = APIRouter()
 

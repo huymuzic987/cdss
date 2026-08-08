@@ -5350,6 +5350,7 @@ INSERT INTO public.symptoms (symptom_id, type, subgroup, name_vn, name_en, descr
 VALUES ('SYM0086', 'Tình trạng sinh lý', 'Khác', 'Người cao tuổi', 'Older Adult', 'Nhóm bệnh nhân cao tuổi.', 'The older-adult patient group.', 'Mục 3.7.1., mục 3.6.7.', NULL, NULL, '30525-0', 'Age', 'Ngưỡng và đích điều trị, Điều trị thiết yếu, Điều trị tối ưu, THA người cao tuổi', 'Treatment Threshold and BP Target, Essential treatment strategy, Optimal treatment strategy, Hypertension older adults')
 ON CONFLICT (symptom_id) DO UPDATE SET type = EXCLUDED.type, subgroup = EXCLUDED.subgroup, name_vn = EXCLUDED.name_vn, name_en = EXCLUDED.name_en, description_vn = EXCLUDED.description_vn, description_en = EXCLUDED.description_en, source = EXCLUDED.source, icd10_code = EXCLUDED.icd10_code, snomed_code = EXCLUDED.snomed_code, loinc_code = EXCLUDED.loinc_code, loinc_common_name = EXCLUDED.loinc_common_name, decision_tree_vn = EXCLUDED.decision_tree_vn, decision_tree_en = EXCLUDED.decision_tree_en;
 
+-- BEGIN GRAPH REFRESH PATCHES
 -- Remove Tree 12 nodes consolidated into surviving nodes or explicitly removed
 -- from the workflow (R2: pregnancy/postpartum monitoring).
 DELETE FROM public.node_source_references
@@ -5908,6 +5909,8 @@ FROM public.decision_trees tree
 WHERE layout.tree_id = tree.id
   AND tree.tree_key = 'hypertensive-emergency'
   AND layout.node_positions ? 'T14_ACTION_SELECT_LABETALOL_PLUS_MAGNESIUM_SULFATE_OR_NICARDIPINE_PLUS_MAGNESIUM_SULFATE_FOR_ECLAMPSIA_PREECLAMPSIA_OR_HELLP';
+
+-- END GRAPH REFRESH PATCHES
 
 UPDATE public.medicines AS medicine
 SET snomed_code = codes.snomed_code

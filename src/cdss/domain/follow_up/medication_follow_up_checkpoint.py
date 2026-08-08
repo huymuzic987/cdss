@@ -8,7 +8,7 @@ from typing import Any
 
 from cdss.domain.decision_tree.contracts import ExecutedAction, NodeType, RunState
 from cdss.domain.decision_tree.graph import NodeDefinition
-from cdss.domain.medication_follow_up import (
+from cdss.domain.follow_up.medication_follow_up import (
     MedicationFollowUpAssessment,
     MedicationFollowUpDecision,
     MedicationFollowUpOutcome,

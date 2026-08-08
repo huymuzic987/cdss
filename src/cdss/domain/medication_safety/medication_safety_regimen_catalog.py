@@ -9,11 +9,14 @@ from cdss.domain.decision_tree.medication_regimen_contracts import (
     MedicationRegimenPlan,
     RegimenComponent,
 )
-from cdss.domain.medication_safety import evaluate_target, target_for_medicine
-from cdss.domain.medication_safety_regimen_helpers import (
+from cdss.domain.medication_safety.medication_safety_inputs import (
+    target_for_medicine,
+)
+from cdss.domain.medication_safety.medication_safety_regimen_helpers import (
     raw_matches_removal,
     relative_findings_for_medicine,
 )
+from cdss.domain.medication_safety.medication_safety_rules import evaluate_target
 
 
 def filter_regimen_catalog(

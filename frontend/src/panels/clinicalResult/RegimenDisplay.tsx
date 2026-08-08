@@ -7,7 +7,9 @@ import { ClinicalSection } from './ClinicalSection'
 import { ComponentCatalogDetails } from './RegimenCatalogPopup'
 import { RegimenComponentSummary } from './RegimenComponentSummary'
 import { componentSummary } from './regimenComponentPresentation'
+import { recommendedDoseSummary } from './RegimenCatalog'
 import { uniqueReferenceDetails } from './RegimenReferenceDetails'
+import { RegimenTooltip } from './RegimenTooltip'
 import { useRegimenPopupDismissal } from './useRegimenPopupDismissal'
 import './RegimenDisplay.css'
 
@@ -154,11 +156,11 @@ export function RegimenDisplay({ presentation, references, locale, includePath =
       )}
       {catalogPopup && createPortal(
         <ComponentCatalogDetails
-          component={catalogPopup.component}
           catalog={presentation.regimenCatalog}
+          component={catalogPopup.component}
+          onClose={() => setCatalogPopup(null)}
           placement={catalogPopup.placement}
           position={{ left: catalogPopup.left, top: catalogPopup.top }}
-          onClose={() => setCatalogPopup(null)}
         />,
         document.body,
       )}

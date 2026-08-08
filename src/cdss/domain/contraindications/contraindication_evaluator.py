@@ -5,11 +5,11 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cdss.domain.contraindication_catalog import (
+from cdss.domain.contraindications.contraindication_catalog import (
     ContraindicationDrug,
     ContraindicationDrugRepository,
 )
-from cdss.domain.contraindication_matching import (
+from cdss.domain.contraindications.contraindication_matching import (
     code_evidence,
     condition_codings,
     fact_matches,
@@ -19,8 +19,8 @@ from cdss.domain.contraindication_matching import (
     unique_evidence,
     unique_findings,
 )
-from cdss.domain.medication_safety_contracts import finding
-from cdss.domain.medication_safety_inputs import evidence
+from cdss.domain.medication_safety.medication_safety_contracts import finding
+from cdss.domain.medication_safety.medication_safety_inputs import evidence
 
 type JsonObject = dict[str, Any]
 

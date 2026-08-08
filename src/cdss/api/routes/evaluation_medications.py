@@ -23,8 +23,11 @@ from cdss.domain.decision_tree import (
     filter_medication_regimen_plan,
 )
 from cdss.domain.decision_tree.medicine_catalog import MedicineRepository
-from cdss.domain.medication_safety_catalog import filter_catalog_medicines, filter_raw_medicines
-from cdss.domain.medication_safety_resolver import resolve_safe_regimens
+from cdss.domain.medication_safety.medication_safety_catalog import (
+    filter_catalog_medicines,
+    filter_raw_medicines,
+)
+from cdss.domain.medication_safety.medication_safety_resolver import resolve_safe_regimens
 
 
 def enrich_inferred_medications(

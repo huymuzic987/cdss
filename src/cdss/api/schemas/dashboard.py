@@ -244,10 +244,15 @@ class RecentCommitItem(ApiModel):
     timestamp: int
 
 
+class CommitHistoryItem(RecentCommitItem):
+    member_keys: list[str]
+
+
 class ContributionsResponse(ApiModel):
     summary: ContributionSummaryResponse
     contributors: list[ContributorMetricResponse]
     overlapping_matrix: list[OverlappingTaskResponse]
     recent_commits: list[RecentCommitItem]
+    commit_history: list[CommitHistoryItem]
     scope: str
     updated_at: datetime

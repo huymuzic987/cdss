@@ -59,6 +59,15 @@ const MOCK_RESPONSE: ContributionResponse = {
       timestamp: 1754104800,
     },
   ],
+  commit_history: [
+    {
+      hash: '010d9c7',
+      author: 'huymuzic987',
+      message: 'refactor: remove legacy bp_target_reached boolean',
+      timestamp: 1754104800,
+      member_keys: ['huy'],
+    },
+  ],
   scope: 'main',
   updated_at: '2026-08-02T12:00:00Z',
 }

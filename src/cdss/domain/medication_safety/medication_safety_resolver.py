@@ -4,17 +4,21 @@ from collections.abc import Mapping, Sequence
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
-from cdss.domain.medication_safety import (
+from cdss.domain.medication_safety.medication_safety import (
     evaluate_medication_safety,
-    evaluate_target,
-    target_for_medicine,
 )
-from cdss.domain.medication_safety_action_catalog import ACTION_SELECTORS
-from cdss.domain.medication_safety_catalog import (
+from cdss.domain.medication_safety.medication_safety_action_catalog import ACTION_SELECTORS
+from cdss.domain.medication_safety.medication_safety_catalog import (
     has_safety_data,
     medicine_json,
 )
-from cdss.domain.medication_safety_interactions import dual_ras_blockade_finding
+from cdss.domain.medication_safety.medication_safety_inputs import (
+    target_for_medicine,
+)
+from cdss.domain.medication_safety.medication_safety_interactions import (
+    dual_ras_blockade_finding,
+)
+from cdss.domain.medication_safety.medication_safety_rules import evaluate_target
 
 type JsonObject = dict[str, Any]
 

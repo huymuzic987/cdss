@@ -47,6 +47,7 @@ REQUIRED_TABLES = {
     "regimen_options",
     "regimen_option_components",
     "regimen_rejection_reasons",
+    "git_commit_history",
 }
 ENUM_LABELS = ["START", "CONDITION", "INFERENCE", "ACTION", "END", "LINK", "GLOBAL"]
 

@@ -13,30 +13,40 @@ and production procedures are covered in [Operations](operations.md) and
 
 ## Backend setup
 
-Create `.env` from the example, install dependencies, start PostgreSQL, apply
-migrations, and load the decision-tree seed data.
+Install the backend and frontend dependencies, then start the appropriate
+development launcher. It starts the local Compose PostgreSQL database when
+needed, waits for the database, applies migrations, refreshes seed data when
+needed, and starts the backend and frontend.
 
 ```powershell
-Copy-Item .env.example .env
 uv sync
-docker compose up -d postgres
-uv run alembic upgrade head
-docker compose exec -T postgres psql -U cdss -d cdss -f - < backups/seed.sql
+pnpm --dir frontend install
 .\dev.ps1
 ```
 
-On macOS, Linux, WSL, or Git Bash, use `cp .env.example .env` and `./dev.sh`
-for the first and last commands.
+On macOS, Linux, WSL, or Git Bash, use `./dev.sh` for the launcher.
+
+No `.env` file is required for the default local Compose database. The
+launchers use `DATABASE_URL` from the environment first, then `.env`, and then
+the local Compose fallback. Create `.env` from the example only when you need
+to override the default database:
+
+```powershell
+Copy-Item .env.example .env
+```
 
 The API is available at `http://localhost:8000`; its interactive reference is
 at `http://localhost:8000/docs` and raw OpenAPI is at `/openapi.json`.
 
-The seed is required. Alembic creates the schema but does not populate the
-clinical decision trees or medicine catalog.
+The launcher seeds a new database after migrations. When `backups/seed.sql`
+changes, `scripts/ensure_seed.py` refreshes the decision-tree graph while
+preserving clinical and dashboard data plus reference catalogs already in the
+database.
 
-## Frontend setup
+## Frontend setup (manual alternative)
 
-In a second terminal:
+The development launcher already starts Vite. Use this standalone workflow
+only when you intentionally want to run the frontend without the launcher:
 
 ```powershell
 cd frontend
@@ -67,7 +77,7 @@ pnpm --dir frontend lint
 
 ## Common setup problems
 
-- **No trees appear:** migrations were applied, but seed data was not loaded.
+- **No trees appear:** rerun the launcher and check its seed output.
 - **Port already in use:** see [Operations: port conflicts](operations.md#4-port-conflicts).
 - **WSL reload does not notice edits:** restart Uvicorn; Windows-mounted paths
   can prevent filesystem events from reaching the reload watcher.

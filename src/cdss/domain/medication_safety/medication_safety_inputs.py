@@ -6,7 +6,7 @@ from collections.abc import Mapping, Sequence
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
-from cdss.domain.medication_safety_contracts import fact_status, fact_value
+from cdss.domain.medication_safety.medication_safety_contracts import fact_status, fact_value
 
 if TYPE_CHECKING:
     from cdss.domain.decision_tree.medicine_catalog import Medicine

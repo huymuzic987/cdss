@@ -21,7 +21,7 @@ from cdss.domain.follow_up import (
     has_complete_previous_bp,
     infer_follow_up,
 )
-from cdss.domain.pregnancy_follow_up import (
+from cdss.domain.follow_up.pregnancy_follow_up import (
     PREGNANCY_TREE_KEY,
     pregnancy_follow_up_entry_node,
 )

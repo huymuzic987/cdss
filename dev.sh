@@ -2,6 +2,12 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
+if ! DATABASE_URL="$(uv run python scripts/dev_database.py resolve)"; then
+    echo "Error: Could not resolve the development database URL." >&2
+    exit 1
+fi
+export DATABASE_URL
+
 echo "========================================"
 echo "  CDSS Efficient Dev Server Launcher    "
 echo "========================================"
@@ -29,9 +35,9 @@ start_postgres() {
 start_postgres || echo "Warning: Docker compose command failed, checking if DB is already running..."
 
 echo "[2/3] Waiting for database connection on port 54321..."
-until uv run python -c "import psycopg2; from backups.dump import _database_url; conn=psycopg2.connect(_database_url())" 2>/dev/null; do
-    sleep 1
-done
+if ! uv run python scripts/dev_database.py wait; then
+    exit 1
+fi
 echo "-> Database connection established!"
 
 echo ""

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +34,21 @@ ALIAS_MAP: dict[str, tuple[str, str, str]] = {
 }
 
 
+@dataclass(frozen=True)
+class CommitRecord:
+    hash: str
+    author: str
+    message: str
+    timestamp: int
+    member_keys: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class GitHistorySnapshot:
+    contributors: dict[str, dict[str, Any]]
+    commits: tuple[CommitRecord, ...]
+
+
 def resolve_canonical(name: str, email: str) -> tuple[str, str, str]:
     """Resolve a Git author name/email pair to a canonical team identity."""
     clean_email = email.strip().lower()
@@ -48,16 +64,110 @@ def resolve_canonical(name: str, email: str) -> tuple[str, str, str]:
     return key, name, email
 
 
-def parse_git_history(scope: str = "main") -> dict[str, dict[str, Any]]:
-    """Parse commit and numstat data from the local Git history."""
-    ref = "main" if scope == "main" else "--all"
+def _git_ref(scope: str) -> str:
+    if scope == "main":
+        check_main = subprocess.call(
+            ["git", "rev-parse", "--verify", "main"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            cwd=PROJECT_ROOT,
+        )
+        return "main" if check_main == 0 else "HEAD"
+    return "--all"
+
+
+def _commit_authors(name: str, email: str, body: str) -> list[tuple[str, str, str]]:
+    primary = resolve_canonical(name, email)
+    authors = [primary]
+    seen_keys = {primary[0]}
+    for line in body.splitlines():
+        if not line.strip().lower().startswith("co-authored-by:"):
+            continue
+        match = re.search(r"co-authored-by:\s*(.*?)\s*<(.*?)>", line, re.IGNORECASE)
+        if not match:
+            continue
+        co_author = resolve_canonical(match.group(1), match.group(2))
+        if co_author[0] not in seen_keys:
+            authors.append(co_author)
+            seen_keys.add(co_author[0])
+    return authors
+
+
+def _parse_git_log(raw_output: str) -> GitHistorySnapshot:
+    contributors: dict[str, dict[str, Any]] = {}
+    commits: list[CommitRecord] = []
+
+    def get_author(key: str, name: str, email: str) -> dict[str, Any]:
+        if key not in contributors:
+            contributors[key] = {
+                "member_key": key,
+                "display_name": name,
+                "canonical_email": email,
+                "commit_count": 0,
+                "lines_added": 0,
+                "lines_deleted": 0,
+                "last_hash": None,
+            }
+        return contributors[key]
+
+    for block in raw_output.split("\x1e"):
+        if not block.strip():
+            continue
+        fields = block.split("\x1f", 5)
+        if len(fields) < 6:
+            continue
+        hash_str, name, email, timestamp_text, body, numstat_text = fields
+        try:
+            timestamp = int(timestamp_text)
+        except ValueError:
+            continue
+
+        commit_authors = _commit_authors(name, email, body)
+        for author_key, author_name, author_email in commit_authors:
+            author = get_author(author_key, author_name, author_email)
+            author["commit_count"] += 1
+            if not author["last_hash"]:
+                author["last_hash"] = hash_str
+
+        primary_display_name = commit_authors[0][1]
+        message = next((line.strip() for line in body.splitlines() if line.strip()), "")
+        commits.append(
+            CommitRecord(
+                hash=hash_str,
+                author=primary_display_name,
+                message=message,
+                timestamp=timestamp,
+                member_keys=tuple(author[0] for author in commit_authors),
+            )
+        )
+
+        weight = 1.0 / len(commit_authors)
+        for line in numstat_text.splitlines():
+            parts = line.strip().split("\t", 2)
+            if len(parts) < 2 or parts[0] == "-" or parts[1] == "-":
+                continue
+            try:
+                added, deleted = int(parts[0]), int(parts[1])
+            except ValueError:
+                continue
+            for author_key, author_name, author_email in commit_authors:
+                author = get_author(author_key, author_name, author_email)
+                author["lines_added"] += int(added * weight)
+                author["lines_deleted"] += int(deleted * weight)
+
+    return GitHistorySnapshot(contributors=contributors, commits=tuple(commits))
+
+
+def parse_git_history_snapshot(scope: str = "main") -> GitHistorySnapshot:
+    """Parse contributor aggregates and canonical commits from local Git history."""
+    ref = _git_ref(scope)
     cmd = [
         "git",
         "log",
         ref,
         "--numstat",
         "--no-merges",
-        "--pretty=format:COMMIT_START|%h|%an|%ae|%at|%B|COMMIT_END",
+        "--pretty=format:%x1e%h%x1f%an%x1f%ae%x1f%at%x1f%B%x1f",
     ]
 
     try:
@@ -66,75 +176,11 @@ def parse_git_history(scope: str = "main") -> dict[str, dict[str, Any]]:
         )
     except Exception as err:
         print(f"Error executing git log: {err}")
-        return {}
+        return GitHistorySnapshot(contributors={}, commits=())
 
-    authors: dict[str, dict[str, Any]] = {}
+    return _parse_git_log(raw_output)
 
-    def get_author_dict(m_key: str, d_name: str, c_email: str) -> dict[str, Any]:
-        if m_key not in authors:
-            authors[m_key] = {
-                "member_key": m_key,
-                "display_name": d_name,
-                "canonical_email": c_email,
-                "commit_count": 0,
-                "lines_added": 0,
-                "lines_deleted": 0,
-                "last_hash": None,
-            }
-        return authors[m_key]
 
-    blocks = raw_output.split("COMMIT_START|")
-    for block in blocks:
-        if not block.strip():
-            continue
-
-        parts = block.split("|COMMIT_END", 1)
-        commit_header = parts[0]
-        numstat_lines = parts[1].splitlines() if len(parts) > 1 else []
-
-        header_fields = commit_header.split("|", 4)
-        if len(header_fields) < 5:
-            continue
-
-        hash_str, name, email, _timestamp, body = header_fields
-        member_key, display_name, canonical_email = resolve_canonical(name, email)
-
-        co_author_keys: set[tuple[str, str, str]] = set()
-        for line in body.splitlines():
-            line_str = line.strip()
-            if line_str.lower().startswith("co-authored-by:"):
-                co_match = re.search(r"co-authored-by:\s*(.*?)\s*<(.*?)>", line_str, re.IGNORECASE)
-                if co_match:
-                    co_name, co_email = co_match.group(1), co_match.group(2)
-                    co_key, co_display_name, co_canonical_email = resolve_canonical(
-                        co_name, co_email
-                    )
-                    if co_key != member_key:
-                        co_author_keys.add((co_key, co_display_name, co_canonical_email))
-
-        all_commit_authors = [
-            (member_key, display_name, canonical_email),
-            *co_author_keys,
-        ]
-        weight = 1.0 / len(all_commit_authors)
-
-        for author_key, author_name, author_email in all_commit_authors:
-            author = get_author_dict(author_key, author_name, author_email)
-            author["commit_count"] += 1
-            if not author["last_hash"]:
-                author["last_hash"] = hash_str
-
-        for line in numstat_lines:
-            line = line.strip()
-            if not line or not line[0].isdigit():
-                continue
-            num_parts = line.split()
-            if len(num_parts) >= 2 and num_parts[0] != "-" and num_parts[1] != "-":
-                added = int(num_parts[0])
-                deleted = int(num_parts[1])
-                for author_key, author_name, author_email in all_commit_authors:
-                    author = get_author_dict(author_key, author_name, author_email)
-                    author["lines_added"] += int(added * weight)
-                    author["lines_deleted"] += int(deleted * weight)
-
-    return authors
+def parse_git_history(scope: str = "main") -> dict[str, dict[str, Any]]:
+    """Preserve the aggregate-only interface used by maintenance scripts."""
+    return parse_git_history_snapshot(scope).contributors

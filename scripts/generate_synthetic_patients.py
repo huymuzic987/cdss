@@ -552,10 +552,10 @@ def _build_bundle(
     entries = []
     for i in range(1, count + 1):
         patient = _generate_patient(i, prefix, adherence_rate, medicines_by_class)
-        for resource in _patient_to_resources(patient):
-            entries.append(
-                {"fullUrl": f"{resource['resourceType']}/{resource['id']}", "resource": resource}
-            )
+        entries.extend(
+            {"fullUrl": f"{resource['resourceType']}/{resource['id']}", "resource": resource}
+            for resource in _patient_to_resources(patient)
+        )
     return {"resourceType": "Bundle", "type": "collection", "entry": entries}
 
 

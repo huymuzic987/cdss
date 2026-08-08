@@ -69,7 +69,11 @@ class SqlAlchemyTreeGraphRepository(TreeGraphRepository):
             raise TreeNotFound(tree_key=tree_key)
 
         node_rows = (
-            self._session.execute(select(DecisionNode).where(DecisionNode.tree_id == tree_row.id))
+            self._session.execute(
+                select(DecisionNode)
+                .where(DecisionNode.tree_id == tree_row.id)
+                .order_by(DecisionNode.display_order, DecisionNode.id)
+            )
             .scalars()
             .all()
         )
@@ -81,6 +85,7 @@ class SqlAlchemyTreeGraphRepository(TreeGraphRepository):
             .join(source_node, DecisionEdge.from_node_id == source_node.id)
             .join(target_node, DecisionEdge.to_node_id == target_node.id)
             .where(source_node.tree_id == tree_row.id)
+            .order_by(DecisionEdge.traversal_order, DecisionEdge.id)
         ).all()
 
         reference_rows = (
@@ -88,6 +93,7 @@ class SqlAlchemyTreeGraphRepository(TreeGraphRepository):
                 select(NodeSourceReference)
                 .join(DecisionNode, NodeSourceReference.node_id == DecisionNode.id)
                 .where(DecisionNode.tree_id == tree_row.id)
+                .order_by(NodeSourceReference.id)
             )
             .scalars()
             .all()

@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cdss.domain.medication_safety_contracts import finding
-from cdss.domain.medication_safety_inputs import target_for_medicine
+from cdss.domain.medication_safety.medication_safety_contracts import finding
+from cdss.domain.medication_safety.medication_safety_inputs import target_for_medicine
 
 type JsonObject = dict[str, Any]
 

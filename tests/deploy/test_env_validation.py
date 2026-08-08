@@ -96,10 +96,11 @@ def test_placeholder_password_and_insecure_backup_mode_are_rejected(tmp_path: Pa
 
 
 def test_deployment_scripts_do_not_source_dotenv_as_shell() -> None:
-    offenders = []
-    for script in (REPO_ROOT / "deploy").glob("*.sh"):
-        if "source .env" in script.read_text(encoding="utf-8"):
-            offenders.append(script.name)
+    offenders = [
+        script.name
+        for script in (REPO_ROOT / "deploy").glob("*.sh")
+        if "source .env" in script.read_text(encoding="utf-8")
+    ]
 
     assert offenders == []
 
