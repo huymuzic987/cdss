@@ -24,6 +24,13 @@ from cdss.infrastructure.db.models.patient import (
     VisitMedication,
     VisitObservation,
 )
+from cdss.infrastructure.db.models.regimen import (
+    RegimenClinicalPlanItem,
+    RegimenDecision,
+    RegimenOption,
+    RegimenOptionComponent,
+    RegimenRejectionReason,
+)
 
 __all__ = [
     "ContraindicationDrug",
@@ -39,6 +46,11 @@ __all__ = [
     "NodeType",
     "Patient",
     "PatientCondition",
+    "RegimenClinicalPlanItem",
+    "RegimenDecision",
+    "RegimenOption",
+    "RegimenOptionComponent",
+    "RegimenRejectionReason",
     "Symptom",
     "TreeLayout",
     "Visit",
