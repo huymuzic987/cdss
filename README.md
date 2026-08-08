@@ -41,26 +41,26 @@ See [Backend components](docs/components/backend.md) for responsibilities.
 ## Quick start
 
 Requirements: Python 3.12+, uv, Docker Compose, and Node.js 20+ with pnpm for
-the optional frontend.
+the frontend.
 
 ~~~powershell
-Copy-Item .env.example .env
 uv sync
-docker compose up -d postgres
-uv run alembic upgrade head
-docker compose exec -T postgres psql -U cdss -d cdss -f - < backups/seed.sql
+pnpm --dir frontend install
 .\dev.ps1
 ~~~
 
-The backend runs at http://localhost:8000. Loading seed data is required
-because migrations create the schema but not the clinical trees.
+On macOS, Linux, WSL, or Git Bash, run `./dev.sh` instead. Each launcher
+starts the local Compose PostgreSQL database when needed, waits for it, applies
+migrations, refreshes the seed when needed, and starts both servers. The backend
+runs at http://localhost:8000 and the frontend at http://localhost:5173.
 
-Start the frontend separately:
+No `.env` file is required for the default local Compose database. The
+launchers resolve `DATABASE_URL` from the environment first, then `.env`, then
+the local Compose fallback. Create `.env` from `.env.example` only when you
+need to override that default:
 
 ~~~powershell
-cd frontend
-pnpm install
-pnpm dev
+Copy-Item .env.example .env
 ~~~
 
 For Linux commands and troubleshooting, see
