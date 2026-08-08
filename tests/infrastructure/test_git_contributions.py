@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from cdss.infrastructure.git_contributions import parse_git_history_snapshot
 
-
 RAW_LOG = (
     "\x1eabc1234\x1fHuy\x1fhuymusic987@gmail.com\x1f1782691200\x1f"
     "feat: add chart history\n\n"
