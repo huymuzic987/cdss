@@ -50,6 +50,11 @@ def test_table_names() -> None:
         "symptoms",
         "contraindication_drugs",
         "git_contributions",
+        "regimen_decisions",
+        "regimen_clinical_plan_items",
+        "regimen_options",
+        "regimen_option_components",
+        "regimen_rejection_reasons",
         "git_commit_history",
     }
 

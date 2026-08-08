@@ -1,5 +1,5 @@
 import type { JsonValue } from '../../api/types'
-import type { RegimenMedicine } from './types'
+import type { RegimenMedicine, RegimenSafetyFinding } from './types'
 import { objectValue, stringValue } from './values'
 
 const TOKEN_PATTERN = /[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*/gu
@@ -46,6 +46,17 @@ export function subgroupMatches(actual: string, expected: string): boolean {
   ))
 }
 
+/** Match subgroup labels that were explicitly selected by a doctor.
+ *
+ * `subgroupMatches` intentionally supports the abbreviated labels used by
+ * decision-tree output. Custom editor selections need stricter semantics so
+ * a label such as "Thiazide-like" cannot also select "Thiazide".
+ */
+export function explicitSubgroupMatches(actual: string, expected: string): boolean {
+  const normalizedActual = normalizeSubgroup(actual)
+  return expected.split('/').some((part) => normalizeSubgroup(part) === normalizedActual)
+}
+
 function mentions(text: string, subgroup: string): boolean {
   const textTokens = tokens(text)
   return tokens(subgroup).some((term) => termMatches(term, textTokens))
@@ -65,6 +76,10 @@ function tokens(value: string): string[] {
   return value.toLocaleLowerCase().normalize('NFKD').replace(/\p{M}/gu, '').match(TOKEN_PATTERN) ?? []
 }
 
+function normalizeSubgroup(value: string): string {
+  return value.toLocaleLowerCase().normalize('NFKD').replace(/\p{M}/gu, '').replace(/\s+/g, ' ').trim()
+}
+
 function isSubsequence(short: string, long: string): boolean {
   let position = 0
   for (const character of long) {
@@ -77,6 +92,20 @@ function parseCatalogMedicines(rawItems: JsonValue[], fallbackGroup: string): Re
   return rawItems.flatMap((raw) => {
     const item = objectValue(raw)
     if (!item) return []
+    const safetyFindings = Array.isArray(item.safety_findings)
+      ? item.safety_findings.flatMap((value) => {
+          const finding = objectValue(value)
+          if (!finding) return []
+          return [{
+            ...(stringValue(finding.target) ? { target: stringValue(finding.target) } : {}),
+            ...(stringValue(finding.severity) ? { severity: stringValue(finding.severity) } : {}),
+            ...(stringValue(finding.reason_code) ? { reasonCode: stringValue(finding.reason_code) } : {}),
+            ...(stringValue(finding.reason_en) ? { reasonEn: stringValue(finding.reason_en) } : {}),
+            ...(stringValue(finding.reason_vi) ? { reasonVi: stringValue(finding.reason_vi) } : {}),
+            ...(stringValue(finding.drug_group) ? { drugGroup: stringValue(finding.drug_group) } : {}),
+          } satisfies RegimenSafetyFinding]
+        })
+      : []
     return [{
       id: stringValue(item.drug_id),
       name: stringValue(item.name),
@@ -88,6 +117,8 @@ function parseCatalogMedicines(rawItems: JsonValue[], fallbackGroup: string): Re
       doseMax: stringValue(item.dose_max),
       snomedCode: stringValue(item.snomed_code),
       safetyStatus: stringValue(item.safety_status) || undefined,
+      ...(safetyFindings.length > 0 ? { safetyFindings } : {}),
+      ...(item.requires_override_reason === true ? { requiresOverrideReason: true } : {}),
     }]
   })
 }

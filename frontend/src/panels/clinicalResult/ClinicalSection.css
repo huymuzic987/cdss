@@ -23,6 +23,10 @@
   transform: rotate(180deg);
 }
 
+.cds-section-action { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; }
+.cds-section-plus { display: inline-grid; width: 24px; height: 24px; place-items: center; border: 1px solid var(--accent-btn-border); border-radius: 7px; background: var(--bg-inset); color: var(--accent-text); cursor: pointer; font-size: 19px; line-height: 1; }
+.cds-section-plus:hover { background: var(--bg-panel-hover); border-color: var(--accent-text); }
+
 @media (prefers-reduced-motion: reduce) {
   .cds-section-chevron { transition: none; }
 }

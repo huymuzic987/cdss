@@ -5,6 +5,8 @@ import type { ClinicalDecisionSupportLocale } from '../clinicalDecisionSupportMe
 import type { ClinicalPresentation, FinalRegimenComponent } from '../clinicalPresentation/types'
 import { ClinicalSection } from './ClinicalSection'
 import { ComponentCatalogDetails } from './RegimenCatalogPopup'
+import { RegimenComponentSummary } from './RegimenComponentSummary'
+import { componentSummary } from './regimenComponentPresentation'
 import { recommendedDoseSummary } from './RegimenCatalog'
 import { uniqueReferenceDetails } from './RegimenReferenceDetails'
 import { RegimenTooltip } from './RegimenTooltip'
@@ -31,17 +33,7 @@ interface CatalogPopupState extends TooltipState {
   component: FinalRegimenComponent
 }
 
-function componentDisplayLabel(
-  component: FinalRegimenComponent,
-  locale: ClinicalDecisionSupportLocale,
-): string {
-  void locale
-  return component.label
-}
-
-export function RegimenDisplay({
-  presentation, references, locale, includePath = false,
-}: RegimenDisplayProps) {
+export function RegimenDisplay({ presentation, references, locale, includePath = false }: RegimenDisplayProps) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
   const [catalogPopup, setCatalogPopup] = useState<CatalogPopupState | null>(null)
   useRegimenPopupDismissal(Boolean(tooltip || catalogPopup), () => {
@@ -50,24 +42,19 @@ export function RegimenDisplay({
   })
   if (presentation.regimenSteps.length === 0 && presentation.regimenOptions.length === 0) return null
   const vi = locale === 'vi'
-  const sourceKeys = new Set(
-    presentation.regimenSteps.map((step) => `${step.treeKey}:${step.nodeKey}`),
-  )
-  const regimenReferences = references.filter(
-    (reference) => sourceKeys.has(`${reference.tree_key}:${reference.node_key}`),
-  )
+  const sourceKeys = new Set(presentation.regimenSteps.map((step) => `${step.treeKey}:${step.nodeKey}`))
+  const regimenReferences = references.filter((reference) => sourceKeys.has(`${reference.tree_key}:${reference.node_key}`))
   const referenceDetails = uniqueReferenceDetails(regimenReferences)
-  const activeOption = presentation.regimenOptions.find(
-    (option) => option.id === tooltip?.optionId,
-  )
+  const activeOption = presentation.regimenOptions.find((option) => option.id === tooltip?.optionId)
+  const regimenGuidance = presentation.regimenOptions.length > 1
+    ? (vi ? 'Chọn một phác đồ hoàn chỉnh bên dưới' : 'Choose one complete regimen below')
+    : (vi ? 'Dùng tất cả thành phần cùng nhau' : 'Use all components together')
 
   const showTooltip = (element: HTMLElement, optionId: string) => {
     const rect = element.getBoundingClientRect()
     const tooltipWidth = Math.min(520, window.innerWidth - 32)
     const estimatedHeight = 230
-    const placement = rect.bottom + estimatedHeight > window.innerHeight && rect.top > estimatedHeight
-      ? 'above'
-      : 'below'
+    const placement = rect.bottom + estimatedHeight > window.innerHeight && rect.top > estimatedHeight ? 'above' : 'below'
     setTooltip({
       optionId,
       left: Math.max(16, Math.min(rect.left, window.innerWidth - tooltipWidth - 16)),
@@ -96,19 +83,12 @@ export function RegimenDisplay({
         <ClinicalSection
           className="cds-final-regimens"
           title={vi ? 'Phác đồ thuốc cuối cùng' : 'Final drug regimen'}
+          subtitle={regimenGuidance}
           onToggle={(event) => !event.currentTarget.open && setTooltip(null)}
         >
           <div className="cds-regimen-panel-content">
-            <div className="cds-regimen-guidance">
-              {presentation.regimenOptions.length > 1
-                ? (vi ? 'Chọn một trong các phác đồ hoàn chỉnh dưới đây' : 'Choose one complete regimen below')
-                : (vi ? 'Dùng tất cả thành phần cùng nhau' : 'Use all components together')}
-            </div>
             {presentation.regimenOptions.map((option, optionIndex) => (
-              <div
-                className="cds-final-regimen"
-                key={option.id}
-              >
+              <div className="cds-final-regimen" key={option.id}>
                 {presentation.regimenOptions.length > 1 && (
                   <button
                     className="cds-regimen-option-title"
@@ -117,11 +97,8 @@ export function RegimenDisplay({
                     aria-expanded={tooltip?.optionId === option.id}
                     style={{ '--option-hue': (optionIndex * 67 + 188) % 360 } as CSSProperties}
                     onClick={(event) => {
-                      if (tooltip?.optionId === option.id) {
-                        setTooltip(null)
-                      } else {
-                        showTooltip(event.currentTarget, option.id)
-                      }
+                      if (tooltip?.optionId === option.id) setTooltip(null)
+                      else showTooltip(event.currentTarget, option.id)
                     }}
                   >
                     {optionIndex + 1}
@@ -132,7 +109,7 @@ export function RegimenDisplay({
                     <div className="cds-regimen-component-group" key={`${component.group}-${component.subgroup ?? ''}-${component.detail}-${component.dose}`}>
                       {componentIndex > 0 && <span className="cds-regimen-and">+</span>}
                       <button
-                        className="cds-regimen-component"
+                        className="cds-regimen-component cds-regimen-component--compact"
                         type="button"
                         onClick={(event) => {
                           event.stopPropagation()
@@ -140,27 +117,19 @@ export function RegimenDisplay({
                           const rect = event.currentTarget.getBoundingClientRect()
                           const popupWidth = Math.min(620, window.innerWidth - 32)
                           const estimatedHeight = 360
-                          const placement = rect.bottom + estimatedHeight > window.innerHeight && rect.top > estimatedHeight
-                            ? 'above'
-                            : 'below'
-                          setCatalogPopup((current) => (
-                            current
-                            && current.component.group === component.group
-                            && current.component.label === component.label
-                            && current.component.subgroup === component.subgroup
-                              ? null
-                              : {
-                                  component,
-                                  optionId: option.id,
-                                  left: Math.max(16, Math.min(rect.left, window.innerWidth - popupWidth - 16)),
-                                  top: placement === 'above' ? rect.top - 8 : rect.bottom + 8,
-                                  placement,
-                                }
-                          ))
+                          const placement = rect.bottom + estimatedHeight > window.innerHeight && rect.top > estimatedHeight ? 'above' : 'below'
+                          setCatalogPopup((current) => current && current.component.group === component.group && current.component.label === component.label && current.component.subgroup === component.subgroup
+                            ? null
+                            : {
+                                component,
+                                optionId: option.id,
+                                left: Math.max(16, Math.min(rect.left, window.innerWidth - popupWidth - 16)),
+                                top: placement === 'above' ? rect.top - 8 : rect.bottom + 8,
+                                placement,
+                              })
                         }}
                       >
-                        <strong>{componentDisplayLabel(component, locale)}</strong>
-                        <small>{recommendedDoseSummary(component, presentation.regimenCatalog)}</small>
+                        <RegimenComponentSummary inline compact locale={locale} {...componentSummary(component, presentation.regimenCatalog, locale)} />
                       </button>
                     </div>
                   ))}
@@ -170,16 +139,20 @@ export function RegimenDisplay({
           </div>
         </ClinicalSection>
       )}
-      {tooltip && activeOption && (
-        <RegimenTooltip
-          activeOption={activeOption}
-          left={tooltip.left}
-          locale={locale}
-          placement={tooltip.placement}
-          referenceDetails={referenceDetails}
-          regimenReferences={regimenReferences}
-          top={tooltip.top}
-        />
+      {tooltip && activeOption && createPortal(
+        <div className={`cds-regimen-row-tooltip cds-regimen-tooltip-${tooltip.placement}`} id={`${activeOption.id}-details`} role="tooltip" style={{ left: tooltip.left, top: tooltip.top }}>
+          <strong>{vi ? 'Chi tiết phác đồ' : 'Regimen details'}</strong>
+          <div className="cds-regimen-group-details">
+            {activeOption.components.map((component) => <RegimenComponentSummary key={`${component.group}:${component.subgroup ?? ''}:${component.label}`} locale={locale} {...componentSummary(component, presentation.regimenCatalog, locale)} />)}
+          </div>
+          {regimenReferences.length > 0 && (
+            <div className="cds-regimen-reference-details">
+              <strong>{regimenReferences[0]?.source_title}</strong>
+              {referenceDetails.map((detail) => <span key={detail}>{detail}</span>)}
+            </div>
+          )}
+        </div>,
+        document.body,
       )}
       {catalogPopup && createPortal(
         <ComponentCatalogDetails

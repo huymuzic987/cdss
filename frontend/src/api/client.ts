@@ -12,6 +12,9 @@ import type {
   TreeLayoutRequest,
   TreeLayoutResponse,
   TreeSummary,
+  MedicineCatalogResponse,
+  RegimenDecisionCreateRequest,
+  RegimenDecisionResponse,
 } from './types'
 import type { JsonObject } from './types'
 
@@ -29,8 +32,14 @@ async function getJson<T>(path: string): Promise<T> {
   return (await response.json()) as T
 }
 
-async function postJson<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, { method: 'POST' })
+async function postJson<T>(path: string, payload?: unknown): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'POST',
+    ...(payload === undefined ? {} : {
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }),
+  })
   if (!response.ok) {
     const body = (await response.json()) as ApiErrorResponse
     throw new Error(body.message ?? `Request to ${path} failed with ${response.status}`)
@@ -90,6 +99,16 @@ export function saveTreeLayout(treeKey: string, layout: TreeLayoutRequest): Prom
 
 export function resetTreeLayout(treeKey: string): Promise<void> {
   return deleteRequest(`/trees/${encodeURIComponent(treeKey)}/layout`)
+}
+
+export function fetchMedicineCatalog(): Promise<MedicineCatalogResponse> {
+  return getJson<MedicineCatalogResponse>('/medicines/catalog')
+}
+
+export function saveRegimenDecision(
+  payload: RegimenDecisionCreateRequest,
+): Promise<RegimenDecisionResponse> {
+  return postJson<RegimenDecisionResponse>('/regimen-decisions', payload)
 }
 
 export interface EvaluationOutcome {
