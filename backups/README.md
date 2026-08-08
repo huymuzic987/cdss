@@ -17,7 +17,7 @@ from `contraindication_drugs_vnha_2022.csv`.
 
 ## Usage Workflows
 
-### Workflow A: Pure Alembic + Seed Data (Recommended for Development)
+### Workflow A: Manual Alembic + Seed Data (Advanced Alternative)
 ```bash
 uv run alembic upgrade head
 psql -d cdss -f backups/seed.sql
