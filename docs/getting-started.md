@@ -43,9 +43,10 @@ changes, `scripts/ensure_seed.py` refreshes the decision-tree graph while
 preserving clinical and dashboard data plus reference catalogs already in the
 database.
 
-## Frontend setup
+## Frontend setup (manual alternative)
 
-In a second terminal:
+The development launcher already starts Vite. Use this standalone workflow
+only when you intentionally want to run the frontend without the launcher:
 
 ```powershell
 cd frontend
