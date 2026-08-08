@@ -7,6 +7,7 @@ from datetime import UTC, date, datetime
 from typing import Any
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Date,
     DateTime,
@@ -203,3 +204,13 @@ class GitContribution(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow
     )
+
+
+class GitCommitHistory(Base):
+    __tablename__ = "git_commit_history"
+
+    commit_hash: Mapped[str] = mapped_column(Text, primary_key=True)
+    author: Mapped[str] = mapped_column(Text, nullable=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    committed_at: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    member_keys: Mapped[list[str]] = mapped_column(JSONB, nullable=False)

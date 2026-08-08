@@ -134,6 +134,27 @@ def get_contributions(
         )
         for commit in history.commits
     ]
+    if not commit_history and scope == "main":
+        try:
+            rows = db.execute(
+                text(
+                    "SELECT commit_hash, author, message, committed_at, member_keys "
+                    "FROM public.git_commit_history "
+                    "ORDER BY committed_at DESC, commit_hash DESC"
+                )
+            ).fetchall()
+            commit_history = [
+                CommitHistoryItem(
+                    hash=row.commit_hash,
+                    author=row.author,
+                    message=row.message,
+                    timestamp=row.committed_at,
+                    member_keys=list(row.member_keys or []),
+                )
+                for row in rows
+            ]
+        except Exception:
+            pass
     recent_commits = [
         RecentCommitItem(
             hash=commit.hash,

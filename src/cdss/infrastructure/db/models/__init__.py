@@ -16,6 +16,7 @@ from cdss.infrastructure.db.models.decision_tree import (
 )
 from cdss.infrastructure.db.models.patient import (
     FhirImportBatch,
+    GitCommitHistory,
     GitContribution,
     Patient,
     PatientCondition,
@@ -31,6 +32,7 @@ __all__ = [
     "DecisionTree",
     "DevelopmentRuntimeLog",
     "FhirImportBatch",
+    "GitCommitHistory",
     "GitContribution",
     "Medicine",
     "NodeSourceReference",

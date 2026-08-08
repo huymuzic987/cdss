@@ -17,6 +17,7 @@
 - Commit types are Feature, Fix, Refactor, and Maintenance; unknown subjects are Maintenance.
 - Velocity groups unique commits by UTC calendar date and cumulative totals start at zero.
 - No fabricated chart data is allowed when history is empty.
+- Production containers read deployment-synced `main` history from PostgreSQL because `.git` is excluded from the image.
 
 ---
 
@@ -341,7 +342,86 @@ git commit -m "fix(frontend): derive contribution charts from history"
 
 ---
 
-### Task 4: Full verification
+### Task 4: Persist commit history for production containers
+
+**Files:**
+- Create: `alembic/versions/c8d9e0f1a2b3_create_git_commit_history_table.py`
+- Create: `tests/scripts/test_update_contributions_db.py`
+- Modify: `src/cdss/infrastructure/db/models/patient.py`
+- Modify: `src/cdss/infrastructure/db/models/__init__.py`
+- Modify: `tests/db/test_models.py`
+- Modify: `tests/db/test_schema_migration.py`
+- Modify: `scripts/update_contributions_db.py`
+- Modify: `tests/api/test_dashboard_contributions.py`
+- Modify: `src/cdss/api/routes/dashboard_contributions.py`
+
+**Interfaces:**
+- Produces: `git_commit_history(commit_hash, author, message, committed_at, member_keys)`.
+- Changes: `generate_sql(snapshot: GitHistorySnapshot) -> str` to atomically sync aggregates and history.
+- Changes: database fallback for `GET /dashboard/contributions?scope=main` to populate `commit_history`.
+
+- [ ] **Step 1: Write failing model and SQL generation tests**
+
+Require `git_commit_history` in SQLAlchemy metadata with a text primary key,
+big-integer timestamp, and JSONB member keys. Build a two-commit
+`GitHistorySnapshot`, call `generate_sql`, and assert literal SQL contains the
+history delete, both commit hashes, escaped subjects, timestamps, and JSONB
+member-key arrays. Also assert an empty snapshot generates no SQL.
+
+- [ ] **Step 2: Run the persistence tests and verify RED**
+
+Run: `uv run pytest tests/db/test_models.py tests/scripts/test_update_contributions_db.py -q`
+
+Expected: FAIL because the model/table is absent and `generate_sql` still
+accepts aggregate dictionaries.
+
+- [ ] **Step 3: Add the model, migration, and fail-closed SQL sync**
+
+Create the table at Alembic head `b7c8d9e0f1a2`. Update the sync script to
+consume `parse_git_history_snapshot`, preserve aggregate upserts, issue
+`DELETE FROM public.git_commit_history` only for a non-empty snapshot, and
+insert every commit in the same transaction. The CLI must exit non-zero without
+printing SQL when parsing yields no contributors or commits.
+
+- [ ] **Step 4: Run persistence tests and verify GREEN**
+
+Run: `uv run pytest tests/db/test_models.py tests/scripts/test_update_contributions_db.py -q`
+
+Expected: PASS.
+
+- [ ] **Step 5: Write the failing API database-fallback test**
+
+Return an empty `GitHistorySnapshot` from the parser and use a database double
+that returns one aggregate row and six newest-first history rows. Assert the
+response contains all six canonical history records and derives the newest
+five `recent_commits` from them.
+
+- [ ] **Step 6: Run the fallback test and verify RED**
+
+Run: `uv run pytest tests/api/test_dashboard_contributions.py::test_contributions_reads_persisted_main_history_without_git -q`
+
+Expected: FAIL because the route does not query `git_commit_history`.
+
+- [ ] **Step 7: Implement and verify the database history fallback**
+
+Query persisted history only for `scope=main`, ordered by timestamp and hash
+descending. Convert JSONB member keys to response lists and reuse the existing
+recent-history derivation.
+
+Run: `uv run pytest tests/api/test_dashboard_contributions.py -q`
+
+Expected: PASS.
+
+- [ ] **Step 8: Commit the production persistence unit**
+
+```bash
+git add alembic/versions/c8d9e0f1a2b3_create_git_commit_history_table.py src/cdss/infrastructure/db/models/patient.py src/cdss/infrastructure/db/models/__init__.py scripts/update_contributions_db.py src/cdss/api/routes/dashboard_contributions.py tests/db/test_models.py tests/db/test_schema_migration.py tests/scripts/test_update_contributions_db.py tests/api/test_dashboard_contributions.py docs/superpowers/specs/2026-08-08-commit-chart-correctness-design.md docs/superpowers/plans/2026-08-08-commit-chart-correctness.md
+git commit -m "fix: persist commit history for production"
+```
+
+---
+
+### Task 5: Full verification
 
 **Files:**
 - Verify only; no planned production edits.
@@ -387,4 +467,3 @@ Expected: no output.
 Run: `git status --short`
 
 Expected: only the implementation-plan document is uncommitted, or no output if it was committed before execution.
-

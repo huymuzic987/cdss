@@ -42,6 +42,7 @@ REQUIRED_TABLES = {
     "tree_layouts",
     "symptoms",
     "contraindication_drugs",
+    "git_commit_history",
 }
 ENUM_LABELS = ["START", "CONDITION", "INFERENCE", "ACTION", "END", "LINK", "GLOBAL"]
 
